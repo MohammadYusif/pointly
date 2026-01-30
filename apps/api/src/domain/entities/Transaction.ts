@@ -141,6 +141,41 @@ export class Transaction {
     });
   }
 
+  /**
+   * Create an expiration transaction for decayed points
+   */
+  static createExpiration(
+    merchantId: string, // Use "SYSTEM" for global decay
+    customerId: string,
+    points: Points,
+    balanceBefore: Points,
+    idempotencyKey: string,
+    metadata: TransactionMetadata = {},
+  ): Transaction {
+    if (points.isZero()) {
+      throw new ValidationError("Points must be greater than zero");
+    }
+
+    return new Transaction({
+      transactionId: ulid(),
+      merchantId,
+      customerId,
+      type: TransactionType.EXPIRATION,
+      status: TransactionStatus.COMPLETED,
+      points,
+      balanceBefore,
+      balanceAfter: balanceBefore.subtract(points),
+      metadata: {
+        ...metadata,
+        expirationReason: metadata["reason"] || "inactivity_decay",
+        expirationDate: new Date().toISOString(),
+      },
+      idempotencyKey,
+      createdAt: new Date(),
+      completedAt: new Date(),
+    });
+  }
+
   static reconstitute(props: TransactionProps): Transaction {
     return new Transaction(props);
   }

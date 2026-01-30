@@ -122,9 +122,9 @@ export class Merchant {
     const configs: Record<MerchantTier, LoyaltyConfiguration> = {
       [MerchantTier.BASIC]: {
         pointsPerSAR: 1,
-        globalPointsPerSAR: 1,
+        globalPointsPerSAR: 1, // Simplified: all tiers give 1:1 global points
         minimumPurchase: 10,
-        pointsExpiry: 365,
+        pointsExpiry: null, // Merchant points never expire
         redemptionRate: 0.01,
         allowPartialRedemption: false,
         minimumRedemption: 100,
@@ -133,9 +133,9 @@ export class Merchant {
       },
       [MerchantTier.PROFESSIONAL]: {
         pointsPerSAR: 1,
-        globalPointsPerSAR: 1.5,
+        globalPointsPerSAR: 1, // Simplified: all tiers give 1:1 global points
         minimumPurchase: 5,
-        pointsExpiry: 730,
+        pointsExpiry: null, // Merchant points never expire
         redemptionRate: 0.01,
         allowPartialRedemption: true,
         minimumRedemption: 50,
@@ -144,10 +144,10 @@ export class Merchant {
       },
       [MerchantTier.ENTERPRISE]: {
         pointsPerSAR: 1,
-        globalPointsPerSAR: 2,
+        globalPointsPerSAR: 1, // Simplified: all tiers give 1:1 global points
         minimumPurchase: 0,
-        pointsExpiry: null,
-        redemptionRate: 0.012,
+        pointsExpiry: null, // Merchant points never expire
+        redemptionRate: 0.012, // Enterprise keeps higher redemption rate as tier benefit
         allowPartialRedemption: true,
         minimumRedemption: 25,
         welcomeBonus: 200,
@@ -238,6 +238,20 @@ export class Merchant {
 
   getUpdatedAt(): Date {
     return this.props.updatedAt;
+  }
+
+  getVerifiedAt(): Date | undefined {
+    return this.props.verifiedAt;
+  }
+
+  /**
+   * Check if merchant is verified and active
+   */
+  isVerified(): boolean {
+    return (
+      this.props.status === MerchantStatus.ACTIVE &&
+      this.props.verifiedAt !== undefined
+    );
   }
 
   // Location management methods

@@ -1,0 +1,400 @@
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { RecordPurchaseUseCase } from "../use-cases/RecordPurchaseUseCase";
+import {
+  Customer,
+  Merchant,
+  Transaction,
+  PhoneNumber,
+  Email,
+  Points,
+  Money,
+  MerchantTier,
+  MerchantStatus,
+  ConsentStatus,
+  NotFoundError,
+  UnauthorizedError,
+  ValidationError,
+} from "../../domain";
+import type { ICustomerRepository } from "../repositories/ICustomerRepository";
+import type { IMerchantRepository } from "../repositories/IMerchantRepository";
+import type { ITransactionRepository } from "../repositories/ITransactionRepository";
+import type { IIdempotencyService } from "../services/IIdempotencyService";
+
+describe("RecordPurchaseUseCase", () => {
+  let useCase: RecordPurchaseUseCase;
+  let mockCustomerRepo: ICustomerRepository;
+  let mockMerchantRepo: IMerchantRepository;
+  let mockTransactionRepo: ITransactionRepository;
+  let mockIdempotencyService: IIdempotencyService;
+
+  let testCustomer: Customer;
+  let testMerchant: Merchant;
+
+  beforeEach(() => {
+    // Create test entities
+    const phone = new PhoneNumber("0501234567");
+    testCustomer = Customer.create(phone, "Ahmed Al-Saud");
+    testCustomer.enrollWithMerchant("merchant_123");
+    testCustomer.grantConsent("merchant_123");
+
+    const email = new Email("merchant@example.com");
+    const merchantPhone = new PhoneNumber("0509876543");
+    testMerchant = Merchant.create(
+      "Test Store",
+      email,
+      merchantPhone,
+      "Merchant Owner",
+      MerchantTier.PROFESSIONAL,
+    );
+    testMerchant.verify(); // Make merchant verified
+
+    // Mock repositories
+    mockCustomerRepo = {
+      findById: vi.fn(),
+      save: vi.fn(),
+      delete: vi.fn(),
+      exists: vi.fn(),
+      findByPhone: vi.fn(),
+      findByMerchant: vi.fn(),
+      findPendingConsents: vi.fn(),
+      isEnrolled: vi.fn(),
+    };
+
+    mockMerchantRepo = {
+      findById: vi.fn(),
+      save: vi.fn(),
+      delete: vi.fn(),
+      exists: vi.fn(),
+      findByEmail: vi.fn(),
+      findByPhone: vi.fn(),
+      findVerified: vi.fn(),
+      findPendingVerification: vi.fn(),
+      findByTier: vi.fn(),
+    };
+
+    mockTransactionRepo = {
+      findById: vi.fn(),
+      save: vi.fn(),
+      delete: vi.fn(),
+      exists: vi.fn(),
+      findByIdempotencyKey: vi.fn(),
+      findByCustomer: vi.fn(),
+      findByMerchant: vi.fn(),
+      findByCustomerAndMerchant: vi.fn(),
+      getMerchantStats: vi.fn(),
+      getCustomerStats: vi.fn(),
+    };
+
+    mockIdempotencyService = {
+      getResult: vi.fn(),
+      storeResult: vi.fn(),
+      delete: vi.fn(),
+    };
+
+    useCase = new RecordPurchaseUseCase(
+      mockCustomerRepo,
+      mockMerchantRepo,
+      mockTransactionRepo,
+      mockIdempotencyService,
+    );
+  });
+
+  describe("Successful Purchase", () => {
+    it("should record purchase and award dual points (PROFESSIONAL tier)", async () => {
+      // Setup
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      const request = {
+        merchantId: "merchant_123",
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 100,
+        idempotencyKey: "test_key_1",
+        metadata: {
+          receiptNumber: "REC-001",
+          cashierName: "Cashier 1",
+        },
+      };
+
+      // Execute
+      const result = await useCase.execute(request);
+
+      // Assert
+      expect(result.merchantPoints).toBe(100); // 1:1 ratio
+      expect(result.globalPoints).toBe(100); // Simplified: 1:1 for all tiers
+      expect(result.newMerchantBalance).toBe(100);
+      expect(result.newGlobalBalance).toBe(100);
+      expect(result.transactionId).toBeTruthy();
+
+      // Verify repositories were called
+      expect(mockTransactionRepo.save).toHaveBeenCalledTimes(1);
+      expect(mockCustomerRepo.save).toHaveBeenCalledTimes(1);
+      expect(mockMerchantRepo.save).toHaveBeenCalledTimes(1);
+      expect(mockIdempotencyService.storeResult).toHaveBeenCalledWith(
+        request.idempotencyKey,
+        result,
+        3600,
+      );
+    });
+
+    it("should award correct points for BASIC tier (1x global multiplier)", async () => {
+      // Create BASIC tier merchant
+      const basicMerchant = Merchant.create(
+        "Basic Store",
+        new Email("basic@example.com"),
+        new PhoneNumber("0501111111"),
+        "Owner",
+        MerchantTier.BASIC,
+      );
+      basicMerchant.verify();
+
+      testCustomer.enrollWithMerchant("basic_merchant");
+      testCustomer.grantConsent("basic_merchant");
+
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(basicMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      const result = await useCase.execute({
+        merchantId: "basic_merchant",
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 100,
+        idempotencyKey: "test_key_2",
+      });
+
+      expect(result.merchantPoints).toBe(100);
+      expect(result.globalPoints).toBe(100); // 1x for BASIC
+    });
+
+    it("should award correct points for ENTERPRISE tier (simplified 1:1)", async () => {
+      // Create ENTERPRISE tier merchant
+      const enterpriseMerchant = Merchant.create(
+        "Enterprise Store",
+        new Email("enterprise@example.com"),
+        new PhoneNumber("0502222222"),
+        "Owner",
+        MerchantTier.ENTERPRISE,
+      );
+      enterpriseMerchant.verify();
+
+      testCustomer.enrollWithMerchant("enterprise_merchant");
+      testCustomer.grantConsent("enterprise_merchant");
+
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(
+        enterpriseMerchant,
+      );
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      const result = await useCase.execute({
+        merchantId: "enterprise_merchant",
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 100,
+        idempotencyKey: "test_key_3",
+      });
+
+      expect(result.merchantPoints).toBe(100);
+      expect(result.globalPoints).toBe(100); // Simplified: 1:1 for all tiers
+    });
+
+    it("should add points to existing balances", async () => {
+      // Give customer some existing points
+      testCustomer.addPointsFromPurchase(
+        "merchant_123",
+        Points.from(50), // existing global
+        Points.from(30), // existing merchant
+      );
+
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      const result = await useCase.execute({
+        merchantId: "merchant_123",
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 100,
+        idempotencyKey: "test_key_4",
+      });
+
+      expect(result.newGlobalBalance).toBe(150); // 50 + 100 (simplified 1:1)
+      expect(result.newMerchantBalance).toBe(130); // 30 + 100
+    });
+  });
+
+  describe("Idempotency", () => {
+    it("should return cached result for duplicate request", async () => {
+      const cachedResponse = {
+        transactionId: "txn_cached",
+        merchantPoints: 100,
+        globalPoints: 150,
+        newMerchantBalance: 100,
+        newGlobalBalance: 150,
+        message: "Cached message",
+      };
+
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(
+        cachedResponse,
+      );
+
+      const result = await useCase.execute({
+        merchantId: "merchant_123",
+        customerId: "customer_123",
+        amountSAR: 100,
+        idempotencyKey: "duplicate_key",
+      });
+
+      expect(result).toEqual(cachedResponse);
+      expect(mockMerchantRepo.findById).not.toHaveBeenCalled();
+      expect(mockCustomerRepo.findById).not.toHaveBeenCalled();
+      expect(mockTransactionRepo.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("Validation Errors", () => {
+    it("should throw NotFoundError if merchant not found", async () => {
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(null);
+
+      await expect(
+        useCase.execute({
+          merchantId: "nonexistent_merchant",
+          customerId: "customer_123",
+          amountSAR: 100,
+          idempotencyKey: "test_key",
+        }),
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it("should throw UnauthorizedError if merchant not verified", async () => {
+      const unverifiedMerchant = Merchant.create(
+        "Unverified Store",
+        new Email("unverified@example.com"),
+        new PhoneNumber("0503333333"),
+        "Owner",
+        MerchantTier.BASIC,
+      );
+      // Don't call verify()
+
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(
+        unverifiedMerchant,
+      );
+
+      await expect(
+        useCase.execute({
+          merchantId: "unverified_merchant",
+          customerId: "customer_123",
+          amountSAR: 100,
+          idempotencyKey: "test_key",
+        }),
+      ).rejects.toThrow(UnauthorizedError);
+    });
+
+    it("should throw NotFoundError if customer not found", async () => {
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(null);
+
+      await expect(
+        useCase.execute({
+          merchantId: "merchant_123",
+          customerId: "nonexistent_customer",
+          amountSAR: 100,
+          idempotencyKey: "test_key",
+        }),
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it("should throw ValidationError if customer not enrolled", async () => {
+      const unenrolledCustomer = Customer.create(
+        new PhoneNumber("0504444444"),
+        "Unenrolled Customer",
+      );
+
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(
+        unenrolledCustomer,
+      );
+
+      await expect(
+        useCase.execute({
+          merchantId: "merchant_123",
+          customerId: unenrolledCustomer.getCustomerId(),
+          amountSAR: 100,
+          idempotencyKey: "test_key",
+        }),
+      ).rejects.toThrow(ValidationError);
+    });
+
+    it("should throw UnauthorizedError if customer has not granted consent", async () => {
+      const noConsentCustomer = Customer.create(
+        new PhoneNumber("0505555555"),
+        "No Consent Customer",
+      );
+      noConsentCustomer.enrollWithMerchant("merchant_123");
+      // Don't grant consent
+
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(
+        noConsentCustomer,
+      );
+
+      await expect(
+        useCase.execute({
+          merchantId: "merchant_123",
+          customerId: noConsentCustomer.getCustomerId(),
+          amountSAR: 100,
+          idempotencyKey: "test_key",
+        }),
+      ).rejects.toThrow(UnauthorizedError);
+    });
+
+    it("should throw ValidationError if purchase below minimum", async () => {
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      await expect(
+        useCase.execute({
+          merchantId: "merchant_123",
+          customerId: testCustomer.getCustomerId(),
+          amountSAR: 0.5, // Below 1 SAR minimum
+          idempotencyKey: "test_key",
+        }),
+      ).rejects.toThrow(ValidationError);
+    });
+  });
+
+  describe("Metadata Handling", () => {
+    it("should store metadata in transaction", async () => {
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      const metadata = {
+        receiptNumber: "REC-12345",
+        cashierName: "Ahmed",
+        terminalId: "POS-01",
+        notes: "Customer paid with cash",
+      };
+
+      await useCase.execute({
+        merchantId: "merchant_123",
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 100,
+        idempotencyKey: "test_key",
+        metadata,
+      });
+
+      // Verify transaction was saved with metadata
+      expect(mockTransactionRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          getMetadata: expect.any(Function),
+        }),
+      );
+    });
+  });
+});

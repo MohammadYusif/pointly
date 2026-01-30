@@ -34,6 +34,13 @@ export interface CustomerProps {
   globalPointsBalance: Points;
   globalLifetimePoints: Points;
   enrollments: Map<string, CustomerEnrollment>;
+
+  // Decay system tracking
+  lastNetworkActivity: Date; // Tracks ANY purchase at ANY merchant
+  globalPointsDecayPhase: number; // 0=active, 1=light decay, 2=heavy decay
+  decayStartDate?: Date; // When decay phase began
+  lastDecayAppliedAt?: Date; // Last time decay was calculated
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,6 +57,11 @@ export class Customer {
       globalPointsBalance: Points.zero(),
       globalLifetimePoints: Points.zero(),
       enrollments: new Map(),
+
+      // Initialize decay tracking
+      lastNetworkActivity: new Date(),
+      globalPointsDecayPhase: 0, // Start active (no decay)
+
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -104,6 +116,22 @@ export class Customer {
 
   getUpdatedAt(): Date {
     return this.props.updatedAt;
+  }
+
+  getLastNetworkActivity(): Date {
+    return this.props.lastNetworkActivity;
+  }
+
+  getGlobalPointsDecayPhase(): number {
+    return this.props.globalPointsDecayPhase;
+  }
+
+  getDecayStartDate(): Date | undefined {
+    return this.props.decayStartDate;
+  }
+
+  getLastDecayAppliedAt(): Date | undefined {
+    return this.props.lastDecayAppliedAt;
   }
 
   // Business methods
@@ -185,6 +213,10 @@ export class Customer {
 
     enrollment.transactionCount++;
     enrollment.lastTransactionAt = new Date();
+
+    // Reset decay timer when customer makes any purchase
+    this.resetDecayTimer();
+
     this.props.updatedAt = new Date();
   }
 
@@ -257,6 +289,118 @@ export class Customer {
     this.props.updatedAt = new Date();
   }
 
+  // Decay management methods
+
+  /**
+   * Check how many months of inactivity
+   */
+  getMonthsOfInactivity(): number {
+    const now = new Date();
+    const diffTime = Math.abs(
+      now.getTime() - this.props.lastNetworkActivity.getTime(),
+    );
+    const diffMonths = diffTime / (1000 * 60 * 60 * 24 * 30); // Approximate months
+    return Math.floor(diffMonths);
+  }
+
+  /**
+   * Determine decay phase based on inactivity
+   * Uses 3-month grace period:
+   * - Months 0-2: Active (no decay)
+   * - Months 3-5: Light decay (5% per month)
+   * - Months 6+: Heavy decay (15% per month)
+   */
+  calculateDecayPhase(): number {
+    const monthsInactive = this.getMonthsOfInactivity();
+
+    if (monthsInactive < 3) {
+      return 0; // Active - no decay (3-month grace period)
+    } else if (monthsInactive < 6) {
+      return 1; // Light decay (months 3-5) - 5% per month
+    } else {
+      return 2; // Heavy decay (month 6+) - 15% per month
+    }
+  }
+
+  /**
+   * Calculate how many points should decay based on inactivity
+   */
+  calculateDecayAmount(): Points {
+    const phase = this.calculateDecayPhase();
+
+    if (phase === 0) {
+      return Points.zero(); // No decay during grace period
+    }
+
+    const monthsInactive = this.getMonthsOfInactivity();
+    let balance = this.props.globalPointsBalance.toNumber();
+
+    // Calculate months in each phase
+    const lightDecayMonths = Math.min(Math.max(monthsInactive - 3, 0), 3); // Months 3-5 (up to 3 months)
+    const heavyDecayMonths = Math.max(monthsInactive - 6, 0); // Month 6+
+
+    // Apply light decay (5% per month) for months 3-5
+    for (let i = 0; i < lightDecayMonths; i++) {
+      balance = Math.floor(balance * 0.95);
+    }
+
+    // Apply heavy decay (15% per month) for month 6+
+    for (let i = 0; i < heavyDecayMonths; i++) {
+      balance = Math.floor(balance * 0.85);
+    }
+
+    const decayAmount = this.props.globalPointsBalance.toNumber() - balance;
+    return Points.from(decayAmount);
+  }
+
+  /**
+   * Apply decay to global points
+   */
+  applyGlobalPointsDecay(): Points {
+    const decayAmount = this.calculateDecayAmount();
+
+    if (decayAmount.isZero()) {
+      return Points.zero();
+    }
+
+    this.props.globalPointsBalance =
+      this.props.globalPointsBalance.subtract(decayAmount);
+
+    this.props.lastDecayAppliedAt = new Date();
+    this.props.globalPointsDecayPhase = this.calculateDecayPhase();
+    this.props.updatedAt = new Date();
+
+    return decayAmount;
+  }
+
+  /**
+   * Reset decay timer when customer makes a purchase
+   */
+  resetDecayTimer(): void {
+    this.props.lastNetworkActivity = new Date();
+    this.props.globalPointsDecayPhase = 0;
+    delete this.props.decayStartDate;
+    delete this.props.lastDecayAppliedAt;
+    this.props.updatedAt = new Date();
+  }
+
+  /**
+   * Update decay phase (for monthly job)
+   */
+  updateDecayPhase(): void {
+    const newPhase = this.calculateDecayPhase();
+
+    if (newPhase !== this.props.globalPointsDecayPhase) {
+      this.props.globalPointsDecayPhase = newPhase;
+
+      if (newPhase > 0 && !this.props.decayStartDate) {
+        this.props.decayStartDate = new Date();
+      }
+
+      this.props.updatedAt = new Date();
+    }
+  }
+
   // Serialization
   toJSON() {
     return {
@@ -266,6 +410,14 @@ export class Customer {
       status: this.props.status,
       globalPointsBalance: this.props.globalPointsBalance.toNumber(),
       globalLifetimePoints: this.props.globalLifetimePoints.toNumber(),
+
+      // Decay tracking
+      lastNetworkActivity: this.props.lastNetworkActivity.toISOString(),
+      globalPointsDecayPhase: this.props.globalPointsDecayPhase,
+      decayStartDate: this.props.decayStartDate?.toISOString(),
+      lastDecayAppliedAt: this.props.lastDecayAppliedAt?.toISOString(),
+      monthsOfInactivity: this.getMonthsOfInactivity(),
+
       enrollments: Array.from(this.props.enrollments.entries()).map(
         ([, enrollment]) => ({
           ...enrollment,

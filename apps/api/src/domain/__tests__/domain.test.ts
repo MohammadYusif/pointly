@@ -163,7 +163,7 @@ describe("Domain Entities", () => {
       expect(points.globalPoints).toBe(100); // 1x for BASIC
     });
 
-    it("should calculate higher global points for PROFESSIONAL tier", () => {
+    it("should calculate same global points for PROFESSIONAL tier (simplified)", () => {
       const email = new Email("test@example.com");
       const phone = new PhoneNumber("0501234567");
       const merchant = Merchant.create(
@@ -178,10 +178,10 @@ describe("Domain Entities", () => {
 
       const points = merchant.calculatePointsForPurchase(100);
       expect(points.merchantPoints).toBe(100);
-      expect(points.globalPoints).toBe(150); // 1.5x for PROFESSIONAL
+      expect(points.globalPoints).toBe(100); // Simplified: 1:1 for all tiers
     });
 
-    it("should calculate highest global points for ENTERPRISE tier", () => {
+    it("should calculate same global points for ENTERPRISE tier (simplified)", () => {
       const email = new Email("test@example.com");
       const phone = new PhoneNumber("0501234567");
       const merchant = Merchant.create(
@@ -196,7 +196,7 @@ describe("Domain Entities", () => {
 
       const points = merchant.calculatePointsForPurchase(100);
       expect(points.merchantPoints).toBe(100);
-      expect(points.globalPoints).toBe(200); // 2x for ENTERPRISE
+      expect(points.globalPoints).toBe(100); // Simplified: 1:1 for all tiers
     });
 
     it("should upgrade tier and update maxLocations", () => {
@@ -321,6 +321,87 @@ describe("Domain Entities", () => {
 
       transaction.complete();
       expect(transaction.getCompletedAt()).toBeTruthy();
+    });
+
+    it("should create an expiration transaction for decayed points", () => {
+      const transaction = Transaction.createExpiration(
+        "SYSTEM",
+        "customer_123",
+        Points.from(50),
+        Points.from(500),
+        "expiration_key_123",
+        { reason: "3_months_inactivity" },
+      );
+
+      expect(transaction.getType()).toBe(TransactionType.EXPIRATION);
+      expect(transaction.getStatus()).toBe("COMPLETED");
+      expect(transaction.getPoints().toNumber()).toBe(50);
+      expect(transaction.getBalanceBefore().toNumber()).toBe(500);
+      expect(transaction.getBalanceAfter().toNumber()).toBe(450);
+    });
+  });
+
+  describe("Customer Decay System", () => {
+    it("should track last network activity", () => {
+      const phone = new PhoneNumber("0501234567");
+      const customer = Customer.create(phone);
+
+      expect(customer.getLastNetworkActivity()).toBeInstanceOf(Date);
+    });
+
+    it("should be in active phase with recent activity", () => {
+      const phone = new PhoneNumber("0501234567");
+      const customer = Customer.create(phone);
+
+      expect(customer.getGlobalPointsDecayPhase()).toBe(0);
+      expect(customer.getMonthsOfInactivity()).toBe(0);
+    });
+
+    it("should calculate zero decay for active customers", () => {
+      const phone = new PhoneNumber("0501234567");
+      const customer = Customer.create(phone);
+      const merchantId = "merchant_123";
+
+      customer.enrollWithMerchant(merchantId);
+      customer.grantConsent(merchantId);
+      customer.addPointsFromPurchase(
+        merchantId,
+        Points.from(1000),
+        Points.from(1000),
+      );
+
+      const decayAmount = customer.calculateDecayAmount();
+      expect(decayAmount.toNumber()).toBe(0);
+    });
+
+    it("should reset decay timer on purchase", () => {
+      const phone = new PhoneNumber("0501234567");
+      const customer = Customer.create(phone);
+      const merchantId = "merchant_123";
+
+      customer.enrollWithMerchant(merchantId);
+      customer.grantConsent(merchantId);
+
+      // Make a purchase
+      customer.addPointsFromPurchase(
+        merchantId,
+        Points.from(10),
+        Points.from(10),
+      );
+
+      expect(customer.getGlobalPointsDecayPhase()).toBe(0);
+      expect(customer.getDecayStartDate()).toBeUndefined();
+    });
+
+    it("should include decay info in toJSON()", () => {
+      const phone = new PhoneNumber("0501234567");
+      const customer = Customer.create(phone);
+
+      const json = customer.toJSON();
+
+      expect(json.lastNetworkActivity).toBeDefined();
+      expect(json.globalPointsDecayPhase).toBe(0);
+      expect(json.monthsOfInactivity).toBe(0);
     });
   });
 });
