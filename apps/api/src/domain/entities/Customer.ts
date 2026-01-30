@@ -43,17 +43,22 @@ export class Customer {
 
   // Factory methods
   static create(phone: PhoneNumber, name?: string): Customer {
-    return new Customer({
+    const props: CustomerProps = {
       customerId: ulid(),
       phone,
-      name,
       status: CustomerStatus.ACTIVE,
       globalPointsBalance: Points.zero(),
       globalLifetimePoints: Points.zero(),
       enrollments: new Map(),
       createdAt: new Date(),
       updatedAt: new Date(),
-    });
+    };
+
+    if (name) {
+      props.name = name;
+    }
+
+    return new Customer(props);
   }
 
   static reconstitute(props: CustomerProps): Customer {
