@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm --version:*)",
+      "Bash(node:*)",
+      "Bash(corepack --version:*)",
+      "Bash(where pnpm:*)",
+      "Bash(cmd /c \"where pnpm\")",
+      "Bash(corepack enable:*)"
+    ]
+  }
+}
