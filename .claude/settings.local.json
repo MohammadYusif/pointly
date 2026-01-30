@@ -6,7 +6,14 @@
       "Bash(corepack --version:*)",
       "Bash(where pnpm:*)",
       "Bash(cmd /c \"where pnpm\")",
-      "Bash(corepack enable:*)"
+      "Bash(corepack enable:*)",
+      "Bash(pnpm.cmd install:*)",
+      "Bash(pnpm.cmd type-check:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: resolve dependency version issues and add CDK infrastructure stacks\n\nPackage version fixes:\n- apps/api: Change AWS SDK versions from non-existent 3.705.0 to ^3.700.0\n  \\(@aws-sdk/client-dynamodb, lib-dynamodb, client-secrets-manager,\n  client-sqs, client-sns\\)\n- packages/infrastructure: Change aws-cdk-lib and aws-cdk from\n  non-existent 2.174.3 to ^2.170.0\n\nNew dependencies added:\n- packages/infrastructure: Add source-map-support and\n  @types/source-map-support for stack trace support\n\nCDK Infrastructure stacks added:\n- DatabaseStack: DynamoDB tables \\(UserLedger, TransactionAudit,\n  Idempotency, QRNonce, PendingConsents, SMSQuota, WalletPasses\\)\n- AuthStack: Cognito User Pools for merchants and customers\n- ApiStack: API Gateway, Lambda functions, SQS queues, IAM roles\n- MonitoringStack: CloudWatch alarms and SNS topics\n\nPlaceholder source files created:\n- apps/api/src/index.ts\n- packages/shared/src/index.ts\n\nAll packages now pass TypeScript type-check successfully.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm test:*)"
     ]
   }
 }

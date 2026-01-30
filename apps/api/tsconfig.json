@@ -10,7 +10,10 @@
       "@infrastructure/*": ["infrastructure/*"],
       "@presentation/*": ["presentation/*"],
       "@shared/*": ["shared/*"]
-    }
+    },
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noPropertyAccessFromIndexSignature": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
