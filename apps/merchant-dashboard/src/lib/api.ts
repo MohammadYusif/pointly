@@ -1,0 +1,84 @@
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+
+async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const url = `${API_BASE_URL}${endpoint}`;
+
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+  const result: ApiResponse<T> = await response.json();
+
+  if (!response.ok || !result.success) {
+    throw new Error(result.error || 'An error occurred');
+  }
+
+  return result.data as T;
+}
+
+// Merchant API
+export const merchantApi = {
+  getById: (id: string) => fetchApi<unknown>(`/v1/merchants/${id}`),
+
+  getCustomers: (merchantId: string, params?: { limit?: number; nextToken?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.limit) query.set('limit', String(params.limit));
+    if (params?.nextToken) query.set('nextToken', params.nextToken);
+    return fetchApi<unknown>(`/v1/merchants/${merchantId}/customers?${query}`);
+  },
+
+  getTransactions: (merchantId: string, params?: { limit?: number; nextToken?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.limit) query.set('limit', String(params.limit));
+    if (params?.nextToken) query.set('nextToken', params.nextToken);
+    return fetchApi<unknown>(`/v1/merchants/${merchantId}/transactions?${query}`);
+  },
+
+  getStats: (merchantId: string) => fetchApi<unknown>(`/v1/merchants/${merchantId}/stats`),
+
+  getPendingConsents: (merchantId: string) =>
+    fetchApi<unknown>(`/v1/merchants/${merchantId}/pending-consents`),
+};
+
+// Customer API
+export const customerApi = {
+  getById: (id: string) => fetchApi<unknown>(`/v1/customers/${id}`),
+
+  getByPhone: (phone: string) => fetchApi<unknown>(`/v1/customers/phone/${phone}`),
+
+  getTransactions: (customerId: string, params?: { limit?: number; nextToken?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.limit) query.set('limit', String(params.limit));
+    if (params?.nextToken) query.set('nextToken', params.nextToken);
+    return fetchApi<unknown>(`/v1/customers/${customerId}/transactions?${query}`);
+  },
+
+  getStats: (customerId: string) => fetchApi<unknown>(`/v1/customers/${customerId}/stats`),
+};
+
+// Purchase API
+export const purchaseApi = {
+  record: (data: {
+    merchantId: string;
+    customerId: string;
+    amount: number;
+    idempotencyKey: string;
+    metadata?: Record<string, unknown>;
+  }) =>
+    fetchApi<unknown>('/v1/purchases', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getById: (id: string) => fetchApi<unknown>(`/v1/purchases/${id}`),
+};

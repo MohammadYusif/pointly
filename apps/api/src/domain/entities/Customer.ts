@@ -429,7 +429,9 @@ export class Customer {
   resetDecayTimer(): void {
     this.props.lastNetworkActivity = new Date();
     this.props.globalPointsDecayPhase = 0;
+    // biome-ignore lint/performance/noDelete: Required for exactOptionalPropertyTypes
     delete this.props.decayStartDate;
+    // biome-ignore lint/performance/noDelete: Required for exactOptionalPropertyTypes
     delete this.props.lastDecayAppliedAt;
     this.props.updatedAt = new Date();
   }

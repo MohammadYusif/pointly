@@ -13,6 +13,6 @@ export interface QueryOptions {
 
 export interface QueryResult<T> {
   items: T[];
-  nextToken?: string;
+  nextToken?: string | undefined;
   count: number;
 }

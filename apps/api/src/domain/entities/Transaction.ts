@@ -165,6 +165,7 @@ export class Transaction {
       balanceAfter: balanceBefore.subtract(points),
       metadata: {
         ...metadata,
+        // biome-ignore lint/complexity/useLiteralKeys: Index signature requires bracket notation
         expirationReason: metadata['reason'] || 'inactivity_decay',
         expirationDate: new Date().toISOString(),
       },
@@ -251,6 +252,7 @@ export class Transaction {
     }
 
     this.props.status = TransactionStatus.FAILED;
+    // biome-ignore lint/complexity/useLiteralKeys: Index signature requires bracket notation
     this.props.metadata['failureReason'] = reason;
     this.props.completedAt = new Date();
   }

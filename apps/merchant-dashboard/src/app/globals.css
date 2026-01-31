@@ -1,0 +1,251 @@
+@import "tailwindcss";
+
+/* Tell Tailwind to scan external packages for classes */
+@source "../../node_modules/@pointly/ui/src/**/*.{ts,tsx}";
+@source "../../node_modules/@pointly/i18n/src/**/*.{ts,tsx}";
+
+/* ============================================================================
+   Tailwind CSS v4 Theme Configuration
+   ============================================================================ */
+
+@theme {
+  /* Brand Colors */
+  --color-primary: #08b0a2;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #263452;
+  --color-secondary-foreground: #ffffff;
+  --color-accent: #05a1a5;
+  --color-accent-foreground: #ffffff;
+
+  /* Neutral Colors */
+  --color-background: #ffffff;
+  --color-foreground: #21242d;
+  --color-card: #ffffff;
+  --color-card-foreground: #21242d;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #21242d;
+  --color-muted: #f4f4f5;
+  --color-muted-foreground: #71717a;
+  --color-border: #e4e4e7;
+  --color-input: #e4e4e7;
+  --color-ring: #08b0a2;
+
+  /* Destructive */
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+
+  /* Typography */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", "Tajawal", ui-sans-serif, system-ui, sans-serif;
+
+  /* Border Radius */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* Animation */
+  --animate-spin: spin 1s linear infinite;
+  --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-bounce: bounce 1s infinite;
+}
+
+/* ============================================================================
+   Dark Mode Theme
+   ============================================================================ */
+
+.dark {
+  --color-background: #0a0a0a;
+  --color-foreground: #fafafa;
+  --color-card: #18181b;
+  --color-card-foreground: #fafafa;
+  --color-popover: #18181b;
+  --color-popover-foreground: #fafafa;
+  --color-muted: #27272a;
+  --color-muted-foreground: #a1a1aa;
+  --color-border: #27272a;
+  --color-input: #27272a;
+  --color-ring: #08b0a2;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #fafafa;
+}
+
+/* ============================================================================
+   Base Styles
+   ============================================================================ */
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* RTL font switching */
+  html[dir="rtl"] {
+    font-family: var(--font-arabic);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Focus visible styles */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
+
+/* ============================================================================
+   RTL Utilities
+   ============================================================================ */
+
+@layer utilities {
+  /* Flip icons in RTL (for directional icons like arrows) */
+  .rtl-flip {
+    [dir="rtl"] & {
+      transform: scaleX(-1);
+    }
+  }
+
+  /* Rotate 180 degrees in RTL */
+  .rtl-rotate-180 {
+    [dir="rtl"] & {
+      transform: rotate(180deg);
+    }
+  }
+
+  /* Hide in RTL */
+  .rtl-hidden {
+    [dir="rtl"] & {
+      display: none;
+    }
+  }
+
+  /* Hide in LTR */
+  .ltr-hidden {
+    [dir="ltr"] & {
+      display: none;
+    }
+  }
+
+  /* Ring offset for card background */
+  .ring-offset-background {
+    --tw-ring-offset-color: var(--color-background);
+  }
+
+  /* Scrollbar styling */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-muted) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: var(--color-muted);
+    border-radius: var(--radius-full);
+  }
+}
+
+/* ============================================================================
+   Animation Keyframes
+   ============================================================================ */
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+/* Fade in animation for page transitions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Slide animations for RTL-aware panels */
+@keyframes slideInFromStart {
+  from {
+    transform: translateX(var(--slide-start, -100%));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromEnd {
+  from {
+    transform: translateX(var(--slide-end, 100%));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+[dir="rtl"] {
+  --slide-start: 100%;
+  --slide-end: -100%;
+}
+
+[dir="ltr"] {
+  --slide-start: -100%;
+  --slide-end: 100%;
+}
