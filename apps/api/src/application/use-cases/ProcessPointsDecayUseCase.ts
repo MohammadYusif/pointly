@@ -1,7 +1,7 @@
-import { Customer, Transaction, Points } from "../../domain";
-import { ICustomerRepository } from "../repositories/ICustomerRepository";
-import { ITransactionRepository } from "../repositories/ITransactionRepository";
-import { IDecayCalculatorService } from "../services/IDecayCalculatorService";
+import { type Customer, Transaction } from '../../domain';
+import type { ICustomerRepository } from '../repositories/ICustomerRepository';
+import type { ITransactionRepository } from '../repositories/ITransactionRepository';
+import type { IDecayCalculatorService } from '../services/IDecayCalculatorService';
 
 export interface DecayProcessingResult {
   totalCustomersProcessed: number;
@@ -50,13 +50,10 @@ export class ProcessPointsDecayUseCase {
 
           // Check if customer needs warning
           if (this.decayCalculator.shouldWarnCustomer(customer)) {
-            const warning =
-              this.decayCalculator.generateWarningMessage(customer);
+            const warning = this.decayCalculator.generateWarningMessage(customer);
             if (warning) {
               // Send SMS warning (would integrate with SNS/SQS here)
-              console.log(
-                `Warning for customer ${warning.customerId}: ${warning.message}`,
-              );
+              console.log(`Warning for customer ${warning.customerId}: ${warning.message}`);
               result.warningsSent++;
             }
           }
@@ -71,13 +68,13 @@ export class ProcessPointsDecayUseCase {
 
             // Create expiration transaction
             const transaction = Transaction.createExpiration(
-              "SYSTEM",
+              'SYSTEM',
               customer.getCustomerId(),
               decayAmount,
               balanceBeforeDecay,
               `decay_${customer.getCustomerId()}_${Date.now()}`,
               {
-                reason: "monthly_inactivity_decay",
+                reason: 'monthly_inactivity_decay',
                 decayPhase: customer.getGlobalPointsDecayPhase().toString(),
                 monthsInactive: customer.getMonthsOfInactivity().toString(),
               },

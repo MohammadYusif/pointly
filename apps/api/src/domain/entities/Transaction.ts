@@ -1,21 +1,21 @@
-import { ulid } from "ulid";
-import { Points } from "../value-objects/Points";
-import { Money } from "../value-objects/Money";
-import { ValidationError } from "../errors/DomainError";
+import { ulid } from 'ulid';
+import { ValidationError } from '../errors/DomainError';
+import type { Money } from '../value-objects/Money';
+import type { Points } from '../value-objects/Points';
 
 export enum TransactionType {
-  EARN = "EARN",
-  REDEEM = "REDEEM",
-  ADJUSTMENT = "ADJUSTMENT",
-  EXPIRATION = "EXPIRATION",
-  REVERSAL = "REVERSAL",
+  EARN = 'EARN',
+  REDEEM = 'REDEEM',
+  ADJUSTMENT = 'ADJUSTMENT',
+  EXPIRATION = 'EXPIRATION',
+  REVERSAL = 'REVERSAL',
 }
 
 export enum TransactionStatus {
-  PENDING = "PENDING",
-  COMPLETED = "COMPLETED",
-  FAILED = "FAILED",
-  REVERSED = "REVERSED",
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  REVERSED = 'REVERSED',
 }
 
 export interface TransactionMetadata {
@@ -57,7 +57,7 @@ export class Transaction {
     metadata: TransactionMetadata = {},
   ): Transaction {
     if (points.isZero()) {
-      throw new ValidationError("Points must be greater than zero");
+      throw new ValidationError('Points must be greater than zero');
     }
 
     return new Transaction({
@@ -86,11 +86,11 @@ export class Transaction {
     metadata: TransactionMetadata = {},
   ): Transaction {
     if (points.isZero()) {
-      throw new ValidationError("Points must be greater than zero");
+      throw new ValidationError('Points must be greater than zero');
     }
 
     if (balanceBefore.isLessThan(points)) {
-      throw new ValidationError("Insufficient points balance");
+      throw new ValidationError('Insufficient points balance');
     }
 
     return new Transaction({
@@ -119,12 +119,10 @@ export class Transaction {
     metadata: TransactionMetadata = {},
   ): Transaction {
     if (points.isZero()) {
-      throw new ValidationError("Points must be greater than zero");
+      throw new ValidationError('Points must be greater than zero');
     }
 
-    const balanceAfter = isPositive
-      ? balanceBefore.add(points)
-      : balanceBefore.subtract(points);
+    const balanceAfter = isPositive ? balanceBefore.add(points) : balanceBefore.subtract(points);
 
     return new Transaction({
       transactionId: ulid(),
@@ -153,7 +151,7 @@ export class Transaction {
     metadata: TransactionMetadata = {},
   ): Transaction {
     if (points.isZero()) {
-      throw new ValidationError("Points must be greater than zero");
+      throw new ValidationError('Points must be greater than zero');
     }
 
     return new Transaction({
@@ -167,7 +165,7 @@ export class Transaction {
       balanceAfter: balanceBefore.subtract(points),
       metadata: {
         ...metadata,
-        expirationReason: metadata["reason"] || "inactivity_decay",
+        expirationReason: metadata['reason'] || 'inactivity_decay',
         expirationDate: new Date().toISOString(),
       },
       idempotencyKey,
@@ -240,7 +238,7 @@ export class Transaction {
   // Business methods
   complete(): void {
     if (this.props.status !== TransactionStatus.PENDING) {
-      throw new ValidationError("Only pending transactions can be completed");
+      throw new ValidationError('Only pending transactions can be completed');
     }
 
     this.props.status = TransactionStatus.COMPLETED;
@@ -249,17 +247,17 @@ export class Transaction {
 
   fail(reason: string): void {
     if (this.props.status !== TransactionStatus.PENDING) {
-      throw new ValidationError("Only pending transactions can be failed");
+      throw new ValidationError('Only pending transactions can be failed');
     }
 
     this.props.status = TransactionStatus.FAILED;
-    this.props.metadata["failureReason"] = reason;
+    this.props.metadata['failureReason'] = reason;
     this.props.completedAt = new Date();
   }
 
   reverse(): void {
     if (this.props.status !== TransactionStatus.COMPLETED) {
-      throw new ValidationError("Only completed transactions can be reversed");
+      throw new ValidationError('Only completed transactions can be reversed');
     }
 
     this.props.status = TransactionStatus.REVERSED;
@@ -267,7 +265,7 @@ export class Transaction {
 
   createReversal(idempotencyKey: string): Transaction {
     if (this.props.status !== TransactionStatus.COMPLETED) {
-      throw new ValidationError("Can only reverse completed transactions");
+      throw new ValidationError('Can only reverse completed transactions');
     }
 
     const reversalProps: TransactionProps = {
@@ -282,7 +280,7 @@ export class Transaction {
       metadata: {
         ...this.props.metadata,
         originalTransactionId: this.props.transactionId,
-        reversalReason: "Transaction reversed",
+        reversalReason: 'Transaction reversed',
       },
       idempotencyKey,
       reversedTransactionId: this.props.transactionId,

@@ -1,32 +1,36 @@
 // Use Cases
 export {
   RecordPurchaseUseCase,
-  RecordPurchaseRequest,
-  RecordPurchaseResponse,
-} from "./use-cases/RecordPurchaseUseCase";
+  type RecordPurchaseRequest,
+  type RecordPurchaseResponse,
+} from './use-cases/RecordPurchaseUseCase';
 export {
   ProcessPointsDecayUseCase,
-  DecayProcessingResult,
-} from "./use-cases/ProcessPointsDecayUseCase";
+  type DecayProcessingResult,
+} from './use-cases/ProcessPointsDecayUseCase';
+export {
+  ProcessMonthlyTierResetUseCase,
+  type TierResetResult,
+} from './use-cases/ProcessMonthlyTierResetUseCase';
 
 // Repository Interfaces
-export { ICustomerRepository } from "./repositories/ICustomerRepository";
-export { IMerchantRepository } from "./repositories/IMerchantRepository";
-export {
+export type { ICustomerRepository } from './repositories/ICustomerRepository';
+export type { IMerchantRepository } from './repositories/IMerchantRepository';
+export type {
   ITransactionRepository,
   TransactionStats,
-} from "./repositories/ITransactionRepository";
+} from './repositories/ITransactionRepository';
 
 // Service Interfaces
-export { IIdempotencyService } from "./services/IIdempotencyService";
-export {
+export type { IIdempotencyService } from './services/IIdempotencyService';
+export type {
   IDecayCalculatorService,
   DecayWarning,
-} from "./services/IDecayCalculatorService";
+} from './services/IDecayCalculatorService';
 
 // Shared Interfaces
-export {
+export type {
   BaseRepository,
   QueryOptions,
   QueryResult,
-} from "./shared/interfaces/BaseRepository";
+} from './shared/interfaces/BaseRepository';

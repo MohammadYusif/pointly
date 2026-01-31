@@ -1,4 +1,4 @@
-import { Customer } from "../../domain";
+import type { Customer } from '../../domain';
 
 export interface DecayWarning {
   customerId: string;

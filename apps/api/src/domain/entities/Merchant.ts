@@ -1,18 +1,18 @@
-import { ulid } from "ulid";
-import { Email } from "../value-objects/Email";
-import { PhoneNumber } from "../value-objects/PhoneNumber";
-import { ValidationError } from "../errors/DomainError";
+import { ulid } from 'ulid';
+import { ValidationError } from '../errors/DomainError';
+import type { Email } from '../value-objects/Email';
+import type { PhoneNumber } from '../value-objects/PhoneNumber';
 
 export enum MerchantStatus {
-  ACTIVE = "ACTIVE",
-  SUSPENDED = "SUSPENDED",
-  PENDING_VERIFICATION = "PENDING_VERIFICATION",
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  PENDING_VERIFICATION = 'PENDING_VERIFICATION',
 }
 
 export enum MerchantTier {
-  BASIC = "BASIC",
-  PROFESSIONAL = "PROFESSIONAL",
-  ENTERPRISE = "ENTERPRISE",
+  BASIC = 'BASIC',
+  PROFESSIONAL = 'PROFESSIONAL',
+  ENTERPRISE = 'ENTERPRISE',
 }
 
 export interface LocationInfo {
@@ -85,9 +85,9 @@ export class Merchant {
     // Create default primary location
     const primaryLocation: LocationInfo = {
       locationId: ulid(),
-      name: "Main Location",
-      address: "",
-      city: "",
+      name: 'Main Location',
+      address: '',
+      city: '',
       isActive: true,
       createdAt: new Date(),
     };
@@ -116,9 +116,7 @@ export class Merchant {
     return new Merchant(props);
   }
 
-  private static getDefaultLoyaltyConfig(
-    tier: MerchantTier,
-  ): LoyaltyConfiguration {
+  private static getDefaultLoyaltyConfig(tier: MerchantTier): LoyaltyConfiguration {
     const configs: Record<MerchantTier, LoyaltyConfiguration> = {
       [MerchantTier.BASIC]: {
         pointsPerSAR: 1,
@@ -248,17 +246,14 @@ export class Merchant {
    * Check if merchant is verified and active
    */
   isVerified(): boolean {
-    return (
-      this.props.status === MerchantStatus.ACTIVE &&
-      this.props.verifiedAt !== undefined
-    );
+    return this.props.status === MerchantStatus.ACTIVE && this.props.verifiedAt !== undefined;
   }
 
   // Location management methods
   addLocation(name: string, address: string, city: string): LocationInfo {
     if (!this.props.loyaltyConfig.enableMultiLocation) {
       throw new ValidationError(
-        "Multi-location is not enabled for this tier. Upgrade to Professional or Enterprise.",
+        'Multi-location is not enabled for this tier. Upgrade to Professional or Enterprise.',
       );
     }
 
@@ -288,11 +283,9 @@ export class Merchant {
     locationId: string,
     updates: { name?: string; address?: string; city?: string },
   ): void {
-    const location = this.props.locations.find(
-      (loc) => loc.locationId === locationId,
-    );
+    const location = this.props.locations.find((loc) => loc.locationId === locationId);
     if (!location) {
-      throw new ValidationError("Location not found");
+      throw new ValidationError('Location not found');
     }
 
     if (updates.name !== undefined) location.name = updates.name;
@@ -303,16 +296,14 @@ export class Merchant {
   }
 
   deactivateLocation(locationId: string): void {
-    const location = this.props.locations.find(
-      (loc) => loc.locationId === locationId,
-    );
+    const location = this.props.locations.find((loc) => loc.locationId === locationId);
     if (!location) {
-      throw new ValidationError("Location not found");
+      throw new ValidationError('Location not found');
     }
 
     const activeLocations = this.getActiveLocations();
     if (activeLocations.length <= 1) {
-      throw new ValidationError("Cannot deactivate the last active location");
+      throw new ValidationError('Cannot deactivate the last active location');
     }
 
     location.isActive = false;
@@ -320,22 +311,18 @@ export class Merchant {
   }
 
   reactivateLocation(locationId: string): void {
-    const location = this.props.locations.find(
-      (loc) => loc.locationId === locationId,
-    );
+    const location = this.props.locations.find((loc) => loc.locationId === locationId);
     if (!location) {
-      throw new ValidationError("Location not found");
+      throw new ValidationError('Location not found');
     }
 
     if (location.isActive) {
-      throw new ValidationError("Location is already active");
+      throw new ValidationError('Location is already active');
     }
 
     const activeLocations = this.getActiveLocations();
     if (activeLocations.length >= this.props.maxLocations) {
-      throw new ValidationError(
-        `Maximum active locations (${this.props.maxLocations}) reached`,
-      );
+      throw new ValidationError(`Maximum active locations (${this.props.maxLocations}) reached`);
     }
 
     location.isActive = true;
@@ -345,7 +332,7 @@ export class Merchant {
   // Business methods
   verify(): void {
     if (this.props.status === MerchantStatus.ACTIVE) {
-      throw new ValidationError("Merchant already verified");
+      throw new ValidationError('Merchant already verified');
     }
 
     this.props.status = MerchantStatus.ACTIVE;
@@ -360,7 +347,7 @@ export class Merchant {
 
   activate(): void {
     if (!this.props.verifiedAt) {
-      throw new ValidationError("Merchant must be verified before activation");
+      throw new ValidationError('Merchant must be verified before activation');
     }
 
     this.props.status = MerchantStatus.ACTIVE;
@@ -369,13 +356,8 @@ export class Merchant {
 
   updateLoyaltyConfig(config: Partial<LoyaltyConfiguration>): void {
     // Prevent enabling multi-location on BASIC tier
-    if (
-      config.enableMultiLocation === true &&
-      this.props.tier === MerchantTier.BASIC
-    ) {
-      throw new ValidationError(
-        "Multi-location is not available for BASIC tier",
-      );
+    if (config.enableMultiLocation === true && this.props.tier === MerchantTier.BASIC) {
+      throw new ValidationError('Multi-location is not available for BASIC tier');
     }
 
     this.props.loyaltyConfig = {
@@ -406,7 +388,7 @@ export class Merchant {
     };
 
     if (tierOrder[newTier] <= tierOrder[this.props.tier]) {
-      throw new ValidationError("Can only upgrade to a higher tier");
+      throw new ValidationError('Can only upgrade to a higher tier');
     }
 
     this.props.tier = newTier;
@@ -416,12 +398,9 @@ export class Merchant {
     this.props.updatedAt = new Date();
   }
 
-  useSMS(count: number = 1): void {
-    if (
-      this.props.smsQuota.currentUsage + count >
-      this.props.smsQuota.monthlyLimit
-    ) {
-      throw new ValidationError("SMS quota exceeded");
+  useSMS(count = 1): void {
+    if (this.props.smsQuota.currentUsage + count > this.props.smsQuota.monthlyLimit) {
+      throw new ValidationError('SMS quota exceeded');
     }
 
     this.props.smsQuota.currentUsage += count;
@@ -456,12 +435,8 @@ export class Merchant {
       return { merchantPoints: 0, globalPoints: 0 };
     }
 
-    const merchantPoints = Math.floor(
-      amountSAR * this.props.loyaltyConfig.pointsPerSAR,
-    );
-    const globalPoints = Math.floor(
-      amountSAR * this.props.loyaltyConfig.globalPointsPerSAR,
-    );
+    const merchantPoints = Math.floor(amountSAR * this.props.loyaltyConfig.pointsPerSAR);
+    const globalPoints = Math.floor(amountSAR * this.props.loyaltyConfig.globalPointsPerSAR);
 
     return { merchantPoints, globalPoints };
   }

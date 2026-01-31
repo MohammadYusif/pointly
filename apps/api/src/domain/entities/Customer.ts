@@ -1,18 +1,19 @@
-import { ulid } from "ulid";
-import { PhoneNumber } from "../value-objects/PhoneNumber";
-import { Points } from "../value-objects/Points";
-import { ValidationError } from "../errors/DomainError";
+import { ulid } from 'ulid';
+import { ValidationError } from '../errors/DomainError';
+import { CustomerTier, CustomerTierLevel } from '../value-objects/CustomerTier';
+import type { PhoneNumber } from '../value-objects/PhoneNumber';
+import { Points } from '../value-objects/Points';
 
 export enum CustomerStatus {
-  ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE",
-  SUSPENDED = "SUSPENDED",
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  SUSPENDED = 'SUSPENDED',
 }
 
 export enum ConsentStatus {
-  PENDING = "PENDING",
-  GRANTED = "GRANTED",
-  REVOKED = "REVOKED",
+  PENDING = 'PENDING',
+  GRANTED = 'GRANTED',
+  REVOKED = 'REVOKED',
 }
 
 export interface CustomerEnrollment {
@@ -31,16 +32,24 @@ export interface CustomerProps {
   phone: PhoneNumber;
   name?: string;
   status: CustomerStatus;
-  globalPointsBalance: Points;
-  globalLifetimePoints: Points;
+
+  // Points & Balance
+  globalPointsBalance: Points; // Spendable (can go down)
+  globalLifetimePoints: Points; // Total ever earned (never decreases)
+
+  // NEW - Tier System
+  currentTier: CustomerTier; // Current status level
+  monthlyProgress: Points; // Points earned THIS calendar month
+  tierLastUpdatedAt: Date; // When tier was last changed
+  monthlyProgressResetAt: Date; // Last time monthly progress reset
+
+  // Decay tracking (existing)
+  lastNetworkActivity: Date;
+  globalPointsDecayPhase: number;
+  decayStartDate?: Date;
+  lastDecayAppliedAt?: Date;
+
   enrollments: Map<string, CustomerEnrollment>;
-
-  // Decay system tracking
-  lastNetworkActivity: Date; // Tracks ANY purchase at ANY merchant
-  globalPointsDecayPhase: number; // 0=active, 1=light decay, 2=heavy decay
-  decayStartDate?: Date; // When decay phase began
-  lastDecayAppliedAt?: Date; // Last time decay was calculated
-
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,20 +59,27 @@ export class Customer {
 
   // Factory methods
   static create(phone: PhoneNumber, name?: string): Customer {
+    const now = new Date();
     const props: CustomerProps = {
       customerId: ulid(),
       phone,
       status: CustomerStatus.ACTIVE,
       globalPointsBalance: Points.zero(),
       globalLifetimePoints: Points.zero(),
+
+      // NEW - Initialize tier system
+      currentTier: CustomerTier.bronze(), // Everyone starts as Bronze
+      monthlyProgress: Points.zero(),
+      tierLastUpdatedAt: now,
+      monthlyProgressResetAt: now,
+
+      // Decay tracking
+      lastNetworkActivity: now,
+      globalPointsDecayPhase: 0,
+
       enrollments: new Map(),
-
-      // Initialize decay tracking
-      lastNetworkActivity: new Date(),
-      globalPointsDecayPhase: 0, // Start active (no decay)
-
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
     };
 
     if (name) {
@@ -134,14 +150,46 @@ export class Customer {
     return this.props.lastDecayAppliedAt;
   }
 
+  // Add after existing getters (around line 110)
+
+  getCurrentTier(): CustomerTier {
+    return this.props.currentTier;
+  }
+
+  getMonthlyProgress(): Points {
+    return this.props.monthlyProgress;
+  }
+
+  getTierLastUpdatedAt(): Date {
+    return this.props.tierLastUpdatedAt;
+  }
+
+  getMonthlyProgressResetAt(): Date {
+    return this.props.monthlyProgressResetAt;
+  }
+
+  /**
+   * Get effective redemption multiplier based on tier
+   */
+  getRedemptionMultiplier(): number {
+    return this.props.currentTier.getRedemptionMultiplier();
+  }
+
+  /**
+   * Calculate how many SAR this customer gets per point when redeeming
+   */
+  getEffectiveRedemptionRate(baseRate: number): number {
+    return baseRate * this.getRedemptionMultiplier();
+  }
+
   // Business methods
   enrollWithMerchant(merchantId: string): void {
     if (this.props.status !== CustomerStatus.ACTIVE) {
-      throw new ValidationError("Customer must be active to enroll");
+      throw new ValidationError('Customer must be active to enroll');
     }
 
     if (this.props.enrollments.has(merchantId)) {
-      throw new ValidationError("Customer already enrolled with this merchant");
+      throw new ValidationError('Customer already enrolled with this merchant');
     }
 
     const enrollment: CustomerEnrollment = {
@@ -160,11 +208,11 @@ export class Customer {
   grantConsent(merchantId: string): void {
     const enrollment = this.props.enrollments.get(merchantId);
     if (!enrollment) {
-      throw new ValidationError("Customer not enrolled with this merchant");
+      throw new ValidationError('Customer not enrolled with this merchant');
     }
 
     if (enrollment.consentStatus === ConsentStatus.GRANTED) {
-      throw new ValidationError("Consent already granted");
+      throw new ValidationError('Consent already granted');
     }
 
     enrollment.consentStatus = ConsentStatus.GRANTED;
@@ -175,7 +223,7 @@ export class Customer {
   revokeConsent(merchantId: string): void {
     const enrollment = this.props.enrollments.get(merchantId);
     if (!enrollment) {
-      throw new ValidationError("Customer not enrolled with this merchant");
+      throw new ValidationError('Customer not enrolled with this merchant');
     }
 
     enrollment.consentStatus = ConsentStatus.REVOKED;
@@ -185,36 +233,39 @@ export class Customer {
   /**
    * Add points from a purchase - awards both global (Pointly Network) and merchant-specific points
    */
-  addPointsFromPurchase(
-    merchantId: string,
-    globalPoints: Points,
-    merchantPoints: Points,
-  ): void {
+  addPointsFromPurchase(merchantId: string, globalPoints: Points, merchantPoints: Points): void {
     const enrollment = this.props.enrollments.get(merchantId);
     if (!enrollment) {
-      throw new ValidationError("Customer not enrolled with this merchant");
+      throw new ValidationError('Customer not enrolled with this merchant');
     }
 
     if (enrollment.consentStatus !== ConsentStatus.GRANTED) {
-      throw new ValidationError("Consent required to add points");
+      throw new ValidationError('Consent required to add points');
     }
 
-    // Add global points (Pointly Network)
-    this.props.globalPointsBalance =
-      this.props.globalPointsBalance.add(globalPoints);
-    this.props.globalLifetimePoints =
-      this.props.globalLifetimePoints.add(globalPoints);
+    // Add global points to balance
+    this.props.globalPointsBalance = this.props.globalPointsBalance.add(globalPoints);
+    this.props.globalLifetimePoints = this.props.globalLifetimePoints.add(globalPoints);
+
+    // NEW - Add to monthly progress
+    this.props.monthlyProgress = this.props.monthlyProgress.add(globalPoints);
+
+    // NEW - Check if tier should be upgraded immediately
+    const potentialTier = CustomerTier.fromMonthlyProgress(this.props.monthlyProgress.toNumber());
+
+    if (potentialTier.isHigherThan(this.props.currentTier)) {
+      this.props.currentTier = potentialTier;
+      this.props.tierLastUpdatedAt = new Date();
+    }
 
     // Add merchant-specific points
-    enrollment.merchantPointsBalance =
-      enrollment.merchantPointsBalance.add(merchantPoints);
-    enrollment.merchantLifetimePoints =
-      enrollment.merchantLifetimePoints.add(merchantPoints);
+    enrollment.merchantPointsBalance = enrollment.merchantPointsBalance.add(merchantPoints);
+    enrollment.merchantLifetimePoints = enrollment.merchantLifetimePoints.add(merchantPoints);
 
     enrollment.transactionCount++;
     enrollment.lastTransactionAt = new Date();
 
-    // Reset decay timer when customer makes any purchase
+    // Reset decay timer
     this.resetDecayTimer();
 
     this.props.updatedAt = new Date();
@@ -222,18 +273,21 @@ export class Customer {
 
   /**
    * Redeem global Pointly Network points (usable at any merchant)
+   * NOTE: Tier is NOT affected by redemption - only by monthly earning
    */
   redeemGlobalPoints(points: Points): void {
     if (this.props.status !== CustomerStatus.ACTIVE) {
-      throw new ValidationError("Customer must be active to redeem points");
+      throw new ValidationError('Customer must be active to redeem points');
     }
 
     if (this.props.globalPointsBalance.isLessThan(points)) {
-      throw new ValidationError("Insufficient global points balance");
+      throw new ValidationError('Insufficient global points balance');
     }
 
-    this.props.globalPointsBalance =
-      this.props.globalPointsBalance.subtract(points);
+    this.props.globalPointsBalance = this.props.globalPointsBalance.subtract(points);
+
+    // Tier and monthly progress DO NOT CHANGE when redeeming
+
     this.props.updatedAt = new Date();
   }
 
@@ -243,19 +297,18 @@ export class Customer {
   redeemMerchantPoints(merchantId: string, points: Points): void {
     const enrollment = this.props.enrollments.get(merchantId);
     if (!enrollment) {
-      throw new ValidationError("Customer not enrolled with this merchant");
+      throw new ValidationError('Customer not enrolled with this merchant');
     }
 
     if (enrollment.consentStatus !== ConsentStatus.GRANTED) {
-      throw new ValidationError("Consent required to redeem points");
+      throw new ValidationError('Consent required to redeem points');
     }
 
     if (enrollment.merchantPointsBalance.isLessThan(points)) {
-      throw new ValidationError("Insufficient merchant points balance");
+      throw new ValidationError('Insufficient merchant points balance');
     }
 
-    enrollment.merchantPointsBalance =
-      enrollment.merchantPointsBalance.subtract(points);
+    enrollment.merchantPointsBalance = enrollment.merchantPointsBalance.subtract(points);
     enrollment.transactionCount++;
     enrollment.lastTransactionAt = new Date();
     this.props.updatedAt = new Date();
@@ -296,9 +349,7 @@ export class Customer {
    */
   getMonthsOfInactivity(): number {
     const now = new Date();
-    const diffTime = Math.abs(
-      now.getTime() - this.props.lastNetworkActivity.getTime(),
-    );
+    const diffTime = Math.abs(now.getTime() - this.props.lastNetworkActivity.getTime());
     const diffMonths = diffTime / (1000 * 60 * 60 * 24 * 30); // Approximate months
     return Math.floor(diffMonths);
   }
@@ -315,11 +366,11 @@ export class Customer {
 
     if (monthsInactive < 3) {
       return 0; // Active - no decay (3-month grace period)
-    } else if (monthsInactive < 6) {
-      return 1; // Light decay (months 3-5) - 5% per month
-    } else {
-      return 2; // Heavy decay (month 6+) - 15% per month
     }
+    if (monthsInactive < 6) {
+      return 1; // Light decay (months 3-5) - 5% per month
+    }
+    return 2; // Heavy decay (month 6+) - 15% per month
   }
 
   /**
@@ -363,8 +414,7 @@ export class Customer {
       return Points.zero();
     }
 
-    this.props.globalPointsBalance =
-      this.props.globalPointsBalance.subtract(decayAmount);
+    this.props.globalPointsBalance = this.props.globalPointsBalance.subtract(decayAmount);
 
     this.props.lastDecayAppliedAt = new Date();
     this.props.globalPointsDecayPhase = this.calculateDecayPhase();
@@ -401,6 +451,67 @@ export class Customer {
     }
   }
 
+  // Add before toJSON() method
+
+  /**
+   * Check if customer qualifies for current tier based on monthly progress
+   */
+  qualifiesForCurrentTier(): boolean {
+    return this.props.currentTier.meetsQualification(this.props.monthlyProgress.toNumber());
+  }
+
+  /**
+   * Reset monthly progress (called on 1st of month)
+   */
+  resetMonthlyProgress(): void {
+    this.props.monthlyProgress = Points.zero();
+    this.props.monthlyProgressResetAt = new Date();
+    this.props.updatedAt = new Date();
+  }
+
+  /**
+   * Update tier based on monthly progress
+   * Called by monthly reset job
+   */
+  updateTierFromProgress(): CustomerTier {
+    const oldTier = this.props.currentTier;
+    const newTier = CustomerTier.fromMonthlyProgress(this.props.monthlyProgress.toNumber());
+
+    if (!newTier.equals(oldTier)) {
+      this.props.currentTier = newTier;
+      this.props.tierLastUpdatedAt = new Date();
+      this.props.updatedAt = new Date();
+    }
+
+    return newTier;
+  }
+
+  /**
+   * Manually set tier (admin override)
+   */
+  setTier(tier: CustomerTier, _reason: string): void {
+    this.props.currentTier = tier;
+    this.props.tierLastUpdatedAt = new Date();
+    this.props.updatedAt = new Date();
+    // TODO: Log admin action with _reason
+  }
+
+  /**
+   * Get points needed to reach next tier
+   */
+  getPointsToNextTier(): number {
+    const currentProgress = this.props.monthlyProgress.toNumber();
+
+    if (this.props.currentTier.getLevel() === CustomerTierLevel.DIAMOND) {
+      return 0; // Already at top tier
+    }
+
+    if (this.props.currentTier.getLevel() === CustomerTierLevel.PLATINUM) {
+      return Math.max(0, 15000 - currentProgress); // To DIAMOND
+    }
+
+    return Math.max(0, 5000 - currentProgress); // To PLATINUM
+  }
   // Serialization
   toJSON() {
     return {
@@ -411,6 +522,16 @@ export class Customer {
       globalPointsBalance: this.props.globalPointsBalance.toNumber(),
       globalLifetimePoints: this.props.globalLifetimePoints.toNumber(),
 
+      // NEW - Tier info
+      currentTier: this.props.currentTier.getLevel(),
+      tierDisplayName: this.props.currentTier.getDisplayName(),
+      tierColor: this.props.currentTier.getColor(),
+      monthlyProgress: this.props.monthlyProgress.toNumber(),
+      pointsToNextTier: this.getPointsToNextTier(),
+      redemptionMultiplier: this.getRedemptionMultiplier(),
+      tierLastUpdatedAt: this.props.tierLastUpdatedAt.toISOString(),
+      monthlyProgressResetAt: this.props.monthlyProgressResetAt.toISOString(),
+
       // Decay tracking
       lastNetworkActivity: this.props.lastNetworkActivity.toISOString(),
       globalPointsDecayPhase: this.props.globalPointsDecayPhase,
@@ -418,13 +539,11 @@ export class Customer {
       lastDecayAppliedAt: this.props.lastDecayAppliedAt?.toISOString(),
       monthsOfInactivity: this.getMonthsOfInactivity(),
 
-      enrollments: Array.from(this.props.enrollments.entries()).map(
-        ([, enrollment]) => ({
-          ...enrollment,
-          merchantPointsBalance: enrollment.merchantPointsBalance.toNumber(),
-          merchantLifetimePoints: enrollment.merchantLifetimePoints.toNumber(),
-        }),
-      ),
+      enrollments: Array.from(this.props.enrollments.entries()).map(([, enrollment]) => ({
+        ...enrollment,
+        merchantPointsBalance: enrollment.merchantPointsBalance.toNumber(),
+        merchantLifetimePoints: enrollment.merchantLifetimePoints.toNumber(),
+      })),
       createdAt: this.props.createdAt.toISOString(),
       updatedAt: this.props.updatedAt.toISOString(),
     };

@@ -1,4 +1,4 @@
-import { ValidationError } from "../errors/DomainError";
+import { ValidationError } from '../errors/DomainError';
 
 export class PhoneNumber {
   private readonly value: string;
@@ -9,7 +9,7 @@ export class PhoneNumber {
 
   private static validate(phone: string): string {
     // Remove all non-digit characters
-    const cleaned = phone.replace(/\D/g, "");
+    const cleaned = phone.replace(/\D/g, '');
 
     // Saudi Arabia phone number validation
     // Format: +966XXXXXXXXX (9 digits after country code)
@@ -18,35 +18,33 @@ export class PhoneNumber {
     // Handle different input formats
     let normalized = cleaned;
 
-    if (cleaned.startsWith("966")) {
+    if (cleaned.startsWith('966')) {
       // Already has country code
       normalized = cleaned;
-    } else if (cleaned.startsWith("0")) {
+    } else if (cleaned.startsWith('0')) {
       // Local format (0XXXXXXXXX)
-      normalized = "966" + cleaned.substring(1);
+      normalized = `966${cleaned.substring(1)}`;
     } else if (cleaned.length === 9) {
       // Just the 9 digits
-      normalized = "966" + cleaned;
+      normalized = `966${cleaned}`;
     } else {
-      throw new ValidationError("Invalid phone number format");
+      throw new ValidationError('Invalid phone number format');
     }
 
     // Validate length (12 digits total: 966 + 9 digits)
     if (normalized.length !== 12) {
-      throw new ValidationError("Invalid phone number length");
+      throw new ValidationError('Invalid phone number length');
     }
 
     // Validate country code
-    if (!normalized.startsWith("966")) {
-      throw new ValidationError(
-        "Only Saudi Arabia phone numbers are supported",
-      );
+    if (!normalized.startsWith('966')) {
+      throw new ValidationError('Only Saudi Arabia phone numbers are supported');
     }
 
     // Validate mobile prefix (5X)
     const prefix = normalized.substring(3, 4);
-    if (prefix !== "5") {
-      throw new ValidationError("Invalid mobile number prefix");
+    if (prefix !== '5') {
+      throw new ValidationError('Invalid mobile number prefix');
     }
 
     return normalized;
@@ -62,7 +60,7 @@ export class PhoneNumber {
 
   toLocal(): string {
     // Convert to local format: 0XXXXXXXXX
-    return "0" + this.value.substring(3);
+    return `0${this.value.substring(3)}`;
   }
 
   toDisplay(): string {

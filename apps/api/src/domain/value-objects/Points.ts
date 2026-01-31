@@ -1,19 +1,19 @@
-import { ValidationError } from "../errors/DomainError";
+import { ValidationError } from '../errors/DomainError';
 
 export class Points {
   private readonly value: number;
 
   constructor(points: number) {
     if (!Number.isInteger(points)) {
-      throw new ValidationError("Points must be an integer");
+      throw new ValidationError('Points must be an integer');
     }
 
     if (points < 0) {
-      throw new ValidationError("Points cannot be negative");
+      throw new ValidationError('Points cannot be negative');
     }
 
     if (!Number.isFinite(points)) {
-      throw new ValidationError("Points must be a finite number");
+      throw new ValidationError('Points must be a finite number');
     }
 
     this.value = points;
@@ -30,21 +30,21 @@ export class Points {
   subtract(other: Points): Points {
     const result = this.value - other.value;
     if (result < 0) {
-      throw new ValidationError("Subtraction would result in negative points");
+      throw new ValidationError('Subtraction would result in negative points');
     }
     return new Points(result);
   }
 
   multiply(factor: number): Points {
     if (factor < 0) {
-      throw new ValidationError("Factor cannot be negative");
+      throw new ValidationError('Factor cannot be negative');
     }
     return new Points(Math.floor(this.value * factor));
   }
 
   divide(divisor: number): Points {
     if (divisor <= 0) {
-      throw new ValidationError("Divisor must be positive");
+      throw new ValidationError('Divisor must be positive');
     }
     return new Points(Math.floor(this.value / divisor));
   }

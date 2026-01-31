@@ -12,31 +12,31 @@ export class DomainError extends Error {
 
 export class ValidationError extends DomainError {
   constructor(message: string) {
-    super(message, "VALIDATION_ERROR", 400);
+    super(message, 'VALIDATION_ERROR', 400);
   }
 }
 
 export class NotFoundError extends DomainError {
   constructor(resource: string, identifier: string) {
-    super(`${resource} not found: ${identifier}`, "NOT_FOUND", 404);
+    super(`${resource} not found: ${identifier}`, 'NOT_FOUND', 404);
   }
 }
 
 export class ConflictError extends DomainError {
   constructor(message: string) {
-    super(message, "CONFLICT", 409);
+    super(message, 'CONFLICT', 409);
   }
 }
 
 export class UnauthorizedError extends DomainError {
-  constructor(message: string = "Unauthorized") {
-    super(message, "UNAUTHORIZED", 401);
+  constructor(message = 'Unauthorized') {
+    super(message, 'UNAUTHORIZED', 401);
   }
 }
 
 export class ForbiddenError extends DomainError {
-  constructor(message: string = "Forbidden") {
-    super(message, "FORBIDDEN", 403);
+  constructor(message = 'Forbidden') {
+    super(message, 'FORBIDDEN', 403);
   }
 }
 
@@ -44,7 +44,7 @@ export class InsufficientPointsError extends DomainError {
   constructor(available: number, required: number) {
     super(
       `Insufficient points: ${available} available, ${required} required`,
-      "INSUFFICIENT_POINTS",
+      'INSUFFICIENT_POINTS',
       400,
     );
   }

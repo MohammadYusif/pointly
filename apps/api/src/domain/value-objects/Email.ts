@@ -1,4 +1,4 @@
-import { ValidationError } from "../errors/DomainError";
+import { ValidationError } from '../errors/DomainError';
 
 export class Email {
   private readonly value: string;
@@ -14,28 +14,28 @@ export class Email {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(trimmed)) {
-      throw new ValidationError("Invalid email format");
+      throw new ValidationError('Invalid email format');
     }
 
     // Additional validations
     if (trimmed.length > 254) {
-      throw new ValidationError("Email too long");
+      throw new ValidationError('Email too long');
     }
 
-    const parts = trimmed.split("@");
+    const parts = trimmed.split('@');
     const localPart = parts[0];
     const domain = parts[1];
 
     if (!localPart || !domain) {
-      throw new ValidationError("Invalid email format");
+      throw new ValidationError('Invalid email format');
     }
 
     if (localPart.length > 64) {
-      throw new ValidationError("Email local part too long");
+      throw new ValidationError('Email local part too long');
     }
 
     if (domain.length > 253) {
-      throw new ValidationError("Email domain too long");
+      throw new ValidationError('Email domain too long');
     }
 
     return trimmed;
@@ -46,15 +46,23 @@ export class Email {
   }
 
   getDomain(): string {
-    const parts = this.value.split("@");
-    // Safe because we validated in constructor
-    return parts[1]!;
+    const parts = this.value.split('@');
+    const domain = parts[1];
+    if (parts.length === 2 && domain) {
+      return domain;
+    }
+    // This should never happen due to the validation in the constructor
+    throw new Error('Invalid email format');
   }
 
   getLocalPart(): string {
-    const parts = this.value.split("@");
-    // Safe because we validated in constructor
-    return parts[0]!;
+    const parts = this.value.split('@');
+    const localPart = parts[0];
+    if (parts.length === 2 && localPart) {
+      return localPart;
+    }
+    // This should never happen due to the validation in the constructor
+    throw new Error('Invalid email format');
   }
 
   equals(other: Email): boolean {

@@ -1,18 +1,16 @@
 import {
-  Customer,
-  Merchant,
-  Transaction,
+  CustomerTier,
   Money,
-  Points,
-  TransactionType,
-  ValidationError,
   NotFoundError,
+  Points,
+  Transaction,
   UnauthorizedError,
-} from "../../domain";
-import { ICustomerRepository } from "../repositories/ICustomerRepository";
-import { IMerchantRepository } from "../repositories/IMerchantRepository";
-import { ITransactionRepository } from "../repositories/ITransactionRepository";
-import { IIdempotencyService } from "../services/IIdempotencyService";
+  ValidationError,
+} from '../../domain';
+import type { ICustomerRepository } from '../repositories/ICustomerRepository';
+import type { IMerchantRepository } from '../repositories/IMerchantRepository';
+import type { ITransactionRepository } from '../repositories/ITransactionRepository';
+import type { IIdempotencyService } from '../services/IIdempotencyService';
 
 export interface RecordPurchaseRequest {
   merchantId: string;
@@ -33,6 +31,13 @@ export interface RecordPurchaseResponse {
   globalPoints: number;
   newMerchantBalance: number;
   newGlobalBalance: number;
+
+  // NEW - Tier info
+  currentTier: string;
+  tierUpgrade: boolean;
+  redemptionMultiplier: number;
+  pointsToNextTier: number;
+
   message: string;
 }
 
@@ -57,14 +62,11 @@ export class RecordPurchaseUseCase {
     private idempotencyService: IIdempotencyService,
   ) {}
 
-  async execute(
-    request: RecordPurchaseRequest,
-  ): Promise<RecordPurchaseResponse> {
+  async execute(request: RecordPurchaseRequest): Promise<RecordPurchaseResponse> {
     // 1. Check idempotency - prevent duplicate transactions
-    const existingResult =
-      await this.idempotencyService.getResult<RecordPurchaseResponse>(
-        request.idempotencyKey,
-      );
+    const existingResult = await this.idempotencyService.getResult<RecordPurchaseResponse>(
+      request.idempotencyKey,
+    );
     if (existingResult) {
       return existingResult;
     }
@@ -72,38 +74,32 @@ export class RecordPurchaseUseCase {
     // 2. Validate merchant
     const merchant = await this.merchantRepository.findById(request.merchantId);
     if (!merchant) {
-      throw new NotFoundError(`Merchant not found: ${request.merchantId}`);
+      throw new NotFoundError('Merchant', request.merchantId);
     }
 
     if (!merchant.isVerified()) {
-      throw new UnauthorizedError("Merchant is not verified");
+      throw new UnauthorizedError('Merchant is not verified');
     }
 
     // 3. Validate customer
     const customer = await this.customerRepository.findById(request.customerId);
     if (!customer) {
-      throw new NotFoundError(`Customer not found: ${request.customerId}`);
+      throw new NotFoundError('Customer', request.customerId);
     }
 
     // Check enrollment
     const enrollment = customer.getEnrollment(request.merchantId);
     if (!enrollment) {
-      throw new ValidationError(
-        "Customer is not enrolled with this merchant",
-      );
+      throw new ValidationError('Customer is not enrolled with this merchant');
     }
 
-    if (enrollment.consentStatus !== "GRANTED") {
-      throw new UnauthorizedError(
-        "Customer consent required to earn points",
-      );
+    if (enrollment.consentStatus !== 'GRANTED') {
+      throw new UnauthorizedError('Customer consent required to earn points');
     }
 
     // 4. Calculate dual points
     const amount = Money.fromSAR(request.amountSAR);
-    const pointsCalculation = merchant.calculatePointsForPurchase(
-      request.amountSAR,
-    );
+    const pointsCalculation = merchant.calculatePointsForPurchase(request.amountSAR);
 
     if (pointsCalculation.merchantPoints === 0) {
       throw new ValidationError(
@@ -115,10 +111,7 @@ export class RecordPurchaseUseCase {
     const globalPoints = Points.from(pointsCalculation.globalPoints);
 
     // 5. Get current balances before transaction
-    const merchantBalanceBefore = customer.getMerchantPointsBalance(
-      request.merchantId,
-    );
-    const globalBalanceBefore = customer.getGlobalPointsBalance();
+    const merchantBalanceBefore = customer.getMerchantPointsBalance(request.merchantId);
 
     // 6. Create transaction record
     const transaction = Transaction.createEarn(
@@ -132,11 +125,7 @@ export class RecordPurchaseUseCase {
     );
 
     // 7. Award points to customer (both types)
-    customer.addPointsFromPurchase(
-      request.merchantId,
-      globalPoints,
-      merchantPoints,
-    );
+    customer.addPointsFromPurchase(request.merchantId, globalPoints, merchantPoints);
 
     // 8. Update merchant stats
     merchant.incrementTransactionCount();
@@ -154,10 +143,21 @@ export class RecordPurchaseUseCase {
       transactionId: transaction.getTransactionId(),
       merchantPoints: merchantPoints.toNumber(),
       globalPoints: globalPoints.toNumber(),
-      newMerchantBalance: customer
-        .getMerchantPointsBalance(request.merchantId)
-        .toNumber(),
+      newMerchantBalance: customer.getMerchantPointsBalance(request.merchantId).toNumber(),
       newGlobalBalance: customer.getGlobalPointsBalance().toNumber(),
+
+      // NEW - Tier info
+      currentTier: customer.getCurrentTier().getDisplayName(),
+      tierUpgrade: customer
+        .getCurrentTier()
+        .isHigherThan(
+          CustomerTier.fromMonthlyProgress(
+            customer.getMonthlyProgress().toNumber() - globalPoints.toNumber(),
+          ),
+        ),
+      redemptionMultiplier: customer.getRedemptionMultiplier(),
+      pointsToNextTier: customer.getPointsToNextTier(),
+
       message: `Purchase recorded! Earned ${merchantPoints.toNumber()} merchant points and ${globalPoints.toNumber()} Pointly Network points`,
     };
 
