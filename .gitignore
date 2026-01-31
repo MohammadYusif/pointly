@@ -41,6 +41,12 @@ coverage/
 *.tmp
 .cache/
 
+# Turbo
+.turbo/
+
+# Claude Code
+.claude/
+
 # AWS
 .aws-sam/
 samconfig.toml
