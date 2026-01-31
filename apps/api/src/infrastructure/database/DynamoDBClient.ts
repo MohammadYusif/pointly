@@ -1,49 +1,52 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
-import EnvironmentConfig from "../config/Environment";
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import EnvironmentConfig from '../config/Environment';
 
-class DynamoDBClientFactory {
-  private static documentClient: DynamoDBDocumentClient;
+let documentClient: DynamoDBDocumentClient;
 
-  static getDocumentClient(): DynamoDBDocumentClient {
-    if (!this.documentClient) {
-      this.documentClient = this.createDocumentClient();
-    }
-    return this.documentClient;
-  }
+function createDocumentClient(): DynamoDBDocumentClient {
+  const env = EnvironmentConfig.get();
 
-  private static createDocumentClient(): DynamoDBDocumentClient {
-    const env = EnvironmentConfig.get();
-
-    const clientConfig = {
-      region: env.AWS_REGION,
-      ...(env.DYNAMODB_ENDPOINT && {
-        endpoint: env.DYNAMODB_ENDPOINT,
-        credentials: {
-          accessKeyId: "local",
-          secretAccessKey: "local",
-        },
-      }),
-    };
-
-    const client = new DynamoDBClient(clientConfig);
-
-    const documentClient = DynamoDBDocumentClient.from(client, {
-      marshallOptions: {
-        removeUndefinedValues: true,
-        convertClassInstanceToMap: true,
+  const clientConfig = {
+    region: env.AWS_REGION,
+    ...(env.DYNAMODB_ENDPOINT && {
+      endpoint: env.DYNAMODB_ENDPOINT,
+      credentials: {
+        accessKeyId: 'local',
+        secretAccessKey: 'local',
       },
-      unmarshallOptions: {
-        wrapNumbers: false,
-      },
-    });
+    }),
+  };
 
-    return documentClient;
-  }
+  const client = new DynamoDBClient(clientConfig);
 
-  static resetClient(): void {
-    this.documentClient = this.createDocumentClient();
-  }
+  const newDocumentClient = DynamoDBDocumentClient.from(client, {
+    marshallOptions: {
+      removeUndefinedValues: true,
+      convertClassInstanceToMap: true,
+    },
+    unmarshallOptions: {
+      wrapNumbers: false,
+    },
+  });
+
+  return newDocumentClient;
 }
+
+function getDocumentClient(): DynamoDBDocumentClient {
+  if (!documentClient) {
+    documentClient = createDocumentClient();
+  }
+  return documentClient;
+}
+
+function resetClient(): void {
+  documentClient = createDocumentClient();
+}
+
+const DynamoDBClientFactory = {
+  getDocumentClient,
+  resetClient,
+};
 
 export default DynamoDBClientFactory;

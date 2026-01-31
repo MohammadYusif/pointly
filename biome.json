@@ -7,13 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": [
-      "node_modules",
-      "dist",
-      ".next",
-      "coverage",
-      "cdk.out"
-    ]
+    "ignore": ["node_modules", "dist", ".next", "coverage", "cdk.out"]
   },
   "formatter": {
     "enabled": true,

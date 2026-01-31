@@ -1,9 +1,9 @@
-import { Transaction } from "../../domain";
-import {
+import type { Transaction } from '../../domain';
+import type {
   BaseRepository,
   QueryOptions,
   QueryResult,
-} from "../shared/interfaces/BaseRepository";
+} from '../shared/interfaces/BaseRepository';
 
 export interface TransactionStats {
   totalTransactions: number;
@@ -14,14 +14,8 @@ export interface TransactionStats {
 
 export interface ITransactionRepository extends BaseRepository<Transaction> {
   findByIdempotencyKey(idempotencyKey: string): Promise<Transaction | null>;
-  findByCustomer(
-    customerId: string,
-    options?: QueryOptions,
-  ): Promise<QueryResult<Transaction>>;
-  findByMerchant(
-    merchantId: string,
-    options?: QueryOptions,
-  ): Promise<QueryResult<Transaction>>;
+  findByCustomer(customerId: string, options?: QueryOptions): Promise<QueryResult<Transaction>>;
+  findByMerchant(merchantId: string, options?: QueryOptions): Promise<QueryResult<Transaction>>;
   findByCustomerAndMerchant(
     customerId: string,
     merchantId: string,

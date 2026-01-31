@@ -1,11 +1,11 @@
-import * as cdk from "aws-cdk-lib";
-import * as apigateway from "aws-cdk-lib/aws-apigateway";
-import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-import * as cognito from "aws-cdk-lib/aws-cognito";
-import * as sqs from "aws-cdk-lib/aws-sqs";
-import * as iam from "aws-cdk-lib/aws-iam";
-import { Construct } from "constructs";
+import * as cdk from 'aws-cdk-lib';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import type * as cognito from 'aws-cdk-lib/aws-cognito';
+import type * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
+import type { Construct } from 'constructs';
 
 interface ApiStackProps extends cdk.StackProps {
   environment: string;
@@ -29,12 +29,12 @@ export class ApiStack extends cdk.Stack {
     const { environment } = props;
 
     // SQS Queue for SMS notifications
-    const smsQueue = new sqs.Queue(this, "SMSQueue", {
+    const smsQueue = new sqs.Queue(this, 'SMSQueue', {
       queueName: `Pointly-SMSQueue-${environment}`,
       visibilityTimeout: cdk.Duration.seconds(300),
       retentionPeriod: cdk.Duration.days(14),
       deadLetterQueue: {
-        queue: new sqs.Queue(this, "SMSDeadLetterQueue", {
+        queue: new sqs.Queue(this, 'SMSDeadLetterQueue', {
           queueName: `Pointly-SMSQueue-DLQ-${environment}`,
           retentionPeriod: cdk.Duration.days(14),
         }),
@@ -43,12 +43,10 @@ export class ApiStack extends cdk.Stack {
     });
 
     // Lambda Execution Role
-    const lambdaRole = new iam.Role(this, "LambdaExecutionRole", {
-      assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
+    const lambdaRole = new iam.Role(this, 'LambdaExecutionRole', {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName(
-          "service-role/AWSLambdaBasicExecutionRole",
-        ),
+        iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
       ],
     });
 
@@ -73,14 +71,14 @@ export class ApiStack extends cdk.Stack {
       PENDING_CONSENTS_TABLE: props.pendingConsentsTable.tableName,
       SMS_QUOTA_TABLE: props.smsQuotaTable.tableName,
       SMS_QUEUE_URL: smsQueue.queueUrl,
-      AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
     };
 
     // Placeholder Lambda (we'll replace with actual functions later)
-    const apiLambda = new lambda.Function(this, "ApiFunction", {
+    const apiLambda = new lambda.Function(this, 'ApiFunction', {
       functionName: `Pointly-Api-${environment}`,
       runtime: lambda.Runtime.NODEJS_24_X,
-      handler: "index.handler",
+      handler: 'index.handler',
       code: lambda.Code.fromInline(`
         exports.handler = async (event) => {
           return {
@@ -104,9 +102,9 @@ export class ApiStack extends cdk.Stack {
     });
 
     // API Gateway
-    this.apiGateway = new apigateway.RestApi(this, "ApiGateway", {
+    this.apiGateway = new apigateway.RestApi(this, 'ApiGateway', {
       restApiName: `Pointly-API-${environment}`,
-      description: "Pointly Loyalty Platform API",
+      description: 'Pointly Loyalty Platform API',
       deployOptions: {
         stageName: environment,
         throttlingRateLimit: 1000,
@@ -119,11 +117,11 @@ export class ApiStack extends cdk.Stack {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS,
         allowHeaders: [
-          "Content-Type",
-          "Authorization",
-          "X-Api-Key",
-          "X-Amz-Date",
-          "X-Amz-Security-Token",
+          'Content-Type',
+          'Authorization',
+          'X-Api-Key',
+          'X-Amz-Date',
+          'X-Amz-Security-Token',
         ],
       },
     });
@@ -131,40 +129,40 @@ export class ApiStack extends cdk.Stack {
     // Cognito Authorizer for merchants
     const merchantAuthorizer = new apigateway.CognitoUserPoolsAuthorizer(
       this,
-      "MerchantAuthorizer",
+      'MerchantAuthorizer',
       {
         cognitoUserPools: [props.merchantUserPool],
-        authorizerName: "MerchantAuthorizer",
+        authorizerName: 'MerchantAuthorizer',
       },
     );
 
     // Cognito Authorizer for customers
     const customerAuthorizer = new apigateway.CognitoUserPoolsAuthorizer(
       this,
-      "CustomerAuthorizer",
+      'CustomerAuthorizer',
       {
         cognitoUserPools: [props.customerUserPool],
-        authorizerName: "CustomerAuthorizer",
+        authorizerName: 'CustomerAuthorizer',
       },
     );
 
     // API Resources
-    const v1 = this.apiGateway.root.addResource("v1");
+    const v1 = this.apiGateway.root.addResource('v1');
 
     // Health check (public)
-    const health = v1.addResource("health");
-    health.addMethod("GET", new apigateway.LambdaIntegration(apiLambda));
+    const health = v1.addResource('health');
+    health.addMethod('GET', new apigateway.LambdaIntegration(apiLambda));
 
     // Merchant endpoints (protected)
-    const merchants = v1.addResource("merchants");
-    merchants.addMethod("GET", new apigateway.LambdaIntegration(apiLambda), {
+    const merchants = v1.addResource('merchants');
+    merchants.addMethod('GET', new apigateway.LambdaIntegration(apiLambda), {
       authorizer: merchantAuthorizer,
       authorizationType: apigateway.AuthorizationType.COGNITO,
     });
 
     // Customer endpoints (protected)
-    const customers = v1.addResource("customers");
-    customers.addMethod("GET", new apigateway.LambdaIntegration(apiLambda), {
+    const customers = v1.addResource('customers');
+    customers.addMethod('GET', new apigateway.LambdaIntegration(apiLambda), {
       authorizer: customerAuthorizer,
       authorizationType: apigateway.AuthorizationType.COGNITO,
     });
@@ -172,12 +170,12 @@ export class ApiStack extends cdk.Stack {
     this.lambdaFunctions = [apiLambda];
 
     // Outputs
-    new cdk.CfnOutput(this, "ApiUrl", {
+    new cdk.CfnOutput(this, 'ApiUrl', {
       value: this.apiGateway.url,
       exportName: `${environment}-ApiUrl`,
     });
 
-    new cdk.CfnOutput(this, "ApiId", {
+    new cdk.CfnOutput(this, 'ApiId', {
       value: this.apiGateway.restApiId,
       exportName: `${environment}-ApiId`,
     });

@@ -1,6 +1,6 @@
-import * as cdk from "aws-cdk-lib";
-import * as cognito from "aws-cdk-lib/aws-cognito";
-import { Construct } from "constructs";
+import * as cdk from 'aws-cdk-lib';
+import * as cognito from 'aws-cdk-lib/aws-cognito';
+import type { Construct } from 'constructs';
 
 interface AuthStackProps extends cdk.StackProps {
   environment: string;
@@ -18,7 +18,7 @@ export class AuthStack extends cdk.Stack {
     const { environment } = props;
 
     // Merchant User Pool
-    this.merchantUserPool = new cognito.UserPool(this, "MerchantUserPool", {
+    this.merchantUserPool = new cognito.UserPool(this, 'MerchantUserPool', {
       userPoolName: `Pointly-Merchants-${environment}`,
       selfSignUpEnabled: true,
       signInAliases: {
@@ -56,31 +56,25 @@ export class AuthStack extends cdk.Stack {
         requireSymbols: false,
       },
       accountRecovery: cognito.AccountRecovery.EMAIL_AND_PHONE_WITHOUT_MFA,
-      removalPolicy:
-        environment === "prod"
-          ? cdk.RemovalPolicy.RETAIN
-          : cdk.RemovalPolicy.DESTROY,
+      removalPolicy: environment === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
     });
 
     // Merchant User Pool Client
-    this.merchantUserPoolClient = this.merchantUserPool.addClient(
-      "MerchantWebClient",
-      {
-        userPoolClientName: `Pointly-MerchantWeb-${environment}`,
-        authFlows: {
-          userPassword: true,
-          userSrp: true,
-        },
-        generateSecret: false,
-        preventUserExistenceErrors: true,
-        refreshTokenValidity: cdk.Duration.days(30),
-        accessTokenValidity: cdk.Duration.hours(1),
-        idTokenValidity: cdk.Duration.hours(1),
+    this.merchantUserPoolClient = this.merchantUserPool.addClient('MerchantWebClient', {
+      userPoolClientName: `Pointly-MerchantWeb-${environment}`,
+      authFlows: {
+        userPassword: true,
+        userSrp: true,
       },
-    );
+      generateSecret: false,
+      preventUserExistenceErrors: true,
+      refreshTokenValidity: cdk.Duration.days(30),
+      accessTokenValidity: cdk.Duration.hours(1),
+      idTokenValidity: cdk.Duration.hours(1),
+    });
 
     // Customer User Pool
-    this.customerUserPool = new cognito.UserPool(this, "CustomerUserPool", {
+    this.customerUserPool = new cognito.UserPool(this, 'CustomerUserPool', {
       userPoolName: `Pointly-Customers-${environment}`,
       selfSignUpEnabled: true,
       signInAliases: {
@@ -115,47 +109,41 @@ export class AuthStack extends cdk.Stack {
         otp: false,
       },
       accountRecovery: cognito.AccountRecovery.PHONE_WITHOUT_MFA_AND_EMAIL,
-      removalPolicy:
-        environment === "prod"
-          ? cdk.RemovalPolicy.RETAIN
-          : cdk.RemovalPolicy.DESTROY,
+      removalPolicy: environment === 'prod' ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
     });
 
     // Customer User Pool Client
-    this.customerUserPoolClient = this.customerUserPool.addClient(
-      "CustomerWebClient",
-      {
-        userPoolClientName: `Pointly-CustomerWeb-${environment}`,
-        authFlows: {
-          userPassword: true,
-          userSrp: true,
-          custom: true,
-        },
-        generateSecret: false,
-        preventUserExistenceErrors: true,
-        refreshTokenValidity: cdk.Duration.days(90),
-        accessTokenValidity: cdk.Duration.hours(24),
-        idTokenValidity: cdk.Duration.hours(24),
+    this.customerUserPoolClient = this.customerUserPool.addClient('CustomerWebClient', {
+      userPoolClientName: `Pointly-CustomerWeb-${environment}`,
+      authFlows: {
+        userPassword: true,
+        userSrp: true,
+        custom: true,
       },
-    );
+      generateSecret: false,
+      preventUserExistenceErrors: true,
+      refreshTokenValidity: cdk.Duration.days(90),
+      accessTokenValidity: cdk.Duration.hours(24),
+      idTokenValidity: cdk.Duration.hours(24),
+    });
 
     // Outputs
-    new cdk.CfnOutput(this, "MerchantUserPoolId", {
+    new cdk.CfnOutput(this, 'MerchantUserPoolId', {
       value: this.merchantUserPool.userPoolId,
       exportName: `${environment}-MerchantUserPoolId`,
     });
 
-    new cdk.CfnOutput(this, "MerchantUserPoolClientId", {
+    new cdk.CfnOutput(this, 'MerchantUserPoolClientId', {
       value: this.merchantUserPoolClient.userPoolClientId,
       exportName: `${environment}-MerchantUserPoolClientId`,
     });
 
-    new cdk.CfnOutput(this, "CustomerUserPoolId", {
+    new cdk.CfnOutput(this, 'CustomerUserPoolId', {
       value: this.customerUserPool.userPoolId,
       exportName: `${environment}-CustomerUserPoolId`,
     });
 
-    new cdk.CfnOutput(this, "CustomerUserPoolClientId", {
+    new cdk.CfnOutput(this, 'CustomerUserPoolClientId', {
       value: this.customerUserPoolClient.userPoolClientId,
       exportName: `${environment}-CustomerUserPoolClientId`,
     });

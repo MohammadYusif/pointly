@@ -8,7 +8,7 @@ export interface BaseRepository<T> {
 export interface QueryOptions {
   limit?: number;
   nextToken?: string;
-  sortOrder?: "ASC" | "DESC";
+  sortOrder?: 'ASC' | 'DESC';
 }
 
 export interface QueryResult<T> {
