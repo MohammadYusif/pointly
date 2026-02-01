@@ -11,11 +11,11 @@ import {
   CardTitle,
   Container,
   Flex,
-  LanguageToggle,
+  type NavItem,
+  Navbar,
   useRTL,
 } from '@pointly/ui';
-import { ArrowUpRight, CreditCard, DollarSign, Menu, Users, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ArrowUpRight, CreditCard, DollarSign, Users } from 'lucide-react';
 
 // Mock data for the dashboard
 const mockStats = {
@@ -55,92 +55,19 @@ const mockStats = {
 export default function DashboardPage() {
   const { t, formatCurrency, formatNumber, language } = useTranslation();
   const { textStart, textEnd, flipIcon } = useRTL();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Define navigation items
+  const navItems: NavItem[] = [
+    { key: 'dashboard', label: t('navigation.dashboard') },
+    { key: 'customers', label: t('navigation.customers') },
+    { key: 'transactions', label: t('navigation.transactions') },
+    { key: 'settings', label: t('navigation.settings') },
+  ];
 
   return (
     <div className="min-h-screen bg-muted/30 overflow-x-hidden">
-      {/* Mobile sidebar overlay */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* Mobile sidebar - slides from left for LTR, from right for RTL */}
-      {mounted && (
-        <div
-          className={`fixed top-0 h-full w-64 bg-card z-50 transform transition-transform duration-300 ease-in-out md:hidden shadow-lg ltr:left-0 rtl:right-0 ${
-            mobileMenuOpen
-              ? 'translate-x-0'
-              : 'ltr:-translate-x-full rtl:translate-x-full'
-          }`}
-        >
-          <div className="flex items-center justify-between p-4 border-b ltr:flex-row rtl:flex-row-reverse">
-            <Logo width={100} />
-            <Button variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-          <nav className="flex flex-col p-4 gap-1">
-            <Button variant="ghost" className="justify-start" onClick={() => setMobileMenuOpen(false)}>
-              {t('navigation.dashboard')}
-            </Button>
-            <Button variant="ghost" className="justify-start" onClick={() => setMobileMenuOpen(false)}>
-              {t('navigation.customers')}
-            </Button>
-            <Button variant="ghost" className="justify-start" onClick={() => setMobileMenuOpen(false)}>
-              {t('navigation.transactions')}
-            </Button>
-            <Button variant="ghost" className="justify-start" onClick={() => setMobileMenuOpen(false)}>
-              {t('navigation.settings')}
-            </Button>
-          </nav>
-        </div>
-      )}
-
-      {/* Header */}
-      <header className="bg-card border-b sticky top-0 z-30">
-        <Container>
-          <Flex justify="between" align="center" className="h-14 md:h-16">
-            {/* Hamburger on left for LTR, on right for RTL */}
-            <div className="flex items-center gap-2 ltr:flex-row rtl:flex-row-reverse">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="md:hidden"
-                onClick={() => setMobileMenuOpen(true)}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-              <Logo width={120} className="md:w-35" />
-            </div>
-            <Flex gap="2" align="center">
-              {/* Hide nav on mobile, show on md+ */}
-              <nav className="hidden md:flex md:gap-2">
-                <Button variant="ghost" size="sm">
-                  {t('navigation.dashboard')}
-                </Button>
-                <Button variant="ghost" size="sm">
-                  {t('navigation.customers')}
-                </Button>
-                <Button variant="ghost" size="sm">
-                  {t('navigation.transactions')}
-                </Button>
-                <Button variant="ghost" size="sm">
-                  {t('navigation.settings')}
-                </Button>
-              </nav>
-              <LanguageToggle />
-            </Flex>
-          </Flex>
-        </Container>
-      </header>
+      {/* Navbar */}
+      <Navbar items={navItems} logo={<Logo width={120} className="md:w-35" />} showLanguageToggle />
 
       {/* Main Content */}
       <main className="py-4 md:py-8">
@@ -203,7 +130,9 @@ export default function DashboardPage() {
                 <div className="text-lg md:text-2xl font-bold truncate">
                   {formatNumber(mockStats.totalPointsIssued)}
                 </div>
-                <p className="text-xs text-muted-foreground truncate">{t('dashboard.pointsRate')}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {t('dashboard.pointsRate')}
+                </p>
               </CardContent>
             </Card>
 
