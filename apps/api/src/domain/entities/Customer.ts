@@ -169,17 +169,17 @@ export class Customer {
   }
 
   /**
-   * Get effective redemption multiplier based on tier
+   * Get earning multiplier based on tier (e.g., 1.2x for Diamond)
    */
-  getRedemptionMultiplier(): number {
-    return this.props.currentTier.getRedemptionMultiplier();
+  getEarningMultiplier(): number {
+    return this.props.currentTier.getEarningMultiplier();
   }
 
   /**
-   * Calculate how many SAR this customer gets per point when redeeming
+   * Check if this customer's tier is immune to point decay
    */
-  getEffectiveRedemptionRate(baseRate: number): number {
-    return baseRate * this.getRedemptionMultiplier();
+  isDecayImmune(): boolean {
+    return this.props.currentTier.isDecayImmune();
   }
 
   // Business methods
@@ -243,12 +243,21 @@ export class Customer {
       throw new ValidationError('Consent required to add points');
     }
 
-    // Add global points to balance
-    this.props.globalPointsBalance = this.props.globalPointsBalance.add(globalPoints);
-    this.props.globalLifetimePoints = this.props.globalLifetimePoints.add(globalPoints);
+    // Lazy reset: if we're in a new month and cron job missed us, reset progress now
+    if (this.isNewMonth(this.props.monthlyProgressResetAt)) {
+      this.resetMonthlyProgress();
+    }
 
-    // NEW - Add to monthly progress
-    this.props.monthlyProgress = this.props.monthlyProgress.add(globalPoints);
+    // Apply tier earning multiplier (e.g., Diamond gets 1.2x points)
+    const earningMultiplier = this.props.currentTier.getEarningMultiplier();
+    const boostedPoints = Points.from(Math.floor(globalPoints.toNumber() * earningMultiplier));
+
+    // Add boosted global points to balance
+    this.props.globalPointsBalance = this.props.globalPointsBalance.add(boostedPoints);
+    this.props.globalLifetimePoints = this.props.globalLifetimePoints.add(boostedPoints);
+
+    // Add boosted points to monthly progress
+    this.props.monthlyProgress = this.props.monthlyProgress.add(boostedPoints);
 
     // NEW - Check if tier should be upgraded immediately
     const potentialTier = CustomerTier.fromMonthlyProgress(this.props.monthlyProgress.toNumber());
@@ -312,6 +321,75 @@ export class Customer {
     enrollment.transactionCount++;
     enrollment.lastTransactionAt = new Date();
     this.props.updatedAt = new Date();
+  }
+
+  /**
+   * Smart Redemption: Prioritizes Merchant Points, then uses Global Points.
+   * Returns the split so the Use Case can create two separate transaction records.
+   *
+   * Example: Customer has 400 merchant points and 1000 global points.
+   * If they redeem 1000 points total:
+   * - Uses 400 from merchant wallet (drains it)
+   * - Uses 600 from global wallet
+   *
+   * @param merchantId - The merchant where redemption is happening
+   * @param totalPointsNeeded - Total points to redeem
+   * @returns Split of merchant vs global points used for transaction records
+   */
+  redeemSmart(
+    merchantId: string,
+    totalPointsNeeded: Points,
+  ): { merchantPointsUsed: Points; globalPointsUsed: Points } {
+    if (this.props.status !== CustomerStatus.ACTIVE) {
+      throw new ValidationError('Customer must be active to redeem points');
+    }
+
+    if (totalPointsNeeded.isZero()) {
+      throw new ValidationError('Points to redeem must be greater than zero');
+    }
+
+    const enrollment = this.getEnrollment(merchantId);
+
+    // Merchant points are only usable if enrolled AND consent is granted
+    // If consent is pending/revoked, treat merchant balance as 0 (use global only)
+    const canUseMerchantPoints =
+      enrollment !== undefined && enrollment.consentStatus === ConsentStatus.GRANTED;
+    const merchantBalance = canUseMerchantPoints ? enrollment.merchantPointsBalance : Points.zero();
+    const globalBalance = this.props.globalPointsBalance;
+
+    // Validate total available points
+    const totalAvailable = merchantBalance.add(globalBalance);
+    if (totalAvailable.isLessThan(totalPointsNeeded)) {
+      // Provide specific error message based on context
+      if (enrollment && enrollment.consentStatus !== ConsentStatus.GRANTED) {
+        throw new ValidationError(
+          `Insufficient points: ${globalBalance.toNumber()} global points available. ` +
+            `Merchant points (${enrollment.merchantPointsBalance.toNumber()}) unavailable due to consent status: ${enrollment.consentStatus}`,
+        );
+      }
+      throw new ValidationError('Insufficient total points balance');
+    }
+
+    let merchantPointsUsed = Points.zero();
+    let globalPointsUsed = Points.zero();
+
+    // 1. Try to satisfy entirely from Merchant Wallet first
+    if (merchantBalance.isGreaterThanOrEqual(totalPointsNeeded)) {
+      merchantPointsUsed = totalPointsNeeded;
+      this.redeemMerchantPoints(merchantId, merchantPointsUsed);
+    } else {
+      // 2. Take everything from Merchant Wallet
+      merchantPointsUsed = merchantBalance;
+      if (merchantPointsUsed.toNumber() > 0) {
+        this.redeemMerchantPoints(merchantId, merchantPointsUsed);
+      }
+
+      // 3. Take remainder from Global Wallet
+      globalPointsUsed = totalPointsNeeded.subtract(merchantPointsUsed);
+      this.redeemGlobalPoints(globalPointsUsed);
+    }
+
+    return { merchantPointsUsed, globalPointsUsed };
   }
 
   getMerchantPointsBalance(merchantId: string): Points {
@@ -383,6 +461,11 @@ export class Customer {
       return Points.zero(); // No decay during grace period
     }
 
+    // Platinum and Diamond tiers are immune to decay
+    if (this.props.currentTier.isDecayImmune()) {
+      return Points.zero();
+    }
+
     const monthsInactive = this.getMonthsOfInactivity();
     let balance = this.props.globalPointsBalance.toNumber();
 
@@ -406,21 +489,49 @@ export class Customer {
 
   /**
    * Apply decay to global points
+   *
+   * Phase 2 (6+ months inactive) triggers zombie cleanup for ALL users,
+   * regardless of tier immunity. Decay-immune tiers (Platinum/Diamond)
+   * keep their global points but still lose merchant points.
    */
   applyGlobalPointsDecay(): Points {
+    const phase = this.calculateDecayPhase();
+
+    // Phase 2 zombie cleanup applies to ALL users, including decay-immune tiers
+    // This prevents accumulation of stale merchant points from inactive users
+    if (phase === 2) {
+      this.wipeMerchantPointBalances();
+    }
+
     const decayAmount = this.calculateDecayAmount();
 
+    // Even if no global decay (decay-immune tier), update tracking if in decay phase
     if (decayAmount.isZero()) {
+      if (phase > 0) {
+        this.props.lastDecayAppliedAt = new Date();
+        this.props.globalPointsDecayPhase = phase;
+        this.props.updatedAt = new Date();
+      }
       return Points.zero();
     }
 
     this.props.globalPointsBalance = this.props.globalPointsBalance.subtract(decayAmount);
-
     this.props.lastDecayAppliedAt = new Date();
-    this.props.globalPointsDecayPhase = this.calculateDecayPhase();
+    this.props.globalPointsDecayPhase = phase;
     this.props.updatedAt = new Date();
 
     return decayAmount;
+  }
+
+  /**
+   * Wipe all merchant point balances for deeply inactive users
+   * Called when user enters Phase 2 (6+ months inactive)
+   * Applies to ALL users regardless of tier immunity (zombie cleanup)
+   */
+  private wipeMerchantPointBalances(): void {
+    for (const enrollment of this.props.enrollments.values()) {
+      enrollment.merchantPointsBalance = Points.zero();
+    }
   }
 
   /**
@@ -463,6 +574,22 @@ export class Customer {
   }
 
   /**
+   * Check if we are in a new month relative to the last reset date
+   * Used for lazy monthly reset to prevent "double dip" when cron fails
+   *
+   * Uses UTC to ensure consistent behavior across timezones and server locations.
+   * This prevents edge cases around midnight where local time might differ.
+   */
+  private isNewMonth(lastResetDate: Date): boolean {
+    const now = new Date();
+    return (
+      now.getUTCFullYear() > lastResetDate.getUTCFullYear() ||
+      (now.getUTCFullYear() === lastResetDate.getUTCFullYear() &&
+        now.getUTCMonth() > lastResetDate.getUTCMonth())
+    );
+  }
+
+  /**
    * Reset monthly progress (called on 1st of month)
    */
   resetMonthlyProgress(): void {
@@ -474,10 +601,20 @@ export class Customer {
   /**
    * Update tier based on monthly progress
    * Called by monthly reset job
+   *
+   * Instead of recalculating from scratch (which would drop Diamond to Bronze),
+   * we only decay one level if the user didn't maintain their current tier.
    */
   updateTierFromProgress(): CustomerTier {
     const oldTier = this.props.currentTier;
-    const newTier = CustomerTier.fromMonthlyProgress(this.props.monthlyProgress.toNumber());
+
+    // If user maintained their tier requirements, keep their tier
+    if (this.qualifiesForCurrentTier()) {
+      return oldTier;
+    }
+
+    // Otherwise, decay one level (Diamond -> Platinum, not Bronze)
+    const newTier = oldTier.decay();
 
     if (!newTier.equals(oldTier)) {
       this.props.currentTier = newTier;
@@ -530,7 +667,8 @@ export class Customer {
       tierColor: this.props.currentTier.getColor(),
       monthlyProgress: this.props.monthlyProgress.toNumber(),
       pointsToNextTier: this.getPointsToNextTier(),
-      redemptionMultiplier: this.getRedemptionMultiplier(),
+      earningMultiplier: this.getEarningMultiplier(),
+      isDecayImmune: this.isDecayImmune(),
       tierLastUpdatedAt: this.props.tierLastUpdatedAt.toISOString(),
       monthlyProgressResetAt: this.props.monthlyProgressResetAt.toISOString(),
 

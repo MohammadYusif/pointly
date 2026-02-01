@@ -1,3 +1,5 @@
+import { ValidationError } from '../errors/DomainError';
+
 export enum CustomerTierLevel {
   BRONZE = 'BRONZE',
   PLATINUM = 'PLATINUM',
@@ -6,7 +8,8 @@ export enum CustomerTierLevel {
 
 export interface TierThresholds {
   readonly monthlyMinimum: number;
-  readonly redemptionMultiplier: number;
+  readonly earningMultiplier: number;
+  readonly decays: boolean;
   readonly displayName: string;
   readonly color: string;
 }
@@ -15,19 +18,22 @@ export class CustomerTier {
   private static readonly TIER_CONFIG: Record<CustomerTierLevel, TierThresholds> = {
     [CustomerTierLevel.BRONZE]: {
       monthlyMinimum: 0,
-      redemptionMultiplier: 1.0,
+      earningMultiplier: 1.0,
+      decays: true,
       displayName: 'Bronze',
       color: '#CD7F32',
     },
     [CustomerTierLevel.PLATINUM]: {
       monthlyMinimum: 5000,
-      redemptionMultiplier: 1.2,
+      earningMultiplier: 1.1,
+      decays: false,
       displayName: 'Platinum',
       color: '#E5E4E2',
     },
     [CustomerTierLevel.DIAMOND]: {
       monthlyMinimum: 15000,
-      redemptionMultiplier: 1.5,
+      earningMultiplier: 1.2,
+      decays: false,
       displayName: 'Diamond',
       color: '#B9F2FF',
     },
@@ -54,6 +60,9 @@ export class CustomerTier {
 
   // Calculate tier based on monthly progress
   static fromMonthlyProgress(monthlyPoints: number): CustomerTier {
+    if (monthlyPoints < 0) {
+      throw new ValidationError('Monthly points cannot be negative');
+    }
     if (monthlyPoints >= 15000) {
       return CustomerTier.diamond();
     }
@@ -72,8 +81,12 @@ export class CustomerTier {
     return CustomerTier.TIER_CONFIG[this.level];
   }
 
-  getRedemptionMultiplier(): number {
-    return this.getThresholds().redemptionMultiplier;
+  getEarningMultiplier(): number {
+    return this.getThresholds().earningMultiplier;
+  }
+
+  isDecayImmune(): boolean {
+    return !this.getThresholds().decays;
   }
 
   getMonthlyMinimum(): number {
