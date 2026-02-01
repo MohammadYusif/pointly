@@ -1,16 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  ConsentStatus,
   Customer,
   Email,
   Merchant,
-  MerchantStatus,
   MerchantTier,
-  Money,
   NotFoundError,
   PhoneNumber,
   Points,
-  Transaction,
   UnauthorizedError,
   ValidationError,
 } from '../../domain';

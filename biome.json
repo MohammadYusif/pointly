@@ -22,6 +22,10 @@
       "complexity": {
         "noExcessiveCognitiveComplexity": "warn"
       },
+      "correctness": {
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error"
+      },
       "style": {
         "useImportType": "error",
         "useNodejsImportProtocol": "error"
