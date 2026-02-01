@@ -1,0 +1,816 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import { ConsentStatus, Customer } from '../entities/Customer';
+import { Transaction } from '../entities/Transaction';
+import { CustomerTier, CustomerTierLevel } from '../value-objects/CustomerTier';
+import { Money } from '../value-objects/Money';
+import { PhoneNumber } from '../value-objects/PhoneNumber';
+import { Points } from '../value-objects/Points';
+
+/**
+ * Comprehensive Point System Tests
+ *
+ * These tests cover all 7 requirements from the domain layer audit:
+ * 1. Zombie Point Cleanup (Fix #1)
+ * 2. Gradual Tier Demotion (Fix #2)
+ * 3. Lazy Monthly Reset (Fix #3)
+ * 4. Safe Tier Incentives (Fix #4)
+ * 5. Redemption Validation (Fix #5)
+ * 6. Config Cleanup (Fix #6) - covered in Merchant tests
+ * 7. Smart Redemption (Fix #7)
+ *
+ * Plus robustness improvements:
+ * - Zero-point validation
+ * - Negative validation
+ * - Consent error messaging
+ * - UTC timezone handling
+ */
+
+// Helper to create a customer with enrollment
+function createCustomerWithEnrollment(merchantId = 'merchant_123') {
+  const phone = new PhoneNumber('0501234567');
+  const customer = Customer.create(phone, 'Test Customer');
+  customer.enrollWithMerchant(merchantId);
+  customer.grantConsent(merchantId);
+  return customer;
+}
+
+// Test helpers that access private props for test setup
+// Using type assertion to access private Customer props for testing purposes
+type CustomerWithProps = { props: Record<string, unknown> };
+
+// Helper to manually set customer's last activity date for decay testing
+function setLastActivityDate(customer: Customer, monthsAgo: number): void {
+  const props = (customer as unknown as CustomerWithProps).props;
+  const date = new Date();
+  date.setMonth(date.getMonth() - monthsAgo);
+  props.lastNetworkActivity = date;
+}
+
+// Helper to manually set monthly progress reset date for lazy reset testing
+function setMonthlyProgressResetDate(customer: Customer, date: Date): void {
+  const props = (customer as unknown as CustomerWithProps).props;
+  props.monthlyProgressResetAt = date;
+}
+
+// Helper to manually set customer tier
+function setCustomerTier(customer: Customer, tier: CustomerTier): void {
+  const props = (customer as unknown as CustomerWithProps).props;
+  props.currentTier = tier;
+}
+
+// Helper to manually set global points balance
+function setGlobalPointsBalance(customer: Customer, points: number): void {
+  const props = (customer as unknown as CustomerWithProps).props;
+  props.globalPointsBalance = Points.from(points);
+}
+
+// Helper to manually set merchant points balance
+function setMerchantPointsBalance(customer: Customer, merchantId: string, points: number): void {
+  const props = (customer as unknown as CustomerWithProps).props;
+  const enrollment = (props.enrollments as Map<string, { merchantPointsBalance: Points }>).get(
+    merchantId,
+  );
+  if (enrollment) {
+    enrollment.merchantPointsBalance = Points.from(points);
+  }
+}
+
+// Helper to manually set monthly progress
+function setMonthlyProgress(customer: Customer, points: number): void {
+  const props = (customer as unknown as CustomerWithProps).props;
+  props.monthlyProgress = Points.from(points);
+}
+
+describe('Point System - Real World Scenarios', () => {
+  /**
+   * ============================================
+   * FIX #7: SMART REDEMPTION (Merchant-First)
+   * ============================================
+   */
+  describe('Smart Redemption (Fix #7)', () => {
+    describe('Scenario: Coffee shop customer redeems points', () => {
+      it('should use merchant points first when sufficient', () => {
+        // Setup: Customer has 500 merchant points and 1000 global points at "Café Riyadh"
+        const customer = createCustomerWithEnrollment('cafe_riyadh');
+        setMerchantPointsBalance(customer, 'cafe_riyadh', 500);
+        setGlobalPointsBalance(customer, 1000);
+
+        // Action: Customer redeems 300 points for a free drink
+        const result = customer.redeemSmart('cafe_riyadh', Points.from(300));
+
+        // Assert: Only merchant points were used
+        expect(result.merchantPointsUsed.toNumber()).toBe(300);
+        expect(result.globalPointsUsed.toNumber()).toBe(0);
+        expect(customer.getMerchantPointsBalance('cafe_riyadh').toNumber()).toBe(200);
+        expect(customer.getGlobalPointsBalance().toNumber()).toBe(1000);
+      });
+
+      it('should drain merchant points then use global when insufficient', () => {
+        // Setup: Customer has 400 merchant points and 1000 global points
+        const customer = createCustomerWithEnrollment('cafe_riyadh');
+        setMerchantPointsBalance(customer, 'cafe_riyadh', 400);
+        setGlobalPointsBalance(customer, 1000);
+
+        // Action: Customer redeems 1000 points for a large order
+        const result = customer.redeemSmart('cafe_riyadh', Points.from(1000));
+
+        // Assert: Merchant drained to 0, then global used for remainder
+        expect(result.merchantPointsUsed.toNumber()).toBe(400);
+        expect(result.globalPointsUsed.toNumber()).toBe(600);
+        expect(customer.getMerchantPointsBalance('cafe_riyadh').toNumber()).toBe(0);
+        expect(customer.getGlobalPointsBalance().toNumber()).toBe(400);
+      });
+
+      it('should use only global points when no merchant balance', () => {
+        // Setup: Customer has 0 merchant points and 500 global points
+        const customer = createCustomerWithEnrollment('cafe_riyadh');
+        setMerchantPointsBalance(customer, 'cafe_riyadh', 0);
+        setGlobalPointsBalance(customer, 500);
+
+        // Action: Customer redeems 200 points
+        const result = customer.redeemSmart('cafe_riyadh', Points.from(200));
+
+        // Assert: Only global points used
+        expect(result.merchantPointsUsed.toNumber()).toBe(0);
+        expect(result.globalPointsUsed.toNumber()).toBe(200);
+        expect(customer.getGlobalPointsBalance().toNumber()).toBe(300);
+      });
+
+      it('should fail when total points insufficient', () => {
+        // Setup: Customer has 200 merchant + 100 global = 300 total
+        const customer = createCustomerWithEnrollment('cafe_riyadh');
+        setMerchantPointsBalance(customer, 'cafe_riyadh', 200);
+        setGlobalPointsBalance(customer, 100);
+
+        // Action & Assert: Trying to redeem 500 should fail
+        expect(() => {
+          customer.redeemSmart('cafe_riyadh', Points.from(500));
+        }).toThrow('Insufficient total points balance');
+      });
+
+      it('should work at a new merchant using only global points', () => {
+        // Setup: Customer has global points but never visited "New Store"
+        const customer = createCustomerWithEnrollment('old_store');
+        setGlobalPointsBalance(customer, 1000);
+
+        // Enroll at new store
+        customer.enrollWithMerchant('new_store');
+        customer.grantConsent('new_store');
+
+        // Action: Redeem at new store (no merchant points there)
+        const result = customer.redeemSmart('new_store', Points.from(300));
+
+        // Assert: Only global points used since merchant balance is 0
+        expect(result.merchantPointsUsed.toNumber()).toBe(0);
+        expect(result.globalPointsUsed.toNumber()).toBe(300);
+      });
+    });
+
+    describe('Edge Cases', () => {
+      it('should reject zero-point redemption', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setGlobalPointsBalance(customer, 1000);
+
+        expect(() => {
+          customer.redeemSmart('merchant_123', Points.from(0));
+        }).toThrow('Points to redeem must be greater than zero');
+      });
+
+      it('should handle exact balance redemption', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setMerchantPointsBalance(customer, 'merchant_123', 500);
+        setGlobalPointsBalance(customer, 500);
+
+        // Redeem exactly total balance
+        const result = customer.redeemSmart('merchant_123', Points.from(1000));
+
+        expect(result.merchantPointsUsed.toNumber()).toBe(500);
+        expect(result.globalPointsUsed.toNumber()).toBe(500);
+        expect(customer.getMerchantPointsBalance('merchant_123').toNumber()).toBe(0);
+        expect(customer.getGlobalPointsBalance().toNumber()).toBe(0);
+      });
+
+      it('should fail for inactive customer', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setGlobalPointsBalance(customer, 1000);
+        customer.deactivate();
+
+        expect(() => {
+          customer.redeemSmart('merchant_123', Points.from(100));
+        }).toThrow('Customer must be active to redeem points');
+      });
+
+      it('should provide clear error when consent blocks merchant points', () => {
+        const phone = new PhoneNumber('0501234567');
+        const customer = Customer.create(phone);
+        customer.enrollWithMerchant('merchant_123');
+        // Consent is PENDING, not GRANTED
+        setMerchantPointsBalance(customer, 'merchant_123', 500);
+        setGlobalPointsBalance(customer, 100);
+
+        // Trying to redeem more than global alone can cover
+        expect(() => {
+          customer.redeemSmart('merchant_123', Points.from(300));
+        }).toThrow(/Merchant points.*unavailable due to consent status: PENDING/);
+      });
+
+      it('should allow global-only redemption even with pending consent', () => {
+        const phone = new PhoneNumber('0501234567');
+        const customer = Customer.create(phone);
+        customer.enrollWithMerchant('merchant_123');
+        // Consent is PENDING
+        setMerchantPointsBalance(customer, 'merchant_123', 500);
+        setGlobalPointsBalance(customer, 1000);
+
+        // Can still redeem from global points
+        const result = customer.redeemSmart('merchant_123', Points.from(300));
+
+        expect(result.merchantPointsUsed.toNumber()).toBe(0);
+        expect(result.globalPointsUsed.toNumber()).toBe(300);
+      });
+    });
+  });
+
+  /**
+   * ============================================
+   * FIX #1: ZOMBIE POINT CLEANUP
+   * ============================================
+   */
+  describe('Zombie Point Cleanup (Fix #1)', () => {
+    describe('Scenario: Long-inactive customer returns after 8 months', () => {
+      it('should wipe merchant points for Bronze user in Phase 2', () => {
+        // Setup: Bronze customer inactive for 7 months with points at multiple merchants
+        const customer = createCustomerWithEnrollment('merchant_a');
+        customer.enrollWithMerchant('merchant_b');
+        customer.grantConsent('merchant_b');
+
+        setMerchantPointsBalance(customer, 'merchant_a', 500);
+        setMerchantPointsBalance(customer, 'merchant_b', 300);
+        setGlobalPointsBalance(customer, 1000);
+        setLastActivityDate(customer, 7); // 7 months inactive = Phase 2
+
+        // Action: Apply decay
+        const decayAmount = customer.applyGlobalPointsDecay();
+
+        // Assert: Global points decayed AND merchant points wiped
+        expect(decayAmount.toNumber()).toBeGreaterThan(0);
+        expect(customer.getMerchantPointsBalance('merchant_a').toNumber()).toBe(0);
+        expect(customer.getMerchantPointsBalance('merchant_b').toNumber()).toBe(0);
+      });
+
+      it('should wipe merchant points for Platinum user in Phase 2 (decay immune keeps global)', () => {
+        // Setup: Platinum customer (decay immune) inactive for 7 months
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setCustomerTier(customer, CustomerTier.platinum());
+        setMerchantPointsBalance(customer, 'merchant_123', 800);
+        setGlobalPointsBalance(customer, 5000);
+        setLastActivityDate(customer, 7); // Phase 2
+
+        // Action: Apply decay
+        const decayAmount = customer.applyGlobalPointsDecay();
+
+        // Assert: Global points preserved (decay immune), but merchant points wiped
+        expect(decayAmount.toNumber()).toBe(0); // No global decay for Platinum
+        expect(customer.getGlobalPointsBalance().toNumber()).toBe(5000);
+        expect(customer.getMerchantPointsBalance('merchant_123').toNumber()).toBe(0); // Wiped!
+      });
+
+      it('should wipe merchant points for Diamond user in Phase 2', () => {
+        // Setup: Diamond customer inactive for 8 months
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setCustomerTier(customer, CustomerTier.diamond());
+        setMerchantPointsBalance(customer, 'merchant_123', 1500);
+        setGlobalPointsBalance(customer, 20000);
+        setLastActivityDate(customer, 8); // Phase 2
+
+        // Action: Apply decay
+        customer.applyGlobalPointsDecay();
+
+        // Assert: Global preserved, merchant wiped
+        expect(customer.getGlobalPointsBalance().toNumber()).toBe(20000);
+        expect(customer.getMerchantPointsBalance('merchant_123').toNumber()).toBe(0);
+      });
+    });
+
+    describe('Active users should NOT lose merchant points', () => {
+      it('should preserve merchant points in Phase 0 (active)', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setMerchantPointsBalance(customer, 'merchant_123', 500);
+        setGlobalPointsBalance(customer, 1000);
+        // Recently active (default) = Phase 0
+
+        customer.applyGlobalPointsDecay();
+
+        expect(customer.getMerchantPointsBalance('merchant_123').toNumber()).toBe(500);
+      });
+
+      it('should preserve merchant points in Phase 1 (light decay)', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setMerchantPointsBalance(customer, 'merchant_123', 500);
+        setGlobalPointsBalance(customer, 1000);
+        setLastActivityDate(customer, 4); // 4 months = Phase 1
+
+        customer.applyGlobalPointsDecay();
+
+        // Global may decay, but merchant points preserved
+        expect(customer.getMerchantPointsBalance('merchant_123').toNumber()).toBe(500);
+      });
+    });
+
+    describe('Decay phases and rates', () => {
+      it('should apply 5% decay per month in Phase 1 (months 3-5)', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setGlobalPointsBalance(customer, 1000);
+        setLastActivityDate(customer, 4); // 4 months = 1 month in Phase 1
+
+        const decayAmount = customer.calculateDecayAmount();
+
+        // 1 month at 5%: 1000 * 0.95 = 950, decay = 50
+        expect(decayAmount.toNumber()).toBe(50);
+      });
+
+      it('should apply 15% decay per month in Phase 2 (month 6+)', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setGlobalPointsBalance(customer, 1000);
+        setLastActivityDate(customer, 7); // 7 months = 3 months Phase 1 + 1 month Phase 2
+
+        const decayAmount = customer.calculateDecayAmount();
+
+        // 3 months at 5%: 1000 * 0.95^3 = 857 (approx)
+        // 1 month at 15%: 857 * 0.85 = 728 (approx)
+        // Decay = 1000 - 728 = 272
+        expect(decayAmount.toNumber()).toBeGreaterThan(250);
+        expect(decayAmount.toNumber()).toBeLessThan(300);
+      });
+
+      it('should apply zero decay for decay-immune tiers', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setCustomerTier(customer, CustomerTier.platinum());
+        setGlobalPointsBalance(customer, 1000);
+        setLastActivityDate(customer, 4); // Would be Phase 1 for Bronze
+
+        const decayAmount = customer.calculateDecayAmount();
+
+        expect(decayAmount.toNumber()).toBe(0);
+      });
+    });
+  });
+
+  /**
+   * ============================================
+   * FIX #2: GRADUAL TIER DEMOTION
+   * ============================================
+   */
+  describe('Gradual Tier Demotion (Fix #2)', () => {
+    describe('Scenario: Diamond customer has a slow month', () => {
+      it('should drop Diamond to Platinum (not Bronze) on first failure', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+
+        // Setup: Diamond tier with reset monthly progress
+        setCustomerTier(customer, CustomerTier.diamond());
+        customer.resetMonthlyProgress();
+
+        // Earn only 3,000 points (below Diamond's 15,000 threshold)
+        customer.addPointsFromPurchase('merchant_123', Points.from(3000), Points.from(3000));
+
+        // Action: End of month tier evaluation
+        const newTier = customer.updateTierFromProgress();
+
+        // Assert: Dropped one level only
+        expect(newTier.getLevel()).toBe(CustomerTierLevel.PLATINUM);
+        expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.PLATINUM);
+      });
+
+      it('should drop Platinum to Bronze on second consecutive failure', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+
+        // Setup: Platinum tier
+        setCustomerTier(customer, CustomerTier.platinum());
+        customer.resetMonthlyProgress();
+
+        // Earn only 2,000 points (below Platinum's 5,000 threshold)
+        customer.addPointsFromPurchase('merchant_123', Points.from(2000), Points.from(2000));
+
+        // Action: Tier evaluation
+        const newTier = customer.updateTierFromProgress();
+
+        // Assert: Dropped to Bronze
+        expect(newTier.getLevel()).toBe(CustomerTierLevel.BRONZE);
+      });
+
+      it('should maintain tier if requirements met', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+
+        // Setup: Platinum tier
+        setCustomerTier(customer, CustomerTier.platinum());
+        customer.resetMonthlyProgress();
+
+        // Earn 6,000 points (above Platinum's 5,000 threshold)
+        customer.addPointsFromPurchase('merchant_123', Points.from(6000), Points.from(6000));
+
+        // Action: Tier evaluation
+        const newTier = customer.updateTierFromProgress();
+
+        // Assert: Stays Platinum
+        expect(newTier.getLevel()).toBe(CustomerTierLevel.PLATINUM);
+      });
+
+      it('should not drop below Bronze', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+
+        // Setup: Already Bronze
+        setCustomerTier(customer, CustomerTier.bronze());
+        customer.resetMonthlyProgress();
+        // No points earned
+
+        // Action: Tier evaluation
+        const newTier = customer.updateTierFromProgress();
+
+        // Assert: Stays Bronze (can't go lower)
+        expect(newTier.getLevel()).toBe(CustomerTierLevel.BRONZE);
+      });
+    });
+
+    describe('CustomerTier.decay() behavior', () => {
+      it('should decay tiers one level at a time', () => {
+        expect(CustomerTier.diamond().decay().getLevel()).toBe(CustomerTierLevel.PLATINUM);
+        expect(CustomerTier.platinum().decay().getLevel()).toBe(CustomerTierLevel.BRONZE);
+        expect(CustomerTier.bronze().decay().getLevel()).toBe(CustomerTierLevel.BRONZE);
+      });
+    });
+  });
+
+  /**
+   * ============================================
+   * FIX #3: LAZY MONTHLY RESET
+   * ============================================
+   */
+  describe('Lazy Monthly Reset (Fix #3)', () => {
+    describe('Scenario: Cron job missed, customer makes purchase in new month', () => {
+      it('should auto-reset monthly progress before adding new points', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+
+        // Setup: Customer had progress last month
+        const lastMonth = new Date();
+        lastMonth.setMonth(lastMonth.getMonth() - 1);
+        setMonthlyProgressResetDate(customer, lastMonth);
+
+        // Manually set some progress from "last month"
+        setMonthlyProgress(customer, 8000);
+
+        // Action: Make a purchase in the new month
+        customer.addPointsFromPurchase('merchant_123', Points.from(100), Points.from(100));
+
+        // Assert: Progress was reset before adding, so only new points count
+        expect(customer.getMonthlyProgress().toNumber()).toBe(100);
+      });
+
+      it('should not reset progress for same-month purchase', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+
+        // Setup: Reset happened today (same month)
+        const today = new Date();
+        setMonthlyProgressResetDate(customer, today);
+
+        // First purchase
+        customer.addPointsFromPurchase('merchant_123', Points.from(500), Points.from(500));
+        expect(customer.getMonthlyProgress().toNumber()).toBe(500);
+
+        // Second purchase same month
+        customer.addPointsFromPurchase('merchant_123', Points.from(300), Points.from(300));
+
+        // Assert: Progress accumulated
+        expect(customer.getMonthlyProgress().toNumber()).toBe(800);
+      });
+
+      it('should handle year boundary correctly', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+
+        // Setup: Last reset was December last year
+        const lastYear = new Date();
+        lastYear.setFullYear(lastYear.getFullYear() - 1);
+        lastYear.setMonth(11); // December
+        setMonthlyProgressResetDate(customer, lastYear);
+
+        setMonthlyProgress(customer, 5000);
+
+        // Action: Purchase in January this year
+        customer.addPointsFromPurchase('merchant_123', Points.from(200), Points.from(200));
+
+        // Assert: Reset happened
+        expect(customer.getMonthlyProgress().toNumber()).toBe(200);
+      });
+    });
+  });
+
+  /**
+   * ============================================
+   * FIX #4: SAFE TIER INCENTIVES (Earning Multiplier)
+   * ============================================
+   */
+  describe('Safe Tier Incentives (Fix #4)', () => {
+    describe('Earning Multiplier', () => {
+      it('should apply 1.0x multiplier for Bronze', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.BRONZE);
+
+        // Earn 1000 base points
+        customer.addPointsFromPurchase('merchant_123', Points.from(1000), Points.from(500));
+
+        // Assert: 1000 * 1.0 = 1000
+        expect(customer.getGlobalPointsBalance().toNumber()).toBe(1000);
+        expect(customer.getMonthlyProgress().toNumber()).toBe(1000);
+      });
+
+      it('should apply 1.1x multiplier for Platinum', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setCustomerTier(customer, CustomerTier.platinum());
+
+        // Earn 1000 base points
+        customer.addPointsFromPurchase('merchant_123', Points.from(1000), Points.from(500));
+
+        // Assert: 1000 * 1.1 = 1100
+        expect(customer.getGlobalPointsBalance().toNumber()).toBe(1100);
+        expect(customer.getMonthlyProgress().toNumber()).toBe(1100);
+      });
+
+      it('should apply 1.2x multiplier for Diamond', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setCustomerTier(customer, CustomerTier.diamond());
+
+        // Earn 1000 base points
+        customer.addPointsFromPurchase('merchant_123', Points.from(1000), Points.from(500));
+
+        // Assert: 1000 * 1.2 = 1200
+        expect(customer.getGlobalPointsBalance().toNumber()).toBe(1200);
+        expect(customer.getMonthlyProgress().toNumber()).toBe(1200);
+      });
+
+      it('should floor fractional points from multiplier', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setCustomerTier(customer, CustomerTier.platinum());
+
+        // Earn 99 base points: 99 * 1.1 = 108.9 → 108
+        customer.addPointsFromPurchase('merchant_123', Points.from(99), Points.from(50));
+
+        expect(customer.getGlobalPointsBalance().toNumber()).toBe(108);
+      });
+    });
+
+    describe('Decay Immunity', () => {
+      it('should make Bronze tier subject to decay', () => {
+        expect(CustomerTier.bronze().isDecayImmune()).toBe(false);
+      });
+
+      it('should make Platinum tier immune to decay', () => {
+        expect(CustomerTier.platinum().isDecayImmune()).toBe(true);
+      });
+
+      it('should make Diamond tier immune to decay', () => {
+        expect(CustomerTier.diamond().isDecayImmune()).toBe(true);
+      });
+    });
+
+    describe('No redemption multiplier (removed)', () => {
+      it('should not have redemptionMultiplier property', () => {
+        const tier = CustomerTier.diamond();
+        const thresholds = tier.getThresholds();
+
+        expect(thresholds).not.toHaveProperty('redemptionMultiplier');
+        expect(thresholds).toHaveProperty('earningMultiplier');
+        expect(thresholds).toHaveProperty('decays');
+      });
+    });
+  });
+
+  /**
+   * ============================================
+   * FIX #5: REDEMPTION VALIDATION (Theft Prevention)
+   * ============================================
+   */
+  describe('Redemption Validation (Fix #5)', () => {
+    describe('Scenario: Preventing point-to-cash theft', () => {
+      it('should block redemption where 1 point > 0.50 SAR', () => {
+        // Attacker tries to redeem 100 points for 100 SAR (1 SAR per point!)
+        expect(() => {
+          Transaction.createRedeem(
+            'merchant_123',
+            'customer_123',
+            Points.from(100),
+            Money.fromSAR(100), // 1 SAR per point - theft attempt!
+            Points.from(1000),
+            'idempotency_key',
+          );
+        }).toThrow(/exceeds maximum allowed 0.5 SAR\/point/);
+      });
+
+      it('should allow redemption at 0.01 SAR per point (normal rate)', () => {
+        // Normal: 100 points for 1 SAR (0.01 SAR per point)
+        const transaction = Transaction.createRedeem(
+          'merchant_123',
+          'customer_123',
+          Points.from(100),
+          Money.fromSAR(1),
+          Points.from(1000),
+          'idempotency_key',
+        );
+
+        expect(transaction.getPoints().toNumber()).toBe(100);
+        expect(transaction.getAmount()?.toSAR()).toBe(1);
+      });
+
+      it('should allow redemption at exactly 0.50 SAR per point (edge case)', () => {
+        // Edge: 100 points for 50 SAR (0.50 SAR per point - max allowed)
+        const transaction = Transaction.createRedeem(
+          'merchant_123',
+          'customer_123',
+          Points.from(100),
+          Money.fromSAR(50),
+          Points.from(1000),
+          'idempotency_key',
+        );
+
+        expect(transaction).toBeDefined();
+      });
+
+      it('should block redemption at 0.51 SAR per point', () => {
+        // Just over limit: 100 points for 51 SAR (0.51 SAR per point)
+        expect(() => {
+          Transaction.createRedeem(
+            'merchant_123',
+            'customer_123',
+            Points.from(100),
+            Money.fromSAR(51),
+            Points.from(1000),
+            'idempotency_key',
+          );
+        }).toThrow(/exceeds maximum allowed/);
+      });
+
+      it('should validate expected rate when provided', () => {
+        // Merchant expects 0.01 SAR/point but transaction has 0.02
+        expect(() => {
+          Transaction.createRedeem(
+            'merchant_123',
+            'customer_123',
+            Points.from(100),
+            Money.fromSAR(2), // 0.02 SAR/point
+            Points.from(1000),
+            'idempotency_key',
+            {},
+            0.01, // Expected rate
+          );
+        }).toThrow(/Redemption rate mismatch/);
+      });
+    });
+
+    describe('Transaction validation edge cases', () => {
+      it('should reject zero points redemption', () => {
+        expect(() => {
+          Transaction.createRedeem(
+            'merchant_123',
+            'customer_123',
+            Points.from(0),
+            Money.fromSAR(10),
+            Points.from(1000),
+            'idempotency_key',
+          );
+        }).toThrow('Points must be greater than zero');
+      });
+
+      it('should reject insufficient balance', () => {
+        expect(() => {
+          Transaction.createRedeem(
+            'merchant_123',
+            'customer_123',
+            Points.from(500),
+            Money.fromSAR(5),
+            Points.from(100), // Only 100 available
+            'idempotency_key',
+          );
+        }).toThrow('Insufficient points balance');
+      });
+    });
+  });
+
+  /**
+   * ============================================
+   * ROBUSTNESS IMPROVEMENTS
+   * ============================================
+   */
+  describe('Robustness Improvements', () => {
+    describe('Negative validation in CustomerTier.fromMonthlyProgress()', () => {
+      it('should reject negative monthly points', () => {
+        expect(() => {
+          CustomerTier.fromMonthlyProgress(-100);
+        }).toThrow('Monthly points cannot be negative');
+      });
+
+      it('should accept zero monthly points', () => {
+        const tier = CustomerTier.fromMonthlyProgress(0);
+        expect(tier.getLevel()).toBe(CustomerTierLevel.BRONZE);
+      });
+    });
+
+    describe('Points value object validation', () => {
+      it('should reject negative points', () => {
+        expect(() => Points.from(-1)).toThrow('Points cannot be negative');
+      });
+
+      it('should reject non-integer points', () => {
+        expect(() => Points.from(10.5)).toThrow('Points must be an integer');
+      });
+
+      it('should reject infinite points', () => {
+        // Infinity is not an integer, so integer check triggers first
+        expect(() => Points.from(Number.POSITIVE_INFINITY)).toThrow('Points must be an integer');
+      });
+    });
+  });
+
+  /**
+   * ============================================
+   * INTEGRATION SCENARIOS
+   * ============================================
+   */
+  describe('Integration Scenarios', () => {
+    describe('Full customer lifecycle', () => {
+      it('should track a customer from signup to Diamond and back', () => {
+        const customer = createCustomerWithEnrollment('store_a');
+        customer.enrollWithMerchant('store_b');
+        customer.grantConsent('store_b');
+
+        // Week 1: New customer makes first purchase
+        expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.BRONZE);
+        customer.addPointsFromPurchase('store_a', Points.from(1000), Points.from(1000));
+        expect(customer.getGlobalPointsBalance().toNumber()).toBe(1000);
+
+        // Week 2-4: Heavy shopping, reaches Diamond
+        customer.addPointsFromPurchase('store_a', Points.from(5000), Points.from(5000));
+        expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.PLATINUM);
+
+        customer.addPointsFromPurchase('store_b', Points.from(10000), Points.from(10000));
+        expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.DIAMOND);
+
+        // Diamond gets 1.2x earning bonus
+        expect(customer.getEarningMultiplier()).toBe(1.2);
+        expect(customer.isDecayImmune()).toBe(true);
+
+        // Month 2: Customer is less active, doesn't maintain Diamond
+        customer.resetMonthlyProgress();
+        customer.addPointsFromPurchase('store_a', Points.from(3000), Points.from(3000));
+
+        // End of month: Drops one level
+        customer.updateTierFromProgress();
+        expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.PLATINUM);
+
+        // Month 3: Even less active
+        customer.resetMonthlyProgress();
+        customer.addPointsFromPurchase('store_a', Points.from(1000), Points.from(1000));
+
+        customer.updateTierFromProgress();
+        expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.BRONZE);
+
+        // Customer redeems points using smart redemption
+        setMerchantPointsBalance(customer, 'store_a', 500);
+        const redemption = customer.redeemSmart('store_a', Points.from(800));
+
+        expect(redemption.merchantPointsUsed.toNumber()).toBe(500);
+        expect(redemption.globalPointsUsed.toNumber()).toBe(300);
+      });
+    });
+
+    describe('Multi-merchant scenario', () => {
+      it('should handle customer active at multiple stores', () => {
+        const customer = createCustomerWithEnrollment('coffee_shop');
+        customer.enrollWithMerchant('grocery_store');
+        customer.grantConsent('grocery_store');
+        customer.enrollWithMerchant('restaurant');
+        customer.grantConsent('restaurant');
+
+        // Shop at different merchants
+        customer.addPointsFromPurchase('coffee_shop', Points.from(100), Points.from(100));
+        customer.addPointsFromPurchase('grocery_store', Points.from(500), Points.from(500));
+        customer.addPointsFromPurchase('restaurant', Points.from(300), Points.from(300));
+
+        // Global points accumulate
+        expect(customer.getGlobalPointsBalance().toNumber()).toBe(900);
+
+        // Merchant points are separate
+        expect(customer.getMerchantPointsBalance('coffee_shop').toNumber()).toBe(100);
+        expect(customer.getMerchantPointsBalance('grocery_store').toNumber()).toBe(500);
+        expect(customer.getMerchantPointsBalance('restaurant').toNumber()).toBe(300);
+
+        // Redeem at grocery store - uses grocery merchant points first
+        const result = customer.redeemSmart('grocery_store', Points.from(700));
+
+        expect(result.merchantPointsUsed.toNumber()).toBe(500);
+        expect(result.globalPointsUsed.toNumber()).toBe(200);
+
+        // Other merchant balances unchanged
+        expect(customer.getMerchantPointsBalance('coffee_shop').toNumber()).toBe(100);
+        expect(customer.getMerchantPointsBalance('restaurant').toNumber()).toBe(300);
+      });
+    });
+  });
+});
