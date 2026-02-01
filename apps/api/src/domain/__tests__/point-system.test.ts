@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { ConsentStatus, Customer } from '../entities/Customer';
+import { describe, expect, it } from 'vitest';
+import { Customer } from '../entities/Customer';
 import { Transaction } from '../entities/Transaction';
 import { CustomerTier, CustomerTierLevel } from '../value-objects/CustomerTier';
 import { Money } from '../value-objects/Money';
