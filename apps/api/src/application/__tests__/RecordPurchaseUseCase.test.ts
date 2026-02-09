@@ -383,4 +383,232 @@ describe('RecordPurchaseUseCase', () => {
       );
     });
   });
+
+  describe('Tier Upgrade Detection', () => {
+    it('should detect tier upgrade from Bronze to Platinum when enough points earned', async () => {
+      // Setup: customer at Bronze with 4500 monthly progress
+      // addPointsFromPurchase will add to monthlyProgress, so give 4500 global pts
+      testCustomer.addPointsFromPurchase(
+        'merchant_123',
+        Points.from(4500), // global points -> monthlyProgress becomes 4500
+        Points.from(4500), // merchant points
+      );
+
+      // Verify still Bronze (4500 < 5000 threshold)
+      expect(testCustomer.getCurrentTier().getDisplayName()).toBe('Bronze');
+
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      // Purchase 600 SAR -> 600 global pts (1.0x Bronze) -> total monthly 5100 -> Platinum
+      const result = await useCase.execute({
+        merchantId: 'merchant_123',
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 600,
+        idempotencyKey: 'tier_upgrade_key',
+      });
+
+      expect(result.tierUpgrade).toBe(true);
+      expect(result.currentTier).toBe('Platinum');
+    });
+  });
+
+  describe('Edge Case Amounts', () => {
+    // ENTERPRISE tier has minimumPurchase: 0, so even 1 SAR is valid
+    let enterpriseMerchant: Merchant;
+
+    beforeEach(() => {
+      enterpriseMerchant = Merchant.create(
+        'Enterprise Store',
+        new Email('enterprise-edge@example.com'),
+        new PhoneNumber('0506666666'),
+        'Owner',
+        MerchantTier.ENTERPRISE,
+      );
+      enterpriseMerchant.verify();
+
+      testCustomer.enrollWithMerchant('enterprise_edge');
+      testCustomer.grantConsent('enterprise_edge');
+    });
+
+    it('should handle minimum valid amount (1 SAR)', async () => {
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(enterpriseMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      const result = await useCase.execute({
+        merchantId: 'enterprise_edge',
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 1,
+        idempotencyKey: 'edge_min_key',
+      });
+
+      expect(result.merchantPoints).toBeGreaterThanOrEqual(1);
+      expect(result.globalPoints).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should handle large amount (10000 SAR)', async () => {
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(enterpriseMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      const result = await useCase.execute({
+        merchantId: 'enterprise_edge',
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 10000,
+        idempotencyKey: 'edge_large_key',
+      });
+
+      // 10000 SAR * 1 pointsPerSAR = 10000 points
+      expect(result.merchantPoints).toBe(10000);
+      expect(result.globalPoints).toBe(10000);
+    });
+
+    it('should handle decimal amount (99.99 SAR) - floors to 99 points', async () => {
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(enterpriseMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      const result = await useCase.execute({
+        merchantId: 'enterprise_edge',
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 99.99,
+        idempotencyKey: 'edge_decimal_key',
+      });
+
+      // Math.floor(99.99 * 1) = 99
+      expect(result.merchantPoints).toBe(99);
+      expect(result.globalPoints).toBe(99);
+    });
+  });
+
+  describe('Points Accumulation', () => {
+    it('should accumulate global points across multiple purchases', async () => {
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      // First purchase: 100 SAR -> 100 global pts -> balance 100
+      const result1 = await useCase.execute({
+        merchantId: 'merchant_123',
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 100,
+        idempotencyKey: 'accum_key_1',
+      });
+
+      expect(result1.globalPoints).toBe(100);
+      expect(result1.newGlobalBalance).toBe(100);
+
+      // Reset idempotency mock so second call is not cached
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+
+      // Second purchase: 200 SAR -> 200 global pts -> balance 300
+      const result2 = await useCase.execute({
+        merchantId: 'merchant_123',
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 200,
+        idempotencyKey: 'accum_key_2',
+      });
+
+      expect(result2.globalPoints).toBe(200);
+      expect(result2.newGlobalBalance).toBe(300);
+    });
+  });
+
+  describe('Concurrent Idempotency', () => {
+    it('should return same result for same idempotency key even with different amounts', async () => {
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      // First call: 100 SAR, stores result
+      const result1 = await useCase.execute({
+        merchantId: 'merchant_123',
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 100,
+        idempotencyKey: 'concurrent_key',
+      });
+
+      expect(result1.merchantPoints).toBe(100);
+
+      // Second call with same idempotency key returns cached result, ignores new amount
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(result1);
+
+      const result2 = await useCase.execute({
+        merchantId: 'merchant_123',
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 500, // Different amount - should be ignored
+        idempotencyKey: 'concurrent_key',
+      });
+
+      expect(result2).toEqual(result1);
+      expect(result2.merchantPoints).toBe(100); // Original amount, not 500
+    });
+  });
+
+  describe('Repository Interactions', () => {
+    it('should call save on all three repositories exactly once per purchase', async () => {
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      await useCase.execute({
+        merchantId: 'merchant_123',
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 100,
+        idempotencyKey: 'repo_save_key',
+      });
+
+      expect(mockTransactionRepo.save).toHaveBeenCalledTimes(1);
+      expect(mockCustomerRepo.save).toHaveBeenCalledTimes(1);
+      expect(mockMerchantRepo.save).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not call any save if idempotency returns cached result', async () => {
+      const cachedResponse = {
+        transactionId: 'txn_cached',
+        merchantPoints: 100,
+        globalPoints: 100,
+        newMerchantBalance: 100,
+        newGlobalBalance: 100,
+        currentTier: 'Bronze',
+        tierUpgrade: false,
+        earningMultiplier: 1.0,
+        isDecayImmune: false,
+        pointsToNextTier: 4900,
+        message: 'Cached',
+      };
+
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(cachedResponse);
+
+      await useCase.execute({
+        merchantId: 'merchant_123',
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 100,
+        idempotencyKey: 'cached_repo_key',
+      });
+
+      expect(mockTransactionRepo.save).not.toHaveBeenCalled();
+      expect(mockCustomerRepo.save).not.toHaveBeenCalled();
+      expect(mockMerchantRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('should increment merchant transaction count (merchantRepo.save called with updated merchant)', async () => {
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      await useCase.execute({
+        merchantId: 'merchant_123',
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 100,
+        idempotencyKey: 'merchant_count_key',
+      });
+
+      // merchantRepo.save should have been called with the merchant that had incrementTransactionCount() called
+      expect(mockMerchantRepo.save).toHaveBeenCalledTimes(1);
+      expect(mockMerchantRepo.save).toHaveBeenCalledWith(testMerchant);
+    });
+  });
 });

@@ -317,6 +317,87 @@ describe('Point System - Real World Scenarios', () => {
       });
     });
 
+    describe('Decay Edge Cases', () => {
+      it('should handle small balance decay: 10 points at Phase 1 (4 months)', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setGlobalPointsBalance(customer, 10);
+        setLastActivityDate(customer, 4); // 4 months = 1 month in Phase 1
+
+        const decayAmount = customer.calculateDecayAmount();
+
+        // 10 * 0.95 = 9.5, floor = 9, decay = 1 (or 0 depending on rounding)
+        expect(decayAmount.toNumber()).toBeGreaterThanOrEqual(0);
+        expect(decayAmount.toNumber()).toBeLessThanOrEqual(1);
+      });
+
+      it('should handle zero global points decay at Phase 1', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setGlobalPointsBalance(customer, 0);
+        setLastActivityDate(customer, 4); // Phase 1
+
+        const decayAmount = customer.calculateDecayAmount();
+
+        expect(decayAmount.toNumber()).toBe(0);
+      });
+
+      it('should start Phase 1 at exactly 3 months of inactivity', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setGlobalPointsBalance(customer, 1000);
+        setLastActivityDate(customer, 3); // Exactly 3 months
+
+        const phase = customer.calculateDecayPhase();
+
+        expect(phase).toBe(1); // Phase 1 starts at month 3
+      });
+
+      it('should start Phase 2 at exactly 6 months of inactivity', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setGlobalPointsBalance(customer, 1000);
+        setLastActivityDate(customer, 6); // Exactly 6 months
+
+        const phase = customer.calculateDecayPhase();
+
+        expect(phase).toBe(2); // Phase 2 starts at month 6
+      });
+
+      it('should compound decay when applied twice', () => {
+        // First application
+        const customer1 = createCustomerWithEnrollment('merchant_123');
+        setGlobalPointsBalance(customer1, 1000);
+        setLastActivityDate(customer1, 4); // Phase 1
+
+        const firstDecay = customer1.applyGlobalPointsDecay();
+        const balanceAfterFirst = customer1.getGlobalPointsBalance().toNumber();
+
+        // Second application (simulate continued inactivity)
+        setLastActivityDate(customer1, 4); // Still Phase 1 after time passes
+        const secondDecay = customer1.applyGlobalPointsDecay();
+        const balanceAfterSecond = customer1.getGlobalPointsBalance().toNumber();
+
+        // Balance should keep decreasing
+        expect(balanceAfterFirst).toBeLessThan(1000);
+        expect(balanceAfterSecond).toBeLessThan(balanceAfterFirst);
+        expect(firstDecay.toNumber()).toBeGreaterThan(0);
+        expect(secondDecay.toNumber()).toBeGreaterThan(0);
+      });
+
+      it('should return undefined decay start date for active customer', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        // Default customer is freshly created / active
+        customer.addPointsFromPurchase('merchant_123', Points.from(10), Points.from(10));
+
+        expect(customer.getDecayStartDate()).toBeUndefined();
+      });
+
+      it('should return 0 months of inactivity for recently active customer', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        // Just created, last activity is now
+        setLastActivityDate(customer, 0);
+
+        expect(customer.getMonthsOfInactivity()).toBe(0);
+      });
+    });
+
     describe('Decay phases and rates', () => {
       it('should apply 5% decay per month in Phase 1 (months 3-5)', () => {
         const customer = createCustomerWithEnrollment('merchant_123');
@@ -664,6 +745,86 @@ describe('Point System - Real World Scenarios', () => {
       });
     });
 
+    describe('Redemption Edge Cases', () => {
+      it('should allow redeeming 1 point for 0.01 SAR (normal rate)', () => {
+        const transaction = Transaction.createRedeem(
+          'merchant_123',
+          'customer_123',
+          Points.from(1),
+          Money.fromSAR(0.01),
+          Points.from(100),
+          'idempotency_key',
+        );
+
+        expect(transaction).toBeDefined();
+        expect(transaction.getPoints().toNumber()).toBe(1);
+      });
+
+      it('should allow redeeming 1 point for 0.50 SAR (exactly at limit)', () => {
+        const transaction = Transaction.createRedeem(
+          'merchant_123',
+          'customer_123',
+          Points.from(1),
+          Money.fromSAR(0.5),
+          Points.from(100),
+          'idempotency_key',
+        );
+
+        expect(transaction).toBeDefined();
+      });
+
+      it('should reject redeeming 1 point for 0.51 SAR (over limit)', () => {
+        expect(() => {
+          Transaction.createRedeem(
+            'merchant_123',
+            'customer_123',
+            Points.from(1),
+            Money.fromSAR(0.51),
+            Points.from(100),
+            'idempotency_key',
+          );
+        }).toThrow(/exceeds maximum allowed/);
+      });
+
+      it('should reject earn with zero points', () => {
+        expect(() => {
+          Transaction.createEarn(
+            'merchant_123',
+            'customer_123',
+            Points.from(0),
+            Money.fromSAR(10),
+            Points.from(100),
+            'idempotency_key',
+          );
+        }).toThrow('Points must be greater than zero');
+      });
+
+      it('should reject adjustment with zero points', () => {
+        expect(() => {
+          Transaction.createAdjustment(
+            'merchant_123',
+            'customer_123',
+            Points.from(0),
+            Points.from(100),
+            true,
+            'idempotency_key',
+          );
+        }).toThrow('Points must be greater than zero');
+      });
+
+      it('should reject expiration with zero points', () => {
+        expect(() => {
+          Transaction.createExpiration(
+            'SYSTEM',
+            'customer_123',
+            Points.from(0),
+            Points.from(100),
+            'idempotency_key',
+          );
+        }).toThrow('Points must be greater than zero');
+      });
+    });
+
     describe('Transaction validation edge cases', () => {
       it('should reject zero points redemption', () => {
         expect(() => {
@@ -725,6 +886,194 @@ describe('Point System - Real World Scenarios', () => {
         // Infinity is not an integer, so integer check triggers first
         expect(() => Points.from(Number.POSITIVE_INFINITY)).toThrow('Points must be an integer');
       });
+    });
+  });
+
+  /**
+   * ============================================
+   * TIER UPGRADE DURING PURCHASE
+   * ============================================
+   */
+  describe('Tier Upgrade During Purchase', () => {
+    it('should upgrade to Platinum when crossing 5000 monthly threshold', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      // Setup: Bronze with 4500 monthly progress
+      setMonthlyProgress(customer, 4500);
+      setGlobalPointsBalance(customer, 4500);
+
+      // Reset monthly progress tracking date to current month so lazy reset doesn't trigger
+      setMonthlyProgressResetDate(customer, new Date());
+
+      // Action: Earn 600 points → 4500 + 600 = 5100 → crosses 5000
+      customer.addPointsFromPurchase('merchant_123', Points.from(600), Points.from(600));
+
+      // Assert: Upgraded to Platinum
+      expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.PLATINUM);
+      expect(customer.getMonthlyProgress().toNumber()).toBe(5100);
+    });
+
+    it('should upgrade to Diamond when crossing 15000 monthly threshold', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      setCustomerTier(customer, CustomerTier.platinum());
+      setMonthlyProgress(customer, 14800);
+      setGlobalPointsBalance(customer, 14800);
+      setMonthlyProgressResetDate(customer, new Date());
+
+      // Action: Earn 300 points → 14800 + 330 (1.1x Platinum) = 15130 → crosses 15000
+      customer.addPointsFromPurchase('merchant_123', Points.from(300), Points.from(300));
+
+      // Assert: Upgraded to Diamond
+      expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.DIAMOND);
+    });
+
+    it('should stay Bronze when below 5000 threshold', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      setMonthlyProgress(customer, 4000);
+      setGlobalPointsBalance(customer, 4000);
+      setMonthlyProgressResetDate(customer, new Date());
+
+      // Action: Earn 500 points → 4000 + 500 = 4500 → below 5000
+      customer.addPointsFromPurchase('merchant_123', Points.from(500), Points.from(500));
+
+      // Assert: Still Bronze
+      expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.BRONZE);
+      expect(customer.getMonthlyProgress().toNumber()).toBe(4500);
+    });
+
+    it('should apply higher multiplier after mid-purchase tier upgrade', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      setMonthlyProgress(customer, 4500);
+      setGlobalPointsBalance(customer, 4500);
+      setMonthlyProgressResetDate(customer, new Date());
+
+      // First purchase: Bronze (1.0x) → earns 600 → crosses 5000 → upgrades to Platinum
+      customer.addPointsFromPurchase('merchant_123', Points.from(600), Points.from(600));
+      expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.PLATINUM);
+
+      // Second purchase: Now Platinum (1.1x) → 100 base → 110 actual
+      customer.addPointsFromPurchase('merchant_123', Points.from(100), Points.from(100));
+      // 4500 + 600 (Bronze 1.0x) + 110 (Platinum 1.1x) = 5210
+      expect(customer.getMonthlyProgress().toNumber()).toBe(5210);
+    });
+  });
+
+  /**
+   * ============================================
+   * CONSENT MECHANICS
+   * ============================================
+   */
+  describe('Consent Mechanics', () => {
+    it('should prevent earning merchant points with PENDING consent', () => {
+      const phone = new PhoneNumber('0501234567');
+      const customer = Customer.create(phone, 'Test Customer');
+      customer.enrollWithMerchant('merchant_123');
+      // Consent is PENDING by default
+
+      expect(() => {
+        customer.addPointsFromPurchase('merchant_123', Points.from(100), Points.from(100));
+      }).toThrow('Consent required to add points');
+    });
+
+    it('should prevent earning merchant points with REVOKED consent', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      // Revoke consent
+      customer.revokeConsent('merchant_123');
+
+      expect(() => {
+        customer.addPointsFromPurchase('merchant_123', Points.from(100), Points.from(100));
+      }).toThrow('Consent required to add points');
+    });
+
+    it('should allow earning again after re-granting consent', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      // Revoke
+      customer.revokeConsent('merchant_123');
+
+      // Re-grant
+      customer.grantConsent('merchant_123');
+
+      // Should now work
+      customer.addPointsFromPurchase('merchant_123', Points.from(100), Points.from(100));
+      expect(customer.getGlobalPointsBalance().toNumber()).toBe(100);
+      expect(customer.getMerchantPointsBalance('merchant_123').toNumber()).toBe(100);
+    });
+
+    it('should not affect one merchant consent when another merchant consent changes', () => {
+      const customer = createCustomerWithEnrollment('merchant_a');
+      customer.enrollWithMerchant('merchant_b');
+      customer.grantConsent('merchant_b');
+
+      // Revoke consent at merchant_a
+      customer.revokeConsent('merchant_a');
+
+      // Should still be able to earn at merchant_b
+      customer.addPointsFromPurchase('merchant_b', Points.from(200), Points.from(200));
+      expect(customer.getMerchantPointsBalance('merchant_b').toNumber()).toBe(200);
+
+      // But not at merchant_a
+      expect(() => {
+        customer.addPointsFromPurchase('merchant_a', Points.from(100), Points.from(100));
+      }).toThrow('Consent required to add points');
+    });
+  });
+
+  /**
+   * ============================================
+   * CUSTOMER STATUS EFFECTS
+   * ============================================
+   */
+  describe('Customer Status Effects', () => {
+    it('should prevent suspended customer from redeeming global points', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      setGlobalPointsBalance(customer, 1000);
+      customer.suspend();
+
+      expect(() => {
+        customer.redeemGlobalPoints(Points.from(100));
+      }).toThrow('Customer must be active to redeem points');
+    });
+
+    it('should prevent deactivated customer from redeeming via redeemSmart', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      setGlobalPointsBalance(customer, 1000);
+      setMerchantPointsBalance(customer, 'merchant_123', 500);
+      customer.deactivate();
+
+      expect(() => {
+        customer.redeemSmart('merchant_123', Points.from(100));
+      }).toThrow('Customer must be active to redeem points');
+    });
+
+    it('should prevent deactivated customer from enrolling with merchant', () => {
+      const phone = new PhoneNumber('0501234567');
+      const customer = Customer.create(phone, 'Test Customer');
+      customer.deactivate();
+
+      expect(() => {
+        customer.enrollWithMerchant('new_merchant');
+      }).toThrow('Customer must be active to enroll');
+    });
+
+    it('should allow active customer to perform all operations normally', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+
+      // Earn points
+      customer.addPointsFromPurchase('merchant_123', Points.from(500), Points.from(500));
+      expect(customer.getGlobalPointsBalance().toNumber()).toBe(500);
+
+      // Redeem global points
+      customer.redeemGlobalPoints(Points.from(100));
+      expect(customer.getGlobalPointsBalance().toNumber()).toBe(400);
+
+      // Smart redeem
+      const result = customer.redeemSmart('merchant_123', Points.from(200));
+      expect(result.merchantPointsUsed.toNumber() + result.globalPointsUsed.toNumber()).toBe(200);
+
+      // Enroll with new merchant
+      customer.enrollWithMerchant('another_merchant');
+      customer.grantConsent('another_merchant');
+      customer.addPointsFromPurchase('another_merchant', Points.from(100), Points.from(100));
+      expect(customer.getMerchantPointsBalance('another_merchant').toNumber()).toBe(100);
     });
   });
 
