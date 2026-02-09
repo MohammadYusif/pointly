@@ -20,7 +20,20 @@
     "docker:up": "docker compose -f docker/docker-compose.yml up -d",
     "docker:down": "docker compose -f docker/docker-compose.yml down",
     "infra:deploy": "pnpm --filter @pointly/infrastructure deploy",
-    "infra:destroy": "pnpm --filter @pointly/infrastructure destroy"
+    "infra:destroy": "pnpm --filter @pointly/infrastructure destroy",
+    "seed": "cd apps/api && node ../../scripts/seed-data.mjs",
+    "seed:clean": "cd apps/api && node ../../scripts/seed-data.mjs --clean"
+  },
+  "pnpm": {
+    "overrides": {
+      "@next/swc-win32-x64-msvc": "15.5.11",
+      "@next/swc-darwin-arm64": "15.5.11",
+      "@next/swc-darwin-x64": "15.5.11",
+      "@next/swc-linux-x64-gnu": "15.5.11",
+      "@next/swc-linux-x64-musl": "15.5.11",
+      "@next/swc-linux-arm64-gnu": "15.5.11",
+      "@next/swc-linux-arm64-musl": "15.5.11"
+    }
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
