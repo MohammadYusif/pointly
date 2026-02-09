@@ -293,6 +293,37 @@ resource "aws_api_gateway_integration_response" "proxy_options" {
 }
 
 # ===========================================
+# API Gateway CloudWatch Logging Role
+# ===========================================
+resource "aws_iam_role" "api_gateway_cloudwatch" {
+  name = "Pointly-APIGateway-CloudWatch-${var.environment}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "apigateway.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "api_gateway_cloudwatch" {
+  role       = aws_iam_role.api_gateway_cloudwatch.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+}
+
+resource "aws_api_gateway_account" "main" {
+  cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch.arn
+
+  depends_on = [aws_iam_role_policy_attachment.api_gateway_cloudwatch]
+}
+
+# ===========================================
 # API Gateway Deployment & Stage
 # ===========================================
 resource "aws_api_gateway_deployment" "main" {
@@ -321,6 +352,8 @@ resource "aws_api_gateway_stage" "main" {
   stage_name    = var.environment
 
   xray_tracing_enabled = true
+
+  depends_on = [aws_api_gateway_account.main]
 
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_gateway.arn
