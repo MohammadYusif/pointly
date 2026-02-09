@@ -6,6 +6,7 @@ locals {
 
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
+data "aws_canonical_user_id" "current" {}
 
 # ===========================================
 # S3 Bucket for Static Website
@@ -87,6 +88,35 @@ resource "aws_s3_bucket_ownership_controls" "cloudfront_logs" {
 
   rule {
     object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_acl" "cloudfront_logs" {
+  bucket = aws_s3_bucket.cloudfront_logs.id
+
+  depends_on = [aws_s3_bucket_ownership_controls.cloudfront_logs]
+
+  access_control_policy {
+    owner {
+      id = data.aws_canonical_user_id.current.id
+    }
+
+    grant {
+      grantee {
+        id   = data.aws_canonical_user_id.current.id
+        type = "CanonicalUser"
+      }
+      permission = "FULL_CONTROL"
+    }
+
+    grant {
+      grantee {
+        # CloudFront log delivery canonical user ID
+        id   = "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0"
+        type = "CanonicalUser"
+      }
+      permission = "FULL_CONTROL"
+    }
   }
 }
 
