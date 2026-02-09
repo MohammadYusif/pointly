@@ -6,7 +6,7 @@
 set -euo pipefail
 
 AWS_REGION="me-south-1"
-STATE_BUCKET="pointly-terraform-state"
+STATE_BUCKET="pointly-terraform-state-759316130972"
 LOCK_TABLE="pointly-terraform-locks"
 
 echo "=== Pointly Terraform Bootstrap ==="
