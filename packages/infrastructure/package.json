@@ -2,30 +2,14 @@
   "name": "@pointly/infrastructure",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
+  "description": "Pointly AWS infrastructure managed with Terraform",
   "scripts": {
-    "cdk": "cdk",
-    "synth": "cdk synth",
-    "diff": "cdk diff",
-    "deploy": "cdk deploy --all --require-approval never",
-    "deploy:dev": "cdk deploy --all --require-approval never --context environment=dev",
-    "deploy:prod": "cdk deploy --all --require-approval never --context environment=prod",
-    "destroy": "cdk destroy --all",
-    "bootstrap": "cdk bootstrap",
-    "lint": "biome check .",
-    "format": "biome format --write .",
-    "type-check": "tsc --noEmit"
-  },
-  "dependencies": {
-    "aws-cdk-lib": "^2.170.0",
-    "constructs": "^10.4.0",
-    "source-map-support": "^0.5.21"
-  },
-  "devDependencies": {
-    "@types/node": "^22.0.0",
-    "@types/source-map-support": "^0.5.10",
-    "@biomejs/biome": "1.9.4",
-    "typescript": "5.7.2",
-    "aws-cdk": "^2.170.0"
+    "tf:init": "cd terraform && terraform init",
+    "tf:plan:dev": "cd terraform && terraform workspace select dev || terraform workspace new dev && terraform plan -var-file=environments/dev.tfvars",
+    "tf:plan:prod": "cd terraform && terraform workspace select prod || terraform workspace new prod && terraform plan -var-file=environments/prod.tfvars",
+    "tf:apply:dev": "cd terraform && terraform workspace select dev && terraform apply -var-file=environments/dev.tfvars",
+    "tf:apply:prod": "cd terraform && terraform workspace select prod && terraform apply -var-file=environments/prod.tfvars",
+    "tf:fmt": "cd terraform && terraform fmt -recursive",
+    "tf:validate": "cd terraform && terraform validate"
   }
 }

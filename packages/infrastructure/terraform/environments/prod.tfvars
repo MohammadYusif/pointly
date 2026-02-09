@@ -1,0 +1,5 @@
+environment     = "prod"
+aws_region      = "me-south-1"
+alarm_email     = ""
+domain_name     = ""
+certificate_arn = ""
