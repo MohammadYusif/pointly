@@ -68,17 +68,12 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build API for Lambda
-        run: pnpm --filter @pointly/api build
+        run: pnpm --filter @pointly/api build:lambda
 
       - name: Package Lambda
-        working-directory: apps/api
         run: |
-          mkdir -p lambda-package
-          cp -r dist/* lambda-package/
-          cp package.json lambda-package/
-          cd lambda-package
-          pnpm install --prod --ignore-scripts
-          zip -r ../../packages/infrastructure/terraform/lambda.zip .
+          cd apps/api/dist/lambda
+          zip -r ../../../../packages/infrastructure/terraform/lambda.zip .
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
