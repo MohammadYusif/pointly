@@ -1,13 +1,7 @@
 'use client';
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-} from 'react';
+import type React from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 export type Direction = 'ltr' | 'rtl';
 export type Language = 'en' | 'ar';
@@ -20,9 +14,7 @@ interface DirectionContextType {
   isRTL: boolean;
 }
 
-const DirectionContext = createContext<DirectionContextType | undefined>(
-  undefined
-);
+const DirectionContext = createContext<DirectionContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'pointly-language';
 
@@ -36,9 +28,7 @@ export function DirectionProvider({
   defaultLanguage = 'ar', // Default to Arabic for Saudi market
 }: DirectionProviderProps) {
   const [language, setLanguageState] = useState<Language>(defaultLanguage);
-  const [direction, setDirection] = useState<Direction>(
-    defaultLanguage === 'ar' ? 'rtl' : 'ltr'
-  );
+  const [direction, setDirection] = useState<Direction>(defaultLanguage === 'ar' ? 'rtl' : 'ltr');
   const [mounted, setMounted] = useState(false);
 
   // Initialize from localStorage on mount
@@ -86,14 +76,10 @@ export function DirectionProvider({
       toggleDirection,
       isRTL,
     }),
-    [direction, language, setLanguage, toggleDirection, isRTL]
+    [direction, language, setLanguage, toggleDirection, isRTL],
   );
 
-  return (
-    <DirectionContext.Provider value={value}>
-      {children}
-    </DirectionContext.Provider>
-  );
+  return <DirectionContext.Provider value={value}>{children}</DirectionContext.Provider>;
 }
 
 export function useDirection() {

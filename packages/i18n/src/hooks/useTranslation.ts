@@ -1,8 +1,8 @@
 'use client';
 
-import { useDirection, type Language } from '../context/DirectionContext';
-import en from '../locales/en.json';
+import { type Language, useDirection } from '../context/DirectionContext';
 import ar from '../locales/ar.json';
+import en from '../locales/en.json';
 
 type TranslationValue = string | Record<string, unknown>;
 type Translations = Record<string, TranslationValue>;
@@ -31,10 +31,7 @@ function getNestedValue(obj: Record<string, unknown>, path: string): string {
  * Replace placeholders in a string with provided values
  * Supports {{key}} syntax
  */
-function interpolate(
-  text: string,
-  params?: Record<string, string | number>
-): string {
+function interpolate(text: string, params?: Record<string, string | number>): string {
   if (!params) return text;
 
   return text.replace(/\{\{(\w+)\}\}/g, (_, key) => {
@@ -51,10 +48,7 @@ export function useTranslation() {
    * @param params - Optional parameters for interpolation
    */
   const t = (key: string, params?: Record<string, string | number>): string => {
-    const value = getNestedValue(
-      translations[language] as Record<string, unknown>,
-      key
-    );
+    const value = getNestedValue(translations[language] as Record<string, unknown>, key);
     return interpolate(value, params);
   };
 
@@ -81,10 +75,7 @@ export function useTranslation() {
   /**
    * Format a date according to the current locale
    */
-  const formatDate = (
-    date: Date | string,
-    options?: Intl.DateTimeFormatOptions
-  ): string => {
+  const formatDate = (date: Date | string, options?: Intl.DateTimeFormatOptions): string => {
     const locale = language === 'ar' ? 'ar-SA' : 'en-SA';
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     return new Intl.DateTimeFormat(locale, {
@@ -100,9 +91,7 @@ export function useTranslation() {
     const locale = language === 'ar' ? 'ar-SA' : 'en-SA';
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     const now = new Date();
-    const diffInSeconds = Math.floor(
-      (now.getTime() - dateObj.getTime()) / 1000
-    );
+    const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
 
     const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
 

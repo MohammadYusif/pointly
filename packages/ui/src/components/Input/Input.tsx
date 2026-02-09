@@ -1,11 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { cn } from '../../utils/cn';
 import { useRTL } from '../../hooks/useRTL';
+import { cn } from '../../utils/cn';
 
-export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   startIcon?: React.ReactNode;
@@ -19,12 +18,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label
-            className={cn(
-              'mb-1.5 block text-sm font-medium text-foreground',
-              textStart
-            )}
-          >
+          <label className={cn('mb-1.5 block text-sm font-medium text-foreground', textStart)}>
             {label}
           </label>
         )}
@@ -33,7 +27,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             <div
               className={cn(
                 'pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted-foreground',
-                isRTL ? 'right-3' : 'left-3'
+                isRTL ? 'right-3' : 'left-3',
               )}
             >
               {startIcon}
@@ -49,10 +43,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               'disabled:cursor-not-allowed disabled:opacity-50',
               startIcon && (isRTL ? 'pr-10' : 'pl-10'),
               endIcon && (isRTL ? 'pl-10' : 'pr-10'),
-              error &&
-                'border-destructive focus-visible:ring-destructive/20',
+              error && 'border-destructive focus-visible:ring-destructive/20',
               textStart,
-              className
+              className,
             )}
             ref={ref}
             {...props}
@@ -61,26 +54,21 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             <div
               className={cn(
                 'pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted-foreground',
-                isRTL ? 'left-3' : 'right-3'
+                isRTL ? 'left-3' : 'right-3',
               )}
             >
               {endIcon}
             </div>
           )}
         </div>
-        {error && (
-          <p className={cn('mt-1.5 text-sm text-destructive', textStart)}>
-            {error}
-          </p>
-        )}
+        {error && <p className={cn('mt-1.5 text-sm text-destructive', textStart)}>{error}</p>}
       </div>
     );
-  }
+  },
 );
 Input.displayName = 'Input';
 
-export interface TextareaProps
-  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
 }
@@ -92,12 +80,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className="w-full">
         {label && (
-          <label
-            className={cn(
-              'mb-1.5 block text-sm font-medium text-foreground',
-              textStart
-            )}
-          >
+          <label className={cn('mb-1.5 block text-sm font-medium text-foreground', textStart)}>
             {label}
           </label>
         )}
@@ -109,19 +92,15 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
             'disabled:cursor-not-allowed disabled:opacity-50',
             error && 'border-destructive focus-visible:ring-destructive/20',
             textStart,
-            className
+            className,
           )}
           ref={ref}
           {...props}
         />
-        {error && (
-          <p className={cn('mt-1.5 text-sm text-destructive', textStart)}>
-            {error}
-          </p>
-        )}
+        {error && <p className={cn('mt-1.5 text-sm text-destructive', textStart)}>{error}</p>}
       </div>
     );
-  }
+  },
 );
 Textarea.displayName = 'Textarea';
 

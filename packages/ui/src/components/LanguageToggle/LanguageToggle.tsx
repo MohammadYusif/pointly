@@ -1,9 +1,7 @@
 'use client';
-
-import * as React from 'react';
 import { useDirection } from '@pointly/i18n';
-import { Button } from '../Button/Button';
 import { cn } from '../../utils/cn';
+import { Button } from '../Button/Button';
 
 export interface LanguageToggleProps {
   className?: string;

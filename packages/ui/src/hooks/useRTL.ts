@@ -59,10 +59,8 @@ export function useRTL() {
   /**
    * Position utilities
    */
-  const start = (value: string): string =>
-    isRTL ? `right-${value}` : `left-${value}`;
-  const end = (value: string): string =>
-    isRTL ? `left-${value}` : `right-${value}`;
+  const start = (value: string): string => (isRTL ? `right-${value}` : `left-${value}`);
+  const end = (value: string): string => (isRTL ? `left-${value}` : `right-${value}`);
 
   /**
    * Translate utilities

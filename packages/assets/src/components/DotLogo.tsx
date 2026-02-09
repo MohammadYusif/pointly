@@ -6,11 +6,7 @@ interface LogoProps {
   className?: string;
 }
 
-export const DotLogo: React.FC<LogoProps> = ({
-  width = 156,
-  height = 104,
-  className = '',
-}) => (
+export const DotLogo: React.FC<LogoProps> = ({ width = 156, height = 104, className = '' }) => (
   <svg
     viewBox="0 0 1248 832"
     width={width}

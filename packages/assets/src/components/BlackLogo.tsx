@@ -6,11 +6,7 @@ interface LogoProps {
   className?: string;
 }
 
-export const BlackLogo: React.FC<LogoProps> = ({
-  width = 192,
-  height = 128,
-  className = '',
-}) => (
+export const BlackLogo: React.FC<LogoProps> = ({ width = 192, height = 128, className = '' }) => (
   <svg
     viewBox="0 0 1536 1024"
     width={width}

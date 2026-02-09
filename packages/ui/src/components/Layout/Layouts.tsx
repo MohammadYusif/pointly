@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { cn } from '../../utils/cn';
 import { useRTL } from '../../hooks/useRTL';
+import { cn } from '../../utils/cn';
 
 // ============================================================================
 // Flex Component
@@ -35,7 +35,7 @@ const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
       children,
       ...props
     },
-    ref
+    ref,
   ) => {
     const { isRTL } = useRTL();
 
@@ -81,14 +81,14 @@ const Flex = React.forwardRef<HTMLDivElement, FlexProps>(
           justifyMap[justify],
           `gap-${gap}`,
           wrap && 'flex-wrap',
-          className
+          className,
         )}
         {...props}
       >
         {children}
       </div>
     );
-  }
+  },
 );
 Flex.displayName = 'Flex';
 
@@ -96,20 +96,7 @@ Flex.displayName = 'Flex';
 // Grid Component
 // ============================================================================
 
-type GridCols =
-  | '1'
-  | '2'
-  | '3'
-  | '4'
-  | '5'
-  | '6'
-  | '7'
-  | '8'
-  | '9'
-  | '10'
-  | '11'
-  | '12'
-  | 'none';
+type GridCols = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | '11' | '12' | 'none';
 
 export interface GridProps extends React.HTMLAttributes<HTMLDivElement> {
   cols?: GridCols;
@@ -137,7 +124,7 @@ const Grid = React.forwardRef<HTMLDivElement, GridProps>(
       children,
       ...props
     },
-    ref
+    ref,
   ) => {
     return (
       <div
@@ -149,17 +136,15 @@ const Grid = React.forwardRef<HTMLDivElement, GridProps>(
           colsMd && `md:grid-cols-${colsMd}`,
           colsLg && `lg:grid-cols-${colsLg}`,
           colsXl && `xl:grid-cols-${colsXl}`,
-          gapX || gapY
-            ? cn(gapX && `gap-x-${gapX}`, gapY && `gap-y-${gapY}`)
-            : `gap-${gap}`,
-          className
+          gapX || gapY ? cn(gapX && `gap-x-${gapX}`, gapY && `gap-y-${gapY}`) : `gap-${gap}`,
+          className,
         )}
         {...props}
       >
         {children}
       </div>
     );
-  }
+  },
 );
 Grid.displayName = 'Grid';
 
@@ -192,14 +177,14 @@ const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
           'w-full px-4 sm:px-6 lg:px-8',
           sizeMap[size],
           centered && 'mx-auto',
-          className
+          className,
         )}
         {...props}
       >
         {children}
       </div>
     );
-  }
+  },
 );
 Container.displayName = 'Container';
 
@@ -225,18 +210,13 @@ const Stack = React.forwardRef<HTMLDivElement, StackProps>(
     return (
       <div
         ref={ref}
-        className={cn(
-          'flex flex-col',
-          `gap-${gap}`,
-          alignMap[align],
-          className
-        )}
+        className={cn('flex flex-col', `gap-${gap}`, alignMap[align], className)}
         {...props}
       >
         {children}
       </div>
     );
-  }
+  },
 );
 Stack.displayName = 'Stack';
 
