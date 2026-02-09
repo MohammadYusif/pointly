@@ -97,13 +97,15 @@ resource "aws_s3_bucket_lifecycle_configuration" "cloudfront_logs" {
     id     = "log-retention"
     status = "Enabled"
 
+    filter {}
+
     transition {
       days          = 30
       storage_class = "INTELLIGENT_TIERING"
     }
 
     expiration {
-      days = local.is_prod ? 90 : 30
+      days = local.is_prod ? 90 : 60
     }
   }
 }

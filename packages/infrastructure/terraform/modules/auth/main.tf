@@ -8,8 +8,8 @@ locals {
 resource "aws_cognito_user_pool" "merchant" {
   name = "Pointly-Merchants-${var.environment}"
 
-  username_attributes      = ["email", "phone_number"]
-  auto_verified_attributes = ["email", "phone_number"]
+  username_attributes      = ["email"]
+  auto_verified_attributes = ["email"]
 
   deletion_protection = local.is_prod ? "ACTIVE" : "INACTIVE"
 
@@ -24,19 +24,6 @@ resource "aws_cognito_user_pool" "merchant" {
 
   schema {
     name                     = "email"
-    attribute_data_type      = "String"
-    required                 = true
-    mutable                  = true
-    developer_only_attribute = false
-
-    string_attribute_constraints {
-      min_length = 1
-      max_length = 256
-    }
-  }
-
-  schema {
-    name                     = "phone_number"
     attribute_data_type      = "String"
     required                 = true
     mutable                  = true
@@ -105,10 +92,6 @@ resource "aws_cognito_user_pool" "merchant" {
       name     = "verified_email"
       priority = 1
     }
-    recovery_mechanism {
-      name     = "verified_phone_number"
-      priority = 2
-    }
   }
 }
 
@@ -142,7 +125,7 @@ resource "aws_cognito_user_pool" "customer" {
   name = "Pointly-Customers-${var.environment}"
 
   username_attributes      = ["phone_number"]
-  auto_verified_attributes = ["phone_number"]
+  auto_verified_attributes = []
 
   deletion_protection = local.is_prod ? "ACTIVE" : "INACTIVE"
 
