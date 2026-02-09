@@ -1,6 +1,13 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { ForbiddenError } from '../../../domain/errors/DomainError';
 import { getContainer } from '../container';
+
+function enforceMerchantAccess(request: FastifyRequest<{ Params: { merchantId: string } }>): void {
+  if (request.merchantId && request.params.merchantId !== request.merchantId) {
+    throw new ForbiddenError("Cannot access another merchant's data");
+  }
+}
 
 const getMerchantParamsSchema = z.object({
   merchantId: z.string().min(1),
@@ -16,6 +23,7 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
   server.get(
     '/:merchantId',
     async (request: FastifyRequest<{ Params: { merchantId: string } }>, reply: FastifyReply) => {
+      enforceMerchantAccess(request);
       const { merchantId } = getMerchantParamsSchema.parse(request.params);
 
       const container = getContainer();
@@ -47,6 +55,7 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       }>,
       reply: FastifyReply,
     ) => {
+      enforceMerchantAccess(request);
       const { merchantId } = request.params;
       const query = getMerchantCustomersQuerySchema.parse(request.query);
 
@@ -79,6 +88,7 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       }>,
       reply: FastifyReply,
     ) => {
+      enforceMerchantAccess(request);
       const { merchantId } = request.params;
       const query = getMerchantCustomersQuerySchema.parse(request.query);
 
@@ -105,6 +115,7 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
   server.get(
     '/:merchantId/stats',
     async (request: FastifyRequest<{ Params: { merchantId: string } }>, reply: FastifyReply) => {
+      enforceMerchantAccess(request);
       const { merchantId } = request.params;
 
       const container = getContainer();
@@ -129,6 +140,7 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       }>,
       reply: FastifyReply,
     ) => {
+      enforceMerchantAccess(request);
       const { merchantId } = request.params;
       const query = getMerchantCustomersQuerySchema.parse(request.query);
 

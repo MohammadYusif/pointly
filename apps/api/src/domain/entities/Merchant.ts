@@ -28,7 +28,6 @@ export interface LoyaltyConfiguration {
   pointsPerSAR: number;
   globalPointsPerSAR: number;
   minimumPurchase: number;
-  pointsExpiry: number | null;
   redemptionRate: number;
   allowPartialRedemption: boolean;
   minimumRedemption: number;
@@ -120,9 +119,8 @@ export class Merchant {
     const configs: Record<MerchantTier, LoyaltyConfiguration> = {
       [MerchantTier.BASIC]: {
         pointsPerSAR: 1,
-        globalPointsPerSAR: 1, // Simplified: all tiers give 1:1 global points
+        globalPointsPerSAR: 1,
         minimumPurchase: 10,
-        pointsExpiry: null, // Merchant points never expire
         redemptionRate: 0.01,
         allowPartialRedemption: false,
         minimumRedemption: 100,
@@ -131,9 +129,8 @@ export class Merchant {
       },
       [MerchantTier.PROFESSIONAL]: {
         pointsPerSAR: 1,
-        globalPointsPerSAR: 1, // Simplified: all tiers give 1:1 global points
+        globalPointsPerSAR: 1,
         minimumPurchase: 5,
-        pointsExpiry: null, // Merchant points never expire
         redemptionRate: 0.01,
         allowPartialRedemption: true,
         minimumRedemption: 50,
@@ -142,10 +139,9 @@ export class Merchant {
       },
       [MerchantTier.ENTERPRISE]: {
         pointsPerSAR: 1,
-        globalPointsPerSAR: 1, // Simplified: all tiers give 1:1 global points
+        globalPointsPerSAR: 1,
         minimumPurchase: 0,
-        pointsExpiry: null, // Merchant points never expire
-        redemptionRate: 0.012, // Enterprise keeps higher redemption rate as tier benefit
+        redemptionRate: 0.012,
         allowPartialRedemption: true,
         minimumRedemption: 25,
         welcomeBonus: 200,

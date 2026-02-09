@@ -3,6 +3,7 @@ import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import Fastify, { type FastifyInstance } from 'fastify';
 import EnvironmentConfig from '../../infrastructure/config/Environment';
+import { cognitoAuthPlugin } from './plugins/cognitoAuth';
 import { errorHandler } from './plugins/errorHandler';
 import { registerRoutes } from './routes';
 
@@ -51,6 +52,9 @@ export async function createServer(): Promise<FastifyInstance> {
       message: 'Rate limit exceeded. Please try again later.',
     }),
   });
+
+  // Register Cognito JWT authentication
+  await server.register(cognitoAuthPlugin);
 
   // Register error handler
   server.setErrorHandler(errorHandler);

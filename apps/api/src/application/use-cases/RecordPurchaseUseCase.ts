@@ -35,7 +35,8 @@ export interface RecordPurchaseResponse {
   // NEW - Tier info
   currentTier: string;
   tierUpgrade: boolean;
-  redemptionMultiplier: number;
+  earningMultiplier: number;
+  isDecayImmune: boolean;
   pointsToNextTier: number;
 
   message: string;
@@ -155,7 +156,8 @@ export class RecordPurchaseUseCase {
             customer.getMonthlyProgress().toNumber() - globalPoints.toNumber(),
           ),
         ),
-      redemptionMultiplier: customer.getRedemptionMultiplier(),
+      earningMultiplier: customer.getEarningMultiplier(),
+      isDecayImmune: customer.isDecayImmune(),
       pointsToNextTier: customer.getPointsToNextTier(),
 
       message: `Purchase recorded! Earned ${merchantPoints.toNumber()} merchant points and ${globalPoints.toNumber()} Pointly Network points`,

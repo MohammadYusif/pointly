@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { ForbiddenError } from '../../../domain/errors/DomainError';
 import { getContainer } from '../container';
 
 const recordPurchaseSchema = z.object({
@@ -24,6 +25,11 @@ export async function purchaseRoutes(server: FastifyInstance): Promise<void> {
     '/',
     async (request: FastifyRequest<{ Body: RecordPurchaseBody }>, reply: FastifyReply) => {
       const body = recordPurchaseSchema.parse(request.body);
+
+      // Enforce that merchants can only record purchases for themselves
+      if (request.merchantId && body.merchantId !== request.merchantId) {
+        throw new ForbiddenError('Cannot record purchases for another merchant');
+      }
 
       const container = getContainer();
       const recordPurchaseUseCase = container.recordPurchaseUseCase;

@@ -76,6 +76,9 @@ export class Transaction {
     });
   }
 
+  // Maximum SAR value per point (sanity check to prevent theft)
+  private static readonly MAX_SAR_PER_POINT = 0.5;
+
   static createRedeem(
     merchantId: string,
     customerId: string,
@@ -84,6 +87,7 @@ export class Transaction {
     balanceBefore: Points,
     idempotencyKey: string,
     metadata: TransactionMetadata = {},
+    expectedRate?: number,
   ): Transaction {
     if (points.isZero()) {
       throw new ValidationError('Points must be greater than zero');
@@ -91,6 +95,28 @@ export class Transaction {
 
     if (balanceBefore.isLessThan(points)) {
       throw new ValidationError('Insufficient points balance');
+    }
+
+    // Validate redemption rate to prevent theft
+    const sarValue = amount.toSAR();
+    const pointCount = points.toNumber();
+    const actualRatePerPoint = sarValue / pointCount;
+
+    // Sanity check: 1 point should never be worth more than MAX_SAR_PER_POINT
+    if (actualRatePerPoint > Transaction.MAX_SAR_PER_POINT) {
+      throw new ValidationError(
+        `Redemption rate ${actualRatePerPoint.toFixed(3)} SAR/point exceeds maximum allowed ${Transaction.MAX_SAR_PER_POINT} SAR/point`,
+      );
+    }
+
+    // If expected rate is provided, validate exact match (with small tolerance for rounding)
+    if (expectedRate !== undefined) {
+      const tolerance = 0.001; // Allow 0.1% tolerance for rounding
+      if (Math.abs(actualRatePerPoint - expectedRate) > tolerance) {
+        throw new ValidationError(
+          `Redemption rate mismatch: expected ${expectedRate} SAR/point but got ${actualRatePerPoint.toFixed(4)} SAR/point`,
+        );
+      }
     }
 
     return new Transaction({
