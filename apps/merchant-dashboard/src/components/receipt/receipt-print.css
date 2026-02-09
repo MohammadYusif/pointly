@@ -1,0 +1,26 @@
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .receipt-printable,
+  .receipt-printable * {
+    visibility: visible;
+  }
+
+  .receipt-printable {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 80mm;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

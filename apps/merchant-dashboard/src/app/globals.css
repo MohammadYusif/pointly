@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "tailwindcss-animate";
 
 /* Tell Tailwind to scan external packages for classes */
 @source "../../node_modules/@pointly/ui/src/**/*.{ts,tsx}";

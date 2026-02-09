@@ -1,5 +1,6 @@
 'use client';
 
+import { AuthProvider } from '@/lib/auth-context';
 import { DirectionProvider } from '@pointly/i18n';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -21,7 +22,9 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <DirectionProvider defaultLanguage="ar">{children}</DirectionProvider>
+      <DirectionProvider defaultLanguage="ar">
+        <AuthProvider>{children}</AuthProvider>
+      </DirectionProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

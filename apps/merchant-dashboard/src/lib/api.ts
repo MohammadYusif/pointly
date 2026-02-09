@@ -1,3 +1,13 @@
+import type {
+  CustomerResponse,
+  MerchantResponse,
+  MerchantStatsResponse,
+  PaginatedResponse,
+  RecordPurchaseResponse,
+  TransactionResponse,
+} from '@/types/api';
+import { getAccessToken, signOut } from './auth';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 interface ApiResponse<T> {
@@ -9,13 +19,22 @@ interface ApiResponse<T> {
 async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
+  const token = await getAccessToken();
+  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
   const response = await fetch(url, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
       ...options.headers,
     },
   });
+
+  if (response.status === 401) {
+    signOut();
+    throw new Error('Session expired');
+  }
 
   const result: ApiResponse<T> = await response.json();
 
@@ -28,42 +47,50 @@ async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise
 
 // Merchant API
 export const merchantApi = {
-  getById: (id: string) => fetchApi<unknown>(`/v1/merchants/${id}`),
+  getById: (id: string) => fetchApi<MerchantResponse>(`/v1/merchants/${id}`),
 
   getCustomers: (merchantId: string, params?: { limit?: number; nextToken?: string }) => {
     const query = new URLSearchParams();
     if (params?.limit) query.set('limit', String(params.limit));
     if (params?.nextToken) query.set('nextToken', params.nextToken);
-    return fetchApi<unknown>(`/v1/merchants/${merchantId}/customers?${query}`);
+    return fetchApi<PaginatedResponse<CustomerResponse>>(
+      `/v1/merchants/${merchantId}/customers?${query}`,
+    );
   },
 
   getTransactions: (merchantId: string, params?: { limit?: number; nextToken?: string }) => {
     const query = new URLSearchParams();
     if (params?.limit) query.set('limit', String(params.limit));
     if (params?.nextToken) query.set('nextToken', params.nextToken);
-    return fetchApi<unknown>(`/v1/merchants/${merchantId}/transactions?${query}`);
+    return fetchApi<PaginatedResponse<TransactionResponse>>(
+      `/v1/merchants/${merchantId}/transactions?${query}`,
+    );
   },
 
-  getStats: (merchantId: string) => fetchApi<unknown>(`/v1/merchants/${merchantId}/stats`),
+  getStats: (merchantId: string) =>
+    fetchApi<MerchantStatsResponse>(`/v1/merchants/${merchantId}/stats`),
 
   getPendingConsents: (merchantId: string) =>
-    fetchApi<unknown>(`/v1/merchants/${merchantId}/pending-consents`),
+    fetchApi<PaginatedResponse<CustomerResponse>>(`/v1/merchants/${merchantId}/pending-consents`),
 };
 
 // Customer API
 export const customerApi = {
-  getById: (id: string) => fetchApi<unknown>(`/v1/customers/${id}`),
+  getById: (id: string) => fetchApi<CustomerResponse>(`/v1/customers/${id}`),
 
-  getByPhone: (phone: string) => fetchApi<unknown>(`/v1/customers/phone/${phone}`),
+  getByPhone: (phone: string) => fetchApi<CustomerResponse>(`/v1/customers/phone/${phone}`),
 
   getTransactions: (customerId: string, params?: { limit?: number; nextToken?: string }) => {
     const query = new URLSearchParams();
     if (params?.limit) query.set('limit', String(params.limit));
     if (params?.nextToken) query.set('nextToken', params.nextToken);
-    return fetchApi<unknown>(`/v1/customers/${customerId}/transactions?${query}`);
+    return fetchApi<PaginatedResponse<TransactionResponse>>(
+      `/v1/customers/${customerId}/transactions?${query}`,
+    );
   },
 
-  getStats: (customerId: string) => fetchApi<unknown>(`/v1/customers/${customerId}/stats`),
+  getStats: (customerId: string) =>
+    fetchApi<MerchantStatsResponse>(`/v1/customers/${customerId}/stats`),
 };
 
 // Purchase API
@@ -75,10 +102,10 @@ export const purchaseApi = {
     idempotencyKey: string;
     metadata?: Record<string, unknown>;
   }) =>
-    fetchApi<unknown>('/v1/purchases', {
+    fetchApi<RecordPurchaseResponse>('/v1/purchases', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  getById: (id: string) => fetchApi<unknown>(`/v1/purchases/${id}`),
+  getById: (id: string) => fetchApi<TransactionResponse>(`/v1/purchases/${id}`),
 };

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { IBM_Plex_Sans_Arabic, Inter } from 'next/font/google';
+import '../components/receipt/receipt-print.css';
 import './globals.css';
 import { Providers } from './providers';
 
