@@ -70,7 +70,7 @@ resource "aws_s3_bucket_public_access_block" "cloudfront_logs" {
   block_public_acls       = false
   block_public_policy     = true
   ignore_public_acls      = false
-  restrict_public_buckets = true
+  restrict_public_buckets = false
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "cloudfront_logs" {
@@ -94,7 +94,10 @@ resource "aws_s3_bucket_ownership_controls" "cloudfront_logs" {
 resource "aws_s3_bucket_acl" "cloudfront_logs" {
   bucket = aws_s3_bucket.cloudfront_logs.id
 
-  depends_on = [aws_s3_bucket_ownership_controls.cloudfront_logs]
+  depends_on = [
+    aws_s3_bucket_ownership_controls.cloudfront_logs,
+    aws_s3_bucket_public_access_block.cloudfront_logs,
+  ]
 
   access_control_policy {
     owner {
