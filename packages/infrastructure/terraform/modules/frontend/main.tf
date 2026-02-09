@@ -67,9 +67,9 @@ resource "aws_s3_bucket" "cloudfront_logs" {
 resource "aws_s3_bucket_public_access_block" "cloudfront_logs" {
   bucket = aws_s3_bucket.cloudfront_logs.id
 
-  block_public_acls       = true
+  block_public_acls       = false
   block_public_policy     = true
-  ignore_public_acls      = true
+  ignore_public_acls      = false
   restrict_public_buckets = true
 }
 
@@ -322,6 +322,8 @@ resource "aws_cloudfront_distribution" "dashboard" {
     bucket          = aws_s3_bucket.cloudfront_logs.bucket_regional_domain_name
     prefix          = "merchant-dashboard/"
   }
+
+  depends_on = [aws_s3_bucket_acl.cloudfront_logs]
 
   # TLS
   viewer_certificate {
