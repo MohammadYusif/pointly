@@ -50,7 +50,7 @@ export function Navbar({
   items,
   logo,
   showLanguageToggle = true,
-  languageToggleFollowsDirection = false,
+  languageToggleFollowsDirection: _languageToggleFollowsDirection = false,
   rightContent,
   mobileMenuContent,
   onNavItemClick,

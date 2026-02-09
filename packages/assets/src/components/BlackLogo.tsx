@@ -13,7 +13,9 @@ export const BlackLogo: React.FC<LogoProps> = ({ width = 192, height = 128, clas
     height={height}
     className={className}
     xmlns="http://www.w3.org/2000/svg"
+    role="img"
   >
+    <title>Pointly</title>
     {/* No background - transparent for dark mode */}
     {/* Letter 'p' */}
     <path

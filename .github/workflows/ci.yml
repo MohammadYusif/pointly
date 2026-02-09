@@ -152,6 +152,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: me-south-1
 
+      - name: Create dummy Lambda zip for validation
+        working-directory: packages/infrastructure/terraform
+        run: echo "placeholder" | zip lambda.zip -
+
       - name: Terraform Format Check
         working-directory: packages/infrastructure/terraform
         run: terraform fmt -check -recursive

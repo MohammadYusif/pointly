@@ -12,13 +12,18 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, label, error, startIcon, endIcon, ...props }, ref) => {
+  ({ className, type, label, error, startIcon, endIcon, id, ...props }, ref) => {
     const { isRTL, textStart } = useRTL();
+    const generatedId = React.useId();
+    const inputId = id || generatedId;
 
     return (
       <div className="w-full">
         {label && (
-          <label className={cn('mb-1.5 block text-sm font-medium text-foreground', textStart)}>
+          <label
+            htmlFor={inputId}
+            className={cn('mb-1.5 block text-sm font-medium text-foreground', textStart)}
+          >
             {label}
           </label>
         )}
@@ -34,6 +39,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             </div>
           )}
           <input
+            id={inputId}
             type={type}
             className={cn(
               'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background',
@@ -74,17 +80,23 @@ export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextArea
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, label, error, ...props }, ref) => {
+  ({ className, label, error, id, ...props }, ref) => {
     const { textStart } = useRTL();
+    const generatedId = React.useId();
+    const textareaId = id || generatedId;
 
     return (
       <div className="w-full">
         {label && (
-          <label className={cn('mb-1.5 block text-sm font-medium text-foreground', textStart)}>
+          <label
+            htmlFor={textareaId}
+            className={cn('mb-1.5 block text-sm font-medium text-foreground', textStart)}
+          >
             {label}
           </label>
         )}
         <textarea
+          id={textareaId}
           className={cn(
             'flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background',
             'placeholder:text-muted-foreground',

@@ -17,7 +17,9 @@ export const MonochromeLogo: React.FC<LogoProps> = ({
     height={height}
     className={className}
     xmlns="http://www.w3.org/2000/svg"
+    role="img"
   >
+    <title>Pointly</title>
     <path
       d="M0 0 C411.84 0 823.68 0 1248 0 C1248 274.56 1248 549.12 1248 832 C836.16 832 424.32 832 0 832 C0 557.44 0 282.88 0 0 Z"
       fill="#F7F8F8"

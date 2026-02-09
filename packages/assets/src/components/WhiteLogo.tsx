@@ -13,7 +13,9 @@ export const WhiteLogo: React.FC<LogoProps> = ({ width = 192, height = 128, clas
     height={height}
     className={className}
     xmlns="http://www.w3.org/2000/svg"
+    role="img"
   >
+    <title>Pointly</title>
     <path
       d="M0 0 C506.88 0 1013.76 0 1536 0 C1536 337.92 1536 675.84 1536 1024 C1029.12 1024 522.24 1024 0 1024 C0 686.08 0 348.16 0 0 Z"
       fill="#21242D"

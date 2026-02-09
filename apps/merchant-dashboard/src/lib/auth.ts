@@ -5,10 +5,17 @@ import {
   type CognitoUserSession,
 } from 'amazon-cognito-identity-js';
 
-const userPool = new CognitoUserPool({
-  UserPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID || '',
-  ClientId: process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID || '',
-});
+const userPoolId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID || '';
+const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID || '';
+
+function getUserPool(): CognitoUserPool {
+  if (!userPoolId || !clientId) {
+    throw new Error(
+      'Cognito is not configured. Set NEXT_PUBLIC_COGNITO_USER_POOL_ID and NEXT_PUBLIC_COGNITO_CLIENT_ID.',
+    );
+  }
+  return new CognitoUserPool({ UserPoolId: userPoolId, ClientId: clientId });
+}
 
 export interface MerchantInfo {
   merchantId: string;
@@ -36,7 +43,7 @@ export function signIn(
   return new Promise((resolve, reject) => {
     const cognitoUser = new CognitoUser({
       Username: email,
-      Pool: userPool,
+      Pool: getUserPool(),
     });
 
     const authDetails = new AuthenticationDetails({
@@ -56,7 +63,7 @@ export function signIn(
 }
 
 export function signOut(): void {
-  const cognitoUser = userPool.getCurrentUser();
+  const cognitoUser = getUserPool().getCurrentUser();
   if (cognitoUser) {
     cognitoUser.signOut();
   }
@@ -68,7 +75,13 @@ export function getCurrentSession(): Promise<{
   merchant: MerchantInfo;
 } | null> {
   return new Promise((resolve) => {
-    const cognitoUser = userPool.getCurrentUser();
+    let cognitoUser: CognitoUser | null = null;
+    try {
+      cognitoUser = getUserPool().getCurrentUser();
+    } catch {
+      resolve(null);
+      return;
+    }
     if (!cognitoUser) {
       resolve(null);
       return;
