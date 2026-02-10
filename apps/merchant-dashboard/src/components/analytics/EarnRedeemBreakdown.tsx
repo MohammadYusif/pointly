@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import type { AnalyticsDataPoint } from "@/types/api";
-import { useTranslation } from "@pointly/i18n";
-import { Card, CardContent, CardHeader, CardTitle } from "@pointly/ui";
+import type { AnalyticsDataPoint } from '@/types/api';
+import { useTranslation } from '@pointly/i18n';
+import { Card, CardContent, CardHeader, CardTitle } from '@pointly/ui';
 import {
   Bar,
   BarChart,
@@ -12,17 +12,14 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from "recharts";
+} from 'recharts';
 
 interface EarnRedeemBreakdownProps {
   data: AnalyticsDataPoint[];
   loading?: boolean;
 }
 
-export function EarnRedeemBreakdown({
-  data,
-  loading,
-}: EarnRedeemBreakdownProps) {
+export function EarnRedeemBreakdown({ data, loading }: EarnRedeemBreakdownProps) {
   const { t, language } = useTranslation();
 
   if (loading) {
@@ -30,13 +27,11 @@ export function EarnRedeemBreakdown({
       <Card>
         <CardHeader>
           <CardTitle className="text-sm md:text-base">
-            {language === "ar"
-              ? "النقاط المكتسبة والمستبدلة"
-              : "Points Earned vs Redeemed"}
+            {language === 'ar' ? 'النقاط المكتسبة والمستبدلة' : 'Points Earned vs Redeemed'}
           </CardTitle>
         </CardHeader>
         <CardContent className="h-75 flex items-center justify-center">
-          <p className="text-muted-foreground">{t("common.loading")}</p>
+          <p className="text-muted-foreground">{t('common.loading')}</p>
         </CardContent>
       </Card>
     );
@@ -52,9 +47,7 @@ export function EarnRedeemBreakdown({
     <Card>
       <CardHeader>
         <CardTitle className="text-sm md:text-base">
-          {language === "ar"
-            ? "النقاط المكتسبة والمستبدلة"
-            : "Points Earned vs Redeemed"}
+          {language === 'ar' ? 'النقاط المكتسبة والمستبدلة' : 'Points Earned vs Redeemed'}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -68,13 +61,13 @@ export function EarnRedeemBreakdown({
               <Legend />
               <Bar
                 dataKey="earned"
-                name={language === "ar" ? "مكتسبة" : "Earned"}
+                name={language === 'ar' ? 'مكتسبة' : 'Earned'}
                 fill="#22c55e"
                 radius={[4, 4, 0, 0]}
               />
               <Bar
                 dataKey="redeemed"
-                name={language === "ar" ? "مستبدلة" : "Redeemed"}
+                name={language === 'ar' ? 'مستبدلة' : 'Redeemed'}
                 fill="#f97316"
                 radius={[4, 4, 0, 0]}
               />
@@ -89,9 +82,9 @@ export function EarnRedeemBreakdown({
 function formatPeriodLabel(period: string, language: string): string {
   try {
     const date = new Date(period);
-    return new Intl.DateTimeFormat(language === "ar" ? "ar-SA" : "en-SA", {
-      month: "short",
-      day: "numeric",
+    return new Intl.DateTimeFormat(language === 'ar' ? 'ar-SA' : 'en-SA', {
+      month: 'short',
+      day: 'numeric',
     }).format(date);
   } catch {
     return period;
