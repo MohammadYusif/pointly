@@ -14,6 +14,18 @@ import { useState } from 'react';
 
 type Step = 'input' | 'confirming' | 'submitting' | 'receipt';
 
+function getTierColor(tier: string) {
+  switch (tier) {
+    case 'Diamond':
+      return 'text-purple-600';
+    case 'Platinum':
+      return 'text-blue-600';
+    default:
+      return 'text-amber-600';
+  }
+}
+
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: multi-step form with 4 states requires conditional rendering
 export default function ManualEntryPage() {
   const { t, formatCurrency, formatNumber, language } = useTranslation();
   const { textStart } = useRTL();
@@ -105,17 +117,6 @@ export default function ManualEntryPage() {
     });
   };
 
-  const getTierColor = (tier: string) => {
-    switch (tier) {
-      case 'Diamond':
-        return 'text-purple-600';
-      case 'Platinum':
-        return 'text-blue-600';
-      default:
-        return 'text-amber-600';
-    }
-  };
-
   return (
     <DashboardLayout>
       <div className="mb-6">
@@ -203,7 +204,9 @@ export default function ManualEntryPage() {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={isLookingUp || !phone || !amount || (isMultiLocation && !selectedLocationId)}
+                  disabled={
+                    isLookingUp || !phone || !amount || (isMultiLocation && !selectedLocationId)
+                  }
                 >
                   {isLookingUp ? t('common.loading') : t('common.next')}
                 </Button>

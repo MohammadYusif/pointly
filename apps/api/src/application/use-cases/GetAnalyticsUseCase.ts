@@ -46,8 +46,7 @@ export class GetAnalyticsUseCase {
     const defaultStart = new Date(now.getTime() - 30 * 86400000);
     const startDate = request.startDate || defaultStart.toISOString();
 
-    const diffDays =
-      (new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000;
+    const diffDays = (new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000;
     const maxDays = GetAnalyticsUseCase.MAX_RANGE_DAYS[groupBy] ?? 90;
     if (diffDays > maxDays) {
       throw new ValidationError(

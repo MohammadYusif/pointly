@@ -1,7 +1,7 @@
 'use client';
 
-import { LocationSelector } from '@/components/analytics';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { LocationSelector } from '@/components/analytics';
 import { useMerchant, useMerchantTransactions } from '@/hooks/api';
 import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
@@ -58,11 +58,7 @@ export default function TransactionsPage() {
         <h1 className={`text-2xl md:text-3xl font-bold text-foreground ${textStart}`}>
           {t('transaction.title')}
         </h1>
-        <LocationSelector
-          locations={locations}
-          selected={locationId}
-          onChange={setLocationId}
-        />
+        <LocationSelector locations={locations} selected={locationId} onChange={setLocationId} />
       </div>
 
       <div className="space-y-3">

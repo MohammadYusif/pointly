@@ -107,28 +107,23 @@ export interface PaginatedResponse<T> {
 
 export interface AnalyticsDataPoint {
   period: string;
+  transactionCount: number;
   earnCount: number;
   redeemCount: number;
-  totalEarnPoints: number;
-  totalRedeemPoints: number;
-  totalRevenue: number;
+  revenue: number;
+  pointsEarned: number;
+  pointsRedeemed: number;
   uniqueCustomers: number;
 }
 
 export interface AnalyticsData {
   summary: {
     totalTransactions: number;
-    totalEarnTransactions: number;
-    totalRedeemTransactions: number;
     totalRevenue: number;
     totalPointsEarned: number;
     totalPointsRedeemed: number;
     uniqueCustomers: number;
+    averageTransactionValue: number;
   };
-  dataPoints: AnalyticsDataPoint[];
-  query: {
-    startDate: string;
-    endDate: string;
-    groupBy: string;
-  };
+  trends: AnalyticsDataPoint[];
 }

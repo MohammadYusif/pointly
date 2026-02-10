@@ -1,9 +1,18 @@
 'use client';
 
+import type { AnalyticsDataPoint } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { Card, CardContent, CardHeader, CardTitle } from '@pointly/ui';
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import type { AnalyticsDataPoint } from '@/types/api';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 interface EarnRedeemBreakdownProps {
   data: AnalyticsDataPoint[];
@@ -30,8 +39,8 @@ export function EarnRedeemBreakdown({ data, loading }: EarnRedeemBreakdownProps)
 
   const chartData = data.map((d) => ({
     period: formatPeriodLabel(d.period, language),
-    earned: d.totalEarnPoints,
-    redeemed: d.totalRedeemPoints,
+    earned: d.pointsEarned,
+    redeemed: d.pointsRedeemed,
   }));
 
   return (

@@ -1,8 +1,9 @@
 'use client';
 
+import { DashboardLayout } from '@/components/DashboardLayout';
 import {
-  DateRangeSelector,
   type DatePreset,
+  DateRangeSelector,
   EarnRedeemBreakdown,
   type GroupBy,
   KPICard,
@@ -11,7 +12,6 @@ import {
   TransactionTrendChart,
   getDateRange,
 } from '@/components/analytics';
-import { DashboardLayout } from '@/components/DashboardLayout';
 import { useMerchant, useMerchantAnalytics } from '@/hooks/api';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslation } from '@pointly/i18n';
@@ -41,7 +41,7 @@ export default function DashboardPage() {
   const isLoading = authLoading || analyticsLoading;
   const locations = merchantData?.locations || [];
   const summary = analytics?.summary;
-  const dataPoints = analytics?.dataPoints || [];
+  const dataPoints = analytics?.trends || [];
 
   return (
     <DashboardLayout>
@@ -65,11 +65,7 @@ export default function DashboardPage() {
           onPresetChange={setPreset}
           onGroupByChange={setGroupBy}
         />
-        <LocationSelector
-          locations={locations}
-          selected={locationId}
-          onChange={setLocationId}
-        />
+        <LocationSelector locations={locations} selected={locationId} onChange={setLocationId} />
       </div>
 
       {/* KPI Cards */}
@@ -112,19 +108,15 @@ export default function DashboardPage() {
       </div>
 
       {/* Location Summary for multi-location merchants */}
-      {locations.length > 1 && !locationId && (
-        <LocationSummary locations={locations} merchantId={authMerchant?.merchantId} />
-      )}
+      {locations.length > 1 && !locationId && <LocationSummary locations={locations} />}
     </DashboardLayout>
   );
 }
 
 function LocationSummary({
   locations,
-  merchantId,
 }: {
   locations: { locationId: string; name: string; city: string; isActive: boolean }[];
-  merchantId?: string;
 }) {
   const { language } = useTranslation();
 
@@ -132,9 +124,7 @@ function LocationSummary({
 
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-3">
-        {language === 'ar' ? 'الفروع' : 'Locations'}
-      </h2>
+      <h2 className="text-lg font-semibold mb-3">{language === 'ar' ? 'الفروع' : 'Locations'}</h2>
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {activeLocations.map((loc) => (
           <div

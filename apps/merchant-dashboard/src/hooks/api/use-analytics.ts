@@ -16,10 +16,12 @@ export function useMerchantAnalytics(params?: AnalyticsParams) {
   return useQuery({
     queryKey: ['merchant', merchant?.merchantId, 'analytics', params],
     queryFn: () => {
+      // biome-ignore lint/style/noNonNullAssertion: enabled guard ensures merchantId exists
+      const merchantId = merchant!.merchantId;
       if (locationId) {
-        return merchantApi.getLocationAnalytics(merchant!.merchantId, locationId, queryParams);
+        return merchantApi.getLocationAnalytics(merchantId, locationId, queryParams);
       }
-      return merchantApi.getAnalytics(merchant!.merchantId, queryParams);
+      return merchantApi.getAnalytics(merchantId, queryParams);
     },
     enabled: !!merchant?.merchantId,
   });

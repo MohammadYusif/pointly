@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import type { AnalyticsDataPoint } from "@/types/api";
-import { useTranslation } from "@pointly/i18n";
-import { Card, CardContent, CardHeader, CardTitle } from "@pointly/ui";
+import type { AnalyticsDataPoint } from '@/types/api';
+import { useTranslation } from '@pointly/i18n';
+import { Card, CardContent, CardHeader, CardTitle } from '@pointly/ui';
 import {
   Area,
   AreaChart,
@@ -11,7 +11,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from "recharts";
+} from 'recharts';
 
 interface RevenueChartProps {
   data: AnalyticsDataPoint[];
@@ -26,11 +26,11 @@ export function RevenueChart({ data, loading }: RevenueChartProps) {
       <Card>
         <CardHeader>
           <CardTitle className="text-sm md:text-base">
-            {language === "ar" ? "الإيرادات" : "Revenue"}
+            {language === 'ar' ? 'الإيرادات' : 'Revenue'}
           </CardTitle>
         </CardHeader>
         <CardContent className="h-75 flex items-center justify-center">
-          <p className="text-muted-foreground">{t("common.loading")}</p>
+          <p className="text-muted-foreground">{t('common.loading')}</p>
         </CardContent>
       </Card>
     );
@@ -38,14 +38,14 @@ export function RevenueChart({ data, loading }: RevenueChartProps) {
 
   const chartData = data.map((d) => ({
     period: formatPeriodLabel(d.period, language),
-    revenue: d.totalRevenue,
+    revenue: d.revenue,
   }));
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-sm md:text-base">
-          {language === "ar" ? "الإيرادات" : "Revenue (SAR)"}
+          {language === 'ar' ? 'الإيرادات' : 'Revenue (SAR)'}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -53,13 +53,7 @@ export function RevenueChart({ data, loading }: RevenueChartProps) {
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData}>
               <defs>
-                <linearGradient
-                  id="revenueGradient"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
+                <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                 </linearGradient>
@@ -69,16 +63,16 @@ export function RevenueChart({ data, loading }: RevenueChartProps) {
               <YAxis fontSize={12} tickLine={false} />
               <Tooltip
                 formatter={(value) =>
-                  new Intl.NumberFormat(language === "ar" ? "ar-SA" : "en-SA", {
-                    style: "currency",
-                    currency: "SAR",
+                  new Intl.NumberFormat(language === 'ar' ? 'ar-SA' : 'en-SA', {
+                    style: 'currency',
+                    currency: 'SAR',
                   }).format(Number(value))
                 }
               />
               <Area
                 type="monotone"
                 dataKey="revenue"
-                name={language === "ar" ? "الإيرادات" : "Revenue"}
+                name={language === 'ar' ? 'الإيرادات' : 'Revenue'}
                 stroke="#6366f1"
                 strokeWidth={2}
                 fill="url(#revenueGradient)"
@@ -94,9 +88,9 @@ export function RevenueChart({ data, loading }: RevenueChartProps) {
 function formatPeriodLabel(period: string, language: string): string {
   try {
     const date = new Date(period);
-    return new Intl.DateTimeFormat(language === "ar" ? "ar-SA" : "en-SA", {
-      month: "short",
-      day: "numeric",
+    return new Intl.DateTimeFormat(language === 'ar' ? 'ar-SA' : 'en-SA', {
+      month: 'short',
+      day: 'numeric',
     }).format(date);
   } catch {
     return period;

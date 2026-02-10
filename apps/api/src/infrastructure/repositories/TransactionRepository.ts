@@ -200,9 +200,7 @@ export class TransactionRepository
     return this.buildAnalytics(items, query.groupBy || 'day');
   }
 
-  private async queryAllItems(
-    input: Parameters<typeof this.query>[0],
-  ): Promise<TransactionItem[]> {
+  private async queryAllItems(input: Parameters<typeof this.query>[0]): Promise<TransactionItem[]> {
     const allItems: TransactionItem[] = [];
     let nextToken: string | undefined;
 
@@ -223,6 +221,7 @@ export class TransactionRepository
     groupBy: 'day' | 'week' | 'month',
   ): AnalyticsData {
     const buckets = new Map<string, AnalyticsDataPoint>();
+    const periodCustomers = new Map<string, Set<string>>();
     const uniqueCustomers = new Set<string>();
     let totalRevenue = 0;
     let totalPointsEarned = 0;
@@ -233,52 +232,27 @@ export class TransactionRepository
       uniqueCustomers.add(item.customerId);
 
       if (!buckets.has(period)) {
-        buckets.set(period, {
-          period,
-          transactionCount: 0,
-          earnCount: 0,
-          redeemCount: 0,
-          revenue: 0,
-          pointsEarned: 0,
-          pointsRedeemed: 0,
-          uniqueCustomers: 0,
-        });
-      }
-      const bucket = buckets.get(period)!;
-      bucket.transactionCount++;
-
-      if (item.type === TransactionType.EARN) {
-        bucket.earnCount++;
-        bucket.pointsEarned += item.points;
-        totalPointsEarned += item.points;
-        if (item.amount) {
-          bucket.revenue += item.amount.amount;
-          totalRevenue += item.amount.amount;
-        }
-      } else if (item.type === TransactionType.REDEEM) {
-        bucket.redeemCount++;
-        bucket.pointsRedeemed += item.points;
-        totalPointsRedeemed += item.points;
-      }
-    }
-
-    // Count unique customers per period
-    const periodCustomers = new Map<string, Set<string>>();
-    for (const item of items) {
-      const period = this.getPeriodKey(item.createdAt, groupBy);
-      if (!periodCustomers.has(period)) {
+        buckets.set(period, this.emptyDataPoint(period));
         periodCustomers.set(period, new Set());
       }
-      periodCustomers.get(period)!.add(item.customerId);
+
+      // biome-ignore lint/style/noNonNullAssertion: bucket was just set above
+      const bucket = buckets.get(period)!;
+      bucket.transactionCount++;
+      periodCustomers.get(period)?.add(item.customerId);
+
+      const rev = this.accumulateBucket(bucket, item);
+      totalRevenue += rev;
+      if (item.type === TransactionType.EARN) totalPointsEarned += item.points;
+      if (item.type === TransactionType.REDEEM) totalPointsRedeemed += item.points;
     }
+
     for (const [period, customers] of periodCustomers) {
       const bucket = buckets.get(period);
       if (bucket) bucket.uniqueCustomers = customers.size;
     }
 
-    const trends = Array.from(buckets.values()).sort((a, b) =>
-      a.period.localeCompare(b.period),
-    );
+    const trends = Array.from(buckets.values()).sort((a, b) => a.period.localeCompare(b.period));
 
     return {
       summary: {
@@ -291,6 +265,35 @@ export class TransactionRepository
       },
       trends,
     };
+  }
+
+  private emptyDataPoint(period: string): AnalyticsDataPoint {
+    return {
+      period,
+      transactionCount: 0,
+      earnCount: 0,
+      redeemCount: 0,
+      revenue: 0,
+      pointsEarned: 0,
+      pointsRedeemed: 0,
+      uniqueCustomers: 0,
+    };
+  }
+
+  /** Returns revenue amount added for this item */
+  private accumulateBucket(bucket: AnalyticsDataPoint, item: TransactionItem): number {
+    if (item.type === TransactionType.EARN) {
+      bucket.earnCount++;
+      bucket.pointsEarned += item.points;
+      if (item.amount) {
+        bucket.revenue += item.amount.amount;
+        return item.amount.amount;
+      }
+    } else if (item.type === TransactionType.REDEEM) {
+      bucket.redeemCount++;
+      bucket.pointsRedeemed += item.points;
+    }
+    return 0;
   }
 
   private getPeriodKey(dateStr: string, groupBy: 'day' | 'week' | 'month'): string {
