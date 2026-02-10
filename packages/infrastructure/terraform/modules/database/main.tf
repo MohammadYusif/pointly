@@ -26,9 +26,76 @@ resource "aws_dynamodb_table" "user_ledger" {
     type = "S"
   }
 
+  attribute {
+    name = "GSI1PK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI1SK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI2PK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI2SK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI3PK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI3SK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI4PK"
+    type = "S"
+  }
+
   global_secondary_index {
     name            = "PhoneIndex"
     hash_key        = "phone"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "EmailIndex"
+    hash_key        = "GSI1PK"
+    range_key       = "GSI1SK"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "MerchantCustomersIndex"
+    hash_key        = "GSI2PK"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "PendingConsentsIndex"
+    hash_key        = "GSI3PK"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "StatusIndex"
+    hash_key        = "GSI3PK"
+    range_key       = "GSI3SK"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "TierIndex"
+    hash_key        = "GSI4PK"
     projection_type = "ALL"
   }
 
@@ -75,10 +142,89 @@ resource "aws_dynamodb_table" "transaction_audit" {
     type = "S"
   }
 
+  attribute {
+    name = "GSI1PK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI1SK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI2PK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI2SK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI3PK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI3SK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI4PK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI5PK"
+    type = "S"
+  }
+
+  attribute {
+    name = "GSI5SK"
+    type = "S"
+  }
+
   global_secondary_index {
     name            = "DateIndex"
     hash_key        = "merchantId"
     range_key       = "createdAt"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "CustomerTransactionsIndex"
+    hash_key        = "GSI1PK"
+    range_key       = "GSI1SK"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "MerchantTransactionsIndex"
+    hash_key        = "GSI2PK"
+    range_key       = "GSI2SK"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "IdempotencyIndex"
+    hash_key        = "GSI3PK"
+    range_key       = "GSI3SK"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "CustomerMerchantIndex"
+    hash_key        = "GSI4PK"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "LocationTransactionsIndex"
+    hash_key        = "GSI5PK"
+    range_key       = "GSI5SK"
     projection_type = "ALL"
   }
 

@@ -30,6 +30,7 @@ export interface TransactionProps {
   transactionId: string;
   merchantId: string;
   customerId: string;
+  locationId?: string;
   type: TransactionType;
   status: TransactionStatus;
   points: Points;
@@ -55,6 +56,7 @@ export class Transaction {
     balanceBefore: Points,
     idempotencyKey: string,
     metadata: TransactionMetadata = {},
+    locationId?: string,
   ): Transaction {
     if (points.isZero()) {
       throw new ValidationError('Points must be greater than zero');
@@ -64,6 +66,7 @@ export class Transaction {
       transactionId: ulid(),
       merchantId,
       customerId,
+      ...(locationId ? { locationId } : {}),
       type: TransactionType.EARN,
       status: TransactionStatus.PENDING,
       points,
@@ -88,6 +91,7 @@ export class Transaction {
     idempotencyKey: string,
     metadata: TransactionMetadata = {},
     expectedRate?: number,
+    locationId?: string,
   ): Transaction {
     if (points.isZero()) {
       throw new ValidationError('Points must be greater than zero');
@@ -123,6 +127,7 @@ export class Transaction {
       transactionId: ulid(),
       merchantId,
       customerId,
+      ...(locationId ? { locationId } : {}),
       type: TransactionType.REDEEM,
       status: TransactionStatus.PENDING,
       points,
@@ -250,6 +255,10 @@ export class Transaction {
     return this.props.idempotencyKey;
   }
 
+  getLocationId(): string | undefined {
+    return this.props.locationId;
+  }
+
   getCreatedAt(): Date {
     return this.props.createdAt;
   }
@@ -300,6 +309,7 @@ export class Transaction {
       transactionId: ulid(),
       merchantId: this.props.merchantId,
       customerId: this.props.customerId,
+      ...(this.props.locationId ? { locationId: this.props.locationId } : {}),
       type: TransactionType.REVERSAL,
       status: TransactionStatus.PENDING,
       points: this.props.points,
@@ -331,6 +341,7 @@ export class Transaction {
       transactionId: this.props.transactionId,
       merchantId: this.props.merchantId,
       customerId: this.props.customerId,
+      locationId: this.props.locationId,
       type: this.props.type,
       status: this.props.status,
       points: this.props.points.toNumber(),

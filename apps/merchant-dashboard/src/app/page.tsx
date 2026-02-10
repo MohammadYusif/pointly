@@ -1,151 +1,154 @@
 'use client';
 
-import { DashboardLayout } from '@/components/DashboardLayout';
-import { useMerchantStats, useMerchantTransactions } from '@/hooks/api';
-import { useAuth } from '@/lib/auth-context';
-import type { TransactionResponse } from '@/types/api';
-import { useTranslation } from '@pointly/i18n';
 import {
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Flex,
-  useRTL,
-} from '@pointly/ui';
+  DateRangeSelector,
+  type DatePreset,
+  EarnRedeemBreakdown,
+  type GroupBy,
+  KPICard,
+  LocationSelector,
+  RevenueChart,
+  TransactionTrendChart,
+  getDateRange,
+} from '@/components/analytics';
+import { DashboardLayout } from '@/components/DashboardLayout';
+import { useMerchant, useMerchantAnalytics } from '@/hooks/api';
+import { useAuth } from '@/lib/auth-context';
+import { useTranslation } from '@pointly/i18n';
+import { useRTL } from '@pointly/ui';
 import { ArrowUpRight, CreditCard, DollarSign, Users } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function DashboardPage() {
   const { t, formatCurrency, formatNumber, language } = useTranslation();
-  const { textStart, textEnd, flipIcon } = useRTL();
-  const { merchant, isLoading: authLoading } = useAuth();
-  const router = useRouter();
+  const { textStart, flipIcon } = useRTL();
+  const { merchant: authMerchant, isLoading: authLoading } = useAuth();
 
-  const { data: stats, isLoading: statsLoading } = useMerchantStats();
-  const { data: txData } = useMerchantTransactions({ limit: 5 });
+  const [preset, setPreset] = useState<DatePreset>('30d');
+  const [groupBy, setGroupBy] = useState<GroupBy>('day');
+  const [locationId, setLocationId] = useState<string | undefined>(undefined);
 
-  const isLoading = authLoading || statsLoading;
-  const transactions = (txData?.transactions || []) as TransactionResponse[];
+  const { startDate, endDate } = getDateRange(preset);
+
+  const { data: merchantData } = useMerchant();
+  const { data: analytics, isLoading: analyticsLoading } = useMerchantAnalytics({
+    startDate,
+    endDate,
+    groupBy,
+    locationId,
+  });
+
+  const isLoading = authLoading || analyticsLoading;
+  const locations = merchantData?.locations || [];
+  const summary = analytics?.summary;
+  const dataPoints = analytics?.dataPoints || [];
 
   return (
     <DashboardLayout>
+      {/* Header */}
       <div className="mb-6 md:mb-8">
         <h1 className={`text-2xl md:text-3xl font-bold text-foreground ${textStart}`}>
           {t('dashboard.title')}
         </h1>
         <p className={`text-sm md:text-base text-muted-foreground mt-1 ${textStart}`}>
-          {merchant?.businessName
-            ? t('dashboard.welcome', { name: merchant.businessName })
+          {authMerchant?.businessName
+            ? t('dashboard.welcome', { name: authMerchant.businessName })
             : t('dashboard.welcomeMessage')}
         </p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4 mb-6 md:mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 md:px-6">
-            <CardTitle className="text-xs md:text-sm font-medium">
-              {t('dashboard.totalCustomers')}
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground shrink-0" />
-          </CardHeader>
-          <CardContent className="px-3 md:px-6">
-            <div className="text-lg md:text-2xl font-bold truncate">
-              {isLoading ? '...' : formatNumber(stats?.totalTransactions ?? 0)}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 md:px-6">
-            <CardTitle className="text-xs md:text-sm font-medium">
-              {t('dashboard.totalTransactions')}
-            </CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground shrink-0" />
-          </CardHeader>
-          <CardContent className="px-3 md:px-6">
-            <div className="text-lg md:text-2xl font-bold truncate">
-              {isLoading ? '...' : formatNumber(stats?.totalTransactions ?? 0)}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 md:px-6">
-            <CardTitle className="text-xs md:text-sm font-medium">
-              {t('dashboard.pointsIssued')}
-            </CardTitle>
-            <ArrowUpRight className={`h-4 w-4 text-muted-foreground shrink-0 ${flipIcon}`} />
-          </CardHeader>
-          <CardContent className="px-3 md:px-6">
-            <div className="text-lg md:text-2xl font-bold truncate">
-              {isLoading ? '...' : formatNumber(stats?.totalPointsEarned ?? 0)}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 md:px-6">
-            <CardTitle className="text-xs md:text-sm font-medium">
-              {t('dashboard.totalRevenue')}
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground shrink-0" />
-          </CardHeader>
-          <CardContent className="px-3 md:px-6">
-            <div className="text-base md:text-2xl font-bold truncate">
-              {isLoading ? '...' : formatCurrency(stats?.averageTransactionValue ?? 0)}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <DateRangeSelector
+          preset={preset}
+          groupBy={groupBy}
+          onPresetChange={setPreset}
+          onGroupByChange={setGroupBy}
+        />
+        <LocationSelector
+          locations={locations}
+          selected={locationId}
+          onChange={setLocationId}
+        />
       </div>
 
-      {/* Recent Transactions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('dashboard.recentTransactions')}</CardTitle>
-          <CardDescription>
-            {language === 'ar' ? 'أحدث معاملات عملائك' : 'Your latest customer transactions'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3 md:space-y-4">
-            {transactions.length === 0 && !isLoading && (
-              <p className="text-center text-muted-foreground py-8">{t('common.noData')}</p>
-            )}
-            {transactions.map((tx) => (
-              <Flex
-                key={tx.transactionId}
-                justify="between"
-                align="center"
-                className="p-3 md:p-4 border rounded-lg"
-              >
-                <div className={textStart}>
-                  <p className="font-medium">{tx.customerId}</p>
-                  <p className="text-sm text-muted-foreground" suppressHydrationWarning>
-                    {new Date(tx.createdAt).toLocaleString(language === 'ar' ? 'ar-SA' : 'en-SA')}
-                  </p>
-                </div>
-                <div className={textEnd}>
-                  <p className="font-medium">{formatCurrency(tx.amount)}</p>
-                  <p className="text-sm text-green-600">
-                    +{formatNumber(tx.points)} {t('common.points')}
-                  </p>
-                </div>
-              </Flex>
-            ))}
-          </div>
-          <Button
-            variant="outline"
-            className="w-full mt-4"
-            onClick={() => router.push('/transactions')}
-          >
-            {t('common.viewAll')} {t('navigation.transactions')}
-          </Button>
-        </CardContent>
-      </Card>
+      {/* KPI Cards */}
+      <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4 mb-6 md:mb-8">
+        <KPICard
+          title={t('dashboard.totalRevenue')}
+          value={formatCurrency(summary?.totalRevenue ?? 0)}
+          icon={<DollarSign className="h-4 w-4" />}
+          loading={isLoading}
+        />
+        <KPICard
+          title={t('dashboard.totalTransactions')}
+          value={formatNumber(summary?.totalTransactions ?? 0)}
+          icon={<CreditCard className="h-4 w-4" />}
+          loading={isLoading}
+        />
+        <KPICard
+          title={t('dashboard.pointsIssued')}
+          value={formatNumber(summary?.totalPointsEarned ?? 0)}
+          icon={<ArrowUpRight className={`h-4 w-4 ${flipIcon}`} />}
+          loading={isLoading}
+        />
+        <KPICard
+          title={language === 'ar' ? 'عملاء فريدون' : 'Unique Customers'}
+          value={formatNumber(summary?.uniqueCustomers ?? 0)}
+          icon={<Users className="h-4 w-4" />}
+          loading={isLoading}
+        />
+      </div>
+
+      {/* Charts Grid */}
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-2 mb-6">
+        <RevenueChart data={dataPoints} loading={isLoading} />
+        <TransactionTrendChart data={dataPoints} loading={isLoading} />
+      </div>
+
+      {/* Points Breakdown */}
+      <div className="mb-6">
+        <EarnRedeemBreakdown data={dataPoints} loading={isLoading} />
+      </div>
+
+      {/* Location Summary for multi-location merchants */}
+      {locations.length > 1 && !locationId && (
+        <LocationSummary locations={locations} merchantId={authMerchant?.merchantId} />
+      )}
     </DashboardLayout>
+  );
+}
+
+function LocationSummary({
+  locations,
+  merchantId,
+}: {
+  locations: { locationId: string; name: string; city: string; isActive: boolean }[];
+  merchantId?: string;
+}) {
+  const { language } = useTranslation();
+
+  const activeLocations = locations.filter((l) => l.isActive);
+
+  return (
+    <div>
+      <h2 className="text-lg font-semibold mb-3">
+        {language === 'ar' ? 'الفروع' : 'Locations'}
+      </h2>
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        {activeLocations.map((loc) => (
+          <div
+            key={loc.locationId}
+            className="p-4 border rounded-lg bg-card hover:shadow-sm transition-shadow"
+          >
+            <p className="font-medium">{loc.name}</p>
+            <p className="text-sm text-muted-foreground">{loc.city}</p>
+            <span className="inline-block mt-2 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800">
+              {language === 'ar' ? 'نشط' : 'Active'}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

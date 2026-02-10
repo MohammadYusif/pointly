@@ -18,6 +18,18 @@ const getMerchantCustomersQuerySchema = z.object({
   nextToken: z.string().optional(),
 });
 
+const getMerchantTransactionsQuerySchema = z.object({
+  limit: z.coerce.number().min(1).max(100).optional().default(20),
+  nextToken: z.string().optional(),
+  locationId: z.string().optional(),
+});
+
+const analyticsQuerySchema = z.object({
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  groupBy: z.enum(['day', 'week', 'month']).optional(),
+});
+
 export async function merchantRoutes(server: FastifyInstance): Promise<void> {
   // Get merchant by ID
   server.get(
@@ -84,21 +96,29 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
     async (
       request: FastifyRequest<{
         Params: { merchantId: string };
-        Querystring: { limit?: string; nextToken?: string };
+        Querystring: { limit?: string; nextToken?: string; locationId?: string };
       }>,
       reply: FastifyReply,
     ) => {
       enforceMerchantAccess(request);
       const { merchantId } = request.params;
-      const query = getMerchantCustomersQuerySchema.parse(request.query);
+      const query = getMerchantTransactionsQuerySchema.parse(request.query);
 
       const container = getContainer();
       const transactionRepository = container.transactionRepository;
 
-      const result = await transactionRepository.findByMerchant(merchantId, {
+      const queryOptions = {
         limit: query.limit,
         ...(query.nextToken && { nextToken: query.nextToken }),
-      });
+      };
+
+      const result = query.locationId
+        ? await transactionRepository.findByMerchantAndLocation(
+            merchantId,
+            query.locationId,
+            queryOptions,
+          )
+        : await transactionRepository.findByMerchant(merchantId, queryOptions);
 
       return reply.send({
         success: true,
@@ -160,6 +180,59 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
           nextToken: result.nextToken,
         },
       });
+    },
+  );
+
+  // Get merchant analytics
+  server.get(
+    '/:merchantId/analytics',
+    async (
+      request: FastifyRequest<{
+        Params: { merchantId: string };
+        Querystring: { startDate?: string; endDate?: string; groupBy?: string };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      enforceMerchantAccess(request);
+      const { merchantId } = request.params;
+      const query = analyticsQuerySchema.parse(request.query);
+
+      const container = getContainer();
+      const result = await container.getAnalyticsUseCase.execute({
+        merchantId,
+        ...(query.startDate ? { startDate: query.startDate } : {}),
+        ...(query.endDate ? { endDate: query.endDate } : {}),
+        ...(query.groupBy ? { groupBy: query.groupBy } : {}),
+      });
+
+      return reply.send({ success: true, data: result });
+    },
+  );
+
+  // Get location-specific analytics
+  server.get(
+    '/:merchantId/analytics/locations/:locationId',
+    async (
+      request: FastifyRequest<{
+        Params: { merchantId: string; locationId: string };
+        Querystring: { startDate?: string; endDate?: string; groupBy?: string };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      enforceMerchantAccess(request);
+      const { merchantId, locationId } = request.params;
+      const query = analyticsQuerySchema.parse(request.query);
+
+      const container = getContainer();
+      const result = await container.getAnalyticsUseCase.execute({
+        merchantId,
+        locationId,
+        ...(query.startDate ? { startDate: query.startDate } : {}),
+        ...(query.endDate ? { endDate: query.endDate } : {}),
+        ...(query.groupBy ? { groupBy: query.groupBy } : {}),
+      });
+
+      return reply.send({ success: true, data: result });
     },
   );
 }

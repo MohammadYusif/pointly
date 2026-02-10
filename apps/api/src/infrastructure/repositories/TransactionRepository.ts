@@ -1,4 +1,7 @@
 import type {
+  AnalyticsData,
+  AnalyticsDataPoint,
+  AnalyticsQuery,
   ITransactionRepository,
   TransactionStats,
 } from '../../application/repositories/ITransactionRepository';
@@ -21,6 +24,7 @@ interface TransactionItem {
   transactionId: string;
   merchantId: string;
   customerId: string;
+  locationId?: string;
   type: TransactionType;
   status: TransactionStatus;
   points: number;
@@ -41,6 +45,8 @@ interface TransactionItem {
   GSI2SK?: string; // TXN#<createdAt>#<id>
   GSI3PK?: string; // IDEMPOTENCY#<key>
   GSI3SK?: string; // TXN
+  GSI5PK?: string; // MERCHANT#<merchantId>#LOCATION#<locationId>
+  GSI5SK?: string; // TXN#<createdAt>#<id>
 }
 
 export class TransactionRepository
@@ -133,6 +139,175 @@ export class TransactionRepository
     };
   }
 
+  async findByMerchantAndLocation(
+    merchantId: string,
+    locationId: string,
+    options?: QueryOptions,
+  ): Promise<QueryResult<Transaction>> {
+    const result = await this.query<TransactionItem>(
+      {
+        IndexName: 'LocationTransactionsIndex',
+        KeyConditionExpression: 'GSI5PK = :pk',
+        ExpressionAttributeValues: {
+          ':pk': `MERCHANT#${merchantId}#LOCATION#${locationId}`,
+        },
+      },
+      options,
+    );
+
+    return {
+      items: result.items.map((item) => this.toEntity(item)),
+      count: result.count,
+      nextToken: result.nextToken,
+    };
+  }
+
+  async getMerchantAnalytics(merchantId: string, query: AnalyticsQuery): Promise<AnalyticsData> {
+    const items = await this.queryAllItems({
+      IndexName: 'MerchantTransactionsIndex',
+      KeyConditionExpression: 'GSI2PK = :pk AND GSI2SK BETWEEN :start AND :end',
+      FilterExpression: '#status = :status',
+      ExpressionAttributeNames: { '#status': 'status' },
+      ExpressionAttributeValues: {
+        ':pk': `MERCHANT#${merchantId}`,
+        ':start': `TXN#${query.startDate}`,
+        ':end': `TXN#${query.endDate}\uffff`,
+        ':status': TransactionStatus.COMPLETED,
+      },
+    });
+
+    return this.buildAnalytics(items, query.groupBy || 'day');
+  }
+
+  async getLocationAnalytics(
+    merchantId: string,
+    locationId: string,
+    query: AnalyticsQuery,
+  ): Promise<AnalyticsData> {
+    const items = await this.queryAllItems({
+      IndexName: 'LocationTransactionsIndex',
+      KeyConditionExpression: 'GSI5PK = :pk AND GSI5SK BETWEEN :start AND :end',
+      FilterExpression: '#status = :status',
+      ExpressionAttributeNames: { '#status': 'status' },
+      ExpressionAttributeValues: {
+        ':pk': `MERCHANT#${merchantId}#LOCATION#${locationId}`,
+        ':start': `TXN#${query.startDate}`,
+        ':end': `TXN#${query.endDate}\uffff`,
+        ':status': TransactionStatus.COMPLETED,
+      },
+    });
+
+    return this.buildAnalytics(items, query.groupBy || 'day');
+  }
+
+  private async queryAllItems(
+    input: Parameters<typeof this.query>[0],
+  ): Promise<TransactionItem[]> {
+    const allItems: TransactionItem[] = [];
+    let nextToken: string | undefined;
+
+    do {
+      const result = await this.query<TransactionItem>(
+        input,
+        nextToken ? { limit: 100, nextToken } : { limit: 100 },
+      );
+      allItems.push(...result.items);
+      nextToken = result.nextToken;
+    } while (nextToken);
+
+    return allItems;
+  }
+
+  private buildAnalytics(
+    items: TransactionItem[],
+    groupBy: 'day' | 'week' | 'month',
+  ): AnalyticsData {
+    const buckets = new Map<string, AnalyticsDataPoint>();
+    const uniqueCustomers = new Set<string>();
+    let totalRevenue = 0;
+    let totalPointsEarned = 0;
+    let totalPointsRedeemed = 0;
+
+    for (const item of items) {
+      const period = this.getPeriodKey(item.createdAt, groupBy);
+      uniqueCustomers.add(item.customerId);
+
+      if (!buckets.has(period)) {
+        buckets.set(period, {
+          period,
+          transactionCount: 0,
+          earnCount: 0,
+          redeemCount: 0,
+          revenue: 0,
+          pointsEarned: 0,
+          pointsRedeemed: 0,
+          uniqueCustomers: 0,
+        });
+      }
+      const bucket = buckets.get(period)!;
+      bucket.transactionCount++;
+
+      if (item.type === TransactionType.EARN) {
+        bucket.earnCount++;
+        bucket.pointsEarned += item.points;
+        totalPointsEarned += item.points;
+        if (item.amount) {
+          bucket.revenue += item.amount.amount;
+          totalRevenue += item.amount.amount;
+        }
+      } else if (item.type === TransactionType.REDEEM) {
+        bucket.redeemCount++;
+        bucket.pointsRedeemed += item.points;
+        totalPointsRedeemed += item.points;
+      }
+    }
+
+    // Count unique customers per period
+    const periodCustomers = new Map<string, Set<string>>();
+    for (const item of items) {
+      const period = this.getPeriodKey(item.createdAt, groupBy);
+      if (!periodCustomers.has(period)) {
+        periodCustomers.set(period, new Set());
+      }
+      periodCustomers.get(period)!.add(item.customerId);
+    }
+    for (const [period, customers] of periodCustomers) {
+      const bucket = buckets.get(period);
+      if (bucket) bucket.uniqueCustomers = customers.size;
+    }
+
+    const trends = Array.from(buckets.values()).sort((a, b) =>
+      a.period.localeCompare(b.period),
+    );
+
+    return {
+      summary: {
+        totalTransactions: items.length,
+        totalRevenue,
+        totalPointsEarned,
+        totalPointsRedeemed,
+        uniqueCustomers: uniqueCustomers.size,
+        averageTransactionValue: items.length > 0 ? totalRevenue / items.length : 0,
+      },
+      trends,
+    };
+  }
+
+  private getPeriodKey(dateStr: string, groupBy: 'day' | 'week' | 'month'): string {
+    const date = new Date(dateStr);
+    if (groupBy === 'month') {
+      return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+    }
+    if (groupBy === 'week') {
+      const dayOfYear = Math.floor(
+        (date.getTime() - new Date(date.getUTCFullYear(), 0, 1).getTime()) / 86400000,
+      );
+      const week = Math.ceil((dayOfYear + 1) / 7);
+      return `${date.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
+    }
+    return date.toISOString().slice(0, 10);
+  }
+
   async getMerchantStats(merchantId: string): Promise<TransactionStats> {
     const result = await this.query<TransactionItem>({
       IndexName: 'MerchantTransactionsIndex',
@@ -218,6 +393,7 @@ export class TransactionRepository
       transactionId: item.transactionId,
       merchantId: item.merchantId,
       customerId: item.customerId,
+      ...(item.locationId ? { locationId: item.locationId } : {}),
       type: item.type,
       status: item.status,
       points: Points.from(item.points),
@@ -259,6 +435,11 @@ export class TransactionRepository
       GSI2SK: `TXN#${createdAt}#${json.transactionId}`,
       GSI3PK: `IDEMPOTENCY#${json.idempotencyKey}`,
       GSI3SK: 'TXN',
+      ...(json.locationId && {
+        locationId: json.locationId,
+        GSI5PK: `MERCHANT#${json.merchantId}#LOCATION#${json.locationId}`,
+        GSI5SK: `TXN#${createdAt}#${json.transactionId}`,
+      }),
       ...(json.amount && { amount: json.amount }),
       ...(json.reversedTransactionId && { reversedTransactionId: json.reversedTransactionId }),
       ...(json.completedAt && { completedAt: json.completedAt }),

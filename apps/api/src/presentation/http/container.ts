@@ -2,6 +2,7 @@ import type { ICustomerRepository } from '../../application/repositories/ICustom
 import type { IMerchantRepository } from '../../application/repositories/IMerchantRepository';
 import type { ITransactionRepository } from '../../application/repositories/ITransactionRepository';
 import type { IIdempotencyService } from '../../application/services/IIdempotencyService';
+import { GetAnalyticsUseCase } from '../../application/use-cases/GetAnalyticsUseCase';
 import { RecordPurchaseUseCase } from '../../application/use-cases/RecordPurchaseUseCase';
 import EnvironmentConfig from '../../infrastructure/config/Environment';
 import DynamoDBClientFactory from '../../infrastructure/database/DynamoDBClient';
@@ -23,6 +24,7 @@ export interface Container {
 
   // Use Cases
   recordPurchaseUseCase: RecordPurchaseUseCase;
+  getAnalyticsUseCase: GetAnalyticsUseCase;
 }
 
 let container: Container | null = null;
@@ -47,12 +49,16 @@ export function createContainer(): Container {
     idempotencyService,
   );
 
+  // Create analytics use case
+  const getAnalyticsUseCase = new GetAnalyticsUseCase(merchantRepository, transactionRepository);
+
   return {
     customerRepository,
     merchantRepository,
     transactionRepository,
     idempotencyService,
     recordPurchaseUseCase,
+    getAnalyticsUseCase,
   };
 }
 

@@ -17,6 +17,7 @@ export interface RecordPurchaseRequest {
   customerId: string;
   amountSAR: number;
   idempotencyKey: string;
+  locationId?: string;
   metadata?: {
     receiptNumber?: string;
     cashierName?: string;
@@ -82,6 +83,18 @@ export class RecordPurchaseUseCase {
       throw new UnauthorizedError('Merchant is not verified');
     }
 
+    // 2b. Resolve locationId
+    let locationId = request.locationId;
+    const locations = merchant.getLocations();
+    if (locationId) {
+      const location = locations.find((l) => l.locationId === locationId && l.isActive);
+      if (!location) {
+        throw new ValidationError(`Location ${locationId} not found or inactive`);
+      }
+    } else if (locations.length === 1 && locations[0]) {
+      locationId = locations[0].locationId;
+    }
+
     // 3. Validate customer
     const customer = await this.customerRepository.findById(request.customerId);
     if (!customer) {
@@ -123,6 +136,7 @@ export class RecordPurchaseUseCase {
       merchantBalanceBefore,
       request.idempotencyKey,
       request.metadata || {},
+      locationId,
     );
 
     // 7. Award points to customer (both types)

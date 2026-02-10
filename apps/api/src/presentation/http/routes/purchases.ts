@@ -8,6 +8,7 @@ const recordPurchaseSchema = z.object({
   customerId: z.string().min(1),
   amount: z.number().positive(),
   idempotencyKey: z.string().min(1),
+  locationId: z.string().optional(),
   metadata: z
     .object({
       receiptNumber: z.string().optional(),
@@ -39,6 +40,7 @@ export async function purchaseRoutes(server: FastifyInstance): Promise<void> {
         customerId: body.customerId,
         amountSAR: body.amount,
         idempotencyKey: body.idempotencyKey,
+        ...(body.locationId && { locationId: body.locationId }),
         ...(body.metadata && {
           metadata: {
             ...(body.metadata.receiptNumber && { receiptNumber: body.metadata.receiptNumber }),

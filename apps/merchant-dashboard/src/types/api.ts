@@ -1,3 +1,12 @@
+export interface MerchantLocation {
+  locationId: string;
+  name: string;
+  address: string;
+  city: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface MerchantResponse {
   merchantId: string;
   businessName: string;
@@ -21,7 +30,7 @@ export interface MerchantResponse {
   };
   totalCustomers: number;
   totalTransactions: number;
-  locations: string[];
+  locations: MerchantLocation[];
   createdAt: string;
   updatedAt: string;
 }
@@ -55,6 +64,7 @@ export interface TransactionResponse {
   transactionId: string;
   merchantId: string;
   customerId: string;
+  locationId?: string;
   type: string;
   status: string;
   amount: number;
@@ -93,4 +103,32 @@ export interface PaginatedResponse<T> {
   items?: T[];
   count: number;
   nextToken?: string;
+}
+
+export interface AnalyticsDataPoint {
+  period: string;
+  earnCount: number;
+  redeemCount: number;
+  totalEarnPoints: number;
+  totalRedeemPoints: number;
+  totalRevenue: number;
+  uniqueCustomers: number;
+}
+
+export interface AnalyticsData {
+  summary: {
+    totalTransactions: number;
+    totalEarnTransactions: number;
+    totalRedeemTransactions: number;
+    totalRevenue: number;
+    totalPointsEarned: number;
+    totalPointsRedeemed: number;
+    uniqueCustomers: number;
+  };
+  dataPoints: AnalyticsDataPoint[];
+  query: {
+    startDate: string;
+    endDate: string;
+    groupBy: string;
+  };
 }

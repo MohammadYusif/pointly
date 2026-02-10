@@ -32,7 +32,11 @@ export function useMerchantCustomers(params?: { limit?: number; nextToken?: stri
   });
 }
 
-export function useMerchantTransactions(params?: { limit?: number; nextToken?: string }) {
+export function useMerchantTransactions(params?: {
+  limit?: number;
+  nextToken?: string;
+  locationId?: string;
+}) {
   const { merchant } = useAuth();
   return useQuery({
     queryKey: ['merchant', merchant?.merchantId, 'transactions', params],

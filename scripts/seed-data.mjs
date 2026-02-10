@@ -107,7 +107,7 @@ function createMerchants() {
       maxLocations: 10,
       totalCustomers: 6,
       activeCustomers: 5,
-      totalTransactions: 28,
+      totalTransactions: 80,
       createdAt: daysAgo(180),
       updatedAt: hoursAgo(2),
       verifiedAt: daysAgo(179),
@@ -153,7 +153,7 @@ function createMerchants() {
       maxLocations: 50,
       totalCustomers: 4,
       activeCustomers: 4,
-      totalTransactions: 15,
+      totalTransactions: 45,
       createdAt: daysAgo(365),
       updatedAt: hoursAgo(6),
       verifiedAt: daysAgo(364),
@@ -387,90 +387,183 @@ function makeEnrollment(merchantId, daysAgoEnrolled, consent, balance, lifetime,
 }
 
 // --- Transaction Data ---
+// Al Baik locations for distributing transactions
+const ALBAIK_LOCATIONS = ['loc_riyadh_01', 'loc_riyadh_02'];
+const JARIR_LOCATION = 'loc_jarir_01';
+
+function pickAlbaikLocation() {
+  return ALBAIK_LOCATIONS[Math.floor(Math.random() * ALBAIK_LOCATIONS.length)];
+}
+
 function createTransactions() {
   const transactions = [];
   const albaik = MERCHANT_IDS.albaik;
   const jarir = MERCHANT_IDS.jarir;
 
-  // Ahmed's recent transactions at Al Baik
-  const ahmedTxns = [
-    { days: 0.1, amount: 85, type: 'earn' },
-    { days: 0.5, amount: 120, type: 'earn' },
-    { days: 1, amount: 45, type: 'earn' },
-    { days: 2, amount: 200, type: 'earn' },
-    { days: 3, amount: 65, type: 'earn' },
-    { days: 5, amount: 150, type: 'earn' },
-    { days: 7, amount: 500, points: 500, type: 'redeem' },
-  ];
+  // ---- Generate 45 days of Al Baik transaction history ----
+  // This creates realistic daily transaction patterns across both locations
 
-  const ahmedBalance = 18500;
-  for (const t of ahmedTxns) {
+  // Ahmed - frequent Al Baik customer (Diamond tier)
+  const ahmedAlbaikTxns = [];
+  for (let day = 0; day < 45; day++) {
+    // Ahmed eats 3-5 times per week at Al Baik
+    if (Math.random() < 0.6) {
+      const amount = Math.floor(40 + Math.random() * 160); // 40-200 SAR meals
+      ahmedAlbaikTxns.push({
+        days: day + Math.random() * 0.8,
+        amount,
+        type: 'earn',
+        loc: pickAlbaikLocation(),
+      });
+    }
+    // Occasional redemption every ~2 weeks
+    if (day % 14 === 7 && day > 0) {
+      ahmedAlbaikTxns.push({
+        days: day + 0.5,
+        amount: 300,
+        points: 300,
+        type: 'redeem',
+        loc: pickAlbaikLocation(),
+      });
+    }
+  }
+  let ahmedBal = 18500;
+  for (const t of ahmedAlbaikTxns) {
     const pts = t.points || t.amount;
-    const before = t.type === 'earn' ? ahmedBalance - pts : ahmedBalance + pts;
+    const before = t.type === 'earn' ? ahmedBal - pts : ahmedBal + pts;
     transactions.push(
-      makeTxn(albaik, CUSTOMER_IDS.ahmed, t.type, pts, t.amount, before, ahmedBalance, t.days),
+      makeTxn(albaik, CUSTOMER_IDS.ahmed, t.type, pts, t.amount, before, ahmedBal, t.days, t.loc),
     );
   }
 
-  // Fatimah's transactions at Al Baik
-  const fatimahTxns = [
-    { days: 0.3, amount: 95, type: 'earn' },
-    { days: 1, amount: 180, type: 'earn' },
-    { days: 4, amount: 60, type: 'earn' },
-    { days: 6, amount: 300, points: 300, type: 'redeem' },
+  // Ahmed at Jarir - occasional electronics purchases
+  const ahmedJarirTxns = [
+    { days: 2, amount: 350, type: 'earn' },
+    { days: 10, amount: 89, type: 'earn' },
+    { days: 18, amount: 1200, type: 'earn' },
+    { days: 25, amount: 45, type: 'earn' },
+    { days: 32, amount: 200, type: 'earn' },
+    { days: 38, amount: 500, points: 500, type: 'redeem' },
   ];
-  const fatimahBalance = 7200;
-  for (const t of fatimahTxns) {
+  for (const t of ahmedJarirTxns) {
     const pts = t.points || t.amount;
-    const before = t.type === 'earn' ? fatimahBalance - pts : fatimahBalance + pts;
+    const before = t.type === 'earn' ? ahmedBal - pts : ahmedBal + pts;
     transactions.push(
-      makeTxn(albaik, CUSTOMER_IDS.fatimah, t.type, pts, t.amount, before, fatimahBalance, t.days),
+      makeTxn(
+        jarir,
+        CUSTOMER_IDS.ahmed,
+        t.type,
+        pts,
+        t.amount,
+        before,
+        ahmedBal,
+        t.days,
+        JARIR_LOCATION,
+      ),
     );
   }
 
-  // Mohammed at Jarir
-  const mohammedTxns = [
-    { days: 1, amount: 250, type: 'earn' },
-    { days: 3, amount: 89, type: 'earn' },
-    { days: 8, amount: 150, type: 'earn' },
+  // Fatimah - regular Al Baik customer (Platinum)
+  for (let day = 0; day < 40; day++) {
+    if (Math.random() < 0.4) {
+      const amount = Math.floor(30 + Math.random() * 120);
+      const loc = pickAlbaikLocation();
+      const fatBal = 7200;
+      const before = fatBal - amount;
+      transactions.push(
+        makeTxn(albaik, CUSTOMER_IDS.fatimah, 'earn', amount, amount, before, fatBal, day + Math.random() * 0.8, loc),
+      );
+    }
+  }
+  // Fatimah redemptions
+  transactions.push(
+    makeTxn(albaik, CUSTOMER_IDS.fatimah, 'redeem', 300, 300, 7500, 7200, 6, 'loc_riyadh_01'),
+  );
+  transactions.push(
+    makeTxn(albaik, CUSTOMER_IDS.fatimah, 'redeem', 200, 200, 7400, 7200, 20, 'loc_riyadh_02'),
+  );
+
+  // Mohammed - moderate at both merchants
+  const mohammedAlbaikTxns = [
+    { days: 1, amount: 75, loc: 'loc_riyadh_01' },
+    { days: 5, amount: 120, loc: 'loc_riyadh_02' },
+    { days: 12, amount: 55, loc: 'loc_riyadh_01' },
+    { days: 19, amount: 90, loc: 'loc_riyadh_02' },
+    { days: 28, amount: 65, loc: 'loc_riyadh_01' },
+    { days: 35, amount: 110, loc: 'loc_riyadh_01' },
   ];
-  const mohammedBalance = 2800;
-  for (const t of mohammedTxns) {
-    const pts = t.amount;
-    const before = mohammedBalance - pts;
+  const mohammedBal = 2800;
+  for (const t of mohammedAlbaikTxns) {
     transactions.push(
-      makeTxn(jarir, CUSTOMER_IDS.mohammed, t.type, pts, t.amount, before, mohammedBalance, t.days),
+      makeTxn(albaik, CUSTOMER_IDS.mohammed, 'earn', t.amount, t.amount, mohammedBal - t.amount, mohammedBal, t.days, t.loc),
     );
   }
-
-  // Omar at Jarir (Platinum customer)
-  const omarTxns = [
-    { days: 0.2, amount: 450, type: 'earn' },
-    { days: 1, amount: 320, type: 'earn' },
-    { days: 2, amount: 180, type: 'earn' },
-    { days: 3, amount: 1000, points: 1000, type: 'redeem' },
-    { days: 5, amount: 275, type: 'earn' },
+  const mohammedJarirTxns = [
+    { days: 1, amount: 250 },
+    { days: 3, amount: 89 },
+    { days: 8, amount: 150 },
+    { days: 22, amount: 320 },
+    { days: 30, amount: 175 },
   ];
-  const omarBalance = 5200;
-  for (const t of omarTxns) {
-    const pts = t.points || t.amount;
-    const before = t.type === 'earn' ? omarBalance - pts : omarBalance + pts;
+  for (const t of mohammedJarirTxns) {
     transactions.push(
-      makeTxn(jarir, CUSTOMER_IDS.omar, t.type, pts, t.amount, before, omarBalance, t.days),
+      makeTxn(jarir, CUSTOMER_IDS.mohammed, 'earn', t.amount, t.amount, mohammedBal - t.amount, mohammedBal, t.days, JARIR_LOCATION),
     );
   }
 
-  // Noura's single purchase at Al Baik
-  transactions.push(makeTxn(albaik, CUSTOMER_IDS.noura, 'earn', 100, 100, 0, 100, 3));
+  // Omar at Jarir (Platinum - heavy spender)
+  for (let day = 0; day < 35; day++) {
+    if (Math.random() < 0.45) {
+      const amount = Math.floor(100 + Math.random() * 500);
+      const omarBal = 5200;
+      transactions.push(
+        makeTxn(jarir, CUSTOMER_IDS.omar, 'earn', amount, amount, omarBal - amount, omarBal, day + Math.random() * 0.8, JARIR_LOCATION),
+      );
+    }
+  }
+  // Omar redemptions
+  transactions.push(
+    makeTxn(jarir, CUSTOMER_IDS.omar, 'redeem', 1000, 1000, 6200, 5200, 3, JARIR_LOCATION),
+  );
+  transactions.push(
+    makeTxn(jarir, CUSTOMER_IDS.omar, 'redeem', 500, 500, 5700, 5200, 15, JARIR_LOCATION),
+  );
 
-  // Layla's purchases at Jarir
-  transactions.push(makeTxn(jarir, CUSTOMER_IDS.layla, 'earn', 200, 200, 0, 200, 14));
-  transactions.push(makeTxn(jarir, CUSTOMER_IDS.layla, 'earn', 250, 250, 200, 450, 7));
+  // Noura - new customer, single purchase at Al Baik Olaya
+  transactions.push(
+    makeTxn(albaik, CUSTOMER_IDS.noura, 'earn', 100, 100, 0, 100, 3, 'loc_riyadh_01'),
+  );
+
+  // Layla at Jarir
+  transactions.push(
+    makeTxn(jarir, CUSTOMER_IDS.layla, 'earn', 200, 200, 0, 200, 14, JARIR_LOCATION),
+  );
+  transactions.push(
+    makeTxn(jarir, CUSTOMER_IDS.layla, 'earn', 250, 250, 200, 450, 7, JARIR_LOCATION),
+  );
+
+  // Sara - inactive but has historical transactions at Al Baik (120+ days ago)
+  for (let day = 120; day < 160; day += 5) {
+    const amount = Math.floor(40 + Math.random() * 80);
+    transactions.push(
+      makeTxn(albaik, CUSTOMER_IDS.sara, 'earn', amount, amount, 3500 - amount, 3500, day, pickAlbaikLocation()),
+    );
+  }
 
   return transactions;
 }
 
-function makeTxn(merchantId, customerId, type, points, amount, balBefore, balAfter, daysAgoVal) {
+function makeTxn(
+  merchantId,
+  customerId,
+  type,
+  points,
+  amount,
+  balBefore,
+  balAfter,
+  daysAgoVal,
+  locationId,
+) {
   const id = txnId();
   const createdAt = daysAgo(daysAgoVal);
   const cashiers = ['Ali', 'Nasser', 'Youssef', 'Hana', 'Maryam'];
@@ -484,6 +577,7 @@ function makeTxn(merchantId, customerId, type, points, amount, balBefore, balAft
     transactionId: id,
     merchantId,
     customerId,
+    locationId: locationId || undefined,
     type: type === 'earn' ? 'EARN' : 'REDEEM',
     status: 'COMPLETED',
     points,
@@ -505,6 +599,12 @@ function makeTxn(merchantId, customerId, type, points, amount, balBefore, balAft
     GSI3SK: 'TXN',
     GSI4PK: `CUSTOMER#${customerId}#MERCHANT#${merchantId}`,
   };
+
+  // GSI5 for location-based lookups
+  if (locationId) {
+    item.GSI5PK = `MERCHANT#${merchantId}#LOCATION#${locationId}`;
+    item.GSI5SK = `TXN#${createdAt}#${id}`;
+  }
 
   if (type === 'earn') {
     item.amount = { amount, currency: 'SAR' };
@@ -594,11 +694,11 @@ async function seed() {
 Summary:
   Merchants: ${merchants.length} (2 active, 1 pending verification)
   Customers: ${customers.length} (1 Diamond, 2 Platinum, 5 Bronze)
-  Transactions: ${transactions.length}
+  Transactions: ${transactions.length} (45 days of history with location data)
 
 Merchant Accounts:
-  Al Baik Restaurant  - PROFESSIONAL tier, ACTIVE
-  Jarir Bookstore     - ENTERPRISE tier, ACTIVE
+  Al Baik Restaurant  - PROFESSIONAL tier, ACTIVE (2 locations)
+  Jarir Bookstore     - ENTERPRISE tier, ACTIVE (1 location)
   eXtra Electronics   - BASIC tier, PENDING_VERIFICATION
 
 Notable Customers:

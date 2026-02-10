@@ -1,4 +1,5 @@
 import type {
+  AnalyticsData,
   CustomerResponse,
   MerchantResponse,
   MerchantStatsResponse,
@@ -58,10 +59,14 @@ export const merchantApi = {
     );
   },
 
-  getTransactions: (merchantId: string, params?: { limit?: number; nextToken?: string }) => {
+  getTransactions: (
+    merchantId: string,
+    params?: { limit?: number; nextToken?: string; locationId?: string },
+  ) => {
     const query = new URLSearchParams();
     if (params?.limit) query.set('limit', String(params.limit));
     if (params?.nextToken) query.set('nextToken', params.nextToken);
+    if (params?.locationId) query.set('locationId', params.locationId);
     return fetchApi<PaginatedResponse<TransactionResponse>>(
       `/v1/merchants/${merchantId}/transactions?${query}`,
     );
@@ -72,6 +77,31 @@ export const merchantApi = {
 
   getPendingConsents: (merchantId: string) =>
     fetchApi<PaginatedResponse<CustomerResponse>>(`/v1/merchants/${merchantId}/pending-consents`),
+
+  getAnalytics: (
+    merchantId: string,
+    params?: { startDate?: string; endDate?: string; groupBy?: string },
+  ) => {
+    const query = new URLSearchParams();
+    if (params?.startDate) query.set('startDate', params.startDate);
+    if (params?.endDate) query.set('endDate', params.endDate);
+    if (params?.groupBy) query.set('groupBy', params.groupBy);
+    return fetchApi<AnalyticsData>(`/v1/merchants/${merchantId}/analytics?${query}`);
+  },
+
+  getLocationAnalytics: (
+    merchantId: string,
+    locationId: string,
+    params?: { startDate?: string; endDate?: string; groupBy?: string },
+  ) => {
+    const query = new URLSearchParams();
+    if (params?.startDate) query.set('startDate', params.startDate);
+    if (params?.endDate) query.set('endDate', params.endDate);
+    if (params?.groupBy) query.set('groupBy', params.groupBy);
+    return fetchApi<AnalyticsData>(
+      `/v1/merchants/${merchantId}/analytics/locations/${locationId}?${query}`,
+    );
+  },
 };
 
 // Customer API
@@ -100,6 +130,7 @@ export const purchaseApi = {
     customerId: string;
     amount: number;
     idempotencyKey: string;
+    locationId?: string;
     metadata?: Record<string, unknown>;
   }) =>
     fetchApi<RecordPurchaseResponse>('/v1/purchases', {

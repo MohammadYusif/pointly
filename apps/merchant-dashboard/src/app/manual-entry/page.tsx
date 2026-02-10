@@ -2,7 +2,7 @@
 
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { ThermalReceipt } from '@/components/receipt/ThermalReceipt';
-import { useRecordPurchase } from '@/hooks/api';
+import { useMerchant, useRecordPurchase } from '@/hooks/api';
 import { customerApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { generateReceiptPDF } from '@/lib/receipt-pdf';
@@ -18,12 +18,17 @@ export default function ManualEntryPage() {
   const { t, formatCurrency, formatNumber, language } = useTranslation();
   const { textStart } = useRTL();
   const { merchant } = useAuth();
+  const { data: merchantData } = useMerchant();
 
   const [step, setStep] = useState<Step>('input');
   const [phone, setPhone] = useState('');
   const [amount, setAmount] = useState('');
   const [cashierName, setCashierName] = useState('');
+  const [selectedLocationId, setSelectedLocationId] = useState('');
   const [error, setError] = useState('');
+
+  const locations = merchantData?.locations?.filter((l) => l.isActive) || [];
+  const isMultiLocation = locations.length > 1;
   const [customer, setCustomer] = useState<CustomerResponse | null>(null);
   const [result, setResult] = useState<RecordPurchaseResponse | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
@@ -57,6 +62,7 @@ export default function ManualEntryPage() {
         customerId: customer.customerId,
         amount: Number(amount),
         idempotencyKey: crypto.randomUUID(),
+        locationId: selectedLocationId || undefined,
         metadata: cashierName ? { cashierName } : undefined,
       });
       setResult(purchaseResult);
@@ -72,6 +78,7 @@ export default function ManualEntryPage() {
     setPhone('');
     setAmount('');
     setCashierName('');
+    setSelectedLocationId('');
     setCustomer(null);
     setResult(null);
     setError('');
@@ -156,6 +163,29 @@ export default function ManualEntryPage() {
                     dir="ltr"
                   />
                 </div>
+                {isMultiLocation && (
+                  <div>
+                    <label htmlFor="location-input" className="text-sm font-medium mb-1 block">
+                      {language === 'ar' ? 'الفرع' : 'Location'}
+                    </label>
+                    <select
+                      id="location-input"
+                      value={selectedLocationId}
+                      onChange={(e) => setSelectedLocationId(e.target.value)}
+                      required
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                    >
+                      <option value="">
+                        {language === 'ar' ? 'اختر الفرع...' : 'Select location...'}
+                      </option>
+                      {locations.map((loc) => (
+                        <option key={loc.locationId} value={loc.locationId}>
+                          {loc.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <label htmlFor="cashier-input" className="text-sm font-medium mb-1 block">
                     {t('common.actions')} ({language === 'ar' ? 'اختياري' : 'optional'})
@@ -173,7 +203,7 @@ export default function ManualEntryPage() {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={isLookingUp || !phone || !amount}
+                  disabled={isLookingUp || !phone || !amount || (isMultiLocation && !selectedLocationId)}
                 >
                   {isLookingUp ? t('common.loading') : t('common.next')}
                 </Button>
