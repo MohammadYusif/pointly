@@ -28,22 +28,22 @@ module "api" {
   lambda_zip_path = var.lambda_zip_path
 
   # DynamoDB table names
-  user_ledger_table_name        = module.database.user_ledger_table_name
-  transaction_audit_table_name  = module.database.transaction_audit_table_name
-  idempotency_table_name        = module.database.idempotency_table_name
-  qr_nonce_table_name           = module.database.qr_nonce_table_name
-  pending_consents_table_name   = module.database.pending_consents_table_name
-  sms_quota_table_name          = module.database.sms_quota_table_name
-  wallet_passes_table_name      = module.database.wallet_passes_table_name
+  user_ledger_table_name       = module.database.user_ledger_table_name
+  transaction_audit_table_name = module.database.transaction_audit_table_name
+  idempotency_table_name       = module.database.idempotency_table_name
+  qr_nonce_table_name          = module.database.qr_nonce_table_name
+  pending_consents_table_name  = module.database.pending_consents_table_name
+  sms_quota_table_name         = module.database.sms_quota_table_name
+  wallet_passes_table_name     = module.database.wallet_passes_table_name
 
   # DynamoDB table ARNs
-  user_ledger_table_arn         = module.database.user_ledger_table_arn
-  transaction_audit_table_arn   = module.database.transaction_audit_table_arn
-  idempotency_table_arn         = module.database.idempotency_table_arn
-  qr_nonce_table_arn            = module.database.qr_nonce_table_arn
-  pending_consents_table_arn    = module.database.pending_consents_table_arn
-  sms_quota_table_arn           = module.database.sms_quota_table_arn
-  wallet_passes_table_arn       = module.database.wallet_passes_table_arn
+  user_ledger_table_arn       = module.database.user_ledger_table_arn
+  transaction_audit_table_arn = module.database.transaction_audit_table_arn
+  idempotency_table_arn       = module.database.idempotency_table_arn
+  qr_nonce_table_arn          = module.database.qr_nonce_table_arn
+  pending_consents_table_arn  = module.database.pending_consents_table_arn
+  sms_quota_table_arn         = module.database.sms_quota_table_arn
+  wallet_passes_table_arn     = module.database.wallet_passes_table_arn
 
   # Cognito
   merchant_user_pool_arn = module.auth.merchant_user_pool_arn

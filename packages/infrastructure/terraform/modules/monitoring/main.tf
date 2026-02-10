@@ -1,5 +1,5 @@
 locals {
-  is_prod        = var.environment == "prod"
+  is_prod         = var.environment == "prod"
   has_alarm_email = var.alarm_email != ""
 }
 
@@ -268,8 +268,8 @@ resource "aws_cloudwatch_dashboard" "main" {
           width  = 8
           height = 6
           properties = {
-            title   = "API Requests"
-            region  = data.aws_region.current.name
+            title  = "API Requests"
+            region = data.aws_region.current.name
             metrics = [
               ["AWS/ApiGateway", "Count", "ApiName", var.api_gateway_name, { stat = "Sum", period = 60 }]
             ]
@@ -283,8 +283,8 @@ resource "aws_cloudwatch_dashboard" "main" {
           width  = 8
           height = 6
           properties = {
-            title   = "API Latency (ms)"
-            region  = data.aws_region.current.name
+            title  = "API Latency (ms)"
+            region = data.aws_region.current.name
             metrics = [
               ["AWS/ApiGateway", "Latency", "ApiName", var.api_gateway_name, { stat = "Average", period = 60 }],
               ["AWS/ApiGateway", "Latency", "ApiName", var.api_gateway_name, { stat = "p99", period = 60 }]
@@ -299,8 +299,8 @@ resource "aws_cloudwatch_dashboard" "main" {
           width  = 8
           height = 6
           properties = {
-            title   = "API Errors"
-            region  = data.aws_region.current.name
+            title  = "API Errors"
+            region = data.aws_region.current.name
             metrics = [
               ["AWS/ApiGateway", "4XXError", "ApiName", var.api_gateway_name, { stat = "Sum", period = 60 }],
               ["AWS/ApiGateway", "5XXError", "ApiName", var.api_gateway_name, { stat = "Sum", period = 60 }]
@@ -331,8 +331,8 @@ resource "aws_cloudwatch_dashboard" "main" {
           width  = 6
           height = 6
           properties = {
-            title   = "${var.lambda_function_name} - Invocations"
-            region  = data.aws_region.current.name
+            title  = "${var.lambda_function_name} - Invocations"
+            region = data.aws_region.current.name
             metrics = [
               ["AWS/Lambda", "Invocations", "FunctionName", var.lambda_function_name, { stat = "Sum", period = 60 }]
             ]
@@ -346,8 +346,8 @@ resource "aws_cloudwatch_dashboard" "main" {
           width  = 6
           height = 6
           properties = {
-            title   = "${var.lambda_function_name} - Duration"
-            region  = data.aws_region.current.name
+            title  = "${var.lambda_function_name} - Duration"
+            region = data.aws_region.current.name
             metrics = [
               ["AWS/Lambda", "Duration", "FunctionName", var.lambda_function_name, { stat = "Average", period = 60 }],
               ["AWS/Lambda", "Duration", "FunctionName", var.lambda_function_name, { stat = "p99", period = 60 }]
@@ -362,8 +362,8 @@ resource "aws_cloudwatch_dashboard" "main" {
           width  = 6
           height = 6
           properties = {
-            title   = "${var.lambda_function_name} - Errors"
-            region  = data.aws_region.current.name
+            title  = "${var.lambda_function_name} - Errors"
+            region = data.aws_region.current.name
             metrics = [
               ["AWS/Lambda", "Errors", "FunctionName", var.lambda_function_name, { stat = "Sum", period = 60 }]
             ]
@@ -377,8 +377,8 @@ resource "aws_cloudwatch_dashboard" "main" {
           width  = 6
           height = 6
           properties = {
-            title   = "${var.lambda_function_name} - Concurrent"
-            region  = data.aws_region.current.name
+            title  = "${var.lambda_function_name} - Concurrent"
+            region = data.aws_region.current.name
             metrics = [
               ["AWS/Lambda", "ConcurrentExecutions", "FunctionName", var.lambda_function_name, { stat = "Maximum", period = 60 }]
             ]
@@ -409,8 +409,8 @@ resource "aws_cloudwatch_dashboard" "main" {
           width  = 12
           height = 6
           properties = {
-            title   = "${table_name} - Consumed RCU/WCU"
-            region  = data.aws_region.current.name
+            title  = "${table_name} - Consumed RCU/WCU"
+            region = data.aws_region.current.name
             metrics = [
               ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", table_name, { stat = "Sum", period = 60 }],
               ["AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", table_name, { stat = "Sum", period = 60 }]
@@ -428,8 +428,8 @@ resource "aws_cloudwatch_dashboard" "main" {
           width  = 12
           height = 6
           properties = {
-            title   = "${table_name} - Latency"
-            region  = data.aws_region.current.name
+            title  = "${table_name} - Latency"
+            region = data.aws_region.current.name
             metrics = [
               ["AWS/DynamoDB", "SuccessfulRequestLatency", "TableName", table_name, "Operation", "GetItem", { stat = "Average", period = 60 }],
               ["AWS/DynamoDB", "SuccessfulRequestLatency", "TableName", table_name, "Operation", "Query", { stat = "Average", period = 60 }]

@@ -1,5 +1,5 @@
 locals {
-  is_prod    = var.environment == "prod"
+  is_prod = var.environment == "prod"
   table_arns = [
     var.user_ledger_table_arn,
     var.transaction_audit_table_arn,

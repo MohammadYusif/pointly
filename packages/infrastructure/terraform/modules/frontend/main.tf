@@ -74,7 +74,7 @@ resource "aws_cloudfront_response_headers_policy" "security" {
   security_headers_config {
     content_security_policy {
       content_security_policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' ${var.api_url} https://cognito-idp.me-south-1.amazonaws.com; frame-ancestors 'none'"
-      override = true
+      override                = true
     }
 
     strict_transport_security {
@@ -94,9 +94,9 @@ resource "aws_cloudfront_response_headers_policy" "security" {
     }
 
     xss_protection {
-      protection  = true
-      mode_block  = true
-      override    = true
+      protection = true
+      mode_block = true
+      override   = true
     }
 
     referrer_policy {
@@ -179,12 +179,12 @@ resource "aws_cloudfront_distribution" "dashboard" {
 
   # Default behavior
   default_cache_behavior {
-    target_origin_id         = "S3-Dashboard"
-    viewer_protocol_policy   = "redirect-to-https"
-    allowed_methods          = ["GET", "HEAD", "OPTIONS"]
-    cached_methods           = ["GET", "HEAD", "OPTIONS"]
-    compress                 = true
-    cache_policy_id          = "658327ea-f89d-4fab-a63d-7e88639e58f6" # CachingOptimized
+    target_origin_id           = "S3-Dashboard"
+    viewer_protocol_policy     = "redirect-to-https"
+    allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+    cached_methods             = ["GET", "HEAD", "OPTIONS"]
+    compress                   = true
+    cache_policy_id            = "658327ea-f89d-4fab-a63d-7e88639e58f6" # CachingOptimized
     response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
 
     function_association {
@@ -195,13 +195,13 @@ resource "aws_cloudfront_distribution" "dashboard" {
 
   # Static assets — long cache
   ordered_cache_behavior {
-    path_pattern             = "/_next/static/*"
-    target_origin_id         = "S3-Dashboard"
-    viewer_protocol_policy   = "redirect-to-https"
-    allowed_methods          = ["GET", "HEAD"]
-    cached_methods           = ["GET", "HEAD"]
-    compress                 = true
-    cache_policy_id          = aws_cloudfront_cache_policy.static_assets.id
+    path_pattern               = "/_next/static/*"
+    target_origin_id           = "S3-Dashboard"
+    viewer_protocol_policy     = "redirect-to-https"
+    allowed_methods            = ["GET", "HEAD"]
+    cached_methods             = ["GET", "HEAD"]
+    compress                   = true
+    cache_policy_id            = aws_cloudfront_cache_policy.static_assets.id
     response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
   }
 
@@ -256,8 +256,8 @@ resource "aws_s3_bucket_policy" "dashboard" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid       = "AllowCloudFrontOAC"
-        Effect    = "Allow"
+        Sid    = "AllowCloudFrontOAC"
+        Effect = "Allow"
         Principal = {
           Service = "cloudfront.amazonaws.com"
         }

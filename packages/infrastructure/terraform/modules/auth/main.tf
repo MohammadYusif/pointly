@@ -105,11 +105,11 @@ resource "aws_cognito_user_pool_client" "merchant_web" {
     "ALLOW_REFRESH_TOKEN_AUTH",
   ]
 
-  generate_secret                      = false
-  prevent_user_existence_errors        = "ENABLED"
-  refresh_token_validity               = 30
-  access_token_validity                = 1
-  id_token_validity                    = 1
+  generate_secret               = false
+  prevent_user_existence_errors = "ENABLED"
+  refresh_token_validity        = 30
+  access_token_validity         = 1
+  id_token_validity             = 1
 
   token_validity_units {
     refresh_token = "days"
@@ -202,11 +202,11 @@ resource "aws_cognito_user_pool_client" "customer_web" {
     "ALLOW_REFRESH_TOKEN_AUTH",
   ]
 
-  generate_secret                      = false
-  prevent_user_existence_errors        = "ENABLED"
-  refresh_token_validity               = 90
-  access_token_validity                = 24
-  id_token_validity                    = 24
+  generate_secret               = false
+  prevent_user_existence_errors = "ENABLED"
+  refresh_token_validity        = 90
+  access_token_validity         = 24
+  id_token_validity             = 24
 
   token_validity_units {
     refresh_token = "days"
