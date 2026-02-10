@@ -77,6 +77,7 @@ resource "aws_dynamodb_table" "user_ledger" {
   global_secondary_index {
     name            = "MerchantCustomersIndex"
     hash_key        = "GSI2PK"
+    range_key       = "GSI2SK"
     projection_type = "ALL"
   }
 
