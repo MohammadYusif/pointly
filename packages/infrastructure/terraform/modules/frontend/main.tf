@@ -6,7 +6,6 @@ locals {
 
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
-data "aws_canonical_user_id" "current" {}
 
 # ===========================================
 # S3 Bucket for Static Website
@@ -55,93 +54,6 @@ resource "aws_s3_bucket_cors_configuration" "dashboard" {
   }
 }
 
-# ===========================================
-# S3 Bucket for CloudFront Logs
-# ===========================================
-resource "aws_s3_bucket" "cloudfront_logs" {
-  bucket = "pointly-cloudfront-logs-${var.environment}-${data.aws_caller_identity.current.account_id}"
-
-  force_destroy = !local.is_prod
-}
-
-resource "aws_s3_bucket_public_access_block" "cloudfront_logs" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
-
-  block_public_acls       = false
-  block_public_policy     = true
-  ignore_public_acls      = false
-  restrict_public_buckets = false
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "cloudfront_logs" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
-
-resource "aws_s3_bucket_ownership_controls" "cloudfront_logs" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
-
-  rule {
-    object_ownership = "BucketOwnerPreferred"
-  }
-}
-
-resource "aws_s3_bucket_acl" "cloudfront_logs" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
-
-  depends_on = [
-    aws_s3_bucket_ownership_controls.cloudfront_logs,
-    aws_s3_bucket_public_access_block.cloudfront_logs,
-  ]
-
-  access_control_policy {
-    owner {
-      id = data.aws_canonical_user_id.current.id
-    }
-
-    grant {
-      grantee {
-        id   = data.aws_canonical_user_id.current.id
-        type = "CanonicalUser"
-      }
-      permission = "FULL_CONTROL"
-    }
-
-    grant {
-      grantee {
-        # CloudFront log delivery canonical user ID
-        id   = "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0"
-        type = "CanonicalUser"
-      }
-      permission = "FULL_CONTROL"
-    }
-  }
-}
-
-resource "aws_s3_bucket_lifecycle_configuration" "cloudfront_logs" {
-  bucket = aws_s3_bucket.cloudfront_logs.id
-
-  rule {
-    id     = "log-retention"
-    status = "Enabled"
-
-    filter {}
-
-    transition {
-      days          = 30
-      storage_class = "INTELLIGENT_TIERING"
-    }
-
-    expiration {
-      days = local.is_prod ? 90 : 60
-    }
-  }
-}
 
 # ===========================================
 # CloudFront Origin Access Control
@@ -318,15 +230,6 @@ resource "aws_cloudfront_distribution" "dashboard" {
     response_page_path    = "/index.html"
     error_caching_min_ttl = 300
   }
-
-  # Logging
-  logging_config {
-    include_cookies = false
-    bucket          = aws_s3_bucket.cloudfront_logs.bucket_regional_domain_name
-    prefix          = "merchant-dashboard/"
-  }
-
-  depends_on = [aws_s3_bucket_acl.cloudfront_logs]
 
   # TLS
   viewer_certificate {
