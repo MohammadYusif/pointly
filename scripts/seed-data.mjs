@@ -395,28 +395,76 @@ function pickAlbaikLocation() {
   return ALBAIK_LOCATIONS[Math.floor(Math.random() * ALBAIK_LOCATIONS.length)];
 }
 
+/** Push transactions from a list of {days, amount, type, points?, loc?} entries */
+function pushTxnList(out, merchantId, customerId, txns, balance, defaultLoc) {
+  for (const t of txns) {
+    const pts = t.points || t.amount;
+    const before = t.type === 'earn' ? balance - pts : balance + pts;
+    out.push(
+      makeTxn(
+        merchantId,
+        customerId,
+        t.type,
+        pts,
+        t.amount,
+        before,
+        balance,
+        t.days,
+        t.loc || defaultLoc,
+      ),
+    );
+  }
+}
+
+/** Generate random daily transactions over a period */
+function generateDailyTxns(
+  out,
+  merchantId,
+  customerId,
+  days,
+  chance,
+  minAmt,
+  maxAmt,
+  balance,
+  locFn,
+) {
+  for (let day = 0; day < days; day++) {
+    if (Math.random() < chance) {
+      const amount = Math.floor(minAmt + Math.random() * (maxAmt - minAmt));
+      const loc = locFn();
+      out.push(
+        makeTxn(
+          merchantId,
+          customerId,
+          'earn',
+          amount,
+          amount,
+          balance - amount,
+          balance,
+          day + Math.random() * 0.8,
+          loc,
+        ),
+      );
+    }
+  }
+}
+
 function createTransactions() {
   const transactions = [];
   const albaik = MERCHANT_IDS.albaik;
   const jarir = MERCHANT_IDS.jarir;
 
-  // ---- Generate 45 days of Al Baik transaction history ----
-  // This creates realistic daily transaction patterns across both locations
-
   // Ahmed - frequent Al Baik customer (Diamond tier)
   const ahmedAlbaikTxns = [];
   for (let day = 0; day < 45; day++) {
-    // Ahmed eats 3-5 times per week at Al Baik
     if (Math.random() < 0.6) {
-      const amount = Math.floor(40 + Math.random() * 160); // 40-200 SAR meals
       ahmedAlbaikTxns.push({
         days: day + Math.random() * 0.8,
-        amount,
+        amount: Math.floor(40 + Math.random() * 160),
         type: 'earn',
         loc: pickAlbaikLocation(),
       });
     }
-    // Occasional redemption every ~2 weeks
     if (day % 14 === 7 && day > 0) {
       ahmedAlbaikTxns.push({
         days: day + 0.5,
@@ -427,55 +475,39 @@ function createTransactions() {
       });
     }
   }
-  let ahmedBal = 18500;
-  for (const t of ahmedAlbaikTxns) {
-    const pts = t.points || t.amount;
-    const before = t.type === 'earn' ? ahmedBal - pts : ahmedBal + pts;
-    transactions.push(
-      makeTxn(albaik, CUSTOMER_IDS.ahmed, t.type, pts, t.amount, before, ahmedBal, t.days, t.loc),
-    );
-  }
+  const ahmedBal = 18500;
+  pushTxnList(transactions, albaik, CUSTOMER_IDS.ahmed, ahmedAlbaikTxns, ahmedBal);
 
-  // Ahmed at Jarir - occasional electronics purchases
-  const ahmedJarirTxns = [
-    { days: 2, amount: 350, type: 'earn' },
-    { days: 10, amount: 89, type: 'earn' },
-    { days: 18, amount: 1200, type: 'earn' },
-    { days: 25, amount: 45, type: 'earn' },
-    { days: 32, amount: 200, type: 'earn' },
-    { days: 38, amount: 500, points: 500, type: 'redeem' },
-  ];
-  for (const t of ahmedJarirTxns) {
-    const pts = t.points || t.amount;
-    const before = t.type === 'earn' ? ahmedBal - pts : ahmedBal + pts;
-    transactions.push(
-      makeTxn(
-        jarir,
-        CUSTOMER_IDS.ahmed,
-        t.type,
-        pts,
-        t.amount,
-        before,
-        ahmedBal,
-        t.days,
-        JARIR_LOCATION,
-      ),
-    );
-  }
+  // Ahmed at Jarir
+  pushTxnList(
+    transactions,
+    jarir,
+    CUSTOMER_IDS.ahmed,
+    [
+      { days: 2, amount: 350, type: 'earn' },
+      { days: 10, amount: 89, type: 'earn' },
+      { days: 18, amount: 1200, type: 'earn' },
+      { days: 25, amount: 45, type: 'earn' },
+      { days: 32, amount: 200, type: 'earn' },
+      { days: 38, amount: 500, points: 500, type: 'redeem' },
+    ],
+    ahmedBal,
+    JARIR_LOCATION,
+  );
 
   // Fatimah - regular Al Baik customer (Platinum)
-  for (let day = 0; day < 40; day++) {
-    if (Math.random() < 0.4) {
-      const amount = Math.floor(30 + Math.random() * 120);
-      const loc = pickAlbaikLocation();
-      const fatBal = 7200;
-      const before = fatBal - amount;
-      transactions.push(
-        makeTxn(albaik, CUSTOMER_IDS.fatimah, 'earn', amount, amount, before, fatBal, day + Math.random() * 0.8, loc),
-      );
-    }
-  }
-  // Fatimah redemptions
+  const fatBal = 7200;
+  generateDailyTxns(
+    transactions,
+    albaik,
+    CUSTOMER_IDS.fatimah,
+    40,
+    0.4,
+    30,
+    150,
+    fatBal,
+    pickAlbaikLocation,
+  );
   transactions.push(
     makeTxn(albaik, CUSTOMER_IDS.fatimah, 'redeem', 300, 300, 7500, 7200, 6, 'loc_riyadh_01'),
   );
@@ -484,44 +516,49 @@ function createTransactions() {
   );
 
   // Mohammed - moderate at both merchants
-  const mohammedAlbaikTxns = [
-    { days: 1, amount: 75, loc: 'loc_riyadh_01' },
-    { days: 5, amount: 120, loc: 'loc_riyadh_02' },
-    { days: 12, amount: 55, loc: 'loc_riyadh_01' },
-    { days: 19, amount: 90, loc: 'loc_riyadh_02' },
-    { days: 28, amount: 65, loc: 'loc_riyadh_01' },
-    { days: 35, amount: 110, loc: 'loc_riyadh_01' },
-  ];
   const mohammedBal = 2800;
-  for (const t of mohammedAlbaikTxns) {
-    transactions.push(
-      makeTxn(albaik, CUSTOMER_IDS.mohammed, 'earn', t.amount, t.amount, mohammedBal - t.amount, mohammedBal, t.days, t.loc),
-    );
-  }
-  const mohammedJarirTxns = [
-    { days: 1, amount: 250 },
-    { days: 3, amount: 89 },
-    { days: 8, amount: 150 },
-    { days: 22, amount: 320 },
-    { days: 30, amount: 175 },
-  ];
-  for (const t of mohammedJarirTxns) {
-    transactions.push(
-      makeTxn(jarir, CUSTOMER_IDS.mohammed, 'earn', t.amount, t.amount, mohammedBal - t.amount, mohammedBal, t.days, JARIR_LOCATION),
-    );
-  }
+  pushTxnList(
+    transactions,
+    albaik,
+    CUSTOMER_IDS.mohammed,
+    [
+      { days: 1, amount: 75, type: 'earn', loc: 'loc_riyadh_01' },
+      { days: 5, amount: 120, type: 'earn', loc: 'loc_riyadh_02' },
+      { days: 12, amount: 55, type: 'earn', loc: 'loc_riyadh_01' },
+      { days: 19, amount: 90, type: 'earn', loc: 'loc_riyadh_02' },
+      { days: 28, amount: 65, type: 'earn', loc: 'loc_riyadh_01' },
+      { days: 35, amount: 110, type: 'earn', loc: 'loc_riyadh_01' },
+    ],
+    mohammedBal,
+  );
+  pushTxnList(
+    transactions,
+    jarir,
+    CUSTOMER_IDS.mohammed,
+    [
+      { days: 1, amount: 250, type: 'earn' },
+      { days: 3, amount: 89, type: 'earn' },
+      { days: 8, amount: 150, type: 'earn' },
+      { days: 22, amount: 320, type: 'earn' },
+      { days: 30, amount: 175, type: 'earn' },
+    ],
+    mohammedBal,
+    JARIR_LOCATION,
+  );
 
   // Omar at Jarir (Platinum - heavy spender)
-  for (let day = 0; day < 35; day++) {
-    if (Math.random() < 0.45) {
-      const amount = Math.floor(100 + Math.random() * 500);
-      const omarBal = 5200;
-      transactions.push(
-        makeTxn(jarir, CUSTOMER_IDS.omar, 'earn', amount, amount, omarBal - amount, omarBal, day + Math.random() * 0.8, JARIR_LOCATION),
-      );
-    }
-  }
-  // Omar redemptions
+  const omarBal = 5200;
+  generateDailyTxns(
+    transactions,
+    jarir,
+    CUSTOMER_IDS.omar,
+    35,
+    0.45,
+    100,
+    600,
+    omarBal,
+    () => JARIR_LOCATION,
+  );
   transactions.push(
     makeTxn(jarir, CUSTOMER_IDS.omar, 'redeem', 1000, 1000, 6200, 5200, 3, JARIR_LOCATION),
   );
@@ -529,7 +566,7 @@ function createTransactions() {
     makeTxn(jarir, CUSTOMER_IDS.omar, 'redeem', 500, 500, 5700, 5200, 15, JARIR_LOCATION),
   );
 
-  // Noura - new customer, single purchase at Al Baik Olaya
+  // Noura - single purchase
   transactions.push(
     makeTxn(albaik, CUSTOMER_IDS.noura, 'earn', 100, 100, 0, 100, 3, 'loc_riyadh_01'),
   );
@@ -542,13 +579,18 @@ function createTransactions() {
     makeTxn(jarir, CUSTOMER_IDS.layla, 'earn', 250, 250, 200, 450, 7, JARIR_LOCATION),
   );
 
-  // Sara - inactive but has historical transactions at Al Baik (120+ days ago)
-  for (let day = 120; day < 160; day += 5) {
-    const amount = Math.floor(40 + Math.random() * 80);
-    transactions.push(
-      makeTxn(albaik, CUSTOMER_IDS.sara, 'earn', amount, amount, 3500 - amount, 3500, day, pickAlbaikLocation()),
-    );
-  }
+  // Sara - inactive, historical (120+ days ago)
+  generateDailyTxns(
+    transactions,
+    albaik,
+    CUSTOMER_IDS.sara,
+    8,
+    1.0,
+    40,
+    120,
+    3500,
+    pickAlbaikLocation,
+  );
 
   return transactions;
 }

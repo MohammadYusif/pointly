@@ -7,7 +7,15 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": ["node_modules", "dist", ".next", "coverage", "cdk.out", "next-env.d.ts"]
+    "ignore": [
+      "node_modules",
+      "dist",
+      ".next",
+      "coverage",
+      "cdk.out",
+      "next-env.d.ts",
+      ".terraform"
+    ]
   },
   "formatter": {
     "enabled": true,
