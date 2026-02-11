@@ -37,8 +37,7 @@ const docClient = DynamoDBDocumentClient.from(client, {
 // --- Deterministic IDs for seed data ---
 const MERCHANT_IDS = {
   albaik: 'merchant_albaik_seed',
-  jarir: 'merchant_jarir_seed',
-  extra: 'merchant_extra_seed',
+  brew92: 'merchant_brew92_seed',
 };
 
 const CUSTOMER_IDS = {
@@ -50,6 +49,8 @@ const CUSTOMER_IDS = {
   sara: 'customer_sara_seed',
   omar: 'customer_omar_seed',
   layla: 'customer_layla_seed',
+  youssef: 'customer_youssef_seed',
+  hana: 'customer_hana_seed',
 };
 
 // --- Helpers ---
@@ -61,9 +62,55 @@ function txnId() {
   return `txn_${randomUUID().slice(0, 12)}`;
 }
 
+// --- Al Baik Locations (4 branches) ---
+const ALBAIK_LOCATIONS = [
+  {
+    locationId: 'loc_riyadh_olaya',
+    name: 'Al Baik - Olaya',
+    address: 'Olaya Street, Al Olaya District',
+    city: 'Riyadh',
+    isActive: true,
+    createdAt: daysAgo(200),
+  },
+  {
+    locationId: 'loc_riyadh_exit15',
+    name: 'Al Baik - Exit 15',
+    address: 'King Fahd Road, Exit 15',
+    city: 'Riyadh',
+    isActive: true,
+    createdAt: daysAgo(180),
+  },
+  {
+    locationId: 'loc_jeddah_corniche',
+    name: 'Al Baik - Corniche',
+    address: 'Corniche Road, Al Hamra District',
+    city: 'Jeddah',
+    isActive: true,
+    createdAt: daysAgo(150),
+  },
+  {
+    locationId: 'loc_jeddah_tahlia',
+    name: 'Al Baik - Tahlia',
+    address: 'Tahlia Street, Al Khalidiyah',
+    city: 'Jeddah',
+    isActive: true,
+    createdAt: daysAgo(120),
+  },
+];
+
+const BREW92_LOCATION = {
+  locationId: 'loc_brew92_main',
+  name: 'Brew92 - Al Nakheel',
+  address: 'Al Nakheel Mall, King Fahd Road',
+  city: 'Riyadh',
+  isActive: true,
+  createdAt: daysAgo(30),
+};
+
 // --- Merchant Data ---
 function createMerchants() {
   return [
+    // Al Baik: 4 branches, rich analytics data
     {
       PK: `MERCHANT#${MERCHANT_IDS.albaik}`,
       SK: 'PROFILE',
@@ -85,32 +132,15 @@ function createMerchants() {
         welcomeBonus: 100,
         enableMultiLocation: true,
       },
-      smsQuota: { monthlyLimit: 5000, currentUsage: 342, resetDate: now },
-      locations: [
-        {
-          locationId: 'loc_riyadh_01',
-          name: 'Al Baik - Olaya',
-          address: 'Olaya Street, Al Olaya District',
-          city: 'Riyadh',
-          isActive: true,
-          createdAt: daysAgo(180),
-        },
-        {
-          locationId: 'loc_riyadh_02',
-          name: 'Al Baik - Exit 15',
-          address: 'King Fahd Road, Exit 15',
-          city: 'Riyadh',
-          isActive: true,
-          createdAt: daysAgo(90),
-        },
-      ],
+      smsQuota: { monthlyLimit: 5000, currentUsage: 420, resetDate: now },
+      locations: ALBAIK_LOCATIONS,
       maxLocations: 10,
-      totalCustomers: 6,
-      activeCustomers: 5,
-      totalTransactions: 80,
-      createdAt: daysAgo(180),
-      updatedAt: hoursAgo(2),
-      verifiedAt: daysAgo(179),
+      totalCustomers: 8,
+      activeCustomers: 7,
+      totalTransactions: 200,
+      createdAt: daysAgo(200),
+      updatedAt: hoursAgo(1),
+      verifiedAt: daysAgo(199),
       GSI1PK: 'EMAIL#manager@albaik.com',
       GSI1SK: 'MERCHANT',
       GSI2PK: 'PHONE#966501234567',
@@ -118,96 +148,43 @@ function createMerchants() {
       GSI3PK: 'STATUS#ACTIVE',
       GSI3SK: `MERCHANT#${MERCHANT_IDS.albaik}`,
     },
+    // Brew92: single location, basic manual transactions
     {
-      PK: `MERCHANT#${MERCHANT_IDS.jarir}`,
+      PK: `MERCHANT#${MERCHANT_IDS.brew92}`,
       SK: 'PROFILE',
       EntityType: 'MERCHANT',
-      merchantId: MERCHANT_IDS.jarir,
-      businessName: 'Jarir Bookstore',
-      email: 'loyalty@jarir.com',
-      phone: '966559876543',
-      contactName: 'Saad Al-Jarir',
-      tier: 'ENTERPRISE',
+      merchantId: MERCHANT_IDS.brew92,
+      businessName: 'Brew92 Coffee',
+      email: 'hello@brew92.com',
+      phone: '966559991234',
+      contactName: 'Faisal Al-Otaibi',
+      tier: 'BASIC',
       status: 'ACTIVE',
       loyaltyConfig: {
-        pointsPerSAR: 2,
+        pointsPerSAR: 1,
         globalPointsPerSAR: 1,
         minimumPurchase: 5,
         redemptionRate: 0.01,
         allowPartialRedemption: true,
-        minimumRedemption: 100,
-        welcomeBonus: 200,
-        enableMultiLocation: true,
-      },
-      smsQuota: { monthlyLimit: 10000, currentUsage: 1205, resetDate: now },
-      locations: [
-        {
-          locationId: 'loc_jarir_01',
-          name: 'Jarir - Tahlia',
-          address: 'Tahlia Street',
-          city: 'Riyadh',
-          isActive: true,
-          createdAt: daysAgo(365),
-        },
-      ],
-      maxLocations: 50,
-      totalCustomers: 4,
-      activeCustomers: 4,
-      totalTransactions: 45,
-      createdAt: daysAgo(365),
-      updatedAt: hoursAgo(6),
-      verifiedAt: daysAgo(364),
-      GSI1PK: 'EMAIL#loyalty@jarir.com',
-      GSI1SK: 'MERCHANT',
-      GSI2PK: 'PHONE#966559876543',
-      GSI2SK: 'MERCHANT',
-      GSI3PK: 'STATUS#ACTIVE',
-      GSI3SK: `MERCHANT#${MERCHANT_IDS.jarir}`,
-    },
-    {
-      PK: `MERCHANT#${MERCHANT_IDS.extra}`,
-      SK: 'PROFILE',
-      EntityType: 'MERCHANT',
-      merchantId: MERCHANT_IDS.extra,
-      businessName: 'eXtra Electronics',
-      email: 'admin@extra.com',
-      phone: '966541112233',
-      contactName: 'Fahad Al-Otaibi',
-      tier: 'BASIC',
-      status: 'PENDING_VERIFICATION',
-      loyaltyConfig: {
-        pointsPerSAR: 1,
-        globalPointsPerSAR: 1,
-        minimumPurchase: 20,
-        redemptionRate: 0.01,
-        allowPartialRedemption: false,
-        minimumRedemption: 100,
+        minimumRedemption: 20,
         welcomeBonus: 50,
         enableMultiLocation: false,
       },
-      smsQuota: { monthlyLimit: 1000, currentUsage: 0, resetDate: now },
-      locations: [
-        {
-          locationId: 'loc_extra_01',
-          name: 'eXtra - Panorama Mall',
-          address: 'Panorama Mall, Takhasusi St',
-          city: 'Riyadh',
-          isActive: true,
-          createdAt: daysAgo(7),
-        },
-      ],
+      smsQuota: { monthlyLimit: 1000, currentUsage: 18, resetDate: now },
+      locations: [BREW92_LOCATION],
       maxLocations: 1,
-      totalCustomers: 0,
-      activeCustomers: 0,
-      totalTransactions: 0,
-      createdAt: daysAgo(7),
-      updatedAt: daysAgo(7),
-      GSI1PK: 'EMAIL#admin@extra.com',
+      totalCustomers: 3,
+      activeCustomers: 3,
+      totalTransactions: 15,
+      createdAt: daysAgo(30),
+      updatedAt: hoursAgo(3),
+      verifiedAt: daysAgo(29),
+      GSI1PK: 'EMAIL#hello@brew92.com',
       GSI1SK: 'MERCHANT',
-      GSI2PK: 'PHONE#966541112233',
+      GSI2PK: 'PHONE#966559991234',
       GSI2SK: 'MERCHANT',
-      GSI3PK: 'STATUS#PENDING_VERIFICATION',
-      GSI3SK: `MERCHANT#${MERCHANT_IDS.extra}`,
+      GSI3PK: 'STATUS#ACTIVE',
+      GSI3SK: `MERCHANT#${MERCHANT_IDS.brew92}`,
     },
   ];
 }
@@ -215,60 +192,83 @@ function createMerchants() {
 // --- Customer Data ---
 function createCustomers() {
   const albaik = MERCHANT_IDS.albaik;
-  const jarir = MERCHANT_IDS.jarir;
+  const brew = MERCHANT_IDS.brew92;
 
   return [
-    // Diamond tier - power user, enrolled in both merchants
+    // === Al Baik Customers ===
+    // Diamond tier - power user, eats at multiple branches
     makeCustomer({
       id: CUSTOMER_IDS.ahmed,
       phone: '966501111111',
       name: 'Ahmed Al-Dosari',
-      globalBalance: 18500,
-      globalLifetime: 42000,
+      globalBalance: 22000,
+      globalLifetime: 48000,
       tier: 'Diamond',
-      monthlyProgress: 16000,
+      monthlyProgress: 18000,
       enrollments: [
-        makeEnrollment(albaik, 120, 'granted', 8500, 25000, 22),
-        makeEnrollment(jarir, 60, 'granted', 4200, 12000, 8),
+        makeEnrollment(albaik, 180, 'granted', 12500, 32000, 45),
+        makeEnrollment(brew, 20, 'granted', 350, 500, 4),
       ],
     }),
-    // Platinum tier
+    // Platinum - regular at Riyadh branches
     makeCustomer({
       id: CUSTOMER_IDS.fatimah,
       phone: '966502222222',
       name: 'Fatimah Al-Harbi',
-      globalBalance: 7200,
-      globalLifetime: 15000,
+      globalBalance: 8500,
+      globalLifetime: 18000,
       tier: 'Platinum',
-      monthlyProgress: 8500,
-      enrollments: [makeEnrollment(albaik, 90, 'granted', 3100, 8000, 12)],
+      monthlyProgress: 9500,
+      enrollments: [makeEnrollment(albaik, 120, 'granted', 4800, 12000, 25)],
     }),
-    // Bronze with good activity
+    // Bronze - moderate, visits both cities
     makeCustomer({
       id: CUSTOMER_IDS.mohammed,
       phone: '966503333333',
       name: 'Mohammed Al-Qahtani',
-      globalBalance: 2800,
-      globalLifetime: 4500,
+      globalBalance: 3200,
+      globalLifetime: 5500,
       tier: 'Bronze',
-      monthlyProgress: 2800,
-      enrollments: [
-        makeEnrollment(albaik, 45, 'granted', 1200, 2500, 6),
-        makeEnrollment(jarir, 30, 'granted', 800, 1200, 3),
-      ],
+      monthlyProgress: 3200,
+      enrollments: [makeEnrollment(albaik, 60, 'granted', 1800, 3200, 10)],
     }),
-    // New customer, just enrolled
+    // Platinum - Jeddah regular
     makeCustomer({
-      id: CUSTOMER_IDS.noura,
-      phone: '966504444444',
-      name: 'Noura Al-Shammari',
-      globalBalance: 100,
-      globalLifetime: 100,
-      tier: 'Bronze',
-      monthlyProgress: 100,
-      enrollments: [makeEnrollment(albaik, 3, 'granted', 100, 100, 1)],
+      id: CUSTOMER_IDS.omar,
+      phone: '966507777777',
+      name: 'Omar Al-Ghamdi',
+      globalBalance: 6800,
+      globalLifetime: 14000,
+      tier: 'Platinum',
+      monthlyProgress: 6800,
+      enrollments: [makeEnrollment(albaik, 100, 'granted', 5200, 11000, 30)],
     }),
-    // Pending consent customer
+    // Bronze - new Jeddah customer
+    makeCustomer({
+      id: CUSTOMER_IDS.youssef,
+      phone: '966509999999',
+      name: 'Youssef Al-Zahrani',
+      globalBalance: 1200,
+      globalLifetime: 1600,
+      tier: 'Bronze',
+      monthlyProgress: 1200,
+      enrollments: [makeEnrollment(albaik, 25, 'granted', 800, 1200, 6)],
+    }),
+    // Inactive - decay candidate
+    makeCustomer({
+      id: CUSTOMER_IDS.sara,
+      phone: '966506666666',
+      name: 'Sara Al-Tamimi',
+      globalBalance: 4000,
+      globalLifetime: 9500,
+      tier: 'Bronze',
+      monthlyProgress: 0,
+      lastActivity: daysAgo(95),
+      decayPhase: 1,
+      decayStartDate: daysAgo(65),
+      enrollments: [makeEnrollment(albaik, 160, 'granted', 1200, 5000, 12)],
+    }),
+    // Pending consent
     makeCustomer({
       id: CUSTOMER_IDS.khalid,
       phone: '966505555555',
@@ -280,40 +280,40 @@ function createCustomers() {
       enrollments: [makeEnrollment(albaik, 1, 'pending', 0, 0, 0)],
       gsi3pk: `MERCHANT#${albaik}#PENDING_CONSENT`,
     }),
-    // Inactive customer (potential decay)
+    // Hana - Riyadh regular
     makeCustomer({
-      id: CUSTOMER_IDS.sara,
-      phone: '966506666666',
-      name: 'Sara Al-Tamimi',
-      globalBalance: 3500,
-      globalLifetime: 8000,
+      id: CUSTOMER_IDS.hana,
+      phone: '966510001111',
+      name: 'Hana Al-Subaie',
+      globalBalance: 2400,
+      globalLifetime: 3600,
       tier: 'Bronze',
-      monthlyProgress: 0,
-      lastActivity: daysAgo(120),
-      decayPhase: 1,
-      decayStartDate: daysAgo(90),
-      enrollments: [makeEnrollment(albaik, 150, 'granted', 500, 4000, 8)],
+      monthlyProgress: 2400,
+      enrollments: [makeEnrollment(albaik, 40, 'granted', 1600, 2800, 8)],
     }),
-    // Jarir-only customer
+
+    // === Brew92 Customers ===
+    // Noura - regular coffee customer
     makeCustomer({
-      id: CUSTOMER_IDS.omar,
-      phone: '966507777777',
-      name: 'Omar Al-Ghamdi',
-      globalBalance: 5200,
-      globalLifetime: 9800,
-      tier: 'Platinum',
-      monthlyProgress: 5200,
-      enrollments: [makeEnrollment(jarir, 60, 'granted', 6400, 9800, 12)],
+      id: CUSTOMER_IDS.noura,
+      phone: '966504444444',
+      name: 'Noura Al-Shammari',
+      globalBalance: 380,
+      globalLifetime: 520,
+      tier: 'Bronze',
+      monthlyProgress: 380,
+      enrollments: [makeEnrollment(brew, 25, 'granted', 380, 520, 8)],
     }),
-    // Minimal customer - no name
+    // Layla - occasional visitor
     makeCustomer({
       id: CUSTOMER_IDS.layla,
       phone: '966508888888',
-      globalBalance: 450,
-      globalLifetime: 450,
+      name: 'Layla Al-Rashidi',
+      globalBalance: 150,
+      globalLifetime: 150,
       tier: 'Bronze',
-      monthlyProgress: 450,
-      enrollments: [makeEnrollment(jarir, 14, 'granted', 450, 450, 2)],
+      monthlyProgress: 150,
+      enrollments: [makeEnrollment(brew, 14, 'granted', 150, 150, 3)],
     }),
   ];
 }
@@ -357,7 +357,6 @@ function makeCustomer({
     GSI1SK: 'CUSTOMER',
   };
 
-  // GSI2PK for merchant customer lookup (first enrolled merchant with granted consent)
   const grantedEnrollment = enrollments.find((e) => e.consentStatus === 'granted');
   if (grantedEnrollment) {
     item.GSI2PK = `MERCHANT#${grantedEnrollment.merchantId}#CUSTOMERS`;
@@ -386,16 +385,16 @@ function makeEnrollment(merchantId, daysAgoEnrolled, consent, balance, lifetime,
   return enrollment;
 }
 
-// --- Transaction Data ---
-// Al Baik locations for distributing transactions
-const ALBAIK_LOCATIONS = ['loc_riyadh_01', 'loc_riyadh_02'];
-const JARIR_LOCATION = 'loc_jarir_01';
-
-function pickAlbaikLocation() {
-  return ALBAIK_LOCATIONS[Math.floor(Math.random() * ALBAIK_LOCATIONS.length)];
+// --- Transaction helpers ---
+/** Weighted random location pick — Olaya busiest, Jeddah Tahlia slowest */
+function pickWeightedAlbaikLocation() {
+  const r = Math.random();
+  if (r < 0.35) return 'loc_riyadh_olaya';
+  if (r < 0.6) return 'loc_riyadh_exit15';
+  if (r < 0.82) return 'loc_jeddah_corniche';
+  return 'loc_jeddah_tahlia';
 }
 
-/** Push transactions from a list of {days, amount, type, points?, loc?} entries */
 function pushTxnList(out, merchantId, customerId, txns, balance, defaultLoc) {
   for (const t of txns) {
     const pts = t.points || t.amount;
@@ -416,18 +415,8 @@ function pushTxnList(out, merchantId, customerId, txns, balance, defaultLoc) {
   }
 }
 
-/** Generate random daily transactions over a period */
-function generateDailyTxns(
-  out,
-  merchantId,
-  customerId,
-  days,
-  chance,
-  minAmt,
-  maxAmt,
-  balance,
-  locFn,
-) {
+function generateDailyTxns(out, merchantId, customerId, cfg) {
+  const { startDay, days, chance, minAmt, maxAmt, balance, locFn } = cfg;
   for (let day = 0; day < days; day++) {
     if (Math.random() < chance) {
       const amount = Math.floor(minAmt + Math.random() * (maxAmt - minAmt));
@@ -441,7 +430,7 @@ function generateDailyTxns(
           amount,
           balance - amount,
           balance,
-          day + Math.random() * 0.8,
+          (startDay || 0) + day + Math.random() * 0.8,
           loc,
         ),
       );
@@ -449,150 +438,232 @@ function generateDailyTxns(
   }
 }
 
-function createTransactions() {
-  const transactions = [];
-  const albaik = MERCHANT_IDS.albaik;
-  const jarir = MERCHANT_IDS.jarir;
+// --- Al Baik Transactions (rich analytics data across 4 branches, 60 days) ---
+function createAlbaikTransactions() {
+  const txns = [];
+  const m = MERCHANT_IDS.albaik;
 
-  // Ahmed - frequent Al Baik customer (Diamond tier)
-  const ahmedAlbaikTxns = [];
-  for (let day = 0; day < 45; day++) {
-    if (Math.random() < 0.6) {
-      ahmedAlbaikTxns.push({
-        days: day + Math.random() * 0.8,
-        amount: Math.floor(40 + Math.random() * 160),
-        type: 'earn',
-        loc: pickAlbaikLocation(),
-      });
-    }
-    if (day % 14 === 7 && day > 0) {
-      ahmedAlbaikTxns.push({
-        days: day + 0.5,
-        amount: 300,
-        points: 300,
-        type: 'redeem',
-        loc: pickAlbaikLocation(),
-      });
-    }
-  }
-  const ahmedBal = 18500;
-  pushTxnList(transactions, albaik, CUSTOMER_IDS.ahmed, ahmedAlbaikTxns, ahmedBal);
+  // Ahmed — Diamond, visits all 4 branches frequently (~4x/week)
+  createAhmedAlbaikTxns(txns, m);
 
-  // Ahmed at Jarir
+  // Fatimah — Platinum, Riyadh branches mostly (~3x/week)
+  createFatimahTxns(txns, m);
+
+  // Omar — Platinum, Jeddah branches mostly (~3x/week)
+  createOmarTxns(txns, m);
+
+  // Mohammed — Bronze, occasional across cities
+  createMohammedTxns(txns, m);
+
+  // Youssef — Bronze, new Jeddah customer
+  createYoussefTxns(txns, m);
+
+  // Hana — Bronze, Riyadh regular
+  createHanaTxns(txns, m);
+
+  // Sara — inactive, old transactions (95-140 days ago)
+  createSaraTxns(txns, m);
+
+  return txns;
+}
+
+function createAhmedAlbaikTxns(txns, m) {
+  // 60 days of visits, ~60% chance per day, all 4 branches, some redeems
+  generateDailyTxns(txns, m, CUSTOMER_IDS.ahmed, {
+    startDay: 0,
+    days: 60,
+    chance: 0.6,
+    minAmt: 45,
+    maxAmt: 220,
+    balance: 22000,
+    locFn: pickWeightedAlbaikLocation,
+  });
+  // Redemptions every ~2 weeks
   pushTxnList(
-    transactions,
-    jarir,
+    txns,
+    m,
     CUSTOMER_IDS.ahmed,
     [
-      { days: 2, amount: 350, type: 'earn' },
-      { days: 10, amount: 89, type: 'earn' },
-      { days: 18, amount: 1200, type: 'earn' },
-      { days: 25, amount: 45, type: 'earn' },
-      { days: 32, amount: 200, type: 'earn' },
-      { days: 38, amount: 500, points: 500, type: 'redeem' },
+      { days: 7, amount: 500, points: 500, type: 'redeem', loc: 'loc_riyadh_olaya' },
+      { days: 21, amount: 400, points: 400, type: 'redeem', loc: 'loc_jeddah_corniche' },
+      { days: 35, amount: 600, points: 600, type: 'redeem', loc: 'loc_riyadh_exit15' },
+      { days: 49, amount: 350, points: 350, type: 'redeem', loc: 'loc_jeddah_tahlia' },
     ],
-    ahmedBal,
-    JARIR_LOCATION,
+    22000,
   );
+}
 
-  // Fatimah - regular Al Baik customer (Platinum)
-  const fatBal = 7200;
-  generateDailyTxns(
-    transactions,
-    albaik,
+function createFatimahTxns(txns, m) {
+  // 55 days, Riyadh branches mostly
+  generateDailyTxns(txns, m, CUSTOMER_IDS.fatimah, {
+    startDay: 0,
+    days: 55,
+    chance: 0.45,
+    minAmt: 35,
+    maxAmt: 160,
+    balance: 8500,
+    locFn: () => (Math.random() < 0.7 ? 'loc_riyadh_olaya' : 'loc_riyadh_exit15'),
+  });
+  pushTxnList(
+    txns,
+    m,
     CUSTOMER_IDS.fatimah,
-    40,
-    0.4,
-    30,
-    150,
-    fatBal,
-    pickAlbaikLocation,
-  );
-  transactions.push(
-    makeTxn(albaik, CUSTOMER_IDS.fatimah, 'redeem', 300, 300, 7500, 7200, 6, 'loc_riyadh_01'),
-  );
-  transactions.push(
-    makeTxn(albaik, CUSTOMER_IDS.fatimah, 'redeem', 200, 200, 7400, 7200, 20, 'loc_riyadh_02'),
-  );
-
-  // Mohammed - moderate at both merchants
-  const mohammedBal = 2800;
-  pushTxnList(
-    transactions,
-    albaik,
-    CUSTOMER_IDS.mohammed,
     [
-      { days: 1, amount: 75, type: 'earn', loc: 'loc_riyadh_01' },
-      { days: 5, amount: 120, type: 'earn', loc: 'loc_riyadh_02' },
-      { days: 12, amount: 55, type: 'earn', loc: 'loc_riyadh_01' },
-      { days: 19, amount: 90, type: 'earn', loc: 'loc_riyadh_02' },
-      { days: 28, amount: 65, type: 'earn', loc: 'loc_riyadh_01' },
-      { days: 35, amount: 110, type: 'earn', loc: 'loc_riyadh_01' },
+      { days: 10, amount: 300, points: 300, type: 'redeem', loc: 'loc_riyadh_olaya' },
+      { days: 30, amount: 250, points: 250, type: 'redeem', loc: 'loc_riyadh_exit15' },
+      { days: 50, amount: 200, points: 200, type: 'redeem', loc: 'loc_riyadh_olaya' },
     ],
-    mohammedBal,
+    8500,
   );
-  pushTxnList(
-    transactions,
-    jarir,
-    CUSTOMER_IDS.mohammed,
-    [
-      { days: 1, amount: 250, type: 'earn' },
-      { days: 3, amount: 89, type: 'earn' },
-      { days: 8, amount: 150, type: 'earn' },
-      { days: 22, amount: 320, type: 'earn' },
-      { days: 30, amount: 175, type: 'earn' },
-    ],
-    mohammedBal,
-    JARIR_LOCATION,
-  );
+}
 
-  // Omar at Jarir (Platinum - heavy spender)
-  const omarBal = 5200;
-  generateDailyTxns(
-    transactions,
-    jarir,
+function createOmarTxns(txns, m) {
+  // 50 days, Jeddah branches mostly
+  generateDailyTxns(txns, m, CUSTOMER_IDS.omar, {
+    startDay: 0,
+    days: 50,
+    chance: 0.45,
+    minAmt: 40,
+    maxAmt: 180,
+    balance: 6800,
+    locFn: () => (Math.random() < 0.6 ? 'loc_jeddah_corniche' : 'loc_jeddah_tahlia'),
+  });
+  pushTxnList(
+    txns,
+    m,
     CUSTOMER_IDS.omar,
-    35,
-    0.45,
-    100,
-    600,
-    omarBal,
-    () => JARIR_LOCATION,
+    [
+      { days: 12, amount: 400, points: 400, type: 'redeem', loc: 'loc_jeddah_corniche' },
+      { days: 38, amount: 500, points: 500, type: 'redeem', loc: 'loc_jeddah_tahlia' },
+    ],
+    6800,
   );
-  transactions.push(
-    makeTxn(jarir, CUSTOMER_IDS.omar, 'redeem', 1000, 1000, 6200, 5200, 3, JARIR_LOCATION),
+}
+
+function createMohammedTxns(txns, m) {
+  pushTxnList(
+    txns,
+    m,
+    CUSTOMER_IDS.mohammed,
+    [
+      { days: 3, amount: 85, type: 'earn', loc: 'loc_riyadh_olaya' },
+      { days: 8, amount: 120, type: 'earn', loc: 'loc_riyadh_exit15' },
+      { days: 15, amount: 65, type: 'earn', loc: 'loc_jeddah_corniche' },
+      { days: 22, amount: 95, type: 'earn', loc: 'loc_riyadh_olaya' },
+      { days: 30, amount: 110, type: 'earn', loc: 'loc_jeddah_tahlia' },
+      { days: 38, amount: 75, type: 'earn', loc: 'loc_riyadh_exit15' },
+      { days: 42, amount: 140, type: 'earn', loc: 'loc_jeddah_corniche' },
+      { days: 50, amount: 55, type: 'earn', loc: 'loc_riyadh_olaya' },
+      { days: 55, amount: 200, points: 200, type: 'redeem', loc: 'loc_riyadh_olaya' },
+    ],
+    3200,
   );
-  transactions.push(
-    makeTxn(jarir, CUSTOMER_IDS.omar, 'redeem', 500, 500, 5700, 5200, 15, JARIR_LOCATION),
+}
+
+function createYoussefTxns(txns, m) {
+  pushTxnList(
+    txns,
+    m,
+    CUSTOMER_IDS.youssef,
+    [
+      { days: 2, amount: 90, type: 'earn', loc: 'loc_jeddah_corniche' },
+      { days: 6, amount: 65, type: 'earn', loc: 'loc_jeddah_tahlia' },
+      { days: 11, amount: 110, type: 'earn', loc: 'loc_jeddah_corniche' },
+      { days: 16, amount: 80, type: 'earn', loc: 'loc_jeddah_corniche' },
+      { days: 20, amount: 130, type: 'earn', loc: 'loc_jeddah_tahlia' },
+      { days: 24, amount: 75, type: 'earn', loc: 'loc_jeddah_corniche' },
+    ],
+    1200,
+  );
+}
+
+function createHanaTxns(txns, m) {
+  pushTxnList(
+    txns,
+    m,
+    CUSTOMER_IDS.hana,
+    [
+      { days: 2, amount: 55, type: 'earn', loc: 'loc_riyadh_olaya' },
+      { days: 7, amount: 90, type: 'earn', loc: 'loc_riyadh_exit15' },
+      { days: 12, amount: 70, type: 'earn', loc: 'loc_riyadh_olaya' },
+      { days: 18, amount: 120, type: 'earn', loc: 'loc_riyadh_olaya' },
+      { days: 23, amount: 85, type: 'earn', loc: 'loc_riyadh_exit15' },
+      { days: 28, amount: 100, type: 'earn', loc: 'loc_riyadh_olaya' },
+      { days: 33, amount: 60, type: 'earn', loc: 'loc_riyadh_exit15' },
+      { days: 38, amount: 150, points: 150, type: 'redeem', loc: 'loc_riyadh_olaya' },
+    ],
+    2400,
+  );
+}
+
+function createSaraTxns(txns, m) {
+  // Old transactions from 95-140 days ago
+  generateDailyTxns(txns, m, CUSTOMER_IDS.sara, {
+    startDay: 95,
+    days: 45,
+    chance: 0.3,
+    minAmt: 40,
+    maxAmt: 130,
+    balance: 4000,
+    locFn: () => (Math.random() < 0.5 ? 'loc_riyadh_olaya' : 'loc_riyadh_exit15'),
+  });
+}
+
+// --- Brew92 Transactions (simple manual transactions, 1 location, 30 days) ---
+function createBrew92Transactions() {
+  const txns = [];
+  const m = MERCHANT_IDS.brew92;
+  const loc = BREW92_LOCATION.locationId;
+
+  // Ahmed — also a Brew92 customer, occasional coffee
+  pushTxnList(
+    txns,
+    m,
+    CUSTOMER_IDS.ahmed,
+    [
+      { days: 2, amount: 28, type: 'earn' },
+      { days: 8, amount: 35, type: 'earn' },
+      { days: 15, amount: 22, type: 'earn' },
+      { days: 22, amount: 42, type: 'earn' },
+    ],
+    350,
+    loc,
   );
 
-  // Noura - single purchase
-  transactions.push(
-    makeTxn(albaik, CUSTOMER_IDS.noura, 'earn', 100, 100, 0, 100, 3, 'loc_riyadh_01'),
+  // Noura — regular coffee lover
+  pushTxnList(
+    txns,
+    m,
+    CUSTOMER_IDS.noura,
+    [
+      { days: 1, amount: 25, type: 'earn' },
+      { days: 4, amount: 30, type: 'earn' },
+      { days: 7, amount: 18, type: 'earn' },
+      { days: 10, amount: 35, type: 'earn' },
+      { days: 14, amount: 28, type: 'earn' },
+      { days: 18, amount: 22, type: 'earn' },
+      { days: 21, amount: 40, type: 'earn' },
+      { days: 25, amount: 50, points: 50, type: 'redeem' },
+    ],
+    380,
+    loc,
   );
 
-  // Layla at Jarir
-  transactions.push(
-    makeTxn(jarir, CUSTOMER_IDS.layla, 'earn', 200, 200, 0, 200, 14, JARIR_LOCATION),
-  );
-  transactions.push(
-    makeTxn(jarir, CUSTOMER_IDS.layla, 'earn', 250, 250, 200, 450, 7, JARIR_LOCATION),
-  );
-
-  // Sara - inactive, historical (120+ days ago)
-  generateDailyTxns(
-    transactions,
-    albaik,
-    CUSTOMER_IDS.sara,
-    8,
-    1.0,
-    40,
-    120,
-    3500,
-    pickAlbaikLocation,
+  // Layla — occasional visitor
+  pushTxnList(
+    txns,
+    m,
+    CUSTOMER_IDS.layla,
+    [
+      { days: 5, amount: 32, type: 'earn' },
+      { days: 14, amount: 45, type: 'earn' },
+      { days: 23, amount: 28, type: 'earn' },
+    ],
+    150,
+    loc,
   );
 
-  return transactions;
+  return txns;
 }
 
 function makeTxn(
@@ -642,7 +713,6 @@ function makeTxn(
     GSI4PK: `CUSTOMER#${customerId}#MERCHANT#${merchantId}`,
   };
 
-  // GSI5 for location-based lookups
   if (locationId) {
     item.GSI5PK = `MERCHANT#${merchantId}#LOCATION#${locationId}`;
     item.GSI5SK = `TXN#${createdAt}#${id}`;
@@ -667,7 +737,6 @@ async function deleteItem(tableName, pk, sk) {
 async function cleanSeedData() {
   console.log('\nCleaning existing seed data...');
 
-  // Delete merchants
   for (const id of Object.values(MERCHANT_IDS)) {
     try {
       await deleteItem(TABLES.userLedger, `MERCHANT#${id}`, 'PROFILE');
@@ -677,7 +746,6 @@ async function cleanSeedData() {
     }
   }
 
-  // Delete customers
   for (const id of Object.values(CUSTOMER_IDS)) {
     try {
       await deleteItem(TABLES.userLedger, `CUSTOMER#${id}`, 'PROFILE');
@@ -687,8 +755,6 @@ async function cleanSeedData() {
     }
   }
 
-  // Note: Transactions use random IDs so we can't easily clean them.
-  // They'll just accumulate harmlessly.
   console.log("  (Transactions use random IDs - old ones will remain but won't conflict)");
 }
 
@@ -723,32 +789,43 @@ async function seed() {
   }
 
   // Seed transactions
-  const transactions = createTransactions();
-  console.log(`\nSeeding ${transactions.length} transactions...`);
-  for (const t of transactions) {
+  const albaikTxns = createAlbaikTransactions();
+  const brew92Txns = createBrew92Transactions();
+  const allTxns = [...albaikTxns, ...brew92Txns];
+  console.log(`\nSeeding ${allTxns.length} transactions...`);
+  console.log(`  Al Baik: ${albaikTxns.length} transactions (4 branches, 60 days)`);
+  console.log(`  Brew92: ${brew92Txns.length} transactions (1 branch, 30 days)`);
+  for (const t of allTxns) {
     await putItem(TABLES.transactionAudit, t);
   }
-  console.log(`  [+] ${transactions.length} transactions written`);
+  console.log(`  [+] ${allTxns.length} transactions written`);
 
-  // Summary
   console.log('\n=== Seed Complete ===');
   console.log(`
 Summary:
-  Merchants: ${merchants.length} (2 active, 1 pending verification)
-  Customers: ${customers.length} (1 Diamond, 2 Platinum, 5 Bronze)
-  Transactions: ${transactions.length} (45 days of history with location data)
+  Merchants: ${merchants.length}
+  Customers: ${customers.length}
+  Transactions: ${allTxns.length}
 
 Merchant Accounts:
-  Al Baik Restaurant  - PROFESSIONAL tier, ACTIVE (2 locations)
-  Jarir Bookstore     - ENTERPRISE tier, ACTIVE (1 location)
-  eXtra Electronics   - BASIC tier, PENDING_VERIFICATION
+  Al Baik Restaurant  - PROFESSIONAL, ACTIVE, 4 branches
+    -> Olaya (Riyadh), Exit 15 (Riyadh), Corniche (Jeddah), Tahlia (Jeddah)
+    -> Login: manager@albaik.com
+  Brew92 Coffee       - BASIC, ACTIVE, 1 location
+    -> Al Nakheel (Riyadh)
+    -> Login: hello@brew92.com
 
-Notable Customers:
-  Ahmed Al-Dosari     - Diamond, 18,500 pts (enrolled at Al Baik + Jarir)
-  Fatimah Al-Harbi    - Platinum, 7,200 pts (Al Baik)
-  Omar Al-Ghamdi      - Platinum, 5,200 pts (Jarir)
-  Sara Al-Tamimi      - Bronze, 3,500 pts (INACTIVE - decay phase 1)
-  Khalid Al-Mutairi   - Bronze, 0 pts (PENDING consent at Al Baik)
+Customers:
+  Ahmed Al-Dosari     - Diamond, 22,000 pts (Al Baik + Brew92)
+  Fatimah Al-Harbi    - Platinum, 8,500 pts (Al Baik - Riyadh)
+  Omar Al-Ghamdi      - Platinum, 6,800 pts (Al Baik - Jeddah)
+  Sara Al-Tamimi      - Bronze, 4,000 pts (Al Baik - INACTIVE, decay phase 1)
+  Mohammed Al-Qahtani - Bronze, 3,200 pts (Al Baik - occasional)
+  Hana Al-Subaie      - Bronze, 2,400 pts (Al Baik - Riyadh)
+  Youssef Al-Zahrani  - Bronze, 1,200 pts (Al Baik - Jeddah, new)
+  Khalid Al-Mutairi   - Bronze, 0 pts (Al Baik - PENDING consent)
+  Noura Al-Shammari   - Bronze, 380 pts (Brew92 - regular)
+  Layla Al-Rashidi    - Bronze, 150 pts (Brew92 - occasional)
 `);
 }
 
