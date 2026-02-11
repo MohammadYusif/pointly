@@ -18,6 +18,13 @@ const DirectionContext = createContext<DirectionContextType | undefined>(undefin
 
 const STORAGE_KEY = 'pointly-language';
 
+function getInitialLanguage(fallback: Language): Language {
+  if (typeof window === 'undefined') return fallback;
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored === 'en' || stored === 'ar') return stored;
+  return fallback;
+}
+
 interface DirectionProviderProps {
   children: React.ReactNode;
   defaultLanguage?: Language;
@@ -27,20 +34,16 @@ export function DirectionProvider({
   children,
   defaultLanguage = 'ar', // Default to Arabic for Saudi market
 }: DirectionProviderProps) {
-  const [language, setLanguageState] = useState<Language>(defaultLanguage);
-  const [direction, setDirection] = useState<Direction>(defaultLanguage === 'ar' ? 'rtl' : 'ltr');
+  const [language, setLanguageState] = useState<Language>(() =>
+    getInitialLanguage(defaultLanguage),
+  );
+  const [direction, setDirection] = useState<Direction>(() =>
+    getInitialLanguage(defaultLanguage) === 'ar' ? 'rtl' : 'ltr',
+  );
   const [mounted, setMounted] = useState(false);
 
-  // Initialize from localStorage on mount
   useEffect(() => {
     setMounted(true);
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(STORAGE_KEY) as Language | null;
-      if (stored && (stored === 'en' || stored === 'ar')) {
-        setLanguageState(stored);
-        setDirection(stored === 'ar' ? 'rtl' : 'ltr');
-      }
-    }
   }, []);
 
   // Update document attributes when direction/language changes

@@ -10,19 +10,20 @@ import { registerRoutes } from './routes';
 export async function createServer(): Promise<FastifyInstance> {
   const env = EnvironmentConfig.get();
 
+  const isLocal = env.NODE_ENV !== 'production' && !process.env['AWS_LAMBDA_FUNCTION_NAME'];
+
   const server = Fastify({
     logger: {
       level: env.NODE_ENV === 'production' ? 'info' : 'debug',
-      transport:
-        env.NODE_ENV !== 'production'
-          ? {
-              target: 'pino-pretty',
-              options: {
-                translateTime: 'HH:MM:ss Z',
-                ignore: 'pid,hostname',
-              },
-            }
-          : undefined,
+      transport: isLocal
+        ? {
+            target: 'pino-pretty',
+            options: {
+              translateTime: 'HH:MM:ss Z',
+              ignore: 'pid,hostname',
+            },
+          }
+        : undefined,
       // biome-ignore lint/suspicious/noExplicitAny: Fastify logger options type is complex
     } as any,
     requestIdHeader: 'x-request-id',
