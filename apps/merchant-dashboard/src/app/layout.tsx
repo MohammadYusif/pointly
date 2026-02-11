@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { IBM_Plex_Sans_Arabic, Inter } from 'next/font/google';
-import Script from 'next/script';
 import '../components/receipt/receipt-print.css';
 import './globals.css';
 import { Providers } from './providers';
@@ -56,10 +55,6 @@ export default function RootLayout({
       className={`${inter.variable} ${ibmPlexArabic.variable}`}
     >
       <head>
-        <Script
-          id="lang-init"
-          strategy="beforeInteractive"
-        >{`(function(){try{var l=localStorage.getItem('pointly-language');if(l==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr'}}catch(e){}})()`}</Script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
