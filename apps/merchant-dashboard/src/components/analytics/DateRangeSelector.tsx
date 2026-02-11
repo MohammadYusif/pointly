@@ -22,8 +22,8 @@ export function getDateRange(preset: DatePreset): { startDate: string; endDate: 
   const end = new Date();
   const start = new Date(end.getTime() - PRESET_DAYS[preset] * 86400000);
   return {
-    startDate: start.toISOString(),
-    endDate: end.toISOString(),
+    startDate: start.toISOString().split('T')[0],
+    endDate: end.toISOString().split('T')[0],
   };
 }
 

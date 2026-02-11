@@ -36,6 +36,8 @@ interface CustomerItem {
   updatedAt: string;
   GSI1PK: string | undefined;
   GSI1SK: string | undefined;
+  GSI2PK?: string;
+  GSI2SK?: string;
 }
 
 interface EnrollmentItem {
@@ -232,6 +234,13 @@ export class CustomerRepository
       GSI1PK: `PHONE#${json.phone}`,
       GSI1SK: 'CUSTOMER',
     };
+
+    // Index customer under first granted merchant for MerchantCustomersIndex (GSI2)
+    const grantedEnrollment = enrollments.find((e) => e.consentStatus === 'granted');
+    if (grantedEnrollment) {
+      item.GSI2PK = `MERCHANT#${grantedEnrollment.merchantId}#CUSTOMERS`;
+      item.GSI2SK = `CUSTOMER#${json.customerId}`;
+    }
 
     return item as unknown as Record<string, unknown>;
   }

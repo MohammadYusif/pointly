@@ -9,14 +9,34 @@ import { Search } from 'lucide-react';
 import { useState } from 'react';
 
 function getTierColor(tier: string): string {
-  switch (tier) {
-    case 'Diamond':
+  switch (tier.toUpperCase()) {
+    case 'DIAMOND':
       return 'bg-purple-100 text-purple-800';
-    case 'Platinum':
+    case 'PLATINUM':
       return 'bg-blue-100 text-blue-800';
     default:
       return 'bg-amber-100 text-amber-800';
   }
+}
+
+function getTierLabel(tier: string): string {
+  switch (tier.toUpperCase()) {
+    case 'DIAMOND':
+      return 'Diamond';
+    case 'PLATINUM':
+      return 'Platinum';
+    default:
+      return 'Bronze';
+  }
+}
+
+/** Format phone: 966501111111 → +966 50 111 1111 */
+function formatPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('966') && digits.length === 12) {
+    return `+${digits.slice(0, 3)} ${digits.slice(3, 5)} ${digits.slice(5, 8)} ${digits.slice(8)}`;
+  }
+  return phone;
 }
 
 export default function CustomersPage() {
@@ -85,14 +105,14 @@ export default function CustomersPage() {
                 <div className={textStart}>
                   <p className="font-medium">{customer.name}</p>
                   <p className="text-sm text-muted-foreground" dir="ltr">
-                    {customer.phone}
+                    {formatPhone(customer.phone)}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span
                     className={`text-xs px-2 py-1 rounded-full font-medium ${getTierColor(customer.currentTier)}`}
                   >
-                    {customer.currentTier}
+                    {getTierLabel(customer.currentTier)}
                   </span>
                   <div className="text-end">
                     <p className="font-medium">{formatNumber(customer.globalPointsBalance)}</p>

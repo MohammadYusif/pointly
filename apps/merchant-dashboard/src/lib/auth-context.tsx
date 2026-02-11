@@ -1,6 +1,15 @@
 'use client';
 
-import { type ReactNode, createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import {
+  type ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   type MerchantInfo,
   signIn as cognitoSignIn,
@@ -22,6 +31,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [merchant, setMerchant] = useState<MerchantInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     getCurrentSession()
@@ -33,6 +44,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       .finally(() => setIsLoading(false));
   }, []);
+
+  // Client-side auth guard (replaces server middleware — not available with output: export)
+  useEffect(() => {
+    if (isLoading) return;
+    const isLoginPage = pathname === '/login';
+    if (!merchant && !isLoginPage) {
+      router.replace('/login');
+    } else if (merchant && isLoginPage) {
+      router.replace('/');
+    }
+  }, [isLoading, merchant, pathname, router]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     const result = await cognitoSignIn(email, password);
@@ -46,19 +68,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.href = '/login';
   }, []);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        merchant,
-        isAuthenticated: !!merchant,
-        isLoading,
-        signIn,
-        signOut,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({
+      merchant,
+      isAuthenticated: !!merchant,
+      isLoading,
+      signIn,
+      signOut,
+    }),
+    [merchant, isLoading, signIn, signOut],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {

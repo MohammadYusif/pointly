@@ -203,7 +203,7 @@ function createCustomers() {
       name: 'Ahmed Al-Dosari',
       globalBalance: 22000,
       globalLifetime: 48000,
-      tier: 'Diamond',
+      tier: 'DIAMOND',
       monthlyProgress: 18000,
       enrollments: [
         makeEnrollment(albaik, 180, 'granted', 12500, 32000, 45),
@@ -217,7 +217,7 @@ function createCustomers() {
       name: 'Fatimah Al-Harbi',
       globalBalance: 8500,
       globalLifetime: 18000,
-      tier: 'Platinum',
+      tier: 'PLATINUM',
       monthlyProgress: 9500,
       enrollments: [makeEnrollment(albaik, 120, 'granted', 4800, 12000, 25)],
     }),
@@ -228,7 +228,7 @@ function createCustomers() {
       name: 'Mohammed Al-Qahtani',
       globalBalance: 3200,
       globalLifetime: 5500,
-      tier: 'Bronze',
+      tier: 'BRONZE',
       monthlyProgress: 3200,
       enrollments: [makeEnrollment(albaik, 60, 'granted', 1800, 3200, 10)],
     }),
@@ -239,7 +239,7 @@ function createCustomers() {
       name: 'Omar Al-Ghamdi',
       globalBalance: 6800,
       globalLifetime: 14000,
-      tier: 'Platinum',
+      tier: 'PLATINUM',
       monthlyProgress: 6800,
       enrollments: [makeEnrollment(albaik, 100, 'granted', 5200, 11000, 30)],
     }),
@@ -250,7 +250,7 @@ function createCustomers() {
       name: 'Youssef Al-Zahrani',
       globalBalance: 1200,
       globalLifetime: 1600,
-      tier: 'Bronze',
+      tier: 'BRONZE',
       monthlyProgress: 1200,
       enrollments: [makeEnrollment(albaik, 25, 'granted', 800, 1200, 6)],
     }),
@@ -261,7 +261,7 @@ function createCustomers() {
       name: 'Sara Al-Tamimi',
       globalBalance: 4000,
       globalLifetime: 9500,
-      tier: 'Bronze',
+      tier: 'BRONZE',
       monthlyProgress: 0,
       lastActivity: daysAgo(95),
       decayPhase: 1,
@@ -275,7 +275,7 @@ function createCustomers() {
       name: 'Khalid Al-Mutairi',
       globalBalance: 0,
       globalLifetime: 0,
-      tier: 'Bronze',
+      tier: 'BRONZE',
       monthlyProgress: 0,
       enrollments: [makeEnrollment(albaik, 1, 'pending', 0, 0, 0)],
       gsi3pk: `MERCHANT#${albaik}#PENDING_CONSENT`,
@@ -287,7 +287,7 @@ function createCustomers() {
       name: 'Hana Al-Subaie',
       globalBalance: 2400,
       globalLifetime: 3600,
-      tier: 'Bronze',
+      tier: 'BRONZE',
       monthlyProgress: 2400,
       enrollments: [makeEnrollment(albaik, 40, 'granted', 1600, 2800, 8)],
     }),
@@ -300,7 +300,7 @@ function createCustomers() {
       name: 'Noura Al-Shammari',
       globalBalance: 380,
       globalLifetime: 520,
-      tier: 'Bronze',
+      tier: 'BRONZE',
       monthlyProgress: 380,
       enrollments: [makeEnrollment(brew, 25, 'granted', 380, 520, 8)],
     }),
@@ -311,7 +311,7 @@ function createCustomers() {
       name: 'Layla Al-Rashidi',
       globalBalance: 150,
       globalLifetime: 150,
-      tier: 'Bronze',
+      tier: 'BRONZE',
       monthlyProgress: 150,
       enrollments: [makeEnrollment(brew, 14, 'granted', 150, 150, 3)],
     }),
@@ -360,6 +360,7 @@ function makeCustomer({
   const grantedEnrollment = enrollments.find((e) => e.consentStatus === 'granted');
   if (grantedEnrollment) {
     item.GSI2PK = `MERCHANT#${grantedEnrollment.merchantId}#CUSTOMERS`;
+    item.GSI2SK = `CUSTOMER#${id}`;
   }
   if (gsi3pk) {
     item.GSI3PK = gsi3pk;

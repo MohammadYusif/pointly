@@ -443,7 +443,7 @@ export class TransactionRepository
         GSI5PK: `MERCHANT#${json.merchantId}#LOCATION#${json.locationId}`,
         GSI5SK: `TXN#${createdAt}#${json.transactionId}`,
       }),
-      ...(json.amount && { amount: json.amount }),
+      ...(json.amount != null && { amount: { amount: json.amount, currency: 'SAR' } }),
       ...(json.reversedTransactionId && { reversedTransactionId: json.reversedTransactionId }),
       ...(json.completedAt && { completedAt: json.completedAt }),
     };

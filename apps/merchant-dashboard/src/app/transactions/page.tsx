@@ -36,6 +36,15 @@ function getStatusBadge(status: string): { label: string; className: string } {
   }
 }
 
+/** Extract numeric amount — handles both `{amount, currency}` object and plain number */
+function getAmount(amount: unknown): number {
+  if (typeof amount === 'number') return amount;
+  if (amount && typeof amount === 'object' && 'amount' in amount) {
+    return (amount as { amount: number }).amount;
+  }
+  return 0;
+}
+
 export default function TransactionsPage() {
   const { t, formatCurrency, formatNumber, language } = useTranslation();
   const { textStart, textEnd } = useRTL();
@@ -95,7 +104,7 @@ export default function TransactionsPage() {
                     </div>
                   </div>
                   <div className={textEnd}>
-                    <p className="font-medium">{formatCurrency(tx.amount)}</p>
+                    <p className="font-medium">{formatCurrency(getAmount(tx.amount))}</p>
                     <p
                       className={`text-sm ${tx.type === 'EARN' ? 'text-green-600' : 'text-orange-600'}`}
                     >

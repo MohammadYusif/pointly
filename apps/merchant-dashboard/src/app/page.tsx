@@ -17,7 +17,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useTranslation } from '@pointly/i18n';
 import { useRTL } from '@pointly/ui';
 import { ArrowUpRight, CreditCard, DollarSign, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 export default function DashboardPage() {
   const { t, formatCurrency, formatNumber, language } = useTranslation();
@@ -28,7 +28,7 @@ export default function DashboardPage() {
   const [groupBy, setGroupBy] = useState<GroupBy>('day');
   const [locationId, setLocationId] = useState<string | undefined>(undefined);
 
-  const { startDate, endDate } = getDateRange(preset);
+  const { startDate, endDate } = useMemo(() => getDateRange(preset), [preset]);
 
   const { data: merchantData } = useMerchant();
   const { data: analytics, isLoading: analyticsLoading } = useMerchantAnalytics({
