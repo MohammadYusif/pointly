@@ -2,7 +2,7 @@
 
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { LocationSelector } from '@/components/analytics';
-import { useMerchant, useMerchantTransactions } from '@/hooks/api';
+import { useMerchant, useMerchantCustomers, useMerchantTransactions } from '@/hooks/api';
 import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { Card, CardContent, useRTL } from '@pointly/ui';
@@ -52,13 +52,19 @@ export default function TransactionsPage() {
 
   const { data: merchantData } = useMerchant();
   const { data: txData, isLoading } = useMerchantTransactions({ limit: 50, locationId });
+  const { data: customersData } = useMerchantCustomers({ limit: 100 });
   const transactions = (txData?.transactions || []) as TransactionResponse[];
   const locations = merchantData?.locations || [];
 
-  // Build a locationId -> name map for display
+  // Build lookup maps for display names
   const locationNames: Record<string, string> = {};
   for (const loc of locations) {
     locationNames[loc.locationId] = loc.name;
+  }
+  const customerNames: Record<string, string> = {};
+  // biome-ignore lint/suspicious/noExplicitAny: API response shape varies
+  for (const c of (customersData?.customers || []) as any[]) {
+    if (c.customerId && c.name) customerNames[c.customerId] = c.name;
   }
 
   return (
@@ -85,7 +91,9 @@ export default function TransactionsPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className={textStart}>
-                    <p className="font-medium text-sm">{tx.customerId}</p>
+                    <p className="font-medium text-sm">
+                      {customerNames[tx.customerId] || tx.customerId}
+                    </p>
                     <p className="text-xs text-muted-foreground" suppressHydrationWarning>
                       {new Date(tx.createdAt).toLocaleString(language === 'ar' ? 'ar-SA' : 'en-SA')}
                     </p>

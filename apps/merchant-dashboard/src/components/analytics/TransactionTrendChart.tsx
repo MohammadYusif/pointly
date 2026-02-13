@@ -30,8 +30,25 @@ export function TransactionTrendChart({ data, loading }: TransactionTrendChartPr
             {language === 'ar' ? 'اتجاه المعاملات' : 'Transaction Trends'}
           </CardTitle>
         </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
+        <CardContent className="h-75 flex items-center justify-center">
           <p className="text-muted-foreground">{t('common.loading')}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm md:text-base">
+            {language === 'ar' ? 'اتجاه المعاملات' : 'Transaction Trends'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="h-75 flex items-center justify-center">
+          <p className="text-muted-foreground">
+            {language === 'ar' ? 'لا توجد بيانات في هذه الفترة' : 'No data for this period'}
+          </p>
         </CardContent>
       </Card>
     );
@@ -51,7 +68,7 @@ export function TransactionTrendChart({ data, loading }: TransactionTrendChartPr
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div dir="ltr" className="h-[300px]">
+        <div dir="ltr" className="h-75">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" className="opacity-30" />

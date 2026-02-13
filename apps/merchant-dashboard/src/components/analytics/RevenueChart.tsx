@@ -36,6 +36,23 @@ export function RevenueChart({ data, loading }: RevenueChartProps) {
     );
   }
 
+  if (data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm md:text-base">
+            {language === 'ar' ? 'الإيرادات' : 'Revenue (SAR)'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="h-75 flex items-center justify-center">
+          <p className="text-muted-foreground">
+            {language === 'ar' ? 'لا توجد بيانات في هذه الفترة' : 'No data for this period'}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const chartData = data.map((d) => ({
     period: formatPeriodLabel(d.period, language),
     revenue: d.revenue,

@@ -2,33 +2,10 @@
 
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useCustomerByPhone, useMerchantCustomers } from '@/hooks/api';
-import type { CustomerResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { Button, Card, CardContent, Input, useRTL } from '@pointly/ui';
 import { Search } from 'lucide-react';
 import { useState } from 'react';
-
-function getTierColor(tier: string): string {
-  switch (tier.toUpperCase()) {
-    case 'DIAMOND':
-      return 'bg-purple-100 text-purple-800';
-    case 'PLATINUM':
-      return 'bg-blue-100 text-blue-800';
-    default:
-      return 'bg-amber-100 text-amber-800';
-  }
-}
-
-function getTierLabel(tier: string): string {
-  switch (tier.toUpperCase()) {
-    case 'DIAMOND':
-      return 'Diamond';
-    case 'PLATINUM':
-      return 'Platinum';
-    default:
-      return 'Bronze';
-  }
-}
 
 /** Format phone: 966501111111 → +966 50 111 1111 */
 function formatPhone(phone: string): string {
@@ -39,8 +16,20 @@ function formatPhone(phone: string): string {
   return phone;
 }
 
+interface MerchantCustomerView {
+  customerId: string;
+  phone: string;
+  name?: string;
+  status: string;
+  merchantPointsBalance: number;
+  merchantLifetimePoints: number;
+  transactionCount: number;
+  enrolledAt?: string;
+  lastTransactionAt?: string;
+}
+
 export default function CustomersPage() {
-  const { t, formatNumber } = useTranslation();
+  const { t, formatNumber, language } = useTranslation();
   const { textStart } = useRTL();
 
   const [searchPhone, setSearchPhone] = useState('');
@@ -49,8 +38,9 @@ export default function CustomersPage() {
   const { data: customersData, isLoading } = useMerchantCustomers({ limit: 20 });
   const { data: searchResult, isLoading: searchLoading } = useCustomerByPhone(searchQuery);
 
-  const customers = (customersData?.customers || []) as CustomerResponse[];
-  const displayCustomers = searchQuery && searchResult ? [searchResult] : customers;
+  const customers = (customersData?.customers || []) as MerchantCustomerView[];
+  const displayCustomers =
+    searchQuery && searchResult ? [searchResult as MerchantCustomerView] : customers;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,21 +93,18 @@ export default function CustomersPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className={textStart}>
-                  <p className="font-medium">{customer.name}</p>
+                  <p className="font-medium">{customer.name || customer.customerId}</p>
                   <p className="text-sm text-muted-foreground" dir="ltr">
                     {formatPhone(customer.phone)}
                   </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {formatNumber(customer.transactionCount)}{' '}
+                    {language === 'ar' ? 'عملية' : 'transactions'}
+                  </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full font-medium ${getTierColor(customer.currentTier)}`}
-                  >
-                    {getTierLabel(customer.currentTier)}
-                  </span>
-                  <div className="text-end">
-                    <p className="font-medium">{formatNumber(customer.globalPointsBalance)}</p>
-                    <p className="text-xs text-muted-foreground">{t('common.points')}</p>
-                  </div>
+                <div className="text-end">
+                  <p className="font-medium">{formatNumber(customer.merchantPointsBalance)}</p>
+                  <p className="text-xs text-muted-foreground">{t('common.points')}</p>
                 </div>
               </div>
             </CardContent>

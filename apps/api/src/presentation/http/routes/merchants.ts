@@ -3,6 +3,25 @@ import { z } from 'zod';
 import { ForbiddenError } from '../../../domain/errors/DomainError';
 import { getContainer } from '../container';
 
+/** Return only merchant-scoped customer data — strips global points, tiers, and decay info */
+function toMerchantCustomerView(customer: ReturnType<typeof Object>, merchantId: string) {
+  // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped object
+  const json = customer as any;
+  // biome-ignore lint/suspicious/noExplicitAny: enrollment shape is untyped
+  const enrollment = json.enrollments?.find((e: any) => e.merchantId === merchantId);
+  return {
+    customerId: json.customerId,
+    phone: json.phone,
+    name: json.name,
+    status: json.status,
+    merchantPointsBalance: enrollment?.merchantPointsBalance ?? 0,
+    merchantLifetimePoints: enrollment?.merchantLifetimePoints ?? 0,
+    transactionCount: enrollment?.transactionCount ?? 0,
+    enrolledAt: enrollment?.enrolledAt,
+    lastTransactionAt: enrollment?.lastTransactionAt,
+  };
+}
+
 function enforceMerchantAccess(request: FastifyRequest<{ Params: { merchantId: string } }>): void {
   if (request.merchantId && request.params.merchantId !== request.merchantId) {
     throw new ForbiddenError("Cannot access another merchant's data");
@@ -82,7 +101,7 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       return reply.send({
         success: true,
         data: {
-          customers: result.items.map((c) => c.toJSON()),
+          customers: result.items.map((c) => toMerchantCustomerView(c.toJSON(), merchantId)),
           count: result.count,
           nextToken: result.nextToken,
         },
