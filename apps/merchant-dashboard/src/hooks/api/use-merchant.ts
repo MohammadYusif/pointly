@@ -1,6 +1,6 @@
 import { merchantApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 export function useMerchant() {
   const { merchant } = useAuth();
@@ -43,5 +43,36 @@ export function useMerchantTransactions(params?: {
     // biome-ignore lint/style/noNonNullAssertion: enabled guard ensures merchantId exists
     queryFn: () => merchantApi.getTransactions(merchant!.merchantId, params),
     enabled: !!merchant?.merchantId,
+  });
+}
+
+export function useInfiniteCustomers(limit = 20) {
+  const { merchant } = useAuth();
+  return useInfiniteQuery({
+    queryKey: ['merchant', merchant?.merchantId, 'customers', 'infinite', limit],
+    queryFn: ({ pageParam }) =>
+      merchantApi.getCustomers(merchant?.merchantId as string, {
+        limit,
+        ...(pageParam ? { nextToken: pageParam } : {}),
+      }),
+    enabled: !!merchant?.merchantId,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextToken,
+  });
+}
+
+export function useInfiniteTransactions(limit = 50, locationId?: string) {
+  const { merchant } = useAuth();
+  return useInfiniteQuery({
+    queryKey: ['merchant', merchant?.merchantId, 'transactions', 'infinite', limit, locationId],
+    queryFn: ({ pageParam }) =>
+      merchantApi.getTransactions(merchant?.merchantId as string, {
+        limit,
+        locationId,
+        ...(pageParam ? { nextToken: pageParam } : {}),
+      }),
+    enabled: !!merchant?.merchantId,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextToken,
   });
 }

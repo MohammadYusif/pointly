@@ -3,6 +3,8 @@ export {
   useMerchantStats,
   useMerchantCustomers,
   useMerchantTransactions,
+  useInfiniteCustomers,
+  useInfiniteTransactions,
 } from './use-merchant';
 export { useCustomerByPhone, useCustomerTransactions } from './use-customers';
 export { useRecordPurchase } from './use-purchases';

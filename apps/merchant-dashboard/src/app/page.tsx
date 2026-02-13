@@ -17,7 +17,8 @@ import { useAuth } from '@/lib/auth-context';
 import { useTranslation } from '@pointly/i18n';
 import { useRTL } from '@pointly/ui';
 import { ArrowUpRight, CreditCard, DollarSign, Users } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 export default function DashboardPage() {
   const { t, formatCurrency, formatNumber, language } = useTranslation();
@@ -30,13 +31,22 @@ export default function DashboardPage() {
 
   const { startDate, endDate } = useMemo(() => getDateRange(preset), [preset]);
 
-  const { data: merchantData } = useMerchant();
-  const { data: analytics, isLoading: analyticsLoading } = useMerchantAnalytics({
+  const { data: merchantData, error: merchantError } = useMerchant();
+  const {
+    data: analytics,
+    isLoading: analyticsLoading,
+    error,
+  } = useMerchantAnalytics({
     startDate,
     endDate,
     groupBy,
     locationId,
   });
+
+  useEffect(() => {
+    const err = error || merchantError;
+    if (err) toast.error(err.message || t('errors.serverError'));
+  }, [error, merchantError, t]);
 
   const isLoading = authLoading || analyticsLoading;
   const locations = merchantData?.locations || [];

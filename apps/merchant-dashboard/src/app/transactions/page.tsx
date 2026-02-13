@@ -2,11 +2,12 @@
 
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { LocationSelector } from '@/components/analytics';
-import { useMerchant, useMerchantCustomers, useMerchantTransactions } from '@/hooks/api';
+import { useInfiniteTransactions, useMerchant, useMerchantCustomers } from '@/hooks/api';
 import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
-import { Card, CardContent, useRTL } from '@pointly/ui';
-import { useState } from 'react';
+import { Button, Card, CardContent, useRTL } from '@pointly/ui';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 function getTypeBadge(type: string): { label: string; className: string } {
   switch (type) {
@@ -51,9 +52,18 @@ export default function TransactionsPage() {
   const [locationId, setLocationId] = useState<string | undefined>(undefined);
 
   const { data: merchantData } = useMerchant();
-  const { data: txData, isLoading } = useMerchantTransactions({ limit: 50, locationId });
+  const {
+    data: txPages,
+    isLoading,
+    error,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useInfiniteTransactions(50, locationId);
   const { data: customersData } = useMerchantCustomers({ limit: 100 });
-  const transactions = (txData?.transactions || []) as TransactionResponse[];
+
+  const transactions = (txPages?.pages.flatMap((p) => p.transactions || []) ||
+    []) as TransactionResponse[];
   const locations = merchantData?.locations || [];
 
   // Build lookup maps for display names
@@ -66,6 +76,10 @@ export default function TransactionsPage() {
   for (const c of (customersData?.customers || []) as any[]) {
     if (c.customerId && c.name) customerNames[c.customerId] = c.name;
   }
+
+  useEffect(() => {
+    if (error) toast.error(error.message || t('errors.serverError'));
+  }, [error, t]);
 
   return (
     <DashboardLayout>
@@ -126,6 +140,21 @@ export default function TransactionsPage() {
           );
         })}
       </div>
+
+      {hasNextPage && (
+        <Button
+          variant="outline"
+          className="w-full mt-4"
+          onClick={() => fetchNextPage()}
+          disabled={isFetchingNextPage}
+        >
+          {isFetchingNextPage
+            ? t('common.loading')
+            : language === 'ar'
+              ? 'تحميل المزيد'
+              : 'Load More'}
+        </Button>
+      )}
     </DashboardLayout>
   );
 }

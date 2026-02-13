@@ -1,11 +1,12 @@
 'use client';
 
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { useCustomerByPhone, useMerchantCustomers } from '@/hooks/api';
+import { useCustomerByPhone, useInfiniteCustomers } from '@/hooks/api';
 import { useTranslation } from '@pointly/i18n';
 import { Button, Card, CardContent, Input, useRTL } from '@pointly/ui';
 import { Search } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 /** Format phone: 966501111111 → +966 50 111 1111 */
 function formatPhone(phone: string): string {
@@ -35,10 +36,18 @@ export default function CustomersPage() {
   const [searchPhone, setSearchPhone] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: customersData, isLoading } = useMerchantCustomers({ limit: 20 });
+  const {
+    data: pages,
+    isLoading,
+    error,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useInfiniteCustomers(20);
   const { data: searchResult, isLoading: searchLoading } = useCustomerByPhone(searchQuery);
 
-  const customers = (customersData?.customers || []) as MerchantCustomerView[];
+  const customers = (pages?.pages.flatMap((p) => p.customers || []) ||
+    []) as MerchantCustomerView[];
   const displayCustomers =
     searchQuery && searchResult ? [searchResult as MerchantCustomerView] : customers;
 
@@ -46,6 +55,10 @@ export default function CustomersPage() {
     e.preventDefault();
     setSearchQuery(searchPhone);
   };
+
+  useEffect(() => {
+    if (error) toast.error(error.message || t('errors.serverError'));
+  }, [error, t]);
 
   return (
     <DashboardLayout>
@@ -112,9 +125,18 @@ export default function CustomersPage() {
         ))}
       </div>
 
-      {customersData?.nextToken && !searchQuery && (
-        <Button variant="outline" className="w-full mt-4">
-          {t('common.viewAll')}
+      {hasNextPage && !searchQuery && (
+        <Button
+          variant="outline"
+          className="w-full mt-4"
+          onClick={() => fetchNextPage()}
+          disabled={isFetchingNextPage}
+        >
+          {isFetchingNextPage
+            ? t('common.loading')
+            : language === 'ar'
+              ? 'تحميل المزيد'
+              : 'Load More'}
         </Button>
       )}
     </DashboardLayout>
