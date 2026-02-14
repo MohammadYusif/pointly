@@ -1,3 +1,4 @@
+import { AppSkeleton } from '@/components/AppSkeleton';
 import type { Metadata } from 'next';
 import { IBM_Plex_Sans_Arabic, Inter } from 'next/font/google';
 import '../components/receipt/receipt-print.css';
@@ -48,13 +49,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ar" dir="rtl" className={`${inter.variable} ${ibmPlexArabic.variable}`}>
+    <html
+      lang="ar"
+      dir="rtl"
+      suppressHydrationWarning
+      className={`${inter.variable} ${ibmPlexArabic.variable}`}
+    >
       <head>
+        <script
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var d=document.documentElement;d.classList.add('notready');try{var l=localStorage.getItem('pointly-language');if(l!=='en'&&l!=='ar')l='ar';d.lang=l;d.dir=l==='ar'?'rtl':'ltr'}catch(_e){d.lang='ar';d.dir='rtl'}})()`,
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="min-h-screen bg-background font-sans antialiased">
-        <Providers>{children}</Providers>
+        <AppSkeleton />
+        <div id="app-content">
+          <Providers>{children}</Providers>
+        </div>
       </body>
     </html>
   );

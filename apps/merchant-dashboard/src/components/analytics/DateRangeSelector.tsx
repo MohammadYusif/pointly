@@ -18,6 +18,20 @@ const PRESET_DAYS: Record<DatePreset, number> = {
   '90d': 90,
 };
 
+/** Valid groupBy options per preset */
+const VALID_GROUP_BY: Record<DatePreset, GroupBy[]> = {
+  '7d': ['day'],
+  '30d': ['day', 'week'],
+  '90d': ['day', 'week', 'month'],
+};
+
+/** Default groupBy when switching presets */
+const DEFAULT_GROUP_BY: Record<DatePreset, GroupBy> = {
+  '7d': 'day',
+  '30d': 'day',
+  '90d': 'week',
+};
+
 export function getDateRange(preset: DatePreset): { startDate: string; endDate: string } {
   const end = new Date();
   const start = new Date(end.getTime() - PRESET_DAYS[preset] * 86400000);
@@ -25,6 +39,14 @@ export function getDateRange(preset: DatePreset): { startDate: string; endDate: 
     startDate: start.toISOString().split('T')[0],
     endDate: end.toISOString().split('T')[0],
   };
+}
+
+export function getDefaultGroupBy(preset: DatePreset): GroupBy {
+  return DEFAULT_GROUP_BY[preset];
+}
+
+export function isValidGroupBy(preset: DatePreset, groupBy: GroupBy): boolean {
+  return VALID_GROUP_BY[preset].includes(groupBy);
 }
 
 export function DateRangeSelector({
@@ -47,6 +69,8 @@ export function DateRangeSelector({
     month: language === 'ar' ? 'شهر' : 'Month',
   };
 
+  const validGroupBys = VALID_GROUP_BY[preset];
+
   return (
     <div className="flex flex-wrap gap-2">
       <div className="flex rounded-md border border-input overflow-hidden">
@@ -66,7 +90,7 @@ export function DateRangeSelector({
         ))}
       </div>
       <div className="flex rounded-md border border-input overflow-hidden">
-        {(Object.keys(groupByLabels) as GroupBy[]).map((g) => (
+        {validGroupBys.map((g) => (
           <button
             key={g}
             type="button"

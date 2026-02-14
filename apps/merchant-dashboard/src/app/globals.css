@@ -5,6 +5,21 @@
 @source "../../node_modules/@pointly/ui/src/**/*.{ts,tsx}";
 @source "../../node_modules/@pointly/i18n/src/**/*.{ts,tsx}";
 
+/* Hydration loading: show skeleton, hide app content until React is ready */
+html.notready .app-skeleton {
+  display: block;
+}
+
+html:not(.notready) .app-skeleton {
+  display: none;
+}
+
+html.notready #app-content {
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+}
+
 /* ============================================================================
    Tailwind CSS v4 Theme Configuration
    ============================================================================ */

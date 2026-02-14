@@ -11,6 +11,8 @@ import {
   RevenueChart,
   TransactionTrendChart,
   getDateRange,
+  getDefaultGroupBy,
+  isValidGroupBy,
 } from '@/components/analytics';
 import { useMerchant, useMerchantAnalytics } from '@/hooks/api';
 import { useAuth } from '@/lib/auth-context';
@@ -28,6 +30,13 @@ export default function DashboardPage() {
   const [preset, setPreset] = useState<DatePreset>('30d');
   const [groupBy, setGroupBy] = useState<GroupBy>('day');
   const [locationId, setLocationId] = useState<string | undefined>(undefined);
+
+  const handlePresetChange = (newPreset: DatePreset) => {
+    setPreset(newPreset);
+    if (!isValidGroupBy(newPreset, groupBy)) {
+      setGroupBy(getDefaultGroupBy(newPreset));
+    }
+  };
 
   const { startDate, endDate } = useMemo(() => getDateRange(preset), [preset]);
 
@@ -72,7 +81,7 @@ export default function DashboardPage() {
         <DateRangeSelector
           preset={preset}
           groupBy={groupBy}
-          onPresetChange={setPreset}
+          onPresetChange={handlePresetChange}
           onGroupByChange={setGroupBy}
         />
         <LocationSelector locations={locations} selected={locationId} onChange={setLocationId} />
