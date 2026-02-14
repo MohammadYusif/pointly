@@ -10,7 +10,8 @@ import { registerRoutes } from './routes';
 export async function createServer(): Promise<FastifyInstance> {
   const env = EnvironmentConfig.get();
 
-  const isLocal = env.NODE_ENV !== 'production' && !process.env.AWS_LAMBDA_FUNCTION_NAME;
+  // biome-ignore lint/complexity/useLiteralKeys: TS noPropertyAccessFromIndexSignature requires bracket notation for process.env
+  const isLocal = env.NODE_ENV !== 'production' && !process.env['AWS_LAMBDA_FUNCTION_NAME'];
 
   const server = Fastify({
     logger: {
