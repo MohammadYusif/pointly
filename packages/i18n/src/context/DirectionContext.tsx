@@ -23,41 +23,38 @@ interface DirectionProviderProps {
   defaultLanguage?: Language;
 }
 
+function getStoredLanguage(fallback: Language): Language {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === 'en' || stored === 'ar') return stored;
+  } catch {}
+  return fallback;
+}
+
 export function DirectionProvider({
   children,
   defaultLanguage = 'ar', // Default to Arabic for Saudi market
 }: DirectionProviderProps) {
-  const [language, setLanguageState] = useState<Language>(defaultLanguage);
-  const [direction, setDirection] = useState<Direction>(defaultLanguage === 'ar' ? 'rtl' : 'ltr');
-  const [mounted, setMounted] = useState(false);
+  const [language] = useState<Language>(() => getStoredLanguage(defaultLanguage));
+  const direction: Direction = language === 'ar' ? 'rtl' : 'ltr';
 
-  // Read stored preference after mount (inline script in layout.tsx handles dir/lang pre-hydration)
+  // Sync document attributes on mount
   useEffect(() => {
-    setMounted(true);
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'en' || stored === 'ar') {
-      setLanguageState(stored);
-      setDirection(stored === 'ar' ? 'rtl' : 'ltr');
-    }
-  }, []);
+    document.documentElement.dir = direction;
+    document.documentElement.lang = language;
+  }, [direction, language]);
 
-  // Update document attributes when direction/language changes
-  useEffect(() => {
-    if (mounted && typeof document !== 'undefined') {
-      document.documentElement.dir = direction;
-      document.documentElement.lang = language;
-    }
-  }, [direction, language, mounted]);
-
-  const setLanguage = useCallback((lang: Language) => {
-    setLanguageState(lang);
-    const newDirection = lang === 'ar' ? 'rtl' : 'ltr';
-    setDirection(newDirection);
-
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, lang);
-    }
-  }, []);
+  const setLanguage = useCallback(
+    (lang: Language) => {
+      if (lang === language) return;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, lang);
+        window.location.reload();
+      }
+    },
+    [language],
+  );
 
   const toggleDirection = useCallback(() => {
     const newLang = language === 'ar' ? 'en' : 'ar';

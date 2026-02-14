@@ -48,19 +48,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="ar"
-      dir="rtl"
-      suppressHydrationWarning
-      className={`${inter.variable} ${ibmPlexArabic.variable}`}
-    >
-      <head suppressHydrationWarning>
-        <script
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: must run before paint to prevent language flash
-          dangerouslySetInnerHTML={{
-            __html: `try{var l=localStorage.getItem('pointly-language');if(l==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr'}}catch(e){}`,
-          }}
-        />
+    <html lang="ar" dir="rtl" className={`${inter.variable} ${ibmPlexArabic.variable}`}>
+      <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
