@@ -345,7 +345,7 @@ export class Transaction {
       type: this.props.type,
       status: this.props.status,
       points: this.props.points.toNumber(),
-      amount: this.props.amount?.toSAR(),
+      amount: this.props.amount?.toJSON(),
       balanceBefore: this.props.balanceBefore.toNumber(),
       balanceAfter: this.props.balanceAfter.toNumber(),
       metadata: this.props.metadata,
