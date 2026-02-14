@@ -40,6 +40,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       active: isActive('/manual-entry'),
     },
     {
+      key: 'redeem',
+      label: t('redeem.title'),
+      href: '/redeem',
+      active: isActive('/redeem'),
+    },
+    {
       key: 'settings',
       label: t('navigation.settings'),
       href: '/settings',

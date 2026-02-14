@@ -10,6 +10,7 @@ export interface MerchantLocation {
 export interface MerchantResponse {
   merchantId: string;
   businessName: string;
+  contactName?: string;
   email: string;
   phone: string;
   tier: string;

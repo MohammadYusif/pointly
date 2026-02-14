@@ -139,4 +139,45 @@ export const purchaseApi = {
     }),
 
   getById: (id: string) => fetchApi<TransactionResponse>(`/v1/purchases/${id}`),
+
+  redeem: (data: {
+    merchantId: string;
+    customerId: string;
+    pointsToRedeem: number;
+    idempotencyKey: string;
+    locationId?: string;
+    metadata?: Record<string, unknown>;
+  }) =>
+    fetchApi<{
+      transactionIds: string[];
+      merchantPointsRedeemed: number;
+      globalPointsRedeemed: number;
+      totalPointsRedeemed: number;
+      sarValue: number;
+      newMerchantBalance: number;
+      newGlobalBalance: number;
+      currentTier: string;
+      message: string;
+    }>('/v1/purchases/redeem', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+};
+
+// Merchant update API
+export const merchantUpdateApi = {
+  update: (merchantId: string, data: { businessName?: string; contactName?: string; phone?: string }) =>
+    fetchApi<MerchantResponse>(`/v1/merchants/${merchantId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  addLocation: (merchantId: string, data: { name: string; address: string; city: string }) =>
+    fetchApi<{ locationId: string; name: string; address: string; city: string }>(
+      `/v1/merchants/${merchantId}/locations`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+    ),
 };

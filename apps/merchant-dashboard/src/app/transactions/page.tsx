@@ -6,6 +6,7 @@ import { useInfiniteTransactions, useMerchant, useMerchantCustomers } from '@/ho
 import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { Button, Card, CardContent, useRTL } from '@pointly/ui';
+import { Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -50,6 +51,7 @@ export default function TransactionsPage() {
   const { t, formatCurrency, formatNumber, language } = useTranslation();
   const { textStart, textEnd } = useRTL();
   const [locationId, setLocationId] = useState<string | undefined>(undefined);
+  const [typeFilter, setTypeFilter] = useState<string>('all');
 
   const { data: merchantData } = useMerchant();
   const {
@@ -62,8 +64,12 @@ export default function TransactionsPage() {
   } = useInfiniteTransactions(50, locationId);
   const { data: customersData } = useMerchantCustomers({ limit: 100 });
 
-  const transactions = (txPages?.pages.flatMap((p) => p.transactions || []) ||
+  const allTransactions = (txPages?.pages.flatMap((p) => p.transactions || []) ||
     []) as TransactionResponse[];
+  const transactions =
+    typeFilter === 'all'
+      ? allTransactions
+      : allTransactions.filter((tx) => tx.type === typeFilter);
   const locations = merchantData?.locations || [];
 
   // Build lookup maps for display names
@@ -87,7 +93,46 @@ export default function TransactionsPage() {
         <h1 className={`text-2xl md:text-3xl font-bold text-foreground ${textStart}`}>
           {t('transaction.title')}
         </h1>
-        <LocationSelector locations={locations} selected={locationId} onChange={setLocationId} />
+        <div className="flex gap-3 flex-wrap">
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            <option value="all">{language === 'ar' ? 'كل الأنواع' : 'All Types'}</option>
+            <option value="EARN">{t('transaction.purchase')}</option>
+            <option value="REDEEM">{t('transaction.redemption')}</option>
+            <option value="EXPIRATION">{language === 'ar' ? 'انتهاء' : 'Expiration'}</option>
+          </select>
+          <LocationSelector locations={locations} selected={locationId} onChange={setLocationId} />
+          <Button
+            variant="outline"
+            onClick={() => {
+              const headers = ['Date', 'ID', 'Customer', 'Type', 'Points', 'Amount (SAR)', 'Status'];
+              const rows = transactions.map((tx) => [
+                new Date(tx.createdAt).toISOString(),
+                tx.transactionId,
+                customerNames[tx.customerId] || tx.customerId,
+                tx.type,
+                tx.points,
+                getAmount(tx.amount),
+                tx.status,
+              ]);
+              const csv = [headers, ...rows].map((r) => r.join(',')).join('\n');
+              const blob = new Blob([csv], { type: 'text/csv' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `transactions_${new Date().toISOString().slice(0, 10)}.csv`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            disabled={transactions.length === 0}
+          >
+            <Download className="h-4 w-4 me-2" />
+            CSV
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-3">
