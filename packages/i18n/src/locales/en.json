@@ -122,6 +122,21 @@
     "unauthorized": "You are not authorized to perform this action",
     "notFound": "The requested resource was not found"
   },
+  "redeem": {
+    "title": "Redeem Points",
+    "pointsToRedeem": "Points to Redeem",
+    "sarValue": "SAR Value",
+    "merchantPointsUsed": "Merchant Points Used",
+    "globalPointsUsed": "Global Points Used",
+    "confirmRedemption": "Confirm Redemption",
+    "success": "Redemption Successful",
+    "minRedemption": "Minimum redemption: {{min}} points",
+    "currentBalances": "Current Balances",
+    "merchantBalance": "Merchant Points",
+    "globalBalance": "Global Points",
+    "redemptionBreakdown": "Redemption Breakdown",
+    "newBalances": "New Balances"
+  },
   "success": {
     "saved": "Changes saved successfully",
     "deleted": "Item deleted successfully",

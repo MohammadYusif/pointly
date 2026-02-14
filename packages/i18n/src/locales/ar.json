@@ -122,6 +122,21 @@
     "unauthorized": "غير مصرح لك بتنفيذ هذا الإجراء",
     "notFound": "المورد المطلوب غير موجود"
   },
+  "redeem": {
+    "title": "استبدال النقاط",
+    "pointsToRedeem": "النقاط للاستبدال",
+    "sarValue": "القيمة بالريال",
+    "merchantPointsUsed": "نقاط التاجر المستخدمة",
+    "globalPointsUsed": "النقاط العامة المستخدمة",
+    "confirmRedemption": "تأكيد الاستبدال",
+    "success": "تم الاستبدال بنجاح",
+    "minRedemption": "الحد الأدنى للاستبدال: {{min}} نقطة",
+    "currentBalances": "الأرصدة الحالية",
+    "merchantBalance": "نقاط التاجر",
+    "globalBalance": "النقاط العامة",
+    "redemptionBreakdown": "تفاصيل الاستبدال",
+    "newBalances": "الأرصدة الجديدة"
+  },
   "success": {
     "saved": "تم حفظ التغييرات بنجاح",
     "deleted": "تم حذف العنصر بنجاح",
