@@ -47,9 +47,9 @@ export default function CustomersPage() {
   const { data: searchResult, isLoading: searchLoading } = useCustomerByPhone(searchQuery);
 
   const customers = (pages?.pages.flatMap((p) => p.customers || []) ||
-    []) as MerchantCustomerView[];
+    []) as unknown as MerchantCustomerView[];
   const displayCustomers =
-    searchQuery && searchResult ? [searchResult as MerchantCustomerView] : customers;
+    searchQuery && searchResult ? [searchResult as unknown as MerchantCustomerView] : customers;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

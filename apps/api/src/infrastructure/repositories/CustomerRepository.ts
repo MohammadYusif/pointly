@@ -1,7 +1,7 @@
 import type { ICustomerRepository } from '../../application/repositories/ICustomerRepository';
 import type { QueryOptions, QueryResult } from '../../application/shared/interfaces/BaseRepository';
 import {
-  type ConsentStatus,
+  ConsentStatus,
   Customer,
   type CustomerEnrollment,
   type CustomerProps,
@@ -236,7 +236,7 @@ export class CustomerRepository
     };
 
     // Index customer under first granted merchant for MerchantCustomersIndex (GSI2)
-    const grantedEnrollment = enrollments.find((e) => e.consentStatus === 'granted');
+    const grantedEnrollment = enrollments.find((e) => e.consentStatus === ConsentStatus.GRANTED);
     if (grantedEnrollment) {
       item.GSI2PK = `MERCHANT#${grantedEnrollment.merchantId}#CUSTOMERS`;
       item.GSI2SK = `CUSTOMER#${json.customerId}`;
