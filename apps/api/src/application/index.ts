@@ -5,6 +5,11 @@ export {
   type RecordPurchaseResponse,
 } from './use-cases/RecordPurchaseUseCase';
 export {
+  RedeemPointsUseCase,
+  type RedeemPointsRequest,
+  type RedeemPointsResponse,
+} from './use-cases/RedeemPointsUseCase';
+export {
   ProcessPointsDecayUseCase,
   type DecayProcessingResult,
 } from './use-cases/ProcessPointsDecayUseCase';

@@ -11,6 +11,8 @@ import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
 import type { ITransactionRepository } from '../repositories/ITransactionRepository';
 import type { IIdempotencyService } from '../services/IIdempotencyService';
+import type { ISmsPublisherService } from '../services/ISmsPublisherService';
+import type { PersistenceItem } from '../shared/interfaces/BaseRepository';
 
 export interface RecordPurchaseRequest {
   merchantId: string;
@@ -62,8 +64,11 @@ export class RecordPurchaseUseCase {
     private merchantRepository: IMerchantRepository,
     private transactionRepository: ITransactionRepository,
     private idempotencyService: IIdempotencyService,
+    private smsPublisher?: ISmsPublisherService,
+    private atomicWrite?: (items: PersistenceItem[]) => Promise<void>,
   ) {}
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: core transaction flow with validation, dual points, and atomic saves
   async execute(request: RecordPurchaseRequest): Promise<RecordPurchaseResponse> {
     // 1. Check idempotency - prevent duplicate transactions
     const existingResult = await this.idempotencyService.getResult<RecordPurchaseResponse>(
@@ -148,10 +153,18 @@ export class RecordPurchaseUseCase {
     // Mark transaction as completed
     transaction.complete();
 
-    // 9. Save everything (repositories should handle transactional consistency)
-    await this.transactionRepository.save(transaction);
-    await this.customerRepository.save(customer);
-    await this.merchantRepository.save(merchant);
+    // 9. Save everything atomically (or fall back to sequential saves)
+    if (this.atomicWrite) {
+      await this.atomicWrite([
+        this.transactionRepository.toPersistenceItem(transaction),
+        this.customerRepository.toPersistenceItem(customer),
+        this.merchantRepository.toPersistenceItem(merchant),
+      ]);
+    } else {
+      await this.transactionRepository.save(transaction);
+      await this.customerRepository.save(customer);
+      await this.merchantRepository.save(merchant);
+    }
 
     // 10. Store idempotency result
     const response: RecordPurchaseResponse = {
@@ -182,6 +195,17 @@ export class RecordPurchaseUseCase {
       response,
       3600, // 1 hour TTL
     );
+
+    // 11. Fire-and-forget SMS notification
+    if (this.smsPublisher) {
+      const customerPhone = customer.getPhone().toE164();
+      this.smsPublisher.publish({
+        phone: customerPhone,
+        body: `You earned ${merchantPoints.toNumber()} points at ${merchant.getBusinessName()}! New balance: ${response.newMerchantBalance}`,
+        merchantId: request.merchantId,
+        type: 'POINTS_EARNED',
+      });
+    }
 
     return response;
   }

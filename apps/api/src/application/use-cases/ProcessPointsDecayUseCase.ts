@@ -103,10 +103,16 @@ export class ProcessPointsDecayUseCase {
   }
 
   private async getAllCustomers(): Promise<Customer[]> {
-    // TODO: Implement pagination in production
-    // This is a placeholder - in real implementation you'd use:
-    // const result = await this.customerRepository.findAll({ limit: 100 });
-    // and implement cursor-based pagination
-    return [];
+    const allCustomers: Customer[] = [];
+    let nextToken: string | undefined;
+    do {
+      const result = await this.customerRepository.findAll({
+        limit: 100,
+        ...(nextToken ? { nextToken } : {}),
+      });
+      allCustomers.push(...result.items);
+      nextToken = result.nextToken;
+    } while (nextToken);
+    return allCustomers;
   }
 }

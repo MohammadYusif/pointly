@@ -152,6 +152,13 @@ export class MerchantRepository
     await this.putItem(item);
   }
 
+  toPersistenceItem(entity: Merchant) {
+    return {
+      tableName: this.tableName,
+      item: this.entityToItem(entity) as unknown as Record<string, unknown>,
+    };
+  }
+
   async delete(id: string): Promise<void> {
     await this.deleteItem(`MERCHANT#${id}`, 'PROFILE');
   }

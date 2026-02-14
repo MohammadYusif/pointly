@@ -5,6 +5,8 @@ import {
   PutCommand,
   QueryCommand,
   type QueryCommandInput,
+  TransactWriteCommand,
+  type TransactWriteCommandInput,
 } from '@aws-sdk/lib-dynamodb';
 import type { QueryOptions, QueryResult } from '../../application/shared/interfaces/BaseRepository';
 
@@ -81,6 +83,62 @@ export abstract class BaseDynamoDBRepository<T> {
     );
 
     return !!result.Item;
+  }
+
+  /**
+   * Execute a DynamoDB TransactWriteItems operation for atomic multi-item writes.
+   * Accepts items across different tables by specifying tableName per item.
+   */
+  protected async transactWrite(
+    items: Array<{
+      type: 'Put' | 'Delete' | 'Update';
+      tableName?: string;
+      item?: object;
+      key?: { PK: string; SK: string };
+      updateExpression?: string;
+      expressionAttributeNames?: Record<string, string>;
+      expressionAttributeValues?: Record<string, unknown>;
+      conditionExpression?: string;
+    }>,
+  ): Promise<void> {
+    const transactItems: TransactWriteCommandInput['TransactItems'] = items.map((op) => {
+      const table = op.tableName || this.tableName;
+      if (op.type === 'Put') {
+        return {
+          Put: {
+            TableName: table,
+            Item: op.item as Record<string, unknown>,
+            ...(op.conditionExpression && { ConditionExpression: op.conditionExpression }),
+          },
+        };
+      }
+      if (op.type === 'Delete') {
+        return {
+          Delete: {
+            TableName: table,
+            Key: op.key as Record<string, unknown>,
+            ...(op.conditionExpression && { ConditionExpression: op.conditionExpression }),
+          },
+        };
+      }
+      // Update
+      return {
+        Update: {
+          TableName: table,
+          Key: op.key as Record<string, unknown>,
+          UpdateExpression: op.updateExpression ?? '',
+          ...(op.expressionAttributeNames && {
+            ExpressionAttributeNames: op.expressionAttributeNames,
+          }),
+          ...(op.expressionAttributeValues && {
+            ExpressionAttributeValues: op.expressionAttributeValues,
+          }),
+          ...(op.conditionExpression && { ConditionExpression: op.conditionExpression }),
+        },
+      };
+    });
+
+    await this.client.send(new TransactWriteCommand({ TransactItems: transactItems }));
   }
 
   // Abstract methods for entity conversion

@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { PhoneNumber, ValidationError } from '../../../domain';
 import { ForbiddenError } from '../../../domain/errors/DomainError';
 import { getContainer } from '../container';
 
@@ -249,6 +250,160 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
         ...(query.startDate ? { startDate: query.startDate } : {}),
         ...(query.endDate ? { endDate: query.endDate } : {}),
         ...(query.groupBy ? { groupBy: query.groupBy } : {}),
+      });
+
+      return reply.send({ success: true, data: result });
+    },
+  );
+
+  // PATCH /:merchantId — Update merchant profile
+  server.patch(
+    '/:merchantId',
+    async (
+      request: FastifyRequest<{
+        Params: { merchantId: string };
+        Body: { businessName?: string; contactName?: string; phone?: string };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      enforceMerchantAccess(request);
+      const { merchantId } = request.params;
+
+      const updateSchema = z.object({
+        businessName: z.string().min(2).max(100).optional(),
+        contactName: z.string().min(1).optional(),
+        phone: z.string().optional(),
+      });
+      const body = updateSchema.parse(request.body);
+
+      const container = getContainer();
+      const { merchantRepository } = container;
+
+      const merchant = await merchantRepository.findById(merchantId);
+      if (!merchant) {
+        return reply.status(404).send({ success: false, error: 'Merchant not found' });
+      }
+
+      const updates: { businessName?: string; contactName?: string; phone?: PhoneNumber } = {};
+      if (body.businessName) updates.businessName = body.businessName;
+      if (body.contactName) updates.contactName = body.contactName;
+      if (body.phone) {
+        try {
+          updates.phone = new PhoneNumber(body.phone);
+        } catch {
+          throw new ValidationError('Invalid Saudi phone number format');
+        }
+      }
+
+      merchant.updateBusinessInfo(updates);
+      await merchantRepository.save(merchant);
+
+      return reply.send({ success: true, data: merchant.toJSON() });
+    },
+  );
+
+  // POST /:merchantId/locations — Add location (PROFESSIONAL/ENTERPRISE only)
+  server.post(
+    '/:merchantId/locations',
+    async (
+      request: FastifyRequest<{
+        Params: { merchantId: string };
+        Body: { name: string; address: string; city: string };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      enforceMerchantAccess(request);
+      const { merchantId } = request.params;
+
+      const locationSchema = z.object({
+        name: z.string().min(1),
+        address: z.string().min(1),
+        city: z.string().min(1),
+      });
+      const body = locationSchema.parse(request.body);
+
+      const container = getContainer();
+      const { merchantRepository } = container;
+
+      const merchant = await merchantRepository.findById(merchantId);
+      if (!merchant) {
+        return reply.status(404).send({ success: false, error: 'Merchant not found' });
+      }
+
+      const location = merchant.addLocation(body.name, body.address, body.city);
+      await merchantRepository.save(merchant);
+
+      return reply.status(201).send({ success: true, data: location });
+    },
+  );
+
+  // PATCH /:merchantId/pending-consents/:customerId — Approve/deny consent
+  server.patch(
+    '/:merchantId/pending-consents/:customerId',
+    async (
+      request: FastifyRequest<{
+        Params: { merchantId: string; customerId: string };
+        Body: { action: string };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      enforceMerchantAccess(request);
+      const { merchantId, customerId } = request.params;
+
+      const actionSchema = z.object({
+        action: z.enum(['approve', 'deny']),
+      });
+      const body = actionSchema.parse(request.body);
+
+      const container = getContainer();
+      const { customerRepository } = container;
+
+      const customer = await customerRepository.findById(customerId);
+      if (!customer) {
+        return reply.status(404).send({ success: false, error: 'Customer not found' });
+      }
+
+      if (body.action === 'approve') {
+        customer.grantConsent(merchantId);
+      } else {
+        customer.revokeConsent(merchantId);
+      }
+
+      await customerRepository.save(customer);
+
+      return reply.send({
+        success: true,
+        data: {
+          customerId,
+          merchantId,
+          consentStatus: customer.getEnrollment(merchantId)?.consentStatus,
+        },
+      });
+    },
+  );
+
+  // POST /:merchantId/verify-qr — Verify customer QR code
+  server.post(
+    '/:merchantId/verify-qr',
+    async (
+      request: FastifyRequest<{
+        Params: { merchantId: string };
+        Body: { nonce: string };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      enforceMerchantAccess(request);
+      const { merchantId } = request.params;
+
+      const verifySchema = z.object({
+        nonce: z.string().min(1),
+      });
+      const body = verifySchema.parse(request.body);
+
+      const container = getContainer();
+      const result = await container.generateQRCodeUseCase.verify({
+        nonce: body.nonce,
+        merchantId,
       });
 
       return reply.send({ success: true, data: result });

@@ -374,6 +374,13 @@ export class TransactionRepository
     await this.putItem(item);
   }
 
+  toPersistenceItem(entity: Transaction) {
+    return {
+      tableName: this.tableName,
+      item: this.entityToItem(entity) as unknown as Record<string, unknown>,
+    };
+  }
+
   async delete(id: string): Promise<void> {
     await this.deleteItem(`TRANSACTION#${id}`, 'DETAILS');
   }

@@ -1,3 +1,4 @@
+import { ScanCommand, type ScanCommandInput } from '@aws-sdk/lib-dynamodb';
 import type { ICustomerRepository } from '../../application/repositories/ICustomerRepository';
 import type { QueryOptions, QueryResult } from '../../application/shared/interfaces/BaseRepository';
 import {
@@ -80,8 +81,10 @@ export class CustomerRepository
       {
         IndexName: 'MerchantCustomersIndex',
         KeyConditionExpression: 'GSI2PK = :pk',
+        FilterExpression: 'contains(grantedMerchantIds, :mid)',
         ExpressionAttributeValues: {
           ':pk': `MERCHANT#${merchantId}#CUSTOMERS`,
+          ':mid': merchantId,
         },
       },
       options,
@@ -116,6 +119,31 @@ export class CustomerRepository
     };
   }
 
+  async findAll(options?: QueryOptions): Promise<QueryResult<Customer>> {
+    const scanInput: ScanCommandInput = {
+      TableName: this.tableName,
+      FilterExpression: 'EntityType = :entityType',
+      ExpressionAttributeValues: {
+        ':entityType': 'CUSTOMER',
+      },
+      Limit: options?.limit || 100,
+    };
+
+    if (options?.nextToken) {
+      scanInput.ExclusiveStartKey = JSON.parse(Buffer.from(options.nextToken, 'base64').toString());
+    }
+
+    const result = await this.client.send(new ScanCommand(scanInput));
+
+    return {
+      items: (result.Items || []).map((item) => this.itemToEntity(item as unknown as CustomerItem)),
+      count: result.Count || 0,
+      nextToken: result.LastEvaluatedKey
+        ? Buffer.from(JSON.stringify(result.LastEvaluatedKey)).toString('base64')
+        : undefined,
+    };
+  }
+
   async isEnrolled(customerId: string, merchantId: string): Promise<boolean> {
     const customer = await this.findById(customerId);
     if (!customer) return false;
@@ -127,6 +155,10 @@ export class CustomerRepository
   async save(entity: Customer): Promise<void> {
     const item = this.toItem(entity);
     await this.putItem(item);
+  }
+
+  toPersistenceItem(entity: Customer) {
+    return { tableName: this.tableName, item: this.toItem(entity) as Record<string, unknown> };
   }
 
   async delete(id: string): Promise<void> {
@@ -235,12 +267,19 @@ export class CustomerRepository
       GSI1SK: 'CUSTOMER',
     };
 
-    // Index customer under first granted merchant for MerchantCustomersIndex (GSI2)
-    const grantedEnrollment = enrollments.find((e) => e.consentStatus === ConsentStatus.GRANTED);
-    if (grantedEnrollment) {
-      item.GSI2PK = `MERCHANT#${grantedEnrollment.merchantId}#CUSTOMERS`;
+    // Store ALL granted merchant IDs for FilterExpression-based lookup
+    const grantedMerchantIds = enrollments
+      .filter((e) => e.consentStatus === ConsentStatus.GRANTED)
+      .map((e) => e.merchantId);
+
+    // Index under first granted merchant for GSI2 partition (pagination anchor)
+    if (grantedMerchantIds.length > 0) {
+      item.GSI2PK = `MERCHANT#${grantedMerchantIds[0]}#CUSTOMERS`;
       item.GSI2SK = `CUSTOMER#${json.customerId}`;
     }
+
+    // biome-ignore lint/suspicious/noExplicitAny: adding dynamic attribute for GSI filter
+    (item as any).grantedMerchantIds = grantedMerchantIds;
 
     return item as unknown as Record<string, unknown>;
   }
