@@ -6,6 +6,14 @@ variable "lambda_zip_path" {
   type = string
 }
 
+variable "lambda_decay_zip_path" {
+  type = string
+}
+
+variable "lambda_tier_reset_zip_path" {
+  type = string
+}
+
 # DynamoDB table names
 variable "user_ledger_table_name" {
   type = string
@@ -61,14 +69,5 @@ variable "sms_quota_table_arn" {
 }
 
 variable "wallet_passes_table_arn" {
-  type = string
-}
-
-# Cognito
-variable "merchant_user_pool_arn" {
-  type = string
-}
-
-variable "customer_user_pool_arn" {
   type = string
 }

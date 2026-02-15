@@ -25,7 +25,9 @@ module "api" {
   source      = "./modules/api"
   environment = var.environment
 
-  lambda_zip_path = var.lambda_zip_path
+  lambda_zip_path            = var.lambda_zip_path
+  lambda_decay_zip_path      = var.lambda_decay_zip_path
+  lambda_tier_reset_zip_path = var.lambda_tier_reset_zip_path
 
   # DynamoDB table names
   user_ledger_table_name       = module.database.user_ledger_table_name
@@ -44,10 +46,6 @@ module "api" {
   pending_consents_table_arn  = module.database.pending_consents_table_arn
   sms_quota_table_arn         = module.database.sms_quota_table_arn
   wallet_passes_table_arn     = module.database.wallet_passes_table_arn
-
-  # Cognito
-  merchant_user_pool_arn = module.auth.merchant_user_pool_arn
-  customer_user_pool_arn = module.auth.customer_user_pool_arn
 }
 
 # ===========================================

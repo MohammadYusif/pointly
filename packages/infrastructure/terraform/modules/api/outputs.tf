@@ -21,3 +21,11 @@ output "lambda_function_arn" {
 output "sms_queue_url" {
   value = aws_sqs_queue.sms.url
 }
+
+output "decay_lambda_function_name" {
+  value = aws_lambda_function.decay.function_name
+}
+
+output "tier_reset_lambda_function_name" {
+  value = aws_lambda_function.tier_reset.function_name
+}

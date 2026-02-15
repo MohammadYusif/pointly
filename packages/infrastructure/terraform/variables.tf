@@ -35,3 +35,15 @@ variable "lambda_zip_path" {
   default     = "../../../apps/api/lambda.zip"
   description = "Path to the pre-built Lambda deployment zip"
 }
+
+variable "lambda_decay_zip_path" {
+  type        = string
+  default     = "../../../apps/api/lambda-decay.zip"
+  description = "Path to the pre-built decay Lambda deployment zip"
+}
+
+variable "lambda_tier_reset_zip_path" {
+  type        = string
+  default     = "../../../apps/api/lambda-tier-reset.zip"
+  description = "Path to the pre-built tier reset Lambda deployment zip"
+}

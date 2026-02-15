@@ -41,8 +41,11 @@ export class QRNonceRepository implements IQRNonceRepository {
     const item = result.Item;
     return {
       nonce,
+      // biome-ignore lint/complexity/useLiteralKeys: index signature requires bracket notation
       customerId: item['customerId'] as string,
+      // biome-ignore lint/complexity/useLiteralKeys: index signature requires bracket notation
       expiresAt: item['expiresAt'] as number,
+      // biome-ignore lint/complexity/useLiteralKeys: index signature requires bracket notation
       used: item['used'] as boolean,
     };
   }
