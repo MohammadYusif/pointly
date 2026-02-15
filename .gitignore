@@ -51,6 +51,9 @@ coverage/
 .aws-sam/
 samconfig.toml
 
+# Lambda build artifacts
+*.zip
+
 # Secrets
 *.pem
 *.key
