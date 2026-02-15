@@ -42,7 +42,8 @@
     "reports": "Reports",
     "loyalty": "Loyalty Program",
     "profile": "Profile",
-    "help": "Help"
+    "help": "Help",
+    "billing": "Billing"
   },
   "dashboard": {
     "title": "Dashboard",

@@ -51,6 +51,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       href: '/settings',
       active: isActive('/settings'),
     },
+    {
+      key: 'billing',
+      label: t('navigation.billing'),
+      href: '/billing',
+      active: isActive('/billing'),
+    },
   ];
 
   const handleNavClick = (item: NavItem) => {
