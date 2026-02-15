@@ -47,3 +47,7 @@ export function updateCustomer(data: { name?: string }) {
     body: JSON.stringify(data),
   });
 }
+
+export function generateQRCode() {
+  return fetchApi<{ qrPayload: string; expiresAt: number }>('/v1/me/qr-code', { method: 'POST' });
+}
