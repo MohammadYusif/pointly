@@ -54,6 +54,14 @@ samconfig.toml
 # Lambda build artifacts
 *.zip
 
+# TypeScript build info
+*.tsbuildinfo
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+-var=*
+
 # Secrets
 *.pem
 *.key
