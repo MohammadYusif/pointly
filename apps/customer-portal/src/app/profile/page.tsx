@@ -4,19 +4,24 @@ import { CustomerLayout } from '@/components/CustomerLayout';
 import { getCustomer, updateCustomer } from '@/lib/api';
 import { signOut } from '@/lib/auth';
 import { useTranslation } from '@pointly/i18n';
+import type { CustomerResponse } from '@pointly/shared';
+import { formatPhone } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+interface CustomerProfile extends CustomerResponse {
+  tierDisplayName: string;
+}
+
 export default function ProfilePage() {
   const { t, language } = useTranslation();
   const { textStart } = useRTL();
   const router = useRouter();
 
-  // biome-ignore lint/suspicious/noExplicitAny: API response shape varies
-  const [customer, setCustomer] = useState<any>(null);
+  const [customer, setCustomer] = useState<CustomerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -24,8 +29,8 @@ export default function ProfilePage() {
   useEffect(() => {
     getCustomer('me')
       .then((data) => {
-        setCustomer(data);
-        setName((data as { name?: string }).name || '');
+        setCustomer(data as CustomerProfile);
+        setName(data.name || '');
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -36,7 +41,7 @@ export default function ProfilePage() {
       await updateCustomer({ name });
       toast.success(t('success.saved'));
       setIsEditing(false);
-      setCustomer((prev: Record<string, unknown>) => ({ ...prev, name }));
+      setCustomer((prev) => prev ? { ...prev, name } : prev);
     } catch {
       toast.error(t('errors.serverError'));
     }
@@ -69,7 +74,7 @@ export default function ProfilePage() {
           <CardContent className="space-y-3">
             <div>
               <p className="text-sm text-muted-foreground">{t('customer.phone')}</p>
-              <p className="font-medium" dir="ltr">{customer?.phone}</p>
+              <p className="font-medium" dir="ltr">{formatPhone(customer?.phone || '')}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">{t('customer.name')}</p>
@@ -94,7 +99,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* Enrolled Merchants */}
-        {customer?.enrollments?.length > 0 && (
+        {(customer?.enrollments?.length ?? 0) > 0 && customer && (
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
@@ -102,7 +107,7 @@ export default function ProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {customer.enrollments.map((e: { merchantId: string; consentStatus: string }) => (
+              {customer.enrollments.map((e) => (
                 <div key={e.merchantId} className="flex justify-between items-center py-1">
                   <span className="text-sm">{e.merchantId}</span>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${

@@ -287,7 +287,7 @@ describe('RedeemPointsUseCase', () => {
     });
 
     it('should enforce exact multiple when partial redemption is disabled', async () => {
-      // Create a BASIC tier merchant (allowPartialRedemption = false, minimumRedemption = 100)
+      // Create a merchant with allowPartialRedemption explicitly disabled
       const basicMerchant = Merchant.create(
         'Basic Store',
         new Email('basic@test.com'),
@@ -296,6 +296,7 @@ describe('RedeemPointsUseCase', () => {
         MerchantTier.BASIC,
       );
       basicMerchant.verify();
+      basicMerchant.updateLoyaltyConfig({ allowPartialRedemption: false });
 
       testCustomer = Customer.create(new PhoneNumber('0533333333'), 'Test User');
       testCustomer.enrollWithMerchant(merchantId);

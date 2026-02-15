@@ -3,20 +3,35 @@ import { z } from 'zod';
 import { ForbiddenError } from '../../../domain/errors/DomainError';
 import { getContainer } from '../container';
 
+const transactionMetadataSchema = z
+  .object({
+    receiptNumber: z.string().optional(),
+    cashierName: z.string().optional(),
+    terminalId: z.string().optional(),
+    notes: z.string().optional(),
+  })
+  .optional();
+
+type TransactionMetadata = z.infer<typeof transactionMetadataSchema>;
+
+/** Strip undefined values so only provided metadata fields are passed downstream. */
+function cleanMetadata(metadata: TransactionMetadata) {
+  if (!metadata) return undefined;
+  return {
+    ...(metadata.receiptNumber && { receiptNumber: metadata.receiptNumber }),
+    ...(metadata.cashierName && { cashierName: metadata.cashierName }),
+    ...(metadata.terminalId && { terminalId: metadata.terminalId }),
+    ...(metadata.notes && { notes: metadata.notes }),
+  };
+}
+
 const redeemPointsSchema = z.object({
   merchantId: z.string().min(1),
   customerId: z.string().min(1),
   pointsToRedeem: z.number().int().positive(),
   idempotencyKey: z.string().min(1),
   locationId: z.string().optional(),
-  metadata: z
-    .object({
-      receiptNumber: z.string().optional(),
-      cashierName: z.string().optional(),
-      terminalId: z.string().optional(),
-      notes: z.string().optional(),
-    })
-    .optional(),
+  metadata: transactionMetadataSchema,
 });
 
 type RedeemPointsBody = z.infer<typeof redeemPointsSchema>;
@@ -27,14 +42,7 @@ const recordPurchaseSchema = z.object({
   amount: z.number().positive(),
   idempotencyKey: z.string().min(1),
   locationId: z.string().optional(),
-  metadata: z
-    .object({
-      receiptNumber: z.string().optional(),
-      cashierName: z.string().optional(),
-      terminalId: z.string().optional(),
-      notes: z.string().optional(),
-    })
-    .optional(),
+  metadata: transactionMetadataSchema,
 });
 
 type RecordPurchaseBody = z.infer<typeof recordPurchaseSchema>;
@@ -53,20 +61,14 @@ export async function purchaseRoutes(server: FastifyInstance): Promise<void> {
       const container = getContainer();
       const recordPurchaseUseCase = container.recordPurchaseUseCase;
 
+      const metadata = cleanMetadata(body.metadata);
       const result = await recordPurchaseUseCase.execute({
         merchantId: body.merchantId,
         customerId: body.customerId,
         amountSAR: body.amount,
         idempotencyKey: body.idempotencyKey,
         ...(body.locationId && { locationId: body.locationId }),
-        ...(body.metadata && {
-          metadata: {
-            ...(body.metadata.receiptNumber && { receiptNumber: body.metadata.receiptNumber }),
-            ...(body.metadata.cashierName && { cashierName: body.metadata.cashierName }),
-            ...(body.metadata.terminalId && { terminalId: body.metadata.terminalId }),
-            ...(body.metadata.notes && { notes: body.metadata.notes }),
-          },
-        }),
+        ...(metadata && { metadata }),
       });
 
       return reply.status(201).send({
@@ -86,20 +88,14 @@ export async function purchaseRoutes(server: FastifyInstance): Promise<void> {
       }
 
       const container = getContainer();
+      const metadata = cleanMetadata(body.metadata);
       const result = await container.redeemPointsUseCase.execute({
         merchantId: body.merchantId,
         customerId: body.customerId,
         pointsToRedeem: body.pointsToRedeem,
         idempotencyKey: body.idempotencyKey,
         ...(body.locationId && { locationId: body.locationId }),
-        ...(body.metadata && {
-          metadata: {
-            ...(body.metadata.receiptNumber && { receiptNumber: body.metadata.receiptNumber }),
-            ...(body.metadata.cashierName && { cashierName: body.metadata.cashierName }),
-            ...(body.metadata.terminalId && { terminalId: body.metadata.terminalId }),
-            ...(body.metadata.notes && { notes: body.metadata.notes }),
-          },
-        }),
+        ...(metadata && { metadata }),
       });
 
       return reply.status(201).send({

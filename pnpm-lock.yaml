@@ -120,6 +120,9 @@ importers:
       '@pointly/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@pointly/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@pointly/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -172,6 +175,9 @@ importers:
       '@pointly/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@pointly/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@pointly/ui':
         specifier: workspace:*
         version: link:../../packages/ui

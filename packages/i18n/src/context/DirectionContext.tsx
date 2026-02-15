@@ -36,7 +36,7 @@ export function DirectionProvider({
   children,
   defaultLanguage = 'ar', // Default to Arabic for Saudi market
 }: DirectionProviderProps) {
-  const [language] = useState<Language>(() => getStoredLanguage(defaultLanguage));
+  const [language, setLanguageState] = useState<Language>(() => getStoredLanguage(defaultLanguage));
   const direction: Direction = language === 'ar' ? 'rtl' : 'ltr';
 
   // Sync document attributes on mount
@@ -50,7 +50,7 @@ export function DirectionProvider({
       if (lang === language) return;
       if (typeof window !== 'undefined') {
         localStorage.setItem(STORAGE_KEY, lang);
-        window.location.reload();
+        setLanguageState(lang);
       }
     },
     [language],

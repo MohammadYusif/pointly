@@ -11,6 +11,8 @@ import {
   type CustomerTierLevel,
   PhoneNumber,
   Points,
+  VALID_TIER_LEVELS,
+  DEFAULT_TIER,
 } from '../../domain';
 import { BaseDynamoDBRepository } from './BaseRepository';
 
@@ -62,12 +64,13 @@ export class CustomerRepository
   }
 
   async findByPhone(phone: string): Promise<Customer | null> {
+    // Phone is stored as digits only (e.g. "966512345678"), strip leading "+"
+    const normalized = phone.replace(/^\+/, '');
     const result = await this.query<CustomerItem>({
       IndexName: 'PhoneIndex',
-      KeyConditionExpression: 'GSI1PK = :pk AND GSI1SK = :sk',
+      KeyConditionExpression: 'phone = :phone',
       ExpressionAttributeValues: {
-        ':pk': `PHONE#${phone}`,
-        ':sk': 'CUSTOMER',
+        ':phone': normalized,
       },
       Limit: 1,
     });
@@ -169,42 +172,64 @@ export class CustomerRepository
     return super.exists(`CUSTOMER#${id}`, 'PROFILE');
   }
 
+  /**
+   * Parse a date value that may be an ISO string, a Date, or an empty/invalid object
+   * (DynamoDB Document Client serializes Date objects as empty maps {"M":{}})
+   */
+  private static parseDate(value: unknown, fallback: Date): Date {
+    if (!value) return fallback;
+    if (typeof value === 'string' && value.length > 0) {
+      const d = new Date(value);
+      return Number.isNaN(d.getTime()) ? fallback : d;
+    }
+    if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+    return fallback;
+  }
+
   private itemToEntity(customerItem: CustomerItem): Customer {
+    const createdAt = new Date(customerItem.createdAt);
     const enrollments = new Map<string, CustomerEnrollment>();
     for (const enrollment of customerItem.enrollments || []) {
       const enrollmentData: CustomerEnrollment = {
         merchantId: enrollment.merchantId,
-        enrolledAt: new Date(enrollment.enrolledAt),
-        consentStatus: enrollment.consentStatus,
-        merchantPointsBalance: Points.from(enrollment.merchantPointsBalance),
-        merchantLifetimePoints: Points.from(enrollment.merchantLifetimePoints),
-        transactionCount: enrollment.transactionCount,
+        enrolledAt: CustomerRepository.parseDate(enrollment.enrolledAt, createdAt),
+        consentStatus: enrollment.consentStatus || ConsentStatus.PENDING,
+        merchantPointsBalance: Points.from(enrollment.merchantPointsBalance ?? 0),
+        merchantLifetimePoints: Points.from(enrollment.merchantLifetimePoints ?? 0),
+        transactionCount: enrollment.transactionCount ?? 0,
       };
 
-      if (enrollment.consentGrantedAt) {
-        enrollmentData.consentGrantedAt = new Date(enrollment.consentGrantedAt);
+      const consentDate = CustomerRepository.parseDate(enrollment.consentGrantedAt, null as unknown as Date);
+      if (consentDate) {
+        enrollmentData.consentGrantedAt = consentDate;
       }
-      if (enrollment.lastTransactionAt) {
-        enrollmentData.lastTransactionAt = new Date(enrollment.lastTransactionAt);
+      const lastTxDate = CustomerRepository.parseDate(enrollment.lastTransactionAt, null as unknown as Date);
+      if (lastTxDate) {
+        enrollmentData.lastTransactionAt = lastTxDate;
       }
 
       enrollments.set(enrollment.merchantId, enrollmentData);
     }
 
+    // Default tier fields for records created before the tier system was added
+    const tierLevel = VALID_TIER_LEVELS.includes(customerItem.currentTier)
+      ? (customerItem.currentTier as CustomerTierLevel)
+      : (DEFAULT_TIER as CustomerTierLevel);
+
     const props: CustomerProps = {
       customerId: customerItem.customerId,
       phone: new PhoneNumber(customerItem.phone),
       status: customerItem.status,
-      globalPointsBalance: Points.from(customerItem.globalPointsBalance),
-      globalLifetimePoints: Points.from(customerItem.globalLifetimePoints),
-      currentTier: CustomerTier.fromLevel(customerItem.currentTier as CustomerTierLevel),
-      monthlyProgress: Points.from(customerItem.monthlyProgress),
-      tierLastUpdatedAt: new Date(customerItem.tierLastUpdatedAt),
-      monthlyProgressResetAt: new Date(customerItem.monthlyProgressResetAt),
-      lastNetworkActivity: new Date(customerItem.lastNetworkActivity),
-      globalPointsDecayPhase: customerItem.globalPointsDecayPhase,
+      globalPointsBalance: Points.from(customerItem.globalPointsBalance ?? 0),
+      globalLifetimePoints: Points.from(customerItem.globalLifetimePoints ?? 0),
+      currentTier: CustomerTier.fromLevel(tierLevel),
+      monthlyProgress: Points.from(customerItem.monthlyProgress ?? 0),
+      tierLastUpdatedAt: CustomerRepository.parseDate(customerItem.tierLastUpdatedAt, createdAt),
+      monthlyProgressResetAt: CustomerRepository.parseDate(customerItem.monthlyProgressResetAt, createdAt),
+      lastNetworkActivity: CustomerRepository.parseDate(customerItem.lastNetworkActivity, createdAt),
+      globalPointsDecayPhase: customerItem.globalPointsDecayPhase ?? 0,
       enrollments,
-      createdAt: new Date(customerItem.createdAt),
+      createdAt,
       updatedAt: new Date(customerItem.updatedAt),
     };
 
@@ -212,10 +237,10 @@ export class CustomerRepository
       props.name = customerItem.name;
     }
     if (customerItem.decayStartDate) {
-      props.decayStartDate = new Date(customerItem.decayStartDate);
+      props.decayStartDate = CustomerRepository.parseDate(customerItem.decayStartDate, createdAt);
     }
     if (customerItem.lastDecayAppliedAt) {
-      props.lastDecayAppliedAt = new Date(customerItem.lastDecayAppliedAt);
+      props.lastDecayAppliedAt = CustomerRepository.parseDate(customerItem.lastDecayAppliedAt, createdAt);
     }
 
     return Customer.reconstitute(props);

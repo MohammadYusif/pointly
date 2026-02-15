@@ -87,6 +87,7 @@ classDiagram
     class CustomerTier {
         <<enumeration>>
         BRONZE
+        GOLD
         PLATINUM
         DIAMOND
     }
@@ -168,11 +169,12 @@ pointly/
 - **Decay System**: 3-month grace period, then gradual decay for inactive accounts
 
 ### Customer Tiers
-| Tier | Monthly Points | Redemption Bonus |
-|------|---------------|------------------|
+| Tier | Monthly Points | Earning Multiplier |
+|------|---------------|-------------------|
 | Bronze | 0 - 4,999 | 1.0x |
-| Platinum | 5,000 - 14,999 | 1.2x |
-| Diamond | 15,000+ | 1.5x |
+| Gold | 5,000 - 9,999 | 1.1x |
+| Platinum | 10,000 - 14,999 | 1.15x |
+| Diamond | 15,000+ | 1.2x |
 
 ### Merchant Tiers
 | Tier | Features |

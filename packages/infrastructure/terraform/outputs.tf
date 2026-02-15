@@ -49,3 +49,12 @@ output "alarm_topic_arn" {
 output "dashboard_monitoring_url" {
   value = module.monitoring.dashboard_url
 }
+
+# Scheduled Lambdas (empty if not deployed)
+output "decay_function_name" {
+  value = module.api.decay_lambda_function_name
+}
+
+output "tier_reset_function_name" {
+  value = module.api.tier_reset_lambda_function_name
+}

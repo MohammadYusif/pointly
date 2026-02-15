@@ -186,10 +186,31 @@ export class MerchantRepository
       createdAt: new Date(loc.createdAt),
     }));
 
+    const rawQuota = item.smsQuota || ({} as Partial<MerchantItem['smsQuota']>);
     const smsQuota: SMSQuota = {
-      monthlyLimit: item.smsQuota.monthlyLimit,
-      currentUsage: item.smsQuota.currentUsage,
-      resetDate: new Date(item.smsQuota.resetDate),
+      monthlyLimit: rawQuota.monthlyLimit ?? 100,
+      currentUsage: rawQuota.currentUsage ?? 0,
+      resetDate: rawQuota.resetDate
+        ? new Date(rawQuota.resetDate)
+        : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1),
+    };
+
+    // Normalize tier — map legacy values to valid MerchantTier enum
+    const validTiers = ['BASIC', 'PROFESSIONAL', 'ENTERPRISE'];
+    const tier = (validTiers.includes(item.tier) ? item.tier : 'BASIC') as MerchantTier;
+
+    // Apply defaults for any missing loyaltyConfig fields (guards against old/manual records)
+    // biome-ignore lint/suspicious/noExplicitAny: DynamoDB records may have legacy field names
+    const rawConfig = (item.loyaltyConfig || {}) as any;
+    const loyaltyConfig: LoyaltyConfiguration = {
+      pointsPerSAR: rawConfig.pointsPerSAR ?? rawConfig.pointsPerUnit ?? 1,
+      globalPointsPerSAR: rawConfig.globalPointsPerSAR ?? rawConfig.pointsPerUnit ?? 1,
+      minimumPurchase: rawConfig.minimumPurchase ?? rawConfig.minimumTransaction ?? 10,
+      redemptionRate: rawConfig.redemptionRate ?? 0.01,
+      allowPartialRedemption: rawConfig.allowPartialRedemption ?? true,
+      minimumRedemption: rawConfig.minimumRedemption ?? 100,
+      welcomeBonus: rawConfig.welcomeBonus ?? 50,
+      enableMultiLocation: rawConfig.enableMultiLocation ?? false,
     };
 
     const props: MerchantProps = {
@@ -198,15 +219,15 @@ export class MerchantRepository
       email: new Email(item.email),
       phone: new PhoneNumber(item.phone),
       contactName: item.contactName,
-      tier: item.tier,
+      tier,
       status: item.status,
-      loyaltyConfig: item.loyaltyConfig,
+      loyaltyConfig,
       smsQuota,
       locations,
-      maxLocations: item.maxLocations,
-      totalCustomers: item.totalCustomers,
-      activeCustomers: item.activeCustomers,
-      totalTransactions: item.totalTransactions,
+      maxLocations: item.maxLocations ?? 3,
+      totalCustomers: item.totalCustomers ?? 0,
+      activeCustomers: item.activeCustomers ?? 0,
+      totalTransactions: item.totalTransactions ?? 0,
       createdAt: new Date(item.createdAt),
       updatedAt: new Date(item.updatedAt),
       ...(item.verifiedAt && { verifiedAt: new Date(item.verifiedAt) }),

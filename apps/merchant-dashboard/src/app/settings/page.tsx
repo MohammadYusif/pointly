@@ -198,8 +198,8 @@ export default function SettingsPage() {
                 {language === 'ar' ? 'الاستخدام' : 'Used'}
               </p>
               <p className="font-medium">
-                {formatNumber(merchant?.smsQuota?.used ?? 0)} /{' '}
-                {formatNumber(merchant?.smsQuota?.limit ?? 0)}
+                {formatNumber(merchant?.smsQuota?.currentUsage ?? 0)} /{' '}
+                {formatNumber(merchant?.smsQuota?.monthlyLimit ?? 0)}
               </p>
             </div>
           </CardContent>

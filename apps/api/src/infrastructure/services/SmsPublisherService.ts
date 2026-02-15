@@ -14,14 +14,20 @@ export class SmsPublisherService implements ISmsPublisherService {
     this.sqs = new SQSClient({ region });
   }
 
+  private get isFifo(): boolean {
+    return this.queueUrl.endsWith('.fifo');
+  }
+
   async publish(message: SmsMessage): Promise<void> {
     try {
       await this.sqs.send(
         new SendMessageCommand({
           QueueUrl: this.queueUrl,
           MessageBody: JSON.stringify(message),
-          MessageGroupId: message.merchantId,
-          MessageDeduplicationId: `${message.merchantId}-${message.phone}-${Date.now()}`,
+          ...(this.isFifo && {
+            MessageGroupId: message.merchantId,
+            MessageDeduplicationId: `${message.merchantId}-${message.phone}-${Date.now()}`,
+          }),
         }),
       );
     } catch (error) {
@@ -47,8 +53,10 @@ export class SmsPublisherService implements ISmsPublisherService {
             Entries: chunk.map((msg, idx) => ({
               Id: String(idx),
               MessageBody: JSON.stringify(msg),
-              MessageGroupId: msg.merchantId,
-              MessageDeduplicationId: `${msg.merchantId}-${msg.phone}-${Date.now()}-${idx}`,
+              ...(this.isFifo && {
+                MessageGroupId: msg.merchantId,
+                MessageDeduplicationId: `${msg.merchantId}-${msg.phone}-${Date.now()}-${idx}`,
+              }),
             })),
           }),
         );

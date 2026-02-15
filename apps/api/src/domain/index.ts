@@ -1,10 +1,20 @@
+// Tier Configuration (single source of truth)
+export {
+  CustomerTierLevel,
+  TIER_CONFIG,
+  TIER_ORDER,
+  VALID_TIER_LEVELS,
+  DEFAULT_TIER,
+  MAX_TIER,
+} from './config/TierConfig';
+export type { TierThresholds } from './config/TierConfig';
+
 // Value Objects
 export { PhoneNumber } from './value-objects/PhoneNumber';
 export { Email } from './value-objects/Email';
 export { Money } from './value-objects/Money';
 export { Points } from './value-objects/Points';
-export { CustomerTier, CustomerTierLevel } from './value-objects/CustomerTier'; // NEW
-export type { TierThresholds } from './value-objects/CustomerTier'; // NEW
+export { CustomerTier } from './value-objects/CustomerTier';
 
 // Entities
 export { Customer, CustomerStatus, ConsentStatus } from './entities/Customer';

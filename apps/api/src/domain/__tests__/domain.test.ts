@@ -567,10 +567,10 @@ describe('Domain Entities', () => {
       // Bronze with 0 progress
       expect(customer.getPointsToNextTier()).toBe(5000);
 
-      // Earn to Platinum
+      // Earn to Gold
       customer.addPointsFromPurchase(merchantId, Points.from(5000), Points.from(5000));
-      expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.PLATINUM);
-      expect(customer.getPointsToNextTier()).toBe(10000); // 15000 - 5000
+      expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.GOLD);
+      expect(customer.getPointsToNextTier()).toBe(5000); // 10000 (Platinum) - 5000
 
       // Earn to Diamond
       customer.addPointsFromPurchase(merchantId, Points.from(10000), Points.from(10000));
@@ -1281,7 +1281,7 @@ describe('Customer Tier System', () => {
     expect(customer.getMonthlyProgress().toNumber()).toBe(0);
   });
 
-  it('should upgrade to Platinum after earning 5,000 points', () => {
+  it('should upgrade to Gold after earning 5,000 points', () => {
     const phone = new PhoneNumber('0501234567');
     const customer = Customer.create(phone);
     const merchantId = 'merchant_123';
@@ -1292,7 +1292,7 @@ describe('Customer Tier System', () => {
     // Earn 5,000 points in one purchase
     customer.addPointsFromPurchase(merchantId, Points.from(5000), Points.from(5000));
 
-    expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.PLATINUM);
+    expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.GOLD);
     expect(customer.getMonthlyProgress().toNumber()).toBe(5000);
   });
 
@@ -1327,7 +1327,7 @@ describe('Customer Tier System', () => {
     // Redeem 9,000 points
     customer.redeemGlobalPoints(Points.from(9000));
 
-    // Tier should stay Platinum
+    // Tier should stay Platinum (redemptions don't affect tier)
     expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.PLATINUM);
     expect(customer.getGlobalPointsBalance().toNumber()).toBe(1000);
     expect(customer.getMonthlyProgress().toNumber()).toBe(10000); // Monthly progress unchanged
@@ -1348,10 +1348,10 @@ describe('Customer Tier System', () => {
     customer.addPointsFromPurchase(merchantId, Points.from(3000), Points.from(3000));
     expect(customer.getPointsToNextTier()).toBe(2000); // 5000 - 3000
 
-    // Earn 3,000 more (now Platinum with 6,000 total)
+    // Earn 3,000 more (now Gold with 6,000 total)
     customer.addPointsFromPurchase(merchantId, Points.from(3000), Points.from(3000));
-    expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.PLATINUM);
-    expect(customer.getPointsToNextTier()).toBe(9000); // 15000 - 6000
+    expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.GOLD);
+    expect(customer.getPointsToNextTier()).toBe(4000); // 10000 (Platinum) - 6000
 
     // Earn 10,000 more (now Diamond with 16,000 total)
     customer.addPointsFromPurchase(merchantId, Points.from(10000), Points.from(10000));
@@ -1392,15 +1392,15 @@ describe('Customer Tier System', () => {
     // Simulate month end: reset progress
     customer.resetMonthlyProgress();
 
-    // New month: earn only 2,000 points (below Platinum threshold)
+    // New month: earn only 2,000 points (below Platinum's 10,000 threshold)
     customer.addPointsFromPurchase(merchantId, Points.from(2000), Points.from(2000));
 
     // Update tier based on new monthly progress
     const newTier = customer.updateTierFromProgress();
 
-    // Should drop back to Bronze
-    expect(newTier.getLevel()).toBe(CustomerTierLevel.BRONZE);
-    expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.BRONZE);
+    // Should drop one level (Platinum → Gold)
+    expect(newTier.getLevel()).toBe(CustomerTierLevel.GOLD);
+    expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.GOLD);
   });
 
   it('should have correct earning multiplier per tier', () => {
@@ -1415,7 +1415,7 @@ describe('Customer Tier System', () => {
     customer.enrollWithMerchant(merchantId);
     customer.grantConsent(merchantId);
 
-    // Earn to Platinum: 1.1x earning, decay immune
+    // Earn to Gold: 1.1x earning, decay immune
     customer.addPointsFromPurchase(merchantId, Points.from(5000), Points.from(5000));
     expect(customer.getEarningMultiplier()).toBe(1.1);
     expect(customer.isDecayImmune()).toBe(true);

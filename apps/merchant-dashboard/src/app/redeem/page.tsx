@@ -6,6 +6,7 @@ import { customerApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import type { CustomerResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
+import { formatPhone } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
 import { CheckCircle, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
@@ -43,6 +44,7 @@ export default function RedeemPage() {
   const loyaltyConfig = merchantData?.loyaltyConfig;
   const minimumRedemption = loyaltyConfig?.minimumRedemption ?? 100;
   const redemptionRate = loyaltyConfig?.redemptionRate ?? 0.01;
+  const allowPartial = loyaltyConfig?.allowPartialRedemption ?? true;
 
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,11 +160,15 @@ export default function RedeemPage() {
                     onChange={(e) => setPointsToRedeem(e.target.value)}
                     required
                     min={minimumRedemption}
-                    step="1"
+                    step={allowPartial ? '1' : String(minimumRedemption)}
                     dir="ltr"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    {t('redeem.minRedemption', { min: String(minimumRedemption) })}
+                    {allowPartial
+                      ? t('redeem.minRedemption', { min: String(minimumRedemption) })
+                      : language === 'ar'
+                        ? `يجب أن تكون النقاط مضاعفات ${minimumRedemption}`
+                        : `Points must be in multiples of ${minimumRedemption}`}
                   </p>
                 </div>
 
@@ -194,7 +200,7 @@ export default function RedeemPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('customer.phone')}</span>
-                  <span className="font-medium" dir="ltr">{customer.phone}</span>
+                  <span className="font-medium" dir="ltr">{formatPhone(customer.phone)}</span>
                 </div>
               </CardContent>
             </Card>

@@ -5,38 +5,11 @@ import { LocationSelector } from '@/components/analytics';
 import { useInfiniteTransactions, useMerchant, useMerchantCustomers } from '@/hooks/api';
 import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
+import { getStatusBadge, getTypeBadge } from '@pointly/shared';
 import { Button, Card, CardContent, useRTL } from '@pointly/ui';
 import { Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-
-function getTypeBadge(type: string): { label: string; className: string } {
-  switch (type) {
-    case 'EARN':
-      return { label: 'Earn', className: 'bg-green-100 text-green-800' };
-    case 'REDEEM':
-      return { label: 'Redeem', className: 'bg-orange-100 text-orange-800' };
-    case 'ADJUSTMENT':
-      return { label: 'Adjust', className: 'bg-blue-100 text-blue-800' };
-    case 'EXPIRATION':
-      return { label: 'Expired', className: 'bg-red-100 text-red-800' };
-    default:
-      return { label: type, className: 'bg-gray-100 text-gray-800' };
-  }
-}
-
-function getStatusBadge(status: string): { label: string; className: string } {
-  switch (status) {
-    case 'COMPLETED':
-      return { label: 'Completed', className: 'bg-green-100 text-green-800' };
-    case 'PENDING':
-      return { label: 'Pending', className: 'bg-yellow-100 text-yellow-800' };
-    case 'FAILED':
-      return { label: 'Failed', className: 'bg-red-100 text-red-800' };
-    default:
-      return { label: status, className: 'bg-gray-100 text-gray-800' };
-  }
-}
 
 /** Extract numeric amount — handles both `{amount, currency}` object and plain number */
 function getAmount(amount: unknown): number {
@@ -48,7 +21,7 @@ function getAmount(amount: unknown): number {
 }
 
 export default function TransactionsPage() {
-  const { t, formatCurrency, formatNumber, language } = useTranslation();
+  const { t, formatCurrency, formatNumber, language, locale } = useTranslation();
   const { textStart, textEnd } = useRTL();
   const [locationId, setLocationId] = useState<string | undefined>(undefined);
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -154,7 +127,7 @@ export default function TransactionsPage() {
                       {customerNames[tx.customerId] || tx.customerId}
                     </p>
                     <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-                      {new Date(tx.createdAt).toLocaleString(language === 'ar' ? 'ar-SA' : 'en-SA')}
+                      {new Date(tx.createdAt).toLocaleString(locale)}
                     </p>
                     <div className="flex flex-wrap gap-2 mt-1">
                       <span className={`text-xs px-2 py-0.5 rounded-full ${typeBadge.className}`}>

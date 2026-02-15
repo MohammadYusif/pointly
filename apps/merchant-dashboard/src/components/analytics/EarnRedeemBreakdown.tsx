@@ -2,6 +2,7 @@
 
 import type { AnalyticsDataPoint } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
+import { formatPeriodLabel } from '@pointly/shared';
 import { Card, CardContent, CardHeader, CardTitle } from '@pointly/ui';
 import {
   Bar,
@@ -96,14 +97,3 @@ export function EarnRedeemBreakdown({ data, loading }: EarnRedeemBreakdownProps)
   );
 }
 
-function formatPeriodLabel(period: string, language: string): string {
-  try {
-    const date = new Date(period);
-    return new Intl.DateTimeFormat(language === 'ar' ? 'ar-SA' : 'en-SA', {
-      month: 'short',
-      day: 'numeric',
-    }).format(date);
-  } catch {
-    return period;
-  }
-}

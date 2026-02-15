@@ -88,7 +88,10 @@ export async function customerPublicRoutes(server: FastifyInstance): Promise<voi
       }
 
       customer.enrollWithMerchant(body.merchantId);
+      merchant.incrementCustomerCount();
+
       await customerRepository.save(customer);
+      await merchantRepository.save(merchant);
 
       return reply.status(201).send({
         success: true,

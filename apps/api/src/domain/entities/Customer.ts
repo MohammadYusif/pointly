@@ -1,6 +1,6 @@
 import { ulid } from 'ulid';
 import { ValidationError } from '../errors/DomainError';
-import { CustomerTier, CustomerTierLevel } from '../value-objects/CustomerTier';
+import { CustomerTier } from '../value-objects/CustomerTier';
 import type { PhoneNumber } from '../value-objects/PhoneNumber';
 import { Points } from '../value-objects/Points';
 
@@ -461,7 +461,7 @@ export class Customer {
       return Points.zero(); // No decay during grace period
     }
 
-    // Platinum and Diamond tiers are immune to decay
+    // Gold and Diamond tiers are immune to decay
     if (this.props.currentTier.isDecayImmune()) {
       return Points.zero();
     }
@@ -491,7 +491,7 @@ export class Customer {
    * Apply decay to global points
    *
    * Phase 2 (6+ months inactive) triggers zombie cleanup for ALL users,
-   * regardless of tier immunity. Decay-immune tiers (Platinum/Diamond)
+   * regardless of tier immunity. Decay-immune tiers (Gold/Diamond)
    * keep their global points but still lose merchant points.
    */
   applyGlobalPointsDecay(): Points {
@@ -632,7 +632,6 @@ export class Customer {
     this.props.currentTier = tier;
     this.props.tierLastUpdatedAt = new Date();
     this.props.updatedAt = new Date();
-    // TODO: Log admin action with _reason
   }
 
   /**
@@ -640,16 +639,9 @@ export class Customer {
    */
   getPointsToNextTier(): number {
     const currentProgress = this.props.monthlyProgress.toNumber();
-
-    if (this.props.currentTier.getLevel() === CustomerTierLevel.DIAMOND) {
-      return 0; // Already at top tier
-    }
-
-    if (this.props.currentTier.getLevel() === CustomerTierLevel.PLATINUM) {
-      return Math.max(0, 15000 - currentProgress); // To DIAMOND
-    }
-
-    return Math.max(0, 5000 - currentProgress); // To PLATINUM
+    const next = this.props.currentTier.nextTier();
+    if (!next) return 0; // Already at max tier
+    return Math.max(0, next.getMonthlyMinimum() - currentProgress);
   }
   // Serialization
   toJSON() {
@@ -680,9 +672,14 @@ export class Customer {
       monthsOfInactivity: this.getMonthsOfInactivity(),
 
       enrollments: Array.from(this.props.enrollments.entries()).map(([, enrollment]) => ({
-        ...enrollment,
+        merchantId: enrollment.merchantId,
+        enrolledAt: enrollment.enrolledAt.toISOString(),
+        consentStatus: enrollment.consentStatus,
+        consentGrantedAt: enrollment.consentGrantedAt?.toISOString(),
         merchantPointsBalance: enrollment.merchantPointsBalance.toNumber(),
         merchantLifetimePoints: enrollment.merchantLifetimePoints.toNumber(),
+        transactionCount: enrollment.transactionCount,
+        lastTransactionAt: enrollment.lastTransactionAt?.toISOString(),
       })),
       createdAt: this.props.createdAt.toISOString(),
       updatedAt: this.props.updatedAt.toISOString(),

@@ -3,15 +3,16 @@
 import { CustomerLayout } from '@/components/CustomerLayout';
 import { getCustomerTransactions } from '@/lib/api';
 import { useTranslation } from '@pointly/i18n';
+import type { TransactionResponse } from '@pointly/shared';
+import { getTypeBadge } from '@pointly/shared';
 import { Button, Card, CardContent, useRTL } from '@pointly/ui';
 import { useEffect, useState } from 'react';
 
 export default function HistoryPage() {
-  const { t, formatNumber, language } = useTranslation();
+  const { t, formatNumber, language, locale } = useTranslation();
   const { textStart } = useRTL();
 
-  // biome-ignore lint/suspicious/noExplicitAny: API response shape varies
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
   const [nextToken, setNextToken] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -49,20 +50,18 @@ export default function HistoryPage() {
       {loading && <p className="text-center text-muted-foreground py-8">{t('common.loading')}</p>}
 
       <div className="space-y-3">
-        {transactions.map((tx) => (
+        {transactions.map((tx) => {
+          const badge = getTypeBadge(tx.type);
+          return (
           <Card key={tx.transactionId}>
             <CardContent className="p-3">
               <div className="flex justify-between items-center">
                 <div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    tx.type === 'EARN' ? 'bg-green-100 text-green-800'
-                      : tx.type === 'REDEEM' ? 'bg-amber-100 text-amber-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {tx.type}
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${badge.className}`}>
+                    {badge.label}
                   </span>
                   <p className="text-xs text-muted-foreground mt-1" suppressHydrationWarning>
-                    {new Date(tx.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-SA')}
+                    {new Date(tx.createdAt).toLocaleDateString(locale)}
                   </p>
                 </div>
                 <span className={`font-medium ${tx.type === 'EARN' ? 'text-green-600' : 'text-amber-600'}`}>
@@ -71,7 +70,8 @@ export default function HistoryPage() {
               </div>
             </CardContent>
           </Card>
-        ))}
+        );
+        })}
       </div>
 
       {!loading && transactions.length === 0 && (

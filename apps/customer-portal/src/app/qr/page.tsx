@@ -3,6 +3,8 @@
 import { CustomerLayout } from '@/components/CustomerLayout';
 import { generateQRCode, getCustomer } from '@/lib/api';
 import { useTranslation } from '@pointly/i18n';
+import type { CustomerResponse } from '@pointly/shared';
+import { formatPhone } from '@pointly/shared';
 import { Card, CardContent, useRTL } from '@pointly/ui';
 import { RefreshCw } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -18,8 +20,7 @@ export default function QRCodePage() {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // biome-ignore lint/suspicious/noExplicitAny: API response shape varies
-  const [customer, setCustomer] = useState<any>(null);
+  const [customer, setCustomer] = useState<CustomerResponse | null>(null);
 
   const fetchQR = useCallback(async () => {
     setLoading(true);
@@ -132,7 +133,7 @@ export default function QRCodePage() {
             <CardContent className="p-4 text-center space-y-1">
               <p className="font-medium text-lg">{customer.name}</p>
               <p className="text-sm text-muted-foreground" dir="ltr">
-                {customer.phone}
+                {formatPhone(customer.phone)}
               </p>
               <p className="text-xs text-muted-foreground">
                 {language === 'ar'

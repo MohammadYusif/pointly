@@ -1,44 +1,18 @@
+import {
+  CustomerTierLevel,
+  DEFAULT_TIER,
+  MAX_TIER,
+  TIER_CONFIG,
+  TIER_ORDER,
+  type TierThresholds,
+} from '../config/TierConfig';
+
+// Re-export so consumers can still import from here
+export { CustomerTierLevel, type TierThresholds };
+
 import { ValidationError } from '../errors/DomainError';
 
-export enum CustomerTierLevel {
-  BRONZE = 'BRONZE',
-  PLATINUM = 'PLATINUM',
-  DIAMOND = 'DIAMOND',
-}
-
-export interface TierThresholds {
-  readonly monthlyMinimum: number;
-  readonly earningMultiplier: number;
-  readonly decays: boolean;
-  readonly displayName: string;
-  readonly color: string;
-}
-
 export class CustomerTier {
-  private static readonly TIER_CONFIG: Record<CustomerTierLevel, TierThresholds> = {
-    [CustomerTierLevel.BRONZE]: {
-      monthlyMinimum: 0,
-      earningMultiplier: 1.0,
-      decays: true,
-      displayName: 'Bronze',
-      color: '#CD7F32',
-    },
-    [CustomerTierLevel.PLATINUM]: {
-      monthlyMinimum: 5000,
-      earningMultiplier: 1.1,
-      decays: false,
-      displayName: 'Platinum',
-      color: '#E5E4E2',
-    },
-    [CustomerTierLevel.DIAMOND]: {
-      monthlyMinimum: 15000,
-      earningMultiplier: 1.2,
-      decays: false,
-      displayName: 'Diamond',
-      color: '#B9F2FF',
-    },
-  };
-
   constructor(private readonly level: CustomerTierLevel) {}
 
   // Factory methods
@@ -50,6 +24,10 @@ export class CustomerTier {
     return new CustomerTier(CustomerTierLevel.BRONZE);
   }
 
+  static gold(): CustomerTier {
+    return new CustomerTier(CustomerTierLevel.GOLD);
+  }
+
   static platinum(): CustomerTier {
     return new CustomerTier(CustomerTierLevel.PLATINUM);
   }
@@ -58,18 +36,22 @@ export class CustomerTier {
     return new CustomerTier(CustomerTierLevel.DIAMOND);
   }
 
-  // Calculate tier based on monthly progress
+  /**
+   * Calculate tier based on monthly progress.
+   * Iterates tiers from highest to lowest and returns the first one the customer qualifies for.
+   */
   static fromMonthlyProgress(monthlyPoints: number): CustomerTier {
     if (monthlyPoints < 0) {
       throw new ValidationError('Monthly points cannot be negative');
     }
-    if (monthlyPoints >= 15000) {
-      return CustomerTier.diamond();
+    // Walk tiers from highest to lowest
+    for (let i = TIER_ORDER.length - 1; i >= 0; i--) {
+      const tier = TIER_ORDER[i] as CustomerTierLevel;
+      if (monthlyPoints >= TIER_CONFIG[tier].monthlyMinimum) {
+        return new CustomerTier(tier);
+      }
     }
-    if (monthlyPoints >= 5000) {
-      return CustomerTier.platinum();
-    }
-    return CustomerTier.bronze();
+    return new CustomerTier(DEFAULT_TIER);
   }
 
   // Getters
@@ -78,7 +60,7 @@ export class CustomerTier {
   }
 
   getThresholds(): TierThresholds {
-    return CustomerTier.TIER_CONFIG[this.level];
+    return TIER_CONFIG[this.level];
   }
 
   getEarningMultiplier(): number {
@@ -107,13 +89,11 @@ export class CustomerTier {
   }
 
   isHigherThan(other: CustomerTier): boolean {
-    const order = [CustomerTierLevel.BRONZE, CustomerTierLevel.PLATINUM, CustomerTierLevel.DIAMOND];
-    return order.indexOf(this.level) > order.indexOf(other.level);
+    return TIER_ORDER.indexOf(this.level) > TIER_ORDER.indexOf(other.level);
   }
 
   isLowerThan(other: CustomerTier): boolean {
-    const order = [CustomerTierLevel.BRONZE, CustomerTierLevel.PLATINUM, CustomerTierLevel.DIAMOND];
-    return order.indexOf(this.level) < order.indexOf(other.level);
+    return TIER_ORDER.indexOf(this.level) < TIER_ORDER.indexOf(other.level);
   }
 
   // Qualification check
@@ -121,15 +101,30 @@ export class CustomerTier {
     return monthlyPoints >= this.getMonthlyMinimum();
   }
 
-  // Calculate tier decay (one level down)
+  /**
+   * Calculate tier decay (one level down).
+   * Uses TIER_ORDER so adding/removing tiers automatically adjusts decay paths.
+   */
   decay(): CustomerTier {
-    if (this.level === CustomerTierLevel.DIAMOND) {
-      return CustomerTier.platinum();
-    }
-    if (this.level === CustomerTierLevel.PLATINUM) {
-      return CustomerTier.bronze();
-    }
-    return this; // Bronze can't go lower
+    const idx = TIER_ORDER.indexOf(this.level);
+    if (idx <= 0) return this; // Already at lowest tier
+    return new CustomerTier(TIER_ORDER[idx - 1] as CustomerTierLevel);
+  }
+
+  /**
+   * Get the next tier above this one (or null if already at max).
+   */
+  nextTier(): CustomerTier | null {
+    const idx = TIER_ORDER.indexOf(this.level);
+    if (idx >= TIER_ORDER.length - 1) return null;
+    return new CustomerTier(TIER_ORDER[idx + 1] as CustomerTierLevel);
+  }
+
+  /**
+   * Is this the highest possible tier?
+   */
+  isMaxTier(): boolean {
+    return this.level === MAX_TIER;
   }
 
   // Serialization

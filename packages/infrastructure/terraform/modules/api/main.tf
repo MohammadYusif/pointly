@@ -391,17 +391,20 @@ resource "aws_lambda_permission" "api_gateway" {
 
 # CloudWatch Log Groups for scheduled Lambdas
 resource "aws_cloudwatch_log_group" "lambda_decay" {
+  count             = var.lambda_decay_zip_path != "" ? 1 : 0
   name              = "/aws/lambda/Pointly-Decay-${var.environment}"
   retention_in_days = local.is_prod ? 90 : 7
 }
 
 resource "aws_cloudwatch_log_group" "lambda_tier_reset" {
+  count             = var.lambda_tier_reset_zip_path != "" ? 1 : 0
   name              = "/aws/lambda/Pointly-TierReset-${var.environment}"
   retention_in_days = local.is_prod ? 90 : 7
 }
 
 # Points Decay Lambda
 resource "aws_lambda_function" "decay" {
+  count         = var.lambda_decay_zip_path != "" ? 1 : 0
   function_name = "Pointly-Decay-${var.environment}"
   description   = "Monthly points decay processing"
 
@@ -429,7 +432,6 @@ resource "aws_lambda_function" "decay" {
       PENDING_CONSENTS_TABLE              = var.pending_consents_table_name
       SMS_QUOTA_TABLE                     = var.sms_quota_table_name
       WALLET_PASSES_TABLE                 = var.wallet_passes_table_name
-      SMS_QUEUE_URL                       = aws_sqs_queue.sms.url
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
       LOG_LEVEL                           = local.is_prod ? "info" : "debug"
     }
@@ -443,6 +445,7 @@ resource "aws_lambda_function" "decay" {
 
 # Tier Reset Lambda
 resource "aws_lambda_function" "tier_reset" {
+  count         = var.lambda_tier_reset_zip_path != "" ? 1 : 0
   function_name = "Pointly-TierReset-${var.environment}"
   description   = "Monthly customer tier evaluation and reset"
 
@@ -470,7 +473,6 @@ resource "aws_lambda_function" "tier_reset" {
       PENDING_CONSENTS_TABLE              = var.pending_consents_table_name
       SMS_QUOTA_TABLE                     = var.sms_quota_table_name
       WALLET_PASSES_TABLE                 = var.wallet_passes_table_name
-      SMS_QUEUE_URL                       = aws_sqs_queue.sms.url
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
       LOG_LEVEL                           = local.is_prod ? "info" : "debug"
     }
@@ -488,40 +490,48 @@ resource "aws_lambda_function" "tier_reset" {
 
 # Points Decay — 15th of every month at 2 AM UTC (5 AM Saudi time)
 resource "aws_cloudwatch_event_rule" "decay_schedule" {
+  count               = var.lambda_decay_zip_path != "" ? 1 : 0
   name                = "Pointly-DecaySchedule-${var.environment}"
   description         = "Trigger points decay processing on the 15th of every month"
   schedule_expression = "cron(0 2 15 * ? *)"
+  state               = local.is_prod ? "ENABLED" : "DISABLED"
 }
 
 resource "aws_cloudwatch_event_target" "decay_lambda" {
-  rule = aws_cloudwatch_event_rule.decay_schedule.name
-  arn  = aws_lambda_function.decay.arn
+  count = var.lambda_decay_zip_path != "" ? 1 : 0
+  rule  = aws_cloudwatch_event_rule.decay_schedule[0].name
+  arn   = aws_lambda_function.decay[0].arn
 }
 
 resource "aws_lambda_permission" "allow_eventbridge_decay" {
+  count         = var.lambda_decay_zip_path != "" ? 1 : 0
   statement_id  = "AllowEventBridgeInvokeDecay"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.decay.function_name
+  function_name = aws_lambda_function.decay[0].function_name
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.decay_schedule.arn
+  source_arn    = aws_cloudwatch_event_rule.decay_schedule[0].arn
 }
 
 # Tier Reset — 1st of every month at 2 AM UTC (5 AM Saudi time)
 resource "aws_cloudwatch_event_rule" "tier_reset_schedule" {
+  count               = var.lambda_tier_reset_zip_path != "" ? 1 : 0
   name                = "Pointly-TierResetSchedule-${var.environment}"
   description         = "Trigger monthly tier evaluation and reset on the 1st of every month"
   schedule_expression = "cron(0 2 1 * ? *)"
+  state               = local.is_prod ? "ENABLED" : "DISABLED"
 }
 
 resource "aws_cloudwatch_event_target" "tier_reset_lambda" {
-  rule = aws_cloudwatch_event_rule.tier_reset_schedule.name
-  arn  = aws_lambda_function.tier_reset.arn
+  count = var.lambda_tier_reset_zip_path != "" ? 1 : 0
+  rule  = aws_cloudwatch_event_rule.tier_reset_schedule[0].name
+  arn   = aws_lambda_function.tier_reset[0].arn
 }
 
 resource "aws_lambda_permission" "allow_eventbridge_tier_reset" {
+  count         = var.lambda_tier_reset_zip_path != "" ? 1 : 0
   statement_id  = "AllowEventBridgeInvokeTierReset"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.tier_reset.function_name
+  function_name = aws_lambda_function.tier_reset[0].function_name
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.tier_reset_schedule.arn
+  source_arn    = aws_cloudwatch_event_rule.tier_reset_schedule[0].arn
 }

@@ -2,6 +2,7 @@
 
 import type { AnalyticsDataPoint } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
+import { formatPeriodLabel } from '@pointly/shared';
 import { Card, CardContent, CardHeader, CardTitle } from '@pointly/ui';
 import {
   Area,
@@ -19,7 +20,7 @@ interface RevenueChartProps {
 }
 
 export function RevenueChart({ data, loading }: RevenueChartProps) {
-  const { t, language } = useTranslation();
+  const { t, language, locale } = useTranslation();
 
   if (loading) {
     return (
@@ -80,7 +81,7 @@ export function RevenueChart({ data, loading }: RevenueChartProps) {
               <YAxis fontSize={12} tickLine={false} />
               <Tooltip
                 formatter={(value) =>
-                  new Intl.NumberFormat(language === 'ar' ? 'ar-SA' : 'en-SA', {
+                  new Intl.NumberFormat(locale, {
                     style: 'currency',
                     currency: 'SAR',
                   }).format(Number(value))
@@ -102,14 +103,3 @@ export function RevenueChart({ data, loading }: RevenueChartProps) {
   );
 }
 
-function formatPeriodLabel(period: string, language: string): string {
-  try {
-    const date = new Date(period);
-    return new Intl.DateTimeFormat(language === 'ar' ? 'ar-SA' : 'en-SA', {
-      month: 'short',
-      day: 'numeric',
-    }).format(date);
-  } catch {
-    return period;
-  }
-}

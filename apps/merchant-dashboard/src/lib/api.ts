@@ -7,6 +7,7 @@ import type {
   RecordPurchaseResponse,
   TransactionResponse,
 } from '@/types/api';
+import { normalizePhone } from '@pointly/shared';
 import { getAccessToken, signOut } from './auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -104,11 +105,32 @@ export const merchantApi = {
   },
 };
 
+// Re-export so existing imports from '@/lib/api' continue to work
+export { normalizePhone };
+
 // Customer API
 export const customerApi = {
   getById: (id: string) => fetchApi<CustomerResponse>(`/v1/customers/${id}`),
 
-  getByPhone: (phone: string) => fetchApi<CustomerResponse>(`/v1/customers/phone/${phone}`),
+  getByPhone: (phone: string) => fetchApi<CustomerResponse>(`/v1/customers/phone/${normalizePhone(phone)}`),
+
+  create: (phone: string, name?: string) =>
+    fetchApi<CustomerResponse>('/v1/customers', {
+      method: 'POST',
+      body: JSON.stringify({ phone, ...(name && { name }) }),
+    }),
+
+  enroll: (customerId: string, merchantId: string) =>
+    fetchApi<{ customerId: string; merchantId: string }>(`/v1/customers/${customerId}/enroll`, {
+      method: 'POST',
+      body: JSON.stringify({ merchantId }),
+    }),
+
+  grantConsent: (customerId: string, merchantId: string) =>
+    fetchApi<{ customerId: string; merchantId: string }>(`/v1/customers/${customerId}/consent`, {
+      method: 'POST',
+      body: JSON.stringify({ merchantId, action: 'grant' }),
+    }),
 
   getTransactions: (customerId: string, params?: { limit?: number; nextToken?: string }) => {
     const query = new URLSearchParams();

@@ -258,10 +258,10 @@ describe('Point System - Real World Scenarios', () => {
         expect(customer.getMerchantPointsBalance('merchant_b').toNumber()).toBe(0);
       });
 
-      it('should wipe merchant points for Platinum user in Phase 2 (decay immune keeps global)', () => {
-        // Setup: Platinum customer (decay immune) inactive for 7 months
+      it('should wipe merchant points for Gold user in Phase 2 (decay immune keeps global)', () => {
+        // Setup: Gold customer (decay immune) inactive for 7 months
         const customer = createCustomerWithEnrollment('merchant_123');
-        setCustomerTier(customer, CustomerTier.platinum());
+        setCustomerTier(customer, CustomerTier.gold());
         setMerchantPointsBalance(customer, 'merchant_123', 800);
         setGlobalPointsBalance(customer, 5000);
         setLastActivityDate(customer, 7); // Phase 2
@@ -270,7 +270,7 @@ describe('Point System - Real World Scenarios', () => {
         const decayAmount = customer.applyGlobalPointsDecay();
 
         // Assert: Global points preserved (decay immune), but merchant points wiped
-        expect(decayAmount.toNumber()).toBe(0); // No global decay for Platinum
+        expect(decayAmount.toNumber()).toBe(0); // No global decay for Gold
         expect(customer.getGlobalPointsBalance().toNumber()).toBe(5000);
         expect(customer.getMerchantPointsBalance('merchant_123').toNumber()).toBe(0); // Wiped!
       });
@@ -426,7 +426,7 @@ describe('Point System - Real World Scenarios', () => {
 
       it('should apply zero decay for decay-immune tiers', () => {
         const customer = createCustomerWithEnrollment('merchant_123');
-        setCustomerTier(customer, CustomerTier.platinum());
+        setCustomerTier(customer, CustomerTier.gold());
         setGlobalPointsBalance(customer, 1000);
         setLastActivityDate(customer, 4); // Would be Phase 1 for Bronze
 
@@ -457,19 +457,19 @@ describe('Point System - Real World Scenarios', () => {
         // Action: End of month tier evaluation
         const newTier = customer.updateTierFromProgress();
 
-        // Assert: Dropped one level only
+        // Assert: Dropped one level only (Diamond → Platinum)
         expect(newTier.getLevel()).toBe(CustomerTierLevel.PLATINUM);
         expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.PLATINUM);
       });
 
-      it('should drop Platinum to Bronze on second consecutive failure', () => {
+      it('should drop Gold to Bronze on consecutive failure', () => {
         const customer = createCustomerWithEnrollment('merchant_123');
 
-        // Setup: Platinum tier
-        setCustomerTier(customer, CustomerTier.platinum());
+        // Setup: Gold tier
+        setCustomerTier(customer, CustomerTier.gold());
         customer.resetMonthlyProgress();
 
-        // Earn only 2,000 points (below Platinum's 5,000 threshold)
+        // Earn only 2,000 points (below Gold's 5,000 threshold)
         customer.addPointsFromPurchase('merchant_123', Points.from(2000), Points.from(2000));
 
         // Action: Tier evaluation
@@ -482,18 +482,18 @@ describe('Point System - Real World Scenarios', () => {
       it('should maintain tier if requirements met', () => {
         const customer = createCustomerWithEnrollment('merchant_123');
 
-        // Setup: Platinum tier
-        setCustomerTier(customer, CustomerTier.platinum());
+        // Setup: Gold tier
+        setCustomerTier(customer, CustomerTier.gold());
         customer.resetMonthlyProgress();
 
-        // Earn 6,000 points (above Platinum's 5,000 threshold)
+        // Earn 6,000 points (above Gold's 5,000 threshold)
         customer.addPointsFromPurchase('merchant_123', Points.from(6000), Points.from(6000));
 
         // Action: Tier evaluation
         const newTier = customer.updateTierFromProgress();
 
-        // Assert: Stays Platinum
-        expect(newTier.getLevel()).toBe(CustomerTierLevel.PLATINUM);
+        // Assert: Stays Gold
+        expect(newTier.getLevel()).toBe(CustomerTierLevel.GOLD);
       });
 
       it('should not drop below Bronze', () => {
@@ -515,7 +515,8 @@ describe('Point System - Real World Scenarios', () => {
     describe('CustomerTier.decay() behavior', () => {
       it('should decay tiers one level at a time', () => {
         expect(CustomerTier.diamond().decay().getLevel()).toBe(CustomerTierLevel.PLATINUM);
-        expect(CustomerTier.platinum().decay().getLevel()).toBe(CustomerTierLevel.BRONZE);
+        expect(CustomerTier.platinum().decay().getLevel()).toBe(CustomerTierLevel.GOLD);
+        expect(CustomerTier.gold().decay().getLevel()).toBe(CustomerTierLevel.BRONZE);
         expect(CustomerTier.bronze().decay().getLevel()).toBe(CustomerTierLevel.BRONZE);
       });
     });
@@ -603,9 +604,9 @@ describe('Point System - Real World Scenarios', () => {
         expect(customer.getMonthlyProgress().toNumber()).toBe(1000);
       });
 
-      it('should apply 1.1x multiplier for Platinum', () => {
+      it('should apply 1.1x multiplier for Gold', () => {
         const customer = createCustomerWithEnrollment('merchant_123');
-        setCustomerTier(customer, CustomerTier.platinum());
+        setCustomerTier(customer, CustomerTier.gold());
 
         // Earn 1000 base points
         customer.addPointsFromPurchase('merchant_123', Points.from(1000), Points.from(500));
@@ -629,7 +630,7 @@ describe('Point System - Real World Scenarios', () => {
 
       it('should floor fractional points from multiplier', () => {
         const customer = createCustomerWithEnrollment('merchant_123');
-        setCustomerTier(customer, CustomerTier.platinum());
+        setCustomerTier(customer, CustomerTier.gold());
 
         // Earn 99 base points: 99 * 1.1 = 108.9 → 108
         customer.addPointsFromPurchase('merchant_123', Points.from(99), Points.from(50));
@@ -643,8 +644,8 @@ describe('Point System - Real World Scenarios', () => {
         expect(CustomerTier.bronze().isDecayImmune()).toBe(false);
       });
 
-      it('should make Platinum tier immune to decay', () => {
-        expect(CustomerTier.platinum().isDecayImmune()).toBe(true);
+      it('should make Gold tier immune to decay', () => {
+        expect(CustomerTier.gold().isDecayImmune()).toBe(true);
       });
 
       it('should make Diamond tier immune to decay', () => {
@@ -895,7 +896,7 @@ describe('Point System - Real World Scenarios', () => {
    * ============================================
    */
   describe('Tier Upgrade During Purchase', () => {
-    it('should upgrade to Platinum when crossing 5000 monthly threshold', () => {
+    it('should upgrade to Gold when crossing 5000 monthly threshold', () => {
       const customer = createCustomerWithEnrollment('merchant_123');
       // Setup: Bronze with 4500 monthly progress
       setMonthlyProgress(customer, 4500);
@@ -907,19 +908,19 @@ describe('Point System - Real World Scenarios', () => {
       // Action: Earn 600 points → 4500 + 600 = 5100 → crosses 5000
       customer.addPointsFromPurchase('merchant_123', Points.from(600), Points.from(600));
 
-      // Assert: Upgraded to Platinum
-      expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.PLATINUM);
+      // Assert: Upgraded to Gold
+      expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.GOLD);
       expect(customer.getMonthlyProgress().toNumber()).toBe(5100);
     });
 
     it('should upgrade to Diamond when crossing 15000 monthly threshold', () => {
       const customer = createCustomerWithEnrollment('merchant_123');
-      setCustomerTier(customer, CustomerTier.platinum());
+      setCustomerTier(customer, CustomerTier.gold());
       setMonthlyProgress(customer, 14800);
       setGlobalPointsBalance(customer, 14800);
       setMonthlyProgressResetDate(customer, new Date());
 
-      // Action: Earn 300 points → 14800 + 330 (1.1x Platinum) = 15130 → crosses 15000
+      // Action: Earn 300 points → 14800 + 330 (1.1x Gold) = 15130 → crosses 15000
       customer.addPointsFromPurchase('merchant_123', Points.from(300), Points.from(300));
 
       // Assert: Upgraded to Diamond
@@ -946,13 +947,13 @@ describe('Point System - Real World Scenarios', () => {
       setGlobalPointsBalance(customer, 4500);
       setMonthlyProgressResetDate(customer, new Date());
 
-      // First purchase: Bronze (1.0x) → earns 600 → crosses 5000 → upgrades to Platinum
+      // First purchase: Bronze (1.0x) → earns 600 → crosses 5000 → upgrades to Gold
       customer.addPointsFromPurchase('merchant_123', Points.from(600), Points.from(600));
-      expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.PLATINUM);
+      expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.GOLD);
 
-      // Second purchase: Now Platinum (1.1x) → 100 base → 110 actual
+      // Second purchase: Now Gold (1.1x) → 100 base → 110 actual
       customer.addPointsFromPurchase('merchant_123', Points.from(100), Points.from(100));
-      // 4500 + 600 (Bronze 1.0x) + 110 (Platinum 1.1x) = 5210
+      // 4500 + 600 (Bronze 1.0x) + 110 (Gold 1.1x) = 5210
       expect(customer.getMonthlyProgress().toNumber()).toBe(5210);
     });
   });
@@ -1096,7 +1097,7 @@ describe('Point System - Real World Scenarios', () => {
 
         // Week 2-4: Heavy shopping, reaches Diamond
         customer.addPointsFromPurchase('store_a', Points.from(5000), Points.from(5000));
-        expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.PLATINUM);
+        expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.GOLD);
 
         customer.addPointsFromPurchase('store_b', Points.from(10000), Points.from(10000));
         expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.DIAMOND);
@@ -1109,16 +1110,16 @@ describe('Point System - Real World Scenarios', () => {
         customer.resetMonthlyProgress();
         customer.addPointsFromPurchase('store_a', Points.from(3000), Points.from(3000));
 
-        // End of month: Drops one level
+        // End of month: Drops one level (Diamond → Platinum)
         customer.updateTierFromProgress();
         expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.PLATINUM);
 
-        // Month 3: Even less active
+        // Month 3: Even less active (Platinum → Gold)
         customer.resetMonthlyProgress();
         customer.addPointsFromPurchase('store_a', Points.from(1000), Points.from(1000));
 
         customer.updateTierFromProgress();
-        expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.BRONZE);
+        expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.GOLD);
 
         // Customer redeems points using smart redemption
         setMerchantPointsBalance(customer, 'store_a', 500);

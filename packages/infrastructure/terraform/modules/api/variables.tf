@@ -7,11 +7,13 @@ variable "lambda_zip_path" {
 }
 
 variable "lambda_decay_zip_path" {
-  type = string
+  type    = string
+  default = ""
 }
 
 variable "lambda_tier_reset_zip_path" {
-  type = string
+  type    = string
+  default = ""
 }
 
 # DynamoDB table names

@@ -1,6 +1,7 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-
+import type { CustomerResponse, TransactionResponse } from '@pointly/shared';
 import { getAccessToken, signOut } from './auth';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -28,21 +29,21 @@ async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise
   return result.data as T;
 }
 
-export function getCustomer(customerId: string) {
-  return fetchApi<Record<string, unknown>>(`/v1/me`);
+export function getCustomer(_customerId: string) {
+  return fetchApi<CustomerResponse>('/v1/me');
 }
 
 export function getCustomerTransactions(params?: { limit?: number; nextToken?: string }) {
   const query = new URLSearchParams();
   if (params?.limit) query.set('limit', String(params.limit));
   if (params?.nextToken) query.set('nextToken', params.nextToken);
-  return fetchApi<{ transactions: Record<string, unknown>[]; count: number; nextToken?: string }>(
+  return fetchApi<{ transactions: TransactionResponse[]; count: number; nextToken?: string }>(
     `/v1/me/transactions?${query}`,
   );
 }
 
 export function updateCustomer(data: { name?: string }) {
-  return fetchApi<Record<string, unknown>>('/v1/me', {
+  return fetchApi<CustomerResponse>('/v1/me', {
     method: 'PATCH',
     body: JSON.stringify(data),
   });

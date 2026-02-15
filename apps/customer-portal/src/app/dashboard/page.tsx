@@ -3,32 +3,22 @@
 import { CustomerLayout } from '@/components/CustomerLayout';
 import { getCustomer, getCustomerTransactions } from '@/lib/api';
 import { useTranslation } from '@pointly/i18n';
+import type { CustomerEnrollment, CustomerResponse, TransactionResponse } from '@pointly/shared';
+import { getTierColor, getTierTarget, getTypeBadge } from '@pointly/shared';
 import { Card, CardContent, CardHeader, CardTitle, useRTL } from '@pointly/ui';
 import { useEffect, useState } from 'react';
 
-function getTierColor(tier: string) {
-  switch (tier) {
-    case 'DIAMOND': return 'text-purple-600';
-    case 'PLATINUM': return 'text-blue-600';
-    default: return 'text-amber-600';
-  }
-}
-
-function getTierTarget(tier: string) {
-  switch (tier) {
-    case 'DIAMOND': return 0;
-    case 'PLATINUM': return 15000;
-    default: return 5000;
-  }
+interface CustomerProfile extends CustomerResponse {
+  tierDisplayName: string;
+  pointsToNextTier: number;
+  monthsOfInactivity: number;
 }
 
 export default function CustomerDashboard() {
-  const { t, formatNumber, language } = useTranslation();
+  const { t, formatNumber, language, locale } = useTranslation();
   const { textStart } = useRTL();
-  // biome-ignore lint/suspicious/noExplicitAny: API response shape varies
-  const [customer, setCustomer] = useState<any>(null);
-  // biome-ignore lint/suspicious/noExplicitAny: API response shape varies
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [customer, setCustomer] = useState<CustomerProfile | null>(null);
+  const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,7 +28,7 @@ export default function CustomerDashboard() {
           getCustomer('me'),
           getCustomerTransactions({ limit: 5 }),
         ]);
-        setCustomer(cust);
+        setCustomer(cust as CustomerProfile);
         setTransactions(txData.transactions || []);
       } catch {
         // User may not be authenticated
@@ -99,7 +89,7 @@ export default function CustomerDashboard() {
               <p className="text-2xl font-bold">
                 {formatNumber(
                   (customer.enrollments || []).reduce(
-                    (sum: number, e: { merchantPointsBalance: number }) => sum + (e.merchantPointsBalance || 0),
+                    (sum: number, e: CustomerEnrollment) => sum + (e.merchantPointsBalance || 0),
                     0,
                   ),
                 )}
@@ -157,23 +147,24 @@ export default function CustomerDashboard() {
             {transactions.length === 0 && (
               <p className="text-sm text-muted-foreground">{t('common.noData')}</p>
             )}
-            {transactions.map((tx: { transactionId: string; type: string; points: number; createdAt: string; merchantId: string }) => (
+            {transactions.map((tx) => {
+              const badge = getTypeBadge(tx.type);
+              return (
               <div key={tx.transactionId} className="flex justify-between items-center">
                 <div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    tx.type === 'EARN' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
-                  }`}>
-                    {tx.type}
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${badge.className}`}>
+                    {badge.label}
                   </span>
                   <p className="text-xs text-muted-foreground mt-1" suppressHydrationWarning>
-                    {new Date(tx.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-SA')}
+                    {new Date(tx.createdAt).toLocaleDateString(locale)}
                   </p>
                 </div>
                 <span className={`font-medium ${tx.type === 'EARN' ? 'text-green-600' : 'text-amber-600'}`}>
                   {tx.type === 'EARN' ? '+' : '-'}{formatNumber(tx.points)}
                 </span>
               </div>
-            ))}
+            );
+            })}
           </CardContent>
         </Card>
 
@@ -186,7 +177,7 @@ export default function CustomerDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {customer.enrollments.map((e: { merchantId: string; merchantPointsBalance: number; consentStatus: string }) => (
+              {customer.enrollments.map((e: CustomerEnrollment) => (
                 <div key={e.merchantId} className="flex justify-between items-center">
                   <span className="text-sm">{e.merchantId}</span>
                   <span className="font-medium">{formatNumber(e.merchantPointsBalance)} {t('common.points')}</span>

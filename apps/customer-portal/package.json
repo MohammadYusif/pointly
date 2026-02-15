@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@pointly/i18n": "workspace:*",
+    "@pointly/shared": "workspace:*",
     "@pointly/ui": "workspace:*",
     "@tanstack/react-query": "^5.62.0",
     "amazon-cognito-identity-js": "^6.3.12",

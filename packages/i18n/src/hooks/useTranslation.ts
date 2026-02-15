@@ -52,12 +52,14 @@ export function useTranslation() {
     return interpolate(value, params);
   };
 
+  /** The Intl locale string for the current language */
+  const locale = language === 'ar' ? 'ar-SA' : 'en-SA';
+
   /**
    * Format a number according to the current locale
    * Uses Arabic numerals when in Arabic mode
    */
   const formatNumber = (num: number): string => {
-    const locale = language === 'ar' ? 'ar-SA' : 'en-SA';
     return new Intl.NumberFormat(locale).format(num);
   };
 
@@ -65,7 +67,6 @@ export function useTranslation() {
    * Format currency in SAR
    */
   const formatCurrency = (amount: number): string => {
-    const locale = language === 'ar' ? 'ar-SA' : 'en-SA';
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: 'SAR',
@@ -76,7 +77,6 @@ export function useTranslation() {
    * Format a date according to the current locale
    */
   const formatDate = (date: Date | string, options?: Intl.DateTimeFormatOptions): string => {
-    const locale = language === 'ar' ? 'ar-SA' : 'en-SA';
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     return new Intl.DateTimeFormat(locale, {
       dateStyle: 'medium',
@@ -88,7 +88,6 @@ export function useTranslation() {
    * Format relative time (e.g., "2 hours ago")
    */
   const formatRelativeTime = (date: Date | string): string => {
-    const locale = language === 'ar' ? 'ar-SA' : 'en-SA';
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
@@ -114,6 +113,7 @@ export function useTranslation() {
   return {
     t,
     language,
+    locale,
     formatNumber,
     formatCurrency,
     formatDate,

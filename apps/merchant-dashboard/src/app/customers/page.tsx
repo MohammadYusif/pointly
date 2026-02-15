@@ -3,19 +3,11 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useCustomerByPhone, useInfiniteCustomers } from '@/hooks/api';
 import { useTranslation } from '@pointly/i18n';
+import { formatPhone } from '@pointly/shared';
 import { Button, Card, CardContent, Input, useRTL } from '@pointly/ui';
 import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-
-/** Format phone: 966501111111 → +966 50 111 1111 */
-function formatPhone(phone: string): string {
-  const digits = phone.replace(/\D/g, '');
-  if (digits.startsWith('966') && digits.length === 12) {
-    return `+${digits.slice(0, 3)} ${digits.slice(3, 5)} ${digits.slice(5, 8)} ${digits.slice(8)}`;
-  }
-  return phone;
-}
 
 interface MerchantCustomerView {
   customerId: string;

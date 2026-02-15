@@ -23,9 +23,9 @@ output "sms_queue_url" {
 }
 
 output "decay_lambda_function_name" {
-  value = aws_lambda_function.decay.function_name
+  value = try(aws_lambda_function.decay[0].function_name, "")
 }
 
 output "tier_reset_lambda_function_name" {
-  value = aws_lambda_function.tier_reset.function_name
+  value = try(aws_lambda_function.tier_reset[0].function_name, "")
 }

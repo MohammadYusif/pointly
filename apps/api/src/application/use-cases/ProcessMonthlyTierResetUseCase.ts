@@ -1,4 +1,4 @@
-import { type Customer, CustomerTierLevel } from '../../domain';
+import { type Customer, TIER_ORDER } from '../../domain';
 import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 
 export interface TierResetResult {
@@ -8,11 +8,7 @@ export interface TierResetResult {
     downgrades: number;
     maintained: number;
   };
-  tierDistribution: {
-    bronze: number;
-    platinum: number;
-    diamond: number;
-  };
+  tierDistribution: Record<string, number>;
   errors: string[];
 }
 
@@ -30,6 +26,12 @@ export class ProcessMonthlyTierResetUseCase {
   constructor(private customerRepository: ICustomerRepository) {}
 
   async execute(): Promise<TierResetResult> {
+    // Build tier distribution dynamically from TIER_ORDER
+    const tierDistribution: Record<string, number> = {};
+    for (const tier of TIER_ORDER) {
+      tierDistribution[tier.toLowerCase()] = 0;
+    }
+
     const result: TierResetResult = {
       totalCustomersProcessed: 0,
       tierChanges: {
@@ -37,11 +39,7 @@ export class ProcessMonthlyTierResetUseCase {
         downgrades: 0,
         maintained: 0,
       },
-      tierDistribution: {
-        bronze: 0,
-        platinum: 0,
-        diamond: 0,
-      },
+      tierDistribution,
       errors: [],
     };
 
@@ -74,14 +72,8 @@ export class ProcessMonthlyTierResetUseCase {
           await this.customerRepository.save(customer);
 
           // Count tier distribution
-          const tierLevel = newTier.getLevel();
-          if (tierLevel === CustomerTierLevel.BRONZE) {
-            result.tierDistribution.bronze++;
-          } else if (tierLevel === CustomerTierLevel.PLATINUM) {
-            result.tierDistribution.platinum++;
-          } else if (tierLevel === CustomerTierLevel.DIAMOND) {
-            result.tierDistribution.diamond++;
-          }
+          const tierKey = newTier.getLevel().toLowerCase();
+          result.tierDistribution[tierKey] = (result.tierDistribution[tierKey] || 0) + 1;
         } catch (error) {
           result.errors.push(
             `Error processing customer ${customer.getCustomerId()}: ${

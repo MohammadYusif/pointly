@@ -385,7 +385,7 @@ describe('RecordPurchaseUseCase', () => {
   });
 
   describe('Tier Upgrade Detection', () => {
-    it('should detect tier upgrade from Bronze to Platinum when enough points earned', async () => {
+    it('should detect tier upgrade from Bronze to Gold when enough points earned', async () => {
       // Setup: customer at Bronze with 4500 monthly progress
       // addPointsFromPurchase will add to monthlyProgress, so give 4500 global pts
       testCustomer.addPointsFromPurchase(
@@ -401,7 +401,7 @@ describe('RecordPurchaseUseCase', () => {
       vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
       vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
 
-      // Purchase 600 SAR -> 600 global pts (1.0x Bronze) -> total monthly 5100 -> Platinum
+      // Purchase 600 SAR -> 600 global pts (1.0x Bronze) -> total monthly 5100 -> Gold
       const result = await useCase.execute({
         merchantId: 'merchant_123',
         customerId: testCustomer.getCustomerId(),
@@ -410,7 +410,7 @@ describe('RecordPurchaseUseCase', () => {
       });
 
       expect(result.tierUpgrade).toBe(true);
-      expect(result.currentTier).toBe('Platinum');
+      expect(result.currentTier).toBe('Gold');
     });
   });
 
