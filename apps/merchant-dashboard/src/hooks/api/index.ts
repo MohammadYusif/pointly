@@ -6,7 +6,12 @@ export {
   useInfiniteCustomers,
   useInfiniteTransactions,
 } from './use-merchant';
-export { useCustomerByPhone, useCustomerTransactions } from './use-customers';
+export {
+  useCustomerByPhone,
+  useCustomerById,
+  useCustomerTransactions,
+  useInfiniteCustomerTransactions,
+} from './use-customers';
 export {
   useRecordPurchase,
   useRedeemPoints,

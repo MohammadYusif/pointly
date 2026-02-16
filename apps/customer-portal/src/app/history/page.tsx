@@ -43,9 +43,7 @@ export default function HistoryPage() {
 
   return (
     <CustomerLayout>
-      <h1 className={`text-xl font-bold mb-4 ${textStart}`}>
-        {t('customer.transactionHistory')}
-      </h1>
+      <h1 className={`text-xl font-bold mb-4 ${textStart}`}>{t('customer.transactionHistory')}</h1>
 
       {loading && <p className="text-center text-muted-foreground py-8">{t('common.loading')}</p>}
 
@@ -53,24 +51,27 @@ export default function HistoryPage() {
         {transactions.map((tx) => {
           const badge = getTypeBadge(tx.type);
           return (
-          <Card key={tx.transactionId}>
-            <CardContent className="p-3">
-              <div className="flex justify-between items-center">
-                <div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${badge.className}`}>
-                    {badge.label}
+            <Card key={tx.transactionId}>
+              <CardContent className="p-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${badge.className}`}>
+                      {badge.label}
+                    </span>
+                    <p className="text-xs text-muted-foreground mt-1" suppressHydrationWarning>
+                      {new Date(tx.createdAt).toLocaleDateString(locale)}
+                    </p>
+                  </div>
+                  <span
+                    className={`font-medium ${tx.type === 'EARN' ? 'text-green-600' : 'text-amber-600'}`}
+                  >
+                    {tx.type === 'EARN' ? '+' : '-'}
+                    {formatNumber(tx.points)}
                   </span>
-                  <p className="text-xs text-muted-foreground mt-1" suppressHydrationWarning>
-                    {new Date(tx.createdAt).toLocaleDateString(locale)}
-                  </p>
                 </div>
-                <span className={`font-medium ${tx.type === 'EARN' ? 'text-green-600' : 'text-amber-600'}`}>
-                  {tx.type === 'EARN' ? '+' : '-'}{formatNumber(tx.points)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        );
+              </CardContent>
+            </Card>
+          );
         })}
       </div>
 
@@ -79,7 +80,12 @@ export default function HistoryPage() {
       )}
 
       {nextToken && (
-        <Button variant="outline" className="w-full mt-4" onClick={handleLoadMore} disabled={loadingMore}>
+        <Button
+          variant="outline"
+          className="w-full mt-4"
+          onClick={handleLoadMore}
+          disabled={loadingMore}
+        >
           {loadingMore ? t('common.loading') : language === 'ar' ? 'تحميل المزيد' : 'Load More'}
         </Button>
       )}

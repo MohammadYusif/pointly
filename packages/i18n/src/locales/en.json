@@ -72,7 +72,12 @@
     "editCustomer": "Edit Customer",
     "deleteCustomer": "Delete Customer",
     "customerDetails": "Customer Details",
-    "transactionHistory": "Transaction History"
+    "transactionHistory": "Transaction History",
+    "lifetimePoints": "Lifetime Points",
+    "enrolled": "Enrolled",
+    "recordPurchase": "Record Purchase",
+    "redeemPoints": "Redeem Points",
+    "exportCSV": "Export CSV"
   },
   "merchant": {
     "title": "Merchant",

@@ -1,4 +1,4 @@
-import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js';
+import { AuthenticationDetails, CognitoUser, CognitoUserPool } from 'amazon-cognito-identity-js';
 
 const userPoolId = process.env.NEXT_PUBLIC_CUSTOMER_USER_POOL_ID || '';
 const clientId = process.env.NEXT_PUBLIC_CUSTOMER_CLIENT_ID || '';
@@ -44,10 +44,18 @@ export function getCurrentSession(): Promise<string | null> {
     const user = pool.getCurrentUser();
     if (!user) return resolve(null);
 
-    user.getSession((err: Error | null, session: { isValid: () => boolean; getAccessToken: () => { getJwtToken: () => string } } | null) => {
-      if (err || !session?.isValid()) return resolve(null);
-      resolve(session.getAccessToken().getJwtToken());
-    });
+    user.getSession(
+      (
+        err: Error | null,
+        session: {
+          isValid: () => boolean;
+          getAccessToken: () => { getJwtToken: () => string };
+        } | null,
+      ) => {
+        if (err || !session?.isValid()) return resolve(null);
+        resolve(session.getAccessToken().getJwtToken());
+      },
+    );
   });
 }
 

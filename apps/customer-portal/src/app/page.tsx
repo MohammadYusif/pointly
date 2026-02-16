@@ -1,11 +1,11 @@
 'use client';
 
+import { confirmOtp, signInWithPhone } from '@/lib/auth';
 import { useTranslation } from '@pointly/i18n';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
 import type { CognitoUser } from 'amazon-cognito-identity-js';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { signInWithPhone, confirmOtp } from '@/lib/auth';
 
 export default function LoginPage() {
   const { t, language } = useTranslation();

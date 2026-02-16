@@ -5,7 +5,8 @@ import { useCustomerByPhone, useInfiniteCustomers } from '@/hooks/api';
 import { useTranslation } from '@pointly/i18n';
 import { formatPhone } from '@pointly/shared';
 import { Button, Card, CardContent, Input, useRTL } from '@pointly/ui';
-import { Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -94,26 +95,39 @@ export default function CustomersPage() {
           <p className="text-center text-muted-foreground py-8">{t('common.noData')}</p>
         )}
         {displayCustomers.map((customer) => (
-          <Card key={customer.customerId}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className={textStart}>
-                  <p className="font-medium">{customer.name || customer.customerId}</p>
-                  <p className="text-sm text-muted-foreground" dir="ltr">
-                    {formatPhone(customer.phone)}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {formatNumber(customer.transactionCount)}{' '}
-                    {language === 'ar' ? 'عملية' : 'transactions'}
-                  </p>
+          <Link
+            key={customer.customerId}
+            href={`/customers/detail?id=${customer.customerId}`}
+            className="block"
+          >
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className={textStart}>
+                    <p className="font-medium">{customer.name || customer.customerId}</p>
+                    <p className="text-sm text-muted-foreground" dir="ltr">
+                      {formatPhone(customer.phone)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {formatNumber(customer.transactionCount)}{' '}
+                      {language === 'ar' ? 'عملية' : 'transactions'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-end">
+                      <p className="font-medium">{formatNumber(customer.merchantPointsBalance)}</p>
+                      <p className="text-xs text-muted-foreground">{t('common.points')}</p>
+                    </div>
+                    {language === 'ar' ? (
+                      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
                 </div>
-                <div className="text-end">
-                  <p className="font-medium">{formatNumber(customer.merchantPointsBalance)}</p>
-                  <p className="text-xs text-muted-foreground">{t('common.points')}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 

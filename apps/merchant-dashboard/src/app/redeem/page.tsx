@@ -9,6 +9,7 @@ import { useTranslation } from '@pointly/i18n';
 import { formatPhone } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
 import { CheckCircle, RotateCcw } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 type Step = 'input' | 'confirming' | 'processing' | 'receipt';
@@ -31,9 +32,10 @@ export default function RedeemPage() {
   const { textStart } = useRTL();
   const { merchant } = useAuth();
   const { data: merchantData } = useMerchant();
+  const searchParams = useSearchParams();
 
   const [step, setStep] = useState<Step>('input');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(searchParams.get('phone') || '');
   const [pointsToRedeem, setPointsToRedeem] = useState('');
   const [error, setError] = useState('');
   const [customer, setCustomer] = useState<CustomerResponse | null>(null);

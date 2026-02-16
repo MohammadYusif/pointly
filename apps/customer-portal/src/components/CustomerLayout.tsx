@@ -30,7 +30,9 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
       <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-border">
         <div className="max-w-lg mx-auto flex justify-around py-2">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+            const isActive =
+              pathname === item.href ||
+              (item.href !== '/dashboard' && pathname.startsWith(item.href));
             const Icon = item.icon;
             return (
               <Link

@@ -1,5 +1,5 @@
 import { customerApi } from '@/lib/api';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 export function useCustomerByPhone(phone: string) {
   return useQuery({
@@ -16,6 +16,28 @@ export function useCustomerTransactions(
   return useQuery({
     queryKey: ['customer', customerId, 'transactions', params],
     queryFn: () => customerApi.getTransactions(customerId, params),
+    enabled: !!customerId,
+  });
+}
+
+export function useInfiniteCustomerTransactions(customerId: string, limit = 20) {
+  return useInfiniteQuery({
+    queryKey: ['customer', customerId, 'transactions', 'infinite', limit],
+    queryFn: ({ pageParam }) =>
+      customerApi.getTransactions(customerId, {
+        limit,
+        ...(pageParam ? { nextToken: pageParam } : {}),
+      }),
+    enabled: !!customerId,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextToken,
+  });
+}
+
+export function useCustomerById(customerId: string) {
+  return useQuery({
+    queryKey: ['customer', customerId],
+    queryFn: () => customerApi.getById(customerId),
     enabled: !!customerId,
   });
 }

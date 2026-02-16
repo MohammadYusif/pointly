@@ -11,6 +11,7 @@ import { useTranslation } from '@pointly/i18n';
 import { getTierColor } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
 import { CheckCircle, Download, Printer, RotateCcw } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 type Step = 'input' | 'confirming' | 'submitting' | 'receipt';
@@ -21,9 +22,10 @@ export default function ManualEntryPage() {
   const { textStart } = useRTL();
   const { merchant } = useAuth();
   const { data: merchantData } = useMerchant();
+  const searchParams = useSearchParams();
 
   const [step, setStep] = useState<Step>('input');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(searchParams.get('phone') || '');
   const [amount, setAmount] = useState('');
   const [cashierName, setCashierName] = useState('');
   const [selectedLocationId, setSelectedLocationId] = useState('');

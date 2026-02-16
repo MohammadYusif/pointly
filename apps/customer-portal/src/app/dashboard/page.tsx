@@ -107,7 +107,9 @@ export default function CustomerDashboard() {
             <CardContent className="p-4">
               <div className="flex justify-between text-sm mb-2">
                 <span>{customer.tierDisplayName}</span>
-                <span>{formatNumber(progress)} / {formatNumber(tierTarget)}</span>
+                <span>
+                  {formatNumber(progress)} / {formatNumber(tierTarget)}
+                </span>
               </div>
               <div className="w-full bg-muted rounded-full h-2">
                 <div
@@ -150,20 +152,23 @@ export default function CustomerDashboard() {
             {transactions.map((tx) => {
               const badge = getTypeBadge(tx.type);
               return (
-              <div key={tx.transactionId} className="flex justify-between items-center">
-                <div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${badge.className}`}>
-                    {badge.label}
+                <div key={tx.transactionId} className="flex justify-between items-center">
+                  <div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${badge.className}`}>
+                      {badge.label}
+                    </span>
+                    <p className="text-xs text-muted-foreground mt-1" suppressHydrationWarning>
+                      {new Date(tx.createdAt).toLocaleDateString(locale)}
+                    </p>
+                  </div>
+                  <span
+                    className={`font-medium ${tx.type === 'EARN' ? 'text-green-600' : 'text-amber-600'}`}
+                  >
+                    {tx.type === 'EARN' ? '+' : '-'}
+                    {formatNumber(tx.points)}
                   </span>
-                  <p className="text-xs text-muted-foreground mt-1" suppressHydrationWarning>
-                    {new Date(tx.createdAt).toLocaleDateString(locale)}
-                  </p>
                 </div>
-                <span className={`font-medium ${tx.type === 'EARN' ? 'text-green-600' : 'text-amber-600'}`}>
-                  {tx.type === 'EARN' ? '+' : '-'}{formatNumber(tx.points)}
-                </span>
-              </div>
-            );
+              );
             })}
           </CardContent>
         </Card>
@@ -180,7 +185,9 @@ export default function CustomerDashboard() {
               {customer.enrollments.map((e: CustomerEnrollment) => (
                 <div key={e.merchantId} className="flex justify-between items-center">
                   <span className="text-sm">{e.merchantId}</span>
-                  <span className="font-medium">{formatNumber(e.merchantPointsBalance)} {t('common.points')}</span>
+                  <span className="font-medium">
+                    {formatNumber(e.merchantPointsBalance)} {t('common.points')}
+                  </span>
                 </div>
               ))}
             </CardContent>

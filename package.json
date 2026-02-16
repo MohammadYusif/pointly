@@ -34,12 +34,7 @@
       "@next/swc-linux-arm64-gnu": "15.5.11",
       "@next/swc-linux-arm64-musl": "15.5.11"
     },
-    "ignoredBuiltDependencies": [
-      "@biomejs/biome",
-      "core-js",
-      "esbuild",
-      "sharp"
-    ]
+    "ignoredBuiltDependencies": ["@biomejs/biome", "core-js", "esbuild", "sharp"]
   },
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "^3.980.0",

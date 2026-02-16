@@ -72,7 +72,12 @@
     "editCustomer": "تعديل العميل",
     "deleteCustomer": "حذف العميل",
     "customerDetails": "تفاصيل العميل",
-    "transactionHistory": "سجل المعاملات"
+    "transactionHistory": "سجل المعاملات",
+    "lifetimePoints": "النقاط مدى الحياة",
+    "enrolled": "تاريخ التسجيل",
+    "recordPurchase": "تسجيل عملية شراء",
+    "redeemPoints": "استبدال النقاط",
+    "exportCSV": "تصدير CSV"
   },
   "merchant": {
     "title": "التاجر",

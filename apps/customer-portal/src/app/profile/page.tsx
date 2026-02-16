@@ -41,7 +41,7 @@ export default function ProfilePage() {
       await updateCustomer({ name });
       toast.success(t('success.saved'));
       setIsEditing(false);
-      setCustomer((prev) => prev ? { ...prev, name } : prev);
+      setCustomer((prev) => (prev ? { ...prev, name } : prev));
     } catch {
       toast.error(t('errors.serverError'));
     }
@@ -74,20 +74,28 @@ export default function ProfilePage() {
           <CardContent className="space-y-3">
             <div>
               <p className="text-sm text-muted-foreground">{t('customer.phone')}</p>
-              <p className="font-medium" dir="ltr">{formatPhone(customer?.phone || '')}</p>
+              <p className="font-medium" dir="ltr">
+                {formatPhone(customer?.phone || '')}
+              </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">{t('customer.name')}</p>
               {isEditing ? (
                 <div className="flex gap-2 mt-1">
                   <Input value={name} onChange={(e) => setName(e.target.value)} />
-                  <Button size="sm" onClick={handleSave}>{t('common.save')}</Button>
-                  <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>{t('common.cancel')}</Button>
+                  <Button size="sm" onClick={handleSave}>
+                    {t('common.save')}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>
+                    {t('common.cancel')}
+                  </Button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <p className="font-medium">{customer?.name || '-'}</p>
-                  <Button size="sm" variant="ghost" onClick={() => setIsEditing(true)}>{t('common.edit')}</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setIsEditing(true)}>
+                    {t('common.edit')}
+                  </Button>
                 </div>
               )}
             </div>
@@ -110,11 +118,15 @@ export default function ProfilePage() {
               {customer.enrollments.map((e) => (
                 <div key={e.merchantId} className="flex justify-between items-center py-1">
                   <span className="text-sm">{e.merchantId}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    e.consentStatus === 'GRANTED' ? 'bg-green-100 text-green-800'
-                      : e.consentStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full ${
+                      e.consentStatus === 'GRANTED'
+                        ? 'bg-green-100 text-green-800'
+                        : e.consentStatus === 'PENDING'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                    }`}
+                  >
                     {e.consentStatus}
                   </span>
                 </div>
