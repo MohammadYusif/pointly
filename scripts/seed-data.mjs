@@ -36,8 +36,9 @@ const docClient = DynamoDBDocumentClient.from(client, {
 
 // --- Deterministic IDs for seed data ---
 const MERCHANT_IDS = {
-  albaik: 'merchant_albaik_seed',
-  brew92: 'merchant_brew92_seed',
+  shawarma: 'merchant_shawarma_seed',
+  dose: 'merchant_dose_seed',
+  nayomi: 'merchant_nayomi_seed',
 };
 
 const CUSTOMER_IDS = {
@@ -51,6 +52,8 @@ const CUSTOMER_IDS = {
   layla: 'customer_layla_seed',
   youssef: 'customer_youssef_seed',
   hana: 'customer_hana_seed',
+  reem: 'customer_reem_seed',
+  tariq: 'customer_tariq_seed',
 };
 
 // --- Helpers ---
@@ -62,62 +65,73 @@ function txnId() {
   return `txn_${randomUUID().slice(0, 12)}`;
 }
 
-// --- Al Baik Locations (4 branches) ---
-const ALBAIK_LOCATIONS = [
+// --- Shawarma House Locations (3 branches) ---
+const SHAWARMA_LOCATIONS = [
   {
-    locationId: 'loc_riyadh_olaya',
-    name: 'Al Baik - Olaya',
+    locationId: 'loc_shawarma_olaya',
+    name: 'Shawarma House - Olaya',
     address: 'Olaya Street, Al Olaya District',
-    city: 'Riyadh',
-    isActive: true,
-    createdAt: daysAgo(200),
-  },
-  {
-    locationId: 'loc_riyadh_exit15',
-    name: 'Al Baik - Exit 15',
-    address: 'King Fahd Road, Exit 15',
     city: 'Riyadh',
     isActive: true,
     createdAt: daysAgo(180),
   },
   {
-    locationId: 'loc_jeddah_corniche',
-    name: 'Al Baik - Corniche',
-    address: 'Corniche Road, Al Hamra District',
-    city: 'Jeddah',
+    locationId: 'loc_shawarma_malaz',
+    name: 'Shawarma House - Malaz',
+    address: 'Malaz District, Prince Turki Road',
+    city: 'Riyadh',
     isActive: true,
     createdAt: daysAgo(150),
   },
   {
-    locationId: 'loc_jeddah_tahlia',
-    name: 'Al Baik - Tahlia',
-    address: 'Tahlia Street, Al Khalidiyah',
+    locationId: 'loc_shawarma_exit5',
+    name: 'Shawarma House - Exit 5',
+    address: 'Eastern Ring Road, Exit 5',
+    city: 'Riyadh',
+    isActive: true,
+    createdAt: daysAgo(90),
+  },
+];
+
+const DOSE_LOCATION = {
+  locationId: 'loc_dose_main',
+  name: 'Dose Cafe - Boulevard',
+  address: 'Boulevard City, Hittin District',
+  city: 'Riyadh',
+  isActive: true,
+  createdAt: daysAgo(60),
+};
+
+const NAYOMI_LOCATIONS = [
+  {
+    locationId: 'loc_nayomi_panorama',
+    name: 'Nayomi - Panorama Mall',
+    address: 'Panorama Mall, Tahlia Street',
     city: 'Jeddah',
     isActive: true,
     createdAt: daysAgo(120),
   },
+  {
+    locationId: 'loc_nayomi_redsea',
+    name: 'Nayomi - Red Sea Mall',
+    address: 'Red Sea Mall, King Abdullah Road',
+    city: 'Jeddah',
+    isActive: true,
+    createdAt: daysAgo(100),
+  },
 ];
-
-const BREW92_LOCATION = {
-  locationId: 'loc_brew92_main',
-  name: 'Brew92 - Al Nakheel',
-  address: 'Al Nakheel Mall, King Fahd Road',
-  city: 'Riyadh',
-  isActive: true,
-  createdAt: daysAgo(30),
-};
 
 // --- Merchant Data ---
 function createMerchants() {
   return [
-    // Al Baik: 4 branches, rich analytics data
+    // Shawarma House: restaurant chain, 3 branches, high volume
     {
-      PK: `MERCHANT#${MERCHANT_IDS.albaik}`,
+      PK: `MERCHANT#${MERCHANT_IDS.shawarma}`,
       SK: 'PROFILE',
       EntityType: 'MERCHANT',
-      merchantId: MERCHANT_IDS.albaik,
-      businessName: 'Al Baik Restaurant',
-      email: 'manager@albaik.com',
+      merchantId: MERCHANT_IDS.shawarma,
+      businessName: 'Shawarma House',
+      email: 'admin@shawarmahouse.sa',
       phone: '966501234567',
       contactName: 'Abdullah Al-Rashid',
       tier: 'PROFESSIONAL',
@@ -132,31 +146,31 @@ function createMerchants() {
         welcomeBonus: 100,
         enableMultiLocation: true,
       },
-      smsQuota: { monthlyLimit: 5000, currentUsage: 420, resetDate: now },
-      locations: ALBAIK_LOCATIONS,
+      smsQuota: { monthlyLimit: 5000, currentUsage: 320, resetDate: now },
+      locations: SHAWARMA_LOCATIONS,
       maxLocations: 10,
       totalCustomers: 8,
       activeCustomers: 7,
-      totalTransactions: 200,
-      createdAt: daysAgo(200),
+      totalTransactions: 180,
+      createdAt: daysAgo(180),
       updatedAt: hoursAgo(1),
-      verifiedAt: daysAgo(199),
-      GSI1PK: 'EMAIL#manager@albaik.com',
+      verifiedAt: daysAgo(179),
+      GSI1PK: 'EMAIL#admin@shawarmahouse.sa',
       GSI1SK: 'MERCHANT',
       GSI2PK: 'PHONE#966501234567',
       GSI2SK: 'MERCHANT',
       GSI3PK: 'STATUS#ACTIVE',
-      GSI3SK: `MERCHANT#${MERCHANT_IDS.albaik}`,
+      GSI3SK: `MERCHANT#${MERCHANT_IDS.shawarma}`,
     },
-    // Brew92: single location, basic manual transactions
+    // Dose Cafe: single location, coffee shop
     {
-      PK: `MERCHANT#${MERCHANT_IDS.brew92}`,
+      PK: `MERCHANT#${MERCHANT_IDS.dose}`,
       SK: 'PROFILE',
       EntityType: 'MERCHANT',
-      merchantId: MERCHANT_IDS.brew92,
-      businessName: 'Brew92 Coffee',
-      email: 'hello@brew92.com',
-      phone: '966559991234',
+      merchantId: MERCHANT_IDS.dose,
+      businessName: 'Dose Cafe',
+      email: 'hello@dosecafe.sa',
+      phone: '966559998877',
       contactName: 'Faisal Al-Otaibi',
       tier: 'BASIC',
       status: 'ACTIVE',
@@ -170,103 +184,131 @@ function createMerchants() {
         welcomeBonus: 50,
         enableMultiLocation: false,
       },
-      smsQuota: { monthlyLimit: 1000, currentUsage: 18, resetDate: now },
-      locations: [BREW92_LOCATION],
+      smsQuota: { monthlyLimit: 1000, currentUsage: 25, resetDate: now },
+      locations: [DOSE_LOCATION],
       maxLocations: 1,
-      totalCustomers: 3,
-      activeCustomers: 3,
-      totalTransactions: 15,
-      createdAt: daysAgo(30),
-      updatedAt: hoursAgo(3),
-      verifiedAt: daysAgo(29),
-      GSI1PK: 'EMAIL#hello@brew92.com',
+      totalCustomers: 4,
+      activeCustomers: 4,
+      totalTransactions: 30,
+      createdAt: daysAgo(60),
+      updatedAt: hoursAgo(2),
+      verifiedAt: daysAgo(59),
+      GSI1PK: 'EMAIL#hello@dosecafe.sa',
       GSI1SK: 'MERCHANT',
-      GSI2PK: 'PHONE#966559991234',
+      GSI2PK: 'PHONE#966559998877',
       GSI2SK: 'MERCHANT',
       GSI3PK: 'STATUS#ACTIVE',
-      GSI3SK: `MERCHANT#${MERCHANT_IDS.brew92}`,
+      GSI3SK: `MERCHANT#${MERCHANT_IDS.dose}`,
+    },
+    // Nayomi Fashion: retail store, 2 locations, high-value transactions
+    {
+      PK: `MERCHANT#${MERCHANT_IDS.nayomi}`,
+      SK: 'PROFILE',
+      EntityType: 'MERCHANT',
+      merchantId: MERCHANT_IDS.nayomi,
+      businessName: 'Nayomi Fashion',
+      email: 'manager@nayomi.sa',
+      phone: '966512345678',
+      contactName: 'Maha Al-Ghamdi',
+      tier: 'PLATINUM',
+      status: 'ACTIVE',
+      loyaltyConfig: {
+        pointsPerSAR: 1,
+        globalPointsPerSAR: 1,
+        minimumPurchase: 50,
+        redemptionRate: 0.01,
+        allowPartialRedemption: true,
+        minimumRedemption: 100,
+        welcomeBonus: 200,
+        enableMultiLocation: true,
+      },
+      smsQuota: { monthlyLimit: 3000, currentUsage: 85, resetDate: now },
+      locations: NAYOMI_LOCATIONS,
+      maxLocations: 5,
+      totalCustomers: 5,
+      activeCustomers: 4,
+      totalTransactions: 60,
+      createdAt: daysAgo(120),
+      updatedAt: hoursAgo(3),
+      verifiedAt: daysAgo(119),
+      GSI1PK: 'EMAIL#manager@nayomi.sa',
+      GSI1SK: 'MERCHANT',
+      GSI2PK: 'PHONE#966512345678',
+      GSI2SK: 'MERCHANT',
+      GSI3PK: 'STATUS#ACTIVE',
+      GSI3SK: `MERCHANT#${MERCHANT_IDS.nayomi}`,
     },
   ];
 }
 
 // --- Customer Data ---
 function createCustomers() {
-  const albaik = MERCHANT_IDS.albaik;
-  const brew = MERCHANT_IDS.brew92;
+  const shawarma = MERCHANT_IDS.shawarma;
+  const dose = MERCHANT_IDS.dose;
+  const nayomi = MERCHANT_IDS.nayomi;
 
   return [
-    // === Al Baik Customers ===
-    // Diamond tier - power user, eats at multiple branches
+    // === Shawarma House Customers ===
+    // Diamond tier - power user, visits all branches
     makeCustomer({
       id: CUSTOMER_IDS.ahmed,
       phone: '966501111111',
       name: 'Ahmed Al-Dosari',
-      globalBalance: 22000,
-      globalLifetime: 48000,
+      globalBalance: 18500,
+      globalLifetime: 42000,
       tier: 'DIAMOND',
-      monthlyProgress: 18000,
+      monthlyProgress: 16000,
       enrollments: [
-        makeEnrollment(albaik, 180, 'granted', 12500, 32000, 45),
-        makeEnrollment(brew, 20, 'granted', 350, 500, 4),
+        makeEnrollment(shawarma, 160, 'granted', 11000, 28000, 50),
+        makeEnrollment(dose, 30, 'granted', 420, 600, 6),
       ],
     }),
-    // Platinum - regular at Riyadh branches
+    // Platinum - regular at Olaya branch
     makeCustomer({
       id: CUSTOMER_IDS.fatimah,
       phone: '966502222222',
       name: 'Fatimah Al-Harbi',
-      globalBalance: 8500,
-      globalLifetime: 18000,
+      globalBalance: 7200,
+      globalLifetime: 15000,
       tier: 'PLATINUM',
-      monthlyProgress: 9500,
-      enrollments: [makeEnrollment(albaik, 120, 'granted', 4800, 12000, 25)],
+      monthlyProgress: 8500,
+      enrollments: [makeEnrollment(shawarma, 100, 'granted', 4500, 10000, 22)],
     }),
-    // Bronze - moderate, visits both cities
+    // Gold - moderate customer
     makeCustomer({
       id: CUSTOMER_IDS.mohammed,
       phone: '966503333333',
       name: 'Mohammed Al-Qahtani',
-      globalBalance: 3200,
-      globalLifetime: 5500,
-      tier: 'BRONZE',
-      monthlyProgress: 3200,
-      enrollments: [makeEnrollment(albaik, 60, 'granted', 1800, 3200, 10)],
+      globalBalance: 3800,
+      globalLifetime: 6500,
+      tier: 'GOLD',
+      monthlyProgress: 3800,
+      enrollments: [makeEnrollment(shawarma, 50, 'granted', 2200, 4000, 12)],
     }),
-    // Platinum - Jeddah regular
-    makeCustomer({
-      id: CUSTOMER_IDS.omar,
-      phone: '966507777777',
-      name: 'Omar Al-Ghamdi',
-      globalBalance: 6800,
-      globalLifetime: 14000,
-      tier: 'PLATINUM',
-      monthlyProgress: 6800,
-      enrollments: [makeEnrollment(albaik, 100, 'granted', 5200, 11000, 30)],
-    }),
-    // Bronze - new Jeddah customer
+    // Bronze - occasional visitor
     makeCustomer({
       id: CUSTOMER_IDS.youssef,
       phone: '966509999999',
       name: 'Youssef Al-Zahrani',
-      globalBalance: 1200,
-      globalLifetime: 1600,
+      globalBalance: 900,
+      globalLifetime: 1200,
       tier: 'BRONZE',
-      monthlyProgress: 1200,
-      enrollments: [makeEnrollment(albaik, 25, 'granted', 800, 1200, 6)],
+      monthlyProgress: 900,
+      enrollments: [makeEnrollment(shawarma, 20, 'granted', 600, 900, 5)],
     }),
     // Inactive - decay candidate
     makeCustomer({
       id: CUSTOMER_IDS.sara,
       phone: '966506666666',
       name: 'Sara Al-Tamimi',
-      globalBalance: 4000,
-      globalLifetime: 9500,
+      globalBalance: 3200,
+      globalLifetime: 8000,
       tier: 'BRONZE',
       monthlyProgress: 0,
       lastActivity: daysAgo(95),
       decayPhase: 1,
       decayStartDate: daysAgo(65),
-      enrollments: [makeEnrollment(albaik, 160, 'granted', 1200, 5000, 12)],
+      enrollments: [makeEnrollment(shawarma, 140, 'granted', 1000, 4500, 10)],
     }),
     // Pending consent
     makeCustomer({
@@ -277,43 +319,81 @@ function createCustomers() {
       globalLifetime: 0,
       tier: 'BRONZE',
       monthlyProgress: 0,
-      enrollments: [makeEnrollment(albaik, 1, 'pending', 0, 0, 0)],
-      gsi3pk: `MERCHANT#${albaik}#PENDING_CONSENT`,
+      enrollments: [makeEnrollment(shawarma, 1, 'pending', 0, 0, 0)],
+      gsi3pk: `MERCHANT#${shawarma}#PENDING_CONSENT`,
     }),
-    // Hana - Riyadh regular
+    // Platinum - Jeddah regular (multi-enrolled: shawarma + nayomi)
+    makeCustomer({
+      id: CUSTOMER_IDS.omar,
+      phone: '966507777777',
+      name: 'Omar Al-Ghamdi',
+      globalBalance: 8200,
+      globalLifetime: 16000,
+      tier: 'PLATINUM',
+      monthlyProgress: 8200,
+      enrollments: [
+        makeEnrollment(shawarma, 80, 'granted', 3800, 8000, 18),
+        makeEnrollment(nayomi, 60, 'granted', 2800, 5500, 8),
+      ],
+    }),
+    // Hana - new Shawarma House customer
     makeCustomer({
       id: CUSTOMER_IDS.hana,
       phone: '966510001111',
       name: 'Hana Al-Subaie',
-      globalBalance: 2400,
-      globalLifetime: 3600,
+      globalBalance: 1800,
+      globalLifetime: 2600,
       tier: 'BRONZE',
-      monthlyProgress: 2400,
-      enrollments: [makeEnrollment(albaik, 40, 'granted', 1600, 2800, 8)],
+      monthlyProgress: 1800,
+      enrollments: [makeEnrollment(shawarma, 30, 'granted', 1200, 2000, 7)],
     }),
 
-    // === Brew92 Customers ===
-    // Noura - regular coffee customer
+    // === Dose Cafe Customers ===
+    // Noura - regular coffee lover
     makeCustomer({
       id: CUSTOMER_IDS.noura,
       phone: '966504444444',
       name: 'Noura Al-Shammari',
-      globalBalance: 380,
-      globalLifetime: 520,
+      globalBalance: 480,
+      globalLifetime: 680,
       tier: 'BRONZE',
-      monthlyProgress: 380,
-      enrollments: [makeEnrollment(brew, 25, 'granted', 380, 520, 8)],
+      monthlyProgress: 480,
+      enrollments: [makeEnrollment(dose, 40, 'granted', 480, 680, 10)],
     }),
     // Layla - occasional visitor
     makeCustomer({
       id: CUSTOMER_IDS.layla,
       phone: '966508888888',
       name: 'Layla Al-Rashidi',
-      globalBalance: 150,
-      globalLifetime: 150,
+      globalBalance: 180,
+      globalLifetime: 180,
       tier: 'BRONZE',
-      monthlyProgress: 150,
-      enrollments: [makeEnrollment(brew, 14, 'granted', 150, 150, 3)],
+      monthlyProgress: 180,
+      enrollments: [makeEnrollment(dose, 14, 'granted', 180, 180, 3)],
+    }),
+
+    // === Nayomi Fashion Customers ===
+    // Reem - VIP shopper, high-value transactions
+    makeCustomer({
+      id: CUSTOMER_IDS.reem,
+      phone: '966511112222',
+      name: 'Reem Al-Otaibi',
+      globalBalance: 12000,
+      globalLifetime: 22000,
+      tier: 'DIAMOND',
+      monthlyProgress: 12000,
+      enrollments: [makeEnrollment(nayomi, 90, 'granted', 9500, 18000, 15)],
+    }),
+    // Tariq - occasional shopper
+    makeCustomer({
+      id: CUSTOMER_IDS.tariq,
+      phone: '966513334444',
+      name: 'Tariq Al-Harthy',
+      globalBalance: 2500,
+      globalLifetime: 3800,
+      tier: 'BRONZE',
+      monthlyProgress: 2500,
+      enrollments: [makeEnrollment(nayomi, 45, 'granted', 2500, 3800, 5)],
     }),
   ];
 }
@@ -387,13 +467,11 @@ function makeEnrollment(merchantId, daysAgoEnrolled, consent, balance, lifetime,
 }
 
 // --- Transaction helpers ---
-/** Weighted random location pick — Olaya busiest, Jeddah Tahlia slowest */
-function pickWeightedAlbaikLocation() {
+function pickWeightedShawarmaLocation() {
   const r = Math.random();
-  if (r < 0.35) return 'loc_riyadh_olaya';
-  if (r < 0.6) return 'loc_riyadh_exit15';
-  if (r < 0.82) return 'loc_jeddah_corniche';
-  return 'loc_jeddah_tahlia';
+  if (r < 0.45) return 'loc_shawarma_olaya';
+  if (r < 0.75) return 'loc_shawarma_malaz';
+  return 'loc_shawarma_exit5';
 }
 
 function pushTxnList(out, merchantId, customerId, txns, balance, defaultLoc) {
@@ -439,214 +517,182 @@ function generateDailyTxns(out, merchantId, customerId, cfg) {
   }
 }
 
-// --- Al Baik Transactions (rich analytics data across 4 branches, 60 days) ---
-function createAlbaikTransactions() {
+// --- Shawarma House Transactions (3 branches, 60 days) ---
+function createShawarmaTransactions() {
   const txns = [];
-  const m = MERCHANT_IDS.albaik;
+  const m = MERCHANT_IDS.shawarma;
 
-  // Ahmed — Diamond, visits all 4 branches frequently (~4x/week)
-  createAhmedAlbaikTxns(txns, m);
-
-  // Fatimah — Platinum, Riyadh branches mostly (~3x/week)
-  createFatimahTxns(txns, m);
-
-  // Omar — Platinum, Jeddah branches mostly (~3x/week)
-  createOmarTxns(txns, m);
-
-  // Mohammed — Bronze, occasional across cities
-  createMohammedTxns(txns, m);
-
-  // Youssef — Bronze, new Jeddah customer
-  createYoussefTxns(txns, m);
-
-  // Hana — Bronze, Riyadh regular
-  createHanaTxns(txns, m);
-
-  // Sara — inactive, old transactions (95-140 days ago)
-  createSaraTxns(txns, m);
-
-  return txns;
-}
-
-function createAhmedAlbaikTxns(txns, m) {
-  // 60 days of visits, ~60% chance per day, all 4 branches, some redeems
+  // Ahmed — Diamond, visits all 3 branches (~4x/week)
   generateDailyTxns(txns, m, CUSTOMER_IDS.ahmed, {
     startDay: 0,
     days: 60,
     chance: 0.6,
-    minAmt: 45,
-    maxAmt: 220,
-    balance: 22000,
-    locFn: pickWeightedAlbaikLocation,
+    minAmt: 40,
+    maxAmt: 200,
+    balance: 18500,
+    locFn: pickWeightedShawarmaLocation,
   });
-  // Redemptions every ~2 weeks
   pushTxnList(
     txns,
     m,
     CUSTOMER_IDS.ahmed,
     [
-      { days: 7, amount: 500, points: 500, type: 'redeem', loc: 'loc_riyadh_olaya' },
-      { days: 21, amount: 400, points: 400, type: 'redeem', loc: 'loc_jeddah_corniche' },
-      { days: 35, amount: 600, points: 600, type: 'redeem', loc: 'loc_riyadh_exit15' },
-      { days: 49, amount: 350, points: 350, type: 'redeem', loc: 'loc_jeddah_tahlia' },
+      { days: 8, amount: 500, points: 500, type: 'redeem', loc: 'loc_shawarma_olaya' },
+      { days: 22, amount: 400, points: 400, type: 'redeem', loc: 'loc_shawarma_malaz' },
+      { days: 40, amount: 600, points: 600, type: 'redeem', loc: 'loc_shawarma_exit5' },
+      { days: 55, amount: 350, points: 350, type: 'redeem', loc: 'loc_shawarma_olaya' },
     ],
-    22000,
+    18500,
   );
-}
 
-function createFatimahTxns(txns, m) {
-  // 55 days, Riyadh branches mostly
+  // Fatimah — Platinum, mostly Olaya (~3x/week)
   generateDailyTxns(txns, m, CUSTOMER_IDS.fatimah, {
     startDay: 0,
-    days: 55,
+    days: 50,
     chance: 0.45,
-    minAmt: 35,
-    maxAmt: 160,
-    balance: 8500,
-    locFn: () => (Math.random() < 0.7 ? 'loc_riyadh_olaya' : 'loc_riyadh_exit15'),
+    minAmt: 30,
+    maxAmt: 150,
+    balance: 7200,
+    locFn: () => (Math.random() < 0.7 ? 'loc_shawarma_olaya' : 'loc_shawarma_malaz'),
   });
   pushTxnList(
     txns,
     m,
     CUSTOMER_IDS.fatimah,
     [
-      { days: 10, amount: 300, points: 300, type: 'redeem', loc: 'loc_riyadh_olaya' },
-      { days: 30, amount: 250, points: 250, type: 'redeem', loc: 'loc_riyadh_exit15' },
-      { days: 50, amount: 200, points: 200, type: 'redeem', loc: 'loc_riyadh_olaya' },
+      { days: 12, amount: 300, points: 300, type: 'redeem', loc: 'loc_shawarma_olaya' },
+      { days: 35, amount: 250, points: 250, type: 'redeem', loc: 'loc_shawarma_olaya' },
     ],
-    8500,
+    7200,
   );
-}
 
-function createOmarTxns(txns, m) {
-  // 50 days, Jeddah branches mostly
+  // Omar — Platinum, visits Malaz and Exit 5 mostly
   generateDailyTxns(txns, m, CUSTOMER_IDS.omar, {
     startDay: 0,
-    days: 50,
-    chance: 0.45,
-    minAmt: 40,
-    maxAmt: 180,
-    balance: 6800,
-    locFn: () => (Math.random() < 0.6 ? 'loc_jeddah_corniche' : 'loc_jeddah_tahlia'),
+    days: 45,
+    chance: 0.4,
+    minAmt: 35,
+    maxAmt: 160,
+    balance: 8200,
+    locFn: () => (Math.random() < 0.55 ? 'loc_shawarma_malaz' : 'loc_shawarma_exit5'),
   });
   pushTxnList(
     txns,
     m,
     CUSTOMER_IDS.omar,
     [
-      { days: 12, amount: 400, points: 400, type: 'redeem', loc: 'loc_jeddah_corniche' },
-      { days: 38, amount: 500, points: 500, type: 'redeem', loc: 'loc_jeddah_tahlia' },
+      { days: 15, amount: 400, points: 400, type: 'redeem', loc: 'loc_shawarma_malaz' },
+      { days: 40, amount: 300, points: 300, type: 'redeem', loc: 'loc_shawarma_exit5' },
     ],
-    6800,
+    8200,
   );
-}
 
-function createMohammedTxns(txns, m) {
+  // Mohammed — Gold, occasional
   pushTxnList(
     txns,
     m,
     CUSTOMER_IDS.mohammed,
     [
-      { days: 3, amount: 85, type: 'earn', loc: 'loc_riyadh_olaya' },
-      { days: 8, amount: 120, type: 'earn', loc: 'loc_riyadh_exit15' },
-      { days: 15, amount: 65, type: 'earn', loc: 'loc_jeddah_corniche' },
-      { days: 22, amount: 95, type: 'earn', loc: 'loc_riyadh_olaya' },
-      { days: 30, amount: 110, type: 'earn', loc: 'loc_jeddah_tahlia' },
-      { days: 38, amount: 75, type: 'earn', loc: 'loc_riyadh_exit15' },
-      { days: 42, amount: 140, type: 'earn', loc: 'loc_jeddah_corniche' },
-      { days: 50, amount: 55, type: 'earn', loc: 'loc_riyadh_olaya' },
-      { days: 55, amount: 200, points: 200, type: 'redeem', loc: 'loc_riyadh_olaya' },
+      { days: 3, amount: 75, type: 'earn', loc: 'loc_shawarma_olaya' },
+      { days: 8, amount: 110, type: 'earn', loc: 'loc_shawarma_malaz' },
+      { days: 14, amount: 55, type: 'earn', loc: 'loc_shawarma_exit5' },
+      { days: 20, amount: 90, type: 'earn', loc: 'loc_shawarma_olaya' },
+      { days: 28, amount: 120, type: 'earn', loc: 'loc_shawarma_malaz' },
+      { days: 35, amount: 65, type: 'earn', loc: 'loc_shawarma_olaya' },
+      { days: 40, amount: 95, type: 'earn', loc: 'loc_shawarma_exit5' },
+      { days: 45, amount: 140, type: 'earn', loc: 'loc_shawarma_olaya' },
+      { days: 48, amount: 200, points: 200, type: 'redeem', loc: 'loc_shawarma_olaya' },
     ],
-    3200,
+    3800,
   );
-}
 
-function createYoussefTxns(txns, m) {
+  // Youssef — Bronze, new customer
   pushTxnList(
     txns,
     m,
     CUSTOMER_IDS.youssef,
     [
-      { days: 2, amount: 90, type: 'earn', loc: 'loc_jeddah_corniche' },
-      { days: 6, amount: 65, type: 'earn', loc: 'loc_jeddah_tahlia' },
-      { days: 11, amount: 110, type: 'earn', loc: 'loc_jeddah_corniche' },
-      { days: 16, amount: 80, type: 'earn', loc: 'loc_jeddah_corniche' },
-      { days: 20, amount: 130, type: 'earn', loc: 'loc_jeddah_tahlia' },
-      { days: 24, amount: 75, type: 'earn', loc: 'loc_jeddah_corniche' },
+      { days: 3, amount: 80, type: 'earn', loc: 'loc_shawarma_exit5' },
+      { days: 7, amount: 55, type: 'earn', loc: 'loc_shawarma_exit5' },
+      { days: 12, amount: 95, type: 'earn', loc: 'loc_shawarma_olaya' },
+      { days: 16, amount: 70, type: 'earn', loc: 'loc_shawarma_exit5' },
+      { days: 19, amount: 110, type: 'earn', loc: 'loc_shawarma_malaz' },
     ],
-    1200,
+    900,
   );
-}
 
-function createHanaTxns(txns, m) {
+  // Hana — Bronze, Olaya regular
   pushTxnList(
     txns,
     m,
     CUSTOMER_IDS.hana,
     [
-      { days: 2, amount: 55, type: 'earn', loc: 'loc_riyadh_olaya' },
-      { days: 7, amount: 90, type: 'earn', loc: 'loc_riyadh_exit15' },
-      { days: 12, amount: 70, type: 'earn', loc: 'loc_riyadh_olaya' },
-      { days: 18, amount: 120, type: 'earn', loc: 'loc_riyadh_olaya' },
-      { days: 23, amount: 85, type: 'earn', loc: 'loc_riyadh_exit15' },
-      { days: 28, amount: 100, type: 'earn', loc: 'loc_riyadh_olaya' },
-      { days: 33, amount: 60, type: 'earn', loc: 'loc_riyadh_exit15' },
-      { days: 38, amount: 150, points: 150, type: 'redeem', loc: 'loc_riyadh_olaya' },
+      { days: 2, amount: 45, type: 'earn', loc: 'loc_shawarma_olaya' },
+      { days: 6, amount: 80, type: 'earn', loc: 'loc_shawarma_olaya' },
+      { days: 11, amount: 60, type: 'earn', loc: 'loc_shawarma_malaz' },
+      { days: 17, amount: 100, type: 'earn', loc: 'loc_shawarma_olaya' },
+      { days: 22, amount: 75, type: 'earn', loc: 'loc_shawarma_olaya' },
+      { days: 27, amount: 90, type: 'earn', loc: 'loc_shawarma_malaz' },
+      { days: 29, amount: 120, points: 120, type: 'redeem', loc: 'loc_shawarma_olaya' },
     ],
-    2400,
+    1800,
   );
-}
 
-function createSaraTxns(txns, m) {
-  // Old transactions from 95-140 days ago
+  // Sara — inactive, old transactions (95-140 days ago)
   generateDailyTxns(txns, m, CUSTOMER_IDS.sara, {
     startDay: 95,
     days: 45,
     chance: 0.3,
-    minAmt: 40,
-    maxAmt: 130,
-    balance: 4000,
-    locFn: () => (Math.random() < 0.5 ? 'loc_riyadh_olaya' : 'loc_riyadh_exit15'),
+    minAmt: 35,
+    maxAmt: 120,
+    balance: 3200,
+    locFn: () => (Math.random() < 0.5 ? 'loc_shawarma_olaya' : 'loc_shawarma_malaz'),
   });
+
+  return txns;
 }
 
-// --- Brew92 Transactions (simple manual transactions, 1 location, 30 days) ---
-function createBrew92Transactions() {
+// --- Dose Cafe Transactions (1 location, 45 days) ---
+function createDoseTransactions() {
   const txns = [];
-  const m = MERCHANT_IDS.brew92;
-  const loc = BREW92_LOCATION.locationId;
+  const m = MERCHANT_IDS.dose;
+  const loc = DOSE_LOCATION.locationId;
 
-  // Ahmed — also a Brew92 customer, occasional coffee
+  // Ahmed — also a Dose customer, occasional coffee
   pushTxnList(
     txns,
     m,
     CUSTOMER_IDS.ahmed,
     [
-      { days: 2, amount: 28, type: 'earn' },
-      { days: 8, amount: 35, type: 'earn' },
-      { days: 15, amount: 22, type: 'earn' },
-      { days: 22, amount: 42, type: 'earn' },
+      { days: 3, amount: 32, type: 'earn' },
+      { days: 9, amount: 28, type: 'earn' },
+      { days: 16, amount: 45, type: 'earn' },
+      { days: 22, amount: 35, type: 'earn' },
+      { days: 28, amount: 38, type: 'earn' },
+      { days: 35, amount: 42, type: 'earn' },
     ],
-    350,
+    420,
     loc,
   );
 
-  // Noura — regular coffee lover
+  // Noura — regular coffee lover, visits every ~4 days
   pushTxnList(
     txns,
     m,
     CUSTOMER_IDS.noura,
     [
-      { days: 1, amount: 25, type: 'earn' },
-      { days: 4, amount: 30, type: 'earn' },
-      { days: 7, amount: 18, type: 'earn' },
-      { days: 10, amount: 35, type: 'earn' },
-      { days: 14, amount: 28, type: 'earn' },
-      { days: 18, amount: 22, type: 'earn' },
-      { days: 21, amount: 40, type: 'earn' },
-      { days: 25, amount: 50, points: 50, type: 'redeem' },
+      { days: 1, amount: 28, type: 'earn' },
+      { days: 4, amount: 35, type: 'earn' },
+      { days: 8, amount: 22, type: 'earn' },
+      { days: 12, amount: 40, type: 'earn' },
+      { days: 15, amount: 30, type: 'earn' },
+      { days: 19, amount: 25, type: 'earn' },
+      { days: 23, amount: 38, type: 'earn' },
+      { days: 27, amount: 32, type: 'earn' },
+      { days: 32, amount: 50, points: 50, type: 'redeem' },
+      { days: 36, amount: 28, type: 'earn' },
     ],
-    380,
+    480,
     loc,
   );
 
@@ -656,12 +702,78 @@ function createBrew92Transactions() {
     m,
     CUSTOMER_IDS.layla,
     [
-      { days: 5, amount: 32, type: 'earn' },
-      { days: 14, amount: 45, type: 'earn' },
-      { days: 23, amount: 28, type: 'earn' },
+      { days: 5, amount: 35, type: 'earn' },
+      { days: 14, amount: 48, type: 'earn' },
+      { days: 25, amount: 32, type: 'earn' },
     ],
-    150,
+    180,
     loc,
+  );
+
+  return txns;
+}
+
+// --- Nayomi Fashion Transactions (2 locations, 60 days, higher amounts) ---
+function createNayomiTransactions() {
+  const txns = [];
+  const m = MERCHANT_IDS.nayomi;
+
+  // Reem — VIP shopper, frequent high-value purchases
+  pushTxnList(
+    txns,
+    m,
+    CUSTOMER_IDS.reem,
+    [
+      { days: 3, amount: 850, type: 'earn', loc: 'loc_nayomi_panorama' },
+      { days: 8, amount: 1200, type: 'earn', loc: 'loc_nayomi_redsea' },
+      { days: 14, amount: 650, type: 'earn', loc: 'loc_nayomi_panorama' },
+      { days: 20, amount: 1500, type: 'earn', loc: 'loc_nayomi_redsea' },
+      { days: 25, amount: 900, type: 'earn', loc: 'loc_nayomi_panorama' },
+      { days: 30, amount: 1100, type: 'earn', loc: 'loc_nayomi_redsea' },
+      { days: 35, amount: 750, type: 'earn', loc: 'loc_nayomi_panorama' },
+      { days: 40, amount: 1300, type: 'earn', loc: 'loc_nayomi_redsea' },
+      { days: 45, amount: 2000, points: 2000, type: 'redeem', loc: 'loc_nayomi_panorama' },
+      { days: 48, amount: 1800, type: 'earn', loc: 'loc_nayomi_panorama' },
+      { days: 52, amount: 950, type: 'earn', loc: 'loc_nayomi_redsea' },
+      { days: 55, amount: 1400, type: 'earn', loc: 'loc_nayomi_panorama' },
+      { days: 58, amount: 1600, points: 1600, type: 'redeem', loc: 'loc_nayomi_redsea' },
+      { days: 60, amount: 1050, type: 'earn', loc: 'loc_nayomi_panorama' },
+      { days: 62, amount: 2200, type: 'earn', loc: 'loc_nayomi_redsea' },
+    ],
+    12000,
+  );
+
+  // Omar — also shops at Nayomi occasionally
+  pushTxnList(
+    txns,
+    m,
+    CUSTOMER_IDS.omar,
+    [
+      { days: 5, amount: 450, type: 'earn', loc: 'loc_nayomi_panorama' },
+      { days: 15, amount: 800, type: 'earn', loc: 'loc_nayomi_redsea' },
+      { days: 25, amount: 550, type: 'earn', loc: 'loc_nayomi_panorama' },
+      { days: 35, amount: 700, type: 'earn', loc: 'loc_nayomi_redsea' },
+      { days: 42, amount: 600, type: 'earn', loc: 'loc_nayomi_panorama' },
+      { days: 50, amount: 900, type: 'earn', loc: 'loc_nayomi_redsea' },
+      { days: 55, amount: 500, points: 500, type: 'redeem', loc: 'loc_nayomi_panorama' },
+      { days: 58, amount: 650, type: 'earn', loc: 'loc_nayomi_redsea' },
+    ],
+    2800,
+  );
+
+  // Tariq — occasional shopper
+  pushTxnList(
+    txns,
+    m,
+    CUSTOMER_IDS.tariq,
+    [
+      { days: 10, amount: 380, type: 'earn', loc: 'loc_nayomi_redsea' },
+      { days: 22, amount: 950, type: 'earn', loc: 'loc_nayomi_panorama' },
+      { days: 35, amount: 620, type: 'earn', loc: 'loc_nayomi_redsea' },
+      { days: 48, amount: 1100, type: 'earn', loc: 'loc_nayomi_panorama' },
+      { days: 55, amount: 750, type: 'earn', loc: 'loc_nayomi_redsea' },
+    ],
+    2500,
   );
 
   return txns;
@@ -790,12 +902,14 @@ async function seed() {
   }
 
   // Seed transactions
-  const albaikTxns = createAlbaikTransactions();
-  const brew92Txns = createBrew92Transactions();
-  const allTxns = [...albaikTxns, ...brew92Txns];
+  const shawarmaTxns = createShawarmaTransactions();
+  const doseTxns = createDoseTransactions();
+  const nayomiTxns = createNayomiTransactions();
+  const allTxns = [...shawarmaTxns, ...doseTxns, ...nayomiTxns];
   console.log(`\nSeeding ${allTxns.length} transactions...`);
-  console.log(`  Al Baik: ${albaikTxns.length} transactions (4 branches, 60 days)`);
-  console.log(`  Brew92: ${brew92Txns.length} transactions (1 branch, 30 days)`);
+  console.log(`  Shawarma House: ${shawarmaTxns.length} transactions (3 branches, 60 days)`);
+  console.log(`  Dose Cafe: ${doseTxns.length} transactions (1 branch, 45 days)`);
+  console.log(`  Nayomi Fashion: ${nayomiTxns.length} transactions (2 locations, 60 days)`);
   for (const t of allTxns) {
     await putItem(TABLES.transactionAudit, t);
   }
@@ -809,24 +923,29 @@ Summary:
   Transactions: ${allTxns.length}
 
 Merchant Accounts:
-  Al Baik Restaurant  - PROFESSIONAL, ACTIVE, 4 branches
-    -> Olaya (Riyadh), Exit 15 (Riyadh), Corniche (Jeddah), Tahlia (Jeddah)
-    -> Login: manager@albaik.com
-  Brew92 Coffee       - BASIC, ACTIVE, 1 location
-    -> Al Nakheel (Riyadh)
-    -> Login: hello@brew92.com
+  Shawarma House   - PROFESSIONAL, ACTIVE, 3 branches (Riyadh)
+    -> Olaya, Malaz, Exit 5
+    -> Login: admin@shawarmahouse.sa
+  Dose Cafe        - BASIC, ACTIVE, 1 location (Riyadh)
+    -> Boulevard City
+    -> Login: hello@dosecafe.sa
+  Nayomi Fashion   - PLATINUM, ACTIVE, 2 locations (Jeddah)
+    -> Panorama Mall, Red Sea Mall
+    -> Login: manager@nayomi.sa
 
 Customers:
-  Ahmed Al-Dosari     - Diamond, 22,000 pts (Al Baik + Brew92)
-  Fatimah Al-Harbi    - Platinum, 8,500 pts (Al Baik - Riyadh)
-  Omar Al-Ghamdi      - Platinum, 6,800 pts (Al Baik - Jeddah)
-  Sara Al-Tamimi      - Bronze, 4,000 pts (Al Baik - INACTIVE, decay phase 1)
-  Mohammed Al-Qahtani - Bronze, 3,200 pts (Al Baik - occasional)
-  Hana Al-Subaie      - Bronze, 2,400 pts (Al Baik - Riyadh)
-  Youssef Al-Zahrani  - Bronze, 1,200 pts (Al Baik - Jeddah, new)
-  Khalid Al-Mutairi   - Bronze, 0 pts (Al Baik - PENDING consent)
-  Noura Al-Shammari   - Bronze, 380 pts (Brew92 - regular)
-  Layla Al-Rashidi    - Bronze, 150 pts (Brew92 - occasional)
+  Ahmed Al-Dosari     - Diamond, 18,500 pts (Shawarma + Dose)
+  Omar Al-Ghamdi      - Platinum, 8,200 pts (Shawarma + Nayomi)
+  Fatimah Al-Harbi    - Platinum, 7,200 pts (Shawarma)
+  Mohammed Al-Qahtani - Gold, 3,800 pts (Shawarma)
+  Sara Al-Tamimi      - Bronze, 3,200 pts (Shawarma - INACTIVE, decay)
+  Tariq Al-Harthy     - Bronze, 2,500 pts (Nayomi)
+  Hana Al-Subaie      - Bronze, 1,800 pts (Shawarma)
+  Reem Al-Otaibi      - Diamond, 12,000 pts (Nayomi - VIP)
+  Youssef Al-Zahrani  - Bronze, 900 pts (Shawarma - new)
+  Noura Al-Shammari   - Bronze, 480 pts (Dose - regular)
+  Khalid Al-Mutairi   - Bronze, 0 pts (Shawarma - PENDING consent)
+  Layla Al-Rashidi    - Bronze, 180 pts (Dose - occasional)
 `);
 }
 
