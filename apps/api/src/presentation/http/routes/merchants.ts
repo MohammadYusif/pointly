@@ -4,17 +4,32 @@ import { PhoneNumber, ValidationError } from '../../../domain';
 import { ForbiddenError } from '../../../domain/errors/DomainError';
 import { getContainer } from '../container';
 
+interface CustomerEnrollmentJSON {
+  merchantId: string;
+  enrolledAt: string;
+  consentStatus: string;
+  merchantPointsBalance: number;
+  merchantLifetimePoints: number;
+  transactionCount: number;
+  lastTransactionAt: string | undefined;
+}
+
+interface CustomerJSON {
+  customerId: string;
+  phone: string;
+  name: string | undefined;
+  status: string;
+  enrollments: CustomerEnrollmentJSON[];
+}
+
 /** Return only merchant-scoped customer data — strips global points, tiers, and decay info */
-function toMerchantCustomerView(customer: ReturnType<typeof Object>, merchantId: string) {
-  // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped object
-  const json = customer as any;
-  // biome-ignore lint/suspicious/noExplicitAny: enrollment shape is untyped
-  const enrollment = json.enrollments?.find((e: any) => e.merchantId === merchantId);
+function toMerchantCustomerView(customer: CustomerJSON, merchantId: string) {
+  const enrollment = customer.enrollments?.find((e) => e.merchantId === merchantId);
   return {
-    customerId: json.customerId,
-    phone: json.phone,
-    name: json.name,
-    status: json.status,
+    customerId: customer.customerId,
+    phone: customer.phone,
+    name: customer.name,
+    status: customer.status,
     merchantPointsBalance: enrollment?.merchantPointsBalance ?? 0,
     merchantLifetimePoints: enrollment?.merchantLifetimePoints ?? 0,
     transactionCount: enrollment?.transactionCount ?? 0,

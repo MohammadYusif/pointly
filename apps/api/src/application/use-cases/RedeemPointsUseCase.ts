@@ -10,6 +10,7 @@ import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
 import type { ITransactionRepository } from '../repositories/ITransactionRepository';
 import type { IIdempotencyService } from '../services/IIdempotencyService';
+import type { PersistenceItem } from '../shared/interfaces/BaseRepository';
 
 export interface RedeemPointsRequest {
   merchantId: string;
@@ -57,6 +58,7 @@ export class RedeemPointsUseCase {
     private merchantRepository: IMerchantRepository,
     private transactionRepository: ITransactionRepository,
     private idempotencyService: IIdempotencyService,
+    private atomicWrite?: (items: PersistenceItem[]) => Promise<void>,
   ) {}
 
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: redemption flow with validation, smart redeem, and dual transactions
@@ -133,6 +135,7 @@ export class RedeemPointsUseCase {
 
     // 7. Create transaction record(s)
     const transactionIds: string[] = [];
+    const transactions: Transaction[] = [];
     const metadata = request.metadata || {};
 
     if (merchantPointsUsed.toNumber() > 0) {
@@ -148,7 +151,7 @@ export class RedeemPointsUseCase {
         locationId,
       );
       merchantTx.complete();
-      await this.transactionRepository.save(merchantTx);
+      transactions.push(merchantTx);
       transactionIds.push(merchantTx.getTransactionId());
     }
 
@@ -165,14 +168,27 @@ export class RedeemPointsUseCase {
         locationId,
       );
       globalTx.complete();
-      await this.transactionRepository.save(globalTx);
+      transactions.push(globalTx);
       transactionIds.push(globalTx.getTransactionId());
     }
 
-    // 8. Save customer and merchant
+    // 8. Save everything atomically (or fall back to sequential saves)
     merchant.incrementTransactionCount();
-    await this.customerRepository.save(customer);
-    await this.merchantRepository.save(merchant);
+
+    if (this.atomicWrite) {
+      const items: PersistenceItem[] = [
+        ...transactions.map((tx) => this.transactionRepository.toPersistenceItem(tx)),
+        this.customerRepository.toPersistenceItem(customer),
+        this.merchantRepository.toPersistenceItem(merchant),
+      ];
+      await this.atomicWrite(items);
+    } else {
+      for (const tx of transactions) {
+        await this.transactionRepository.save(tx);
+      }
+      await this.customerRepository.save(customer);
+      await this.merchantRepository.save(merchant);
+    }
 
     // 9. Store idempotency result and return
     const response: RedeemPointsResponse = {

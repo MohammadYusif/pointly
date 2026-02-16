@@ -25,6 +25,9 @@ export async function cognitoAuthPlugin(server: FastifyInstance): Promise<void> 
   const userPoolId = env.MERCHANT_USER_POOL_ID;
 
   if (!userPoolId) {
+    if (env.NODE_ENV === 'production') {
+      throw new Error('MERCHANT_USER_POOL_ID is required in production');
+    }
     server.log.warn('MERCHANT_USER_POOL_ID not set — Cognito auth disabled');
     server.decorateRequest('merchantId', '');
     server.decorateRequest('cognitoSub', '');

@@ -4,6 +4,7 @@ import rateLimit from '@fastify/rate-limit';
 import Fastify, { type FastifyInstance } from 'fastify';
 import EnvironmentConfig from '../../infrastructure/config/Environment';
 import { cognitoAuthPlugin } from './plugins/cognitoAuth';
+import { cognitoCustomerAuthPlugin } from './plugins/cognitoCustomerAuth';
 import { errorHandler } from './plugins/errorHandler';
 import { registerRoutes } from './routes';
 
@@ -55,8 +56,9 @@ export async function createServer(): Promise<FastifyInstance> {
     }),
   });
 
-  // Register Cognito JWT authentication
+  // Register Cognito JWT authentication (merchant + customer)
   await server.register(cognitoAuthPlugin);
+  await server.register(cognitoCustomerAuthPlugin);
 
   // Register error handler
   server.setErrorHandler(errorHandler);

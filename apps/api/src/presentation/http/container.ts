@@ -76,6 +76,7 @@ export function createContainer(): Container {
     merchantRepository,
     transactionRepository,
     idempotencyService,
+    (items) => transactionalWriter.writeAll(items),
   );
 
   const processPointsDecayUseCase = new ProcessPointsDecayUseCase(

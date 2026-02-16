@@ -25,6 +25,9 @@ export async function cognitoCustomerAuthPlugin(server: FastifyInstance): Promis
   const userPoolId = env.CUSTOMER_USER_POOL_ID;
 
   if (!userPoolId) {
+    if (env.NODE_ENV === 'production') {
+      throw new Error('CUSTOMER_USER_POOL_ID is required in production');
+    }
     server.log.warn('CUSTOMER_USER_POOL_ID not set — Customer Cognito auth disabled');
     server.decorateRequest('customerId', '');
     return;
