@@ -437,10 +437,14 @@ function makeCustomer({
     GSI1SK: 'CUSTOMER',
   };
 
-  const grantedEnrollment = enrollments.find((e) => e.consentStatus === 'granted');
-  if (grantedEnrollment) {
-    item.GSI2PK = `MERCHANT#${grantedEnrollment.merchantId}#CUSTOMERS`;
+  const grantedMerchantIds = enrollments
+    .filter((e) => e.consentStatus === 'granted')
+    .map((e) => e.merchantId);
+
+  if (grantedMerchantIds.length > 0) {
+    item.GSI2PK = `MERCHANT#${grantedMerchantIds[0]}#CUSTOMERS`;
     item.GSI2SK = `CUSTOMER#${id}`;
+    item.grantedMerchantIds = grantedMerchantIds;
   }
   if (gsi3pk) {
     item.GSI3PK = gsi3pk;
