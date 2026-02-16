@@ -9,10 +9,10 @@ import {
   type CustomerStatus,
   CustomerTier,
   type CustomerTierLevel,
+  DEFAULT_TIER,
   PhoneNumber,
   Points,
   VALID_TIER_LEVELS,
-  DEFAULT_TIER,
 } from '../../domain';
 import { BaseDynamoDBRepository } from './BaseRepository';
 
@@ -186,6 +186,7 @@ export class CustomerRepository
     return fallback;
   }
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: DynamoDB item mapping with many optional fields and date parsing
   private itemToEntity(customerItem: CustomerItem): Customer {
     const createdAt = new Date(customerItem.createdAt);
     const enrollments = new Map<string, CustomerEnrollment>();
@@ -199,11 +200,17 @@ export class CustomerRepository
         transactionCount: enrollment.transactionCount ?? 0,
       };
 
-      const consentDate = CustomerRepository.parseDate(enrollment.consentGrantedAt, null as unknown as Date);
+      const consentDate = CustomerRepository.parseDate(
+        enrollment.consentGrantedAt,
+        null as unknown as Date,
+      );
       if (consentDate) {
         enrollmentData.consentGrantedAt = consentDate;
       }
-      const lastTxDate = CustomerRepository.parseDate(enrollment.lastTransactionAt, null as unknown as Date);
+      const lastTxDate = CustomerRepository.parseDate(
+        enrollment.lastTransactionAt,
+        null as unknown as Date,
+      );
       if (lastTxDate) {
         enrollmentData.lastTransactionAt = lastTxDate;
       }
@@ -225,8 +232,14 @@ export class CustomerRepository
       currentTier: CustomerTier.fromLevel(tierLevel),
       monthlyProgress: Points.from(customerItem.monthlyProgress ?? 0),
       tierLastUpdatedAt: CustomerRepository.parseDate(customerItem.tierLastUpdatedAt, createdAt),
-      monthlyProgressResetAt: CustomerRepository.parseDate(customerItem.monthlyProgressResetAt, createdAt),
-      lastNetworkActivity: CustomerRepository.parseDate(customerItem.lastNetworkActivity, createdAt),
+      monthlyProgressResetAt: CustomerRepository.parseDate(
+        customerItem.monthlyProgressResetAt,
+        createdAt,
+      ),
+      lastNetworkActivity: CustomerRepository.parseDate(
+        customerItem.lastNetworkActivity,
+        createdAt,
+      ),
       globalPointsDecayPhase: customerItem.globalPointsDecayPhase ?? 0,
       enrollments,
       createdAt,
@@ -240,7 +253,10 @@ export class CustomerRepository
       props.decayStartDate = CustomerRepository.parseDate(customerItem.decayStartDate, createdAt);
     }
     if (customerItem.lastDecayAppliedAt) {
-      props.lastDecayAppliedAt = CustomerRepository.parseDate(customerItem.lastDecayAppliedAt, createdAt);
+      props.lastDecayAppliedAt = CustomerRepository.parseDate(
+        customerItem.lastDecayAppliedAt,
+        createdAt,
+      );
     }
 
     return Customer.reconstitute(props);

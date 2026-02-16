@@ -100,4 +100,3 @@ export function TransactionTrendChart({ data, loading }: TransactionTrendChartPr
     </Card>
   );
 }
-

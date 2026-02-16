@@ -112,7 +112,8 @@ export { normalizePhone };
 export const customerApi = {
   getById: (id: string) => fetchApi<CustomerResponse>(`/v1/customers/${id}`),
 
-  getByPhone: (phone: string) => fetchApi<CustomerResponse>(`/v1/customers/phone/${normalizePhone(phone)}`),
+  getByPhone: (phone: string) =>
+    fetchApi<CustomerResponse>(`/v1/customers/phone/${normalizePhone(phone)}`),
 
   create: (phone: string, name?: string) =>
     fetchApi<CustomerResponse>('/v1/customers', {
@@ -188,7 +189,10 @@ export const purchaseApi = {
 
 // Merchant update API
 export const merchantUpdateApi = {
-  update: (merchantId: string, data: { businessName?: string; contactName?: string; phone?: string }) =>
+  update: (
+    merchantId: string,
+    data: { businessName?: string; contactName?: string; phone?: string },
+  ) =>
     fetchApi<MerchantResponse>(`/v1/merchants/${merchantId}`, {
       method: 'PATCH',
       body: JSON.stringify(data),

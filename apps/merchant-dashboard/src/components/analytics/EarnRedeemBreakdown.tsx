@@ -96,4 +96,3 @@ export function EarnRedeemBreakdown({ data, loading }: EarnRedeemBreakdownProps)
     </Card>
   );
 }
-

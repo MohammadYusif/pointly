@@ -200,7 +200,9 @@ export default function RedeemPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('customer.phone')}</span>
-                  <span className="font-medium" dir="ltr">{formatPhone(customer.phone)}</span>
+                  <span className="font-medium" dir="ltr">
+                    {formatPhone(customer.phone)}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -281,9 +283,7 @@ export default function RedeemPage() {
                 <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
                 <div>
                   <p className="text-lg font-bold text-green-600">{t('redeem.success')}</p>
-                  <p className="text-2xl font-bold mt-2">
-                    {formatCurrency(result.sarValue)}
-                  </p>
+                  <p className="text-2xl font-bold mt-2">{formatCurrency(result.sarValue)}</p>
                   <p className="text-sm text-muted-foreground mt-1">{result.message}</p>
                 </div>
               </CardContent>

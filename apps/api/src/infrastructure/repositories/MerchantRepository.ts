@@ -176,6 +176,7 @@ export class MerchantRepository
     return this.entityToItem(entity);
   }
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: DynamoDB item mapping with many optional fields
   private itemToEntity(item: MerchantItem): Merchant {
     const locations: LocationInfo[] = (item.locations || []).map((loc) => ({
       locationId: loc.locationId,

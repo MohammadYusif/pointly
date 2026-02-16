@@ -68,8 +68,7 @@ export default function SettingsPage() {
     }
   };
 
-  const canManageLocations =
-    merchant?.tier === 'PROFESSIONAL' || merchant?.tier === 'ENTERPRISE';
+  const canManageLocations = merchant?.tier === 'PROFESSIONAL' || merchant?.tier === 'ENTERPRISE';
 
   if (isLoading) {
     return (
@@ -102,24 +101,52 @@ export default function SettingsPage() {
             {isEditing ? (
               <>
                 <div>
-                  <label className="text-sm text-muted-foreground block mb-1">{t('merchant.name')}</label>
-                  <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
+                  <label
+                    htmlFor="settings-business-name"
+                    className="text-sm text-muted-foreground block mb-1"
+                  >
+                    {t('merchant.name')}
+                  </label>
+                  <Input
+                    id="settings-business-name"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                  />
                 </div>
                 <div>
-                  <label className="text-sm text-muted-foreground block mb-1">
+                  <label
+                    htmlFor="settings-contact-name"
+                    className="text-sm text-muted-foreground block mb-1"
+                  >
                     {language === 'ar' ? 'اسم جهة الاتصال' : 'Contact Name'}
                   </label>
-                  <Input value={contactName} onChange={(e) => setContactName(e.target.value)} />
+                  <Input
+                    id="settings-contact-name"
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
+                  />
                 </div>
                 <div>
-                  <label className="text-sm text-muted-foreground block mb-1">{t('customer.phone')}</label>
-                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} dir="ltr" />
+                  <label
+                    htmlFor="settings-phone"
+                    className="text-sm text-muted-foreground block mb-1"
+                  >
+                    {t('customer.phone')}
+                  </label>
+                  <Input
+                    id="settings-phone"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    dir="ltr"
+                  />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{t('auth.email')}</p>
                   <p className="font-medium text-muted-foreground" dir="ltr">
                     {merchant?.email || authMerchant?.email}
-                    <span className="text-xs ms-2">({language === 'ar' ? 'غير قابل للتعديل' : 'read-only'})</span>
+                    <span className="text-xs ms-2">
+                      ({language === 'ar' ? 'غير قابل للتعديل' : 'read-only'})
+                    </span>
                   </p>
                 </div>
                 <div className="flex gap-3 pt-2">
@@ -135,15 +162,21 @@ export default function SettingsPage() {
               <>
                 <div>
                   <p className="text-sm text-muted-foreground">{t('merchant.name')}</p>
-                  <p className="font-medium">{merchant?.businessName || authMerchant?.businessName}</p>
+                  <p className="font-medium">
+                    {merchant?.businessName || authMerchant?.businessName}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{t('auth.email')}</p>
-                  <p className="font-medium" dir="ltr">{merchant?.email || authMerchant?.email}</p>
+                  <p className="font-medium" dir="ltr">
+                    {merchant?.email || authMerchant?.email}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{t('customer.phone')}</p>
-                  <p className="font-medium" dir="ltr">{merchant?.phone}</p>
+                  <p className="font-medium" dir="ltr">
+                    {merchant?.phone}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{t('merchant.tier')}</p>
@@ -229,7 +262,11 @@ export default function SettingsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>{t('merchant.locations')}</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => setShowAddLocation(!showAddLocation)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAddLocation(!showAddLocation)}
+              >
                 {t('merchant.addLocation')}
               </Button>
             </CardHeader>
@@ -252,15 +289,17 @@ export default function SettingsPage() {
                     onChange={(e) => setNewLocationCity(e.target.value)}
                   />
                   <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowAddLocation(false)}
-                    >
+                    <Button variant="outline" onClick={() => setShowAddLocation(false)}>
                       {t('common.cancel')}
                     </Button>
                     <Button
                       onClick={handleAddLocation}
-                      disabled={addLocation.isPending || !newLocationName || !newLocationAddress || !newLocationCity}
+                      disabled={
+                        addLocation.isPending ||
+                        !newLocationName ||
+                        !newLocationAddress ||
+                        !newLocationCity
+                      }
                     >
                       {addLocation.isPending ? t('common.loading') : t('common.save')}
                     </Button>
@@ -270,17 +309,27 @@ export default function SettingsPage() {
 
               <div className="space-y-2">
                 {merchant?.locations?.map((loc) => (
-                  <div key={loc.locationId} className="flex items-center justify-between p-3 border rounded-md">
+                  <div
+                    key={loc.locationId}
+                    className="flex items-center justify-between p-3 border rounded-md"
+                  >
                     <div>
                       <p className="font-medium">{loc.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {loc.city}{loc.address ? ` - ${loc.address}` : ''}
+                        {loc.city}
+                        {loc.address ? ` - ${loc.address}` : ''}
                       </p>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${loc.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                    <span
+                      className={`text-xs px-2 py-1 rounded-full ${loc.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
+                    >
                       {loc.isActive
-                        ? (language === 'ar' ? 'نشط' : 'Active')
-                        : (language === 'ar' ? 'غير نشط' : 'Inactive')}
+                        ? language === 'ar'
+                          ? 'نشط'
+                          : 'Active'
+                        : language === 'ar'
+                          ? 'غير نشط'
+                          : 'Inactive'}
                     </span>
                   </div>
                 ))}

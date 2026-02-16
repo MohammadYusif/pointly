@@ -167,7 +167,12 @@ describe('CustomerTier Value Object', () => {
     });
 
     it('getColor() should return a color string for each tier', () => {
-      for (const tier of [CustomerTier.bronze(), CustomerTier.gold(), CustomerTier.platinum(), CustomerTier.diamond()]) {
+      for (const tier of [
+        CustomerTier.bronze(),
+        CustomerTier.gold(),
+        CustomerTier.platinum(),
+        CustomerTier.diamond(),
+      ]) {
         expect(tier.getColor()).toEqual(expect.any(String));
         expect(tier.getColor()).toMatch(/^#[0-9A-Fa-f]{6}$/);
       }
@@ -207,13 +212,23 @@ describe('CustomerTier Value Object', () => {
     });
 
     it('getThresholds() does NOT have redemptionMultiplier', () => {
-      for (const tier of [CustomerTier.bronze(), CustomerTier.gold(), CustomerTier.platinum(), CustomerTier.diamond()]) {
+      for (const tier of [
+        CustomerTier.bronze(),
+        CustomerTier.gold(),
+        CustomerTier.platinum(),
+        CustomerTier.diamond(),
+      ]) {
         expect(tier.getThresholds()).not.toHaveProperty('redemptionMultiplier');
       }
     });
 
     it('getDisplayName matches toString of display name', () => {
-      for (const tier of [CustomerTier.bronze(), CustomerTier.gold(), CustomerTier.platinum(), CustomerTier.diamond()]) {
+      for (const tier of [
+        CustomerTier.bronze(),
+        CustomerTier.gold(),
+        CustomerTier.platinum(),
+        CustomerTier.diamond(),
+      ]) {
         expect(tier.getDisplayName()).toBe(tier.getThresholds().displayName);
       }
     });

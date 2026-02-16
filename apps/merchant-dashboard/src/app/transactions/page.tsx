@@ -20,6 +20,7 @@ function getAmount(amount: unknown): number {
   return 0;
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: page component with filtering, export, and conditional rendering
 export default function TransactionsPage() {
   const { t, formatCurrency, formatNumber, language, locale } = useTranslation();
   const { textStart, textEnd } = useRTL();
@@ -40,9 +41,7 @@ export default function TransactionsPage() {
   const allTransactions = (txPages?.pages.flatMap((p) => p.transactions || []) ||
     []) as TransactionResponse[];
   const transactions =
-    typeFilter === 'all'
-      ? allTransactions
-      : allTransactions.filter((tx) => tx.type === typeFilter);
+    typeFilter === 'all' ? allTransactions : allTransactions.filter((tx) => tx.type === typeFilter);
   const locations = merchantData?.locations || [];
 
   // Build lookup maps for display names
@@ -81,7 +80,15 @@ export default function TransactionsPage() {
           <Button
             variant="outline"
             onClick={() => {
-              const headers = ['Date', 'ID', 'Customer', 'Type', 'Points', 'Amount (SAR)', 'Status'];
+              const headers = [
+                'Date',
+                'ID',
+                'Customer',
+                'Type',
+                'Points',
+                'Amount (SAR)',
+                'Status',
+              ];
               const rows = transactions.map((tx) => [
                 new Date(tx.createdAt).toISOString(),
                 tx.transactionId,

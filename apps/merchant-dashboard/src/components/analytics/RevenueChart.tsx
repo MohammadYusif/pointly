@@ -102,4 +102,3 @@ export function RevenueChart({ data, loading }: RevenueChartProps) {
     </Card>
   );
 }
-

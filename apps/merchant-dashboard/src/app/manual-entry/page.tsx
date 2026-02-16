@@ -37,6 +37,7 @@ export default function ManualEntryPage() {
 
   const purchaseMutation = useRecordPurchase();
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: lookup flow with QR parsing, phone validation, and error handling
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
