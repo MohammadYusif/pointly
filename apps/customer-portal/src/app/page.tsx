@@ -9,7 +9,7 @@ import { useState } from 'react';
 
 export default function LoginPage() {
   const { t, language } = useTranslation();
-  const { textStart } = useRTL();
+  useRTL();
   const router = useRouter();
 
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
@@ -64,8 +64,11 @@ export default function LoginPage() {
           {step === 'phone' ? (
             <form onSubmit={handlePhoneSubmit} className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">{t('customer.phone')}</label>
+                <label htmlFor="phone-input" className="text-sm font-medium mb-1 block">
+                  {t('customer.phone')}
+                </label>
                 <Input
+                  id="phone-input"
                   type="tel"
                   placeholder="05XXXXXXXX"
                   value={phone}
@@ -82,10 +85,11 @@ export default function LoginPage() {
           ) : (
             <form onSubmit={handleOtpSubmit} className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">
+                <label htmlFor="otp-input" className="text-sm font-medium mb-1 block">
                   {language === 'ar' ? 'رمز التحقق' : 'Verification Code'}
                 </label>
                 <Input
+                  id="otp-input"
                   type="text"
                   inputMode="numeric"
                   placeholder="000000"

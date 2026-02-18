@@ -904,7 +904,7 @@ async function seed() {
   for (const c of customers) {
     // Extract merchant IDs before cleaning up the temp field
     const grantedMerchantIds = c._grantedMerchantIds || [];
-    delete c._grantedMerchantIds;
+    c._grantedMerchantIds = undefined;
 
     await putItem(TABLES.userLedger, c);
 

@@ -10,14 +10,14 @@ import { useEffect, useState } from 'react';
 
 export default function HistoryPage() {
   const { t, formatNumber, language, locale } = useTranslation();
-  const { textStart } = useRTL();
+  useRTL();
 
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
   const [nextToken, setNextToken] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const loadTransactions = async (token?: string) => {
+  const loadTransactions = useCallback(async (token?: string) => {
     try {
       const result = await getCustomerTransactions({ limit: 20, nextToken: token });
       if (token) {
@@ -29,11 +29,11 @@ export default function HistoryPage() {
     } catch {
       // handle error
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadTransactions().finally(() => setLoading(false));
-  }, []);
+  }, [loadTransactions]);
 
   const handleLoadMore = async () => {
     setLoadingMore(true);

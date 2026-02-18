@@ -14,6 +14,7 @@ interface CustomerProfile extends CustomerResponse {
   monthsOfInactivity: number;
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: <explanation>
 export default function CustomerDashboard() {
   const { t, formatNumber, language, locale } = useTranslation();
   const { textStart } = useRTL();
