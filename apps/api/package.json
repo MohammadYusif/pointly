@@ -11,7 +11,7 @@
     "build:lambda:tier-reset": "esbuild src/scheduled-tier-reset.ts --bundle --platform=node --target=node20 --outfile=dist/lambda-tier-reset/index.js --external:@aws-sdk/* --minify",
     "build:lambda:all": "pnpm build:lambda && pnpm build:lambda:decay && pnpm build:lambda:tier-reset",
     "start": "node dist/presentation/http/server.js",
-    "test": "vitest run",
+    "test": "vitest run --coverage",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "biome check .",
