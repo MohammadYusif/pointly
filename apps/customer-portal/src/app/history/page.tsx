@@ -6,11 +6,11 @@ import { useTranslation } from '@pointly/i18n';
 import type { TransactionResponse } from '@pointly/shared';
 import { getTypeBadge } from '@pointly/shared';
 import { Button, Card, CardContent, useRTL } from '@pointly/ui';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export default function HistoryPage() {
   const { t, formatNumber, language, locale } = useTranslation();
-  useRTL();
+  const { textStart } = useRTL();
 
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
   const [nextToken, setNextToken] = useState<string | undefined>();
