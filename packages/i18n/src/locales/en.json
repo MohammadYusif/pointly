@@ -19,7 +19,12 @@
     "close": "Close",
     "viewAll": "View All",
     "noData": "No data available",
-    "actions": "Actions"
+    "actions": "Actions",
+    "optional": "optional",
+    "loadMore": "Load More",
+    "active": "Active",
+    "readOnly": "read-only",
+    "inactive": "Inactive"
   },
   "auth": {
     "login": "Log In",
@@ -56,7 +61,9 @@
     "activeCustomers": "{{count}} active",
     "recentTransactions": "Recent Transactions",
     "fromLastMonth": "+{{percent}}% from last month",
-    "pointsRate": "1 SAR = 1 Point"
+    "pointsRate": "1 SAR = 1 Point",
+    "uniqueCustomers": "Unique Customers",
+    "locations": "Locations"
   },
   "customer": {
     "title": "Customers",
@@ -77,7 +84,8 @@
     "enrolled": "Enrolled",
     "recordPurchase": "Record Purchase",
     "redeemPoints": "Redeem Points",
-    "exportCSV": "Export CSV"
+    "exportCSV": "Export CSV",
+    "phonePlaceholder": "+966 5XX XXX XXXX"
   },
   "merchant": {
     "title": "Merchant",
@@ -87,7 +95,12 @@
     "locations": "Locations",
     "addLocation": "Add Location",
     "businessType": "Business Type",
-    "contactInfo": "Contact Information"
+    "contactInfo": "Contact Information",
+    "selectLocation": "Select location...",
+    "contactName": "Contact Name",
+    "locationName": "Location name",
+    "address": "Address",
+    "city": "City"
   },
   "transaction": {
     "title": "Transactions",
@@ -102,7 +115,17 @@
     "pending": "Pending",
     "completed": "Completed",
     "cancelled": "Cancelled",
-    "viewDetails": "View Details"
+    "viewDetails": "View Details",
+    "cashierName": "Cashier Name",
+    "cashierNamePlaceholder": "e.g. John Doe",
+    "printReceipt": "Print Receipt",
+    "downloadPdf": "Download PDF",
+    "newPurchase": "New Purchase",
+    "purchaseSuccess": "Purchase successful!",
+    "allTypes": "All Types",
+    "sortNewest": "Newest",
+    "sortOldest": "Oldest",
+    "minAmount": "Amount (min)"
   },
   "settings": {
     "title": "Settings",
@@ -115,7 +138,10 @@
     "theme": "Theme",
     "light": "Light",
     "dark": "Dark",
-    "system": "System"
+    "system": "System",
+    "redemptionRate": "Redemption Rate",
+    "sms": "SMS",
+    "used": "Used"
   },
   "errors": {
     "required": "This field is required",
@@ -126,7 +152,8 @@
     "networkError": "Network error. Please try again.",
     "serverError": "Server error. Please try again later.",
     "unauthorized": "You are not authorized to perform this action",
-    "notFound": "The requested resource was not found"
+    "notFound": "The requested resource was not found",
+    "locationRequired": "Location is required"
   },
   "redeem": {
     "title": "Redeem Points",
@@ -141,7 +168,21 @@
     "merchantBalance": "Merchant Points",
     "globalBalance": "Global Points",
     "redemptionBreakdown": "Redemption Breakdown",
-    "newBalances": "New Balances"
+    "newBalances": "New Balances",
+    "totalAvailable": "Total Available",
+    "newRedemption": "New Redemption",
+    "multiplesOf": "Points must be in multiples of {{min}}",
+    "successMessage": "Successfully redeemed {{points}} points for {{value}}.",
+    "errorZero": "Points to redeem must be greater than zero.",
+    "errorMinimum": "You must redeem at least {{min}} points.",
+    "errorInsufficient": "You cannot redeem more points than the customer has."
+  },
+  "billing": {
+    "currentPlan": "Current Plan",
+    "current": "Current",
+    "management": "Billing Management",
+    "comingSoon": "Coming Soon",
+    "managementDesc": "Payment methods, invoices, and usage management will be available soon. To upgrade or for billing inquiries, contact our support team."
   },
   "success": {
     "saved": "Changes saved successfully",

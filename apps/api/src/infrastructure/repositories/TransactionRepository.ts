@@ -375,10 +375,10 @@ export class TransactionRepository
   }
 
   toPersistenceItem(entity: Transaction) {
-    return {
+    return [{
       tableName: this.tableName,
       item: this.entityToItem(entity) as unknown as Record<string, unknown>,
-    };
+    }];
   }
 
   async delete(id: string): Promise<void> {

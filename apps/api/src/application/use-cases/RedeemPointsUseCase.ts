@@ -177,9 +177,9 @@ export class RedeemPointsUseCase {
 
     if (this.atomicWrite) {
       const items: PersistenceItem[] = [
-        ...transactions.map((tx) => this.transactionRepository.toPersistenceItem(tx)),
-        this.customerRepository.toPersistenceItem(customer),
-        this.merchantRepository.toPersistenceItem(merchant),
+        ...transactions.flatMap((tx) => this.transactionRepository.toPersistenceItem(tx)),
+        ...this.customerRepository.toPersistenceItem(customer),
+        ...this.merchantRepository.toPersistenceItem(merchant),
       ];
       await this.atomicWrite(items);
     } else {

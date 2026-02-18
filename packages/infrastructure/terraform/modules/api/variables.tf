@@ -16,6 +16,15 @@ variable "lambda_tier_reset_zip_path" {
   default = ""
 }
 
+# Cognito
+variable "merchant_user_pool_id" {
+  type = string
+}
+
+variable "merchant_user_pool_client_id" {
+  type = string
+}
+
 # DynamoDB table names
 variable "user_ledger_table_name" {
   type = string

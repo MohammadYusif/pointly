@@ -7,7 +7,14 @@ import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { formatPhone, getStatusBadge, getTierColor, getTypeBadge } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, useRTL } from '@pointly/ui';
-import { ArrowLeft, ArrowRight, Download, Receipt, ShoppingCart } from 'lucide-react';
+import {
+  ArrowDownUp,
+  ArrowLeft,
+  ArrowRight,
+  Download,
+  Receipt,
+  ShoppingCart,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -38,6 +45,7 @@ export default function CustomerDetailPage() {
   } = useCustomerById(customerId);
   const { data: merchantData } = useMerchant();
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC');
 
   const {
     data: txPages,
@@ -46,7 +54,7 @@ export default function CustomerDetailPage() {
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useInfiniteCustomerTransactions(customerId, 20);
+  } = useInfiniteCustomerTransactions(customerId, 20, sortOrder);
 
   const allTransactions = (txPages?.pages.flatMap((p) => p.transactions || []) ||
     []) as TransactionResponse[];
@@ -173,12 +181,22 @@ export default function CustomerDetailPage() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <CardTitle className="text-lg">{t('customer.transactionHistory')}</CardTitle>
                 <div className="flex gap-3 flex-wrap">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSortOrder(sortOrder === 'DESC' ? 'ASC' : 'DESC')}
+                  >
+                    <ArrowDownUp className="h-4 w-4 me-1" />
+                    {sortOrder === 'DESC'
+                      ? t('transaction.sortNewest')
+                      : t('transaction.sortOldest')}
+                  </Button>
                   <select
                     value={typeFilter}
                     onChange={(e) => setTypeFilter(e.target.value)}
                     className="flex h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                   >
-                    <option value="all">{language === 'ar' ? 'كل الأنواع' : 'All Types'}</option>
+                    <option value="all">{t('transaction.allTypes')}</option>
                     <option value="EARN">{t('transaction.purchase')}</option>
                     <option value="REDEEM">{t('transaction.redemption')}</option>
                   </select>
@@ -280,11 +298,7 @@ export default function CustomerDetailPage() {
                   onClick={() => fetchNextPage()}
                   disabled={isFetchingNextPage}
                 >
-                  {isFetchingNextPage
-                    ? t('common.loading')
-                    : language === 'ar'
-                      ? 'تحميل المزيد'
-                      : 'Load More'}
+                  {isFetchingNextPage ? t('common.loading') : t('common.loadMore')}
                 </Button>
               )}
             </CardContent>

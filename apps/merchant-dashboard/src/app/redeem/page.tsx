@@ -10,7 +10,7 @@ import { formatPhone } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
 import { CheckCircle, RotateCcw } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type Step = 'input' | 'confirming' | 'processing' | 'receipt';
 
@@ -38,6 +38,7 @@ export default function RedeemPage() {
   const [phone, setPhone] = useState(searchParams.get('phone') || '');
   const [pointsToRedeem, setPointsToRedeem] = useState('');
   const [error, setError] = useState('');
+  const [validationError, setValidationError] = useState('');
   const [customer, setCustomer] = useState<CustomerResponse | null>(null);
   const [result, setResult] = useState<RedeemResult | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
@@ -47,6 +48,46 @@ export default function RedeemPage() {
   const minimumRedemption = loyaltyConfig?.minimumRedemption ?? 100;
   const redemptionRate = loyaltyConfig?.redemptionRate ?? 0.01;
   const allowPartial = loyaltyConfig?.allowPartialRedemption ?? true;
+
+  const getCustomerMerchantBalance = (): number => {
+    if (!customer || !merchant) return 0;
+    // biome-ignore lint/suspicious/noExplicitAny: enrollment shape varies
+    const enrollment = customer.enrollments?.find((e: any) => e.merchantId === merchant.merchantId);
+    return enrollment?.merchantPointsBalance ?? 0;
+  };
+
+  const getCustomerGlobalBalance = (): number => {
+    return customer?.globalPointsBalance ?? 0;
+  };
+
+  const getTotalAvailable = (): number => {
+    return getCustomerMerchantBalance() + getCustomerGlobalBalance();
+  };
+
+  useEffect(() => {
+    const points = Number(pointsToRedeem);
+    if (!pointsToRedeem) {
+      setValidationError('');
+      return;
+    }
+
+    if (points <= 0) {
+      setValidationError(t('redeem.errorZero'));
+      return;
+    }
+
+    if (points < minimumRedemption) {
+      setValidationError(t('redeem.errorMinimum', { min: String(minimumRedemption) }));
+      return;
+    }
+
+    if (step === 'confirming' && customer && points > getTotalAvailable()) {
+      setValidationError(t('redeem.errorInsufficient'));
+      return;
+    }
+
+    setValidationError('');
+  }, [pointsToRedeem, customer, minimumRedemption, step, t, getTotalAvailable]);
 
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,21 +105,6 @@ export default function RedeemPage() {
     }
   };
 
-  const getCustomerMerchantBalance = (): number => {
-    if (!customer || !merchant) return 0;
-    // biome-ignore lint/suspicious/noExplicitAny: enrollment shape varies
-    const enrollment = customer.enrollments?.find((e: any) => e.merchantId === merchant.merchantId);
-    return enrollment?.merchantPointsBalance ?? 0;
-  };
-
-  const getCustomerGlobalBalance = (): number => {
-    return customer?.globalPointsBalance ?? 0;
-  };
-
-  const getTotalAvailable = (): number => {
-    return getCustomerMerchantBalance() + getCustomerGlobalBalance();
-  };
-
   const getRedemptionBreakdown = () => {
     const points = Number(pointsToRedeem);
     const merchantBal = getCustomerMerchantBalance();
@@ -88,7 +114,7 @@ export default function RedeemPage() {
   };
 
   const handleConfirm = async () => {
-    if (!merchant || !customer) return;
+    if (!merchant || !customer || validationError) return;
     setStep('processing');
     setError('');
 
@@ -143,7 +169,7 @@ export default function RedeemPage() {
                   <Input
                     id="phone-input"
                     type="tel"
-                    placeholder="+966 5XX XXX XXXX"
+                    placeholder={t('customer.phonePlaceholder')}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     required
@@ -161,25 +187,24 @@ export default function RedeemPage() {
                     value={pointsToRedeem}
                     onChange={(e) => setPointsToRedeem(e.target.value)}
                     required
-                    min={minimumRedemption}
+                    min={1}
                     step={allowPartial ? '1' : String(minimumRedemption)}
                     dir="ltr"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     {allowPartial
                       ? t('redeem.minRedemption', { min: String(minimumRedemption) })
-                      : language === 'ar'
-                        ? `يجب أن تكون النقاط مضاعفات ${minimumRedemption}`
-                        : `Points must be in multiples of ${minimumRedemption}`}
+                      : t('redeem.multiplesOf', { min: String(minimumRedemption) })}
                   </p>
                 </div>
 
                 {error && <p className="text-sm text-destructive">{error}</p>}
+                {validationError && <p className="text-sm text-destructive">{validationError}</p>}
 
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={isLookingUp || !phone || !pointsToRedeem}
+                  disabled={isLookingUp || !phone || !pointsToRedeem || !!validationError}
                 >
                   {isLookingUp ? t('common.loading') : t('common.next')}
                 </Button>
@@ -224,7 +249,7 @@ export default function RedeemPage() {
                 </div>
                 <div className="flex justify-between border-t pt-2">
                   <span className="text-muted-foreground font-medium">
-                    {language === 'ar' ? 'الإجمالي المتاح' : 'Total Available'}
+                    {t('redeem.totalAvailable')}
                   </span>
                   <span className="font-bold">{formatNumber(getTotalAvailable())}</span>
                 </div>
@@ -252,16 +277,13 @@ export default function RedeemPage() {
             </Card>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
+            {validationError && <p className="text-sm text-destructive">{validationError}</p>}
 
             <div className="flex gap-3">
               <Button variant="outline" className="flex-1" onClick={() => setStep('input')}>
                 {t('common.back')}
               </Button>
-              <Button
-                className="flex-1"
-                onClick={handleConfirm}
-                disabled={Number(pointsToRedeem) > getTotalAvailable()}
-              >
+              <Button className="flex-1" onClick={handleConfirm} disabled={!!validationError}>
                 {t('redeem.confirmRedemption')}
               </Button>
             </div>
@@ -286,7 +308,12 @@ export default function RedeemPage() {
                 <div>
                   <p className="text-lg font-bold text-green-600">{t('redeem.success')}</p>
                   <p className="text-2xl font-bold mt-2">{formatCurrency(result.sarValue)}</p>
-                  <p className="text-sm text-muted-foreground mt-1">{result.message}</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {t('redeem.successMessage', {
+                      points: formatNumber(result.totalPointsRedeemed),
+                      value: formatCurrency(result.sarValue),
+                    })}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -313,7 +340,7 @@ export default function RedeemPage() {
 
             <Button className="w-full" onClick={handleNewRedemption}>
               <RotateCcw className="h-4 w-4 me-2" />
-              {language === 'ar' ? 'استبدال جديد' : 'New Redemption'}
+              {t('redeem.newRedemption')}
             </Button>
           </div>
         )}

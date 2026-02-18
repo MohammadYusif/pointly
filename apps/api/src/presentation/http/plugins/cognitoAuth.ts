@@ -1,6 +1,7 @@
 import type { Secret } from '@fastify/jwt';
 import fastifyJwt from '@fastify/jwt';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
+import fp from 'fastify-plugin';
 import jwksRsa from 'jwks-rsa';
 import { ForbiddenError, UnauthorizedError } from '../../../domain/errors/DomainError';
 import EnvironmentConfig from '../../../infrastructure/config/Environment';
@@ -19,7 +20,7 @@ function getJwksClient(region: string, userPoolId: string): jwksRsa.JwksClient {
   return jwksClient;
 }
 
-export async function cognitoAuthPlugin(server: FastifyInstance): Promise<void> {
+export const cognitoAuthPlugin = fp(async function cognitoAuthPlugin(server: FastifyInstance): Promise<void> {
   const env = EnvironmentConfig.get();
   const region = env.AWS_REGION;
   const userPoolId = env.MERCHANT_USER_POOL_ID;
@@ -50,6 +51,7 @@ export async function cognitoAuthPlugin(server: FastifyInstance): Promise<void> 
 
   await server.register(fastifyJwt, {
     secret,
+    decode: { complete: true },
     verify: {
       allowedIss: issuer,
     },
@@ -57,7 +59,7 @@ export async function cognitoAuthPlugin(server: FastifyInstance): Promise<void> 
 
   server.decorateRequest('merchantId', '');
   server.decorateRequest('cognitoSub', '');
-}
+});
 
 export async function verifyMerchantToken(request: FastifyRequest): Promise<void> {
   const env = EnvironmentConfig.get();
@@ -69,15 +71,16 @@ export async function verifyMerchantToken(request: FastifyRequest): Promise<void
 
   try {
     await request.jwtVerify();
-  } catch {
+  } catch (err) {
+    request.log.error({ err }, 'JWT verification failed');
     throw new UnauthorizedError('Invalid or expired token');
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: JWT payload shape varies
   const payload = (request as any).user;
 
-  if (payload.token_use !== 'access') {
-    throw new UnauthorizedError('Invalid token type');
+  if (payload.token_use !== 'id') {
+    throw new UnauthorizedError('Invalid token type — expected ID token');
   }
 
   const merchantId = payload['custom:merchantId'];

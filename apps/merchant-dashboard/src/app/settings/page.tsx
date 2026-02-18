@@ -118,7 +118,7 @@ export default function SettingsPage() {
                     htmlFor="settings-contact-name"
                     className="text-sm text-muted-foreground block mb-1"
                   >
-                    {language === 'ar' ? 'اسم جهة الاتصال' : 'Contact Name'}
+                    {t('merchant.contactName')}
                   </label>
                   <Input
                     id="settings-contact-name"
@@ -144,9 +144,7 @@ export default function SettingsPage() {
                   <p className="text-sm text-muted-foreground">{t('auth.email')}</p>
                   <p className="font-medium text-muted-foreground" dir="ltr">
                     {merchant?.email || authMerchant?.email}
-                    <span className="text-xs ms-2">
-                      ({language === 'ar' ? 'غير قابل للتعديل' : 'read-only'})
-                    </span>
+                    <span className="text-xs ms-2">({t('common.readOnly')})</span>
                   </p>
                 </div>
                 <div className="flex gap-3 pt-2">
@@ -206,13 +204,11 @@ export default function SettingsPage() {
               </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">{t('transaction.amount')} (min)</p>
+              <p className="text-sm text-muted-foreground">{t('transaction.minAmount')}</p>
               <p className="font-medium">{merchant?.loyaltyConfig?.minimumPurchase ?? '-'} SAR</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">
-                {language === 'ar' ? 'معدل الاستبدال' : 'Redemption Rate'}
-              </p>
+              <p className="text-sm text-muted-foreground">{t('settings.redemptionRate')}</p>
               <p className="font-medium">
                 {merchant?.loyaltyConfig?.redemptionRate ?? '-'} SAR / {t('common.points')}
               </p>
@@ -223,13 +219,11 @@ export default function SettingsPage() {
         {/* SMS Quota */}
         <Card>
           <CardHeader>
-            <CardTitle>SMS</CardTitle>
+            <CardTitle>{t('settings.sms')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <p className="text-sm text-muted-foreground">
-                {language === 'ar' ? 'الاستخدام' : 'Used'}
-              </p>
+              <p className="text-sm text-muted-foreground">{t('settings.used')}</p>
               <p className="font-medium">
                 {formatNumber(merchant?.smsQuota?.currentUsage ?? 0)} /{' '}
                 {formatNumber(merchant?.smsQuota?.monthlyLimit ?? 0)}
@@ -274,17 +268,17 @@ export default function SettingsPage() {
               {showAddLocation && (
                 <div className="mb-4 p-4 border rounded-md space-y-3">
                   <Input
-                    placeholder={language === 'ar' ? 'اسم الفرع' : 'Location name'}
+                    placeholder={t('merchant.locationName')}
                     value={newLocationName}
                     onChange={(e) => setNewLocationName(e.target.value)}
                   />
                   <Input
-                    placeholder={language === 'ar' ? 'العنوان' : 'Address'}
+                    placeholder={t('merchant.address')}
                     value={newLocationAddress}
                     onChange={(e) => setNewLocationAddress(e.target.value)}
                   />
                   <Input
-                    placeholder={language === 'ar' ? 'المدينة' : 'City'}
+                    placeholder={t('merchant.city')}
                     value={newLocationCity}
                     onChange={(e) => setNewLocationCity(e.target.value)}
                   />
@@ -323,13 +317,7 @@ export default function SettingsPage() {
                     <span
                       className={`text-xs px-2 py-1 rounded-full ${loc.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
                     >
-                      {loc.isActive
-                        ? language === 'ar'
-                          ? 'نشط'
-                          : 'Active'
-                        : language === 'ar'
-                          ? 'غير نشط'
-                          : 'Inactive'}
+                      {loc.isActive ? t('common.active') : t('common.inactive')}
                     </span>
                   </div>
                 ))}

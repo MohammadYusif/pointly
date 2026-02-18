@@ -156,6 +156,8 @@ resource "aws_lambda_function" "api" {
       SMS_QUOTA_TABLE                     = var.sms_quota_table_name
       WALLET_PASSES_TABLE                 = var.wallet_passes_table_name
       SMS_QUEUE_URL                       = aws_sqs_queue.sms.url
+      MERCHANT_USER_POOL_ID               = var.merchant_user_pool_id
+      MERCHANT_USER_POOL_CLIENT_ID        = var.merchant_user_pool_client_id
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
       LOG_LEVEL                           = local.is_prod ? "info" : "debug"
     }

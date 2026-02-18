@@ -259,8 +259,8 @@ function createCustomers() {
       tier: 'DIAMOND',
       monthlyProgress: 16000,
       enrollments: [
-        makeEnrollment(shawarma, 160, 'granted', 11000, 28000, 50),
-        makeEnrollment(dose, 30, 'granted', 420, 600, 6),
+        makeEnrollment(shawarma, 160, 'GRANTED', 11000, 28000, 50),
+        makeEnrollment(dose, 30, 'GRANTED', 420, 600, 6),
       ],
     }),
     // Platinum - regular at Olaya branch
@@ -272,7 +272,7 @@ function createCustomers() {
       globalLifetime: 15000,
       tier: 'PLATINUM',
       monthlyProgress: 8500,
-      enrollments: [makeEnrollment(shawarma, 100, 'granted', 4500, 10000, 22)],
+      enrollments: [makeEnrollment(shawarma, 100, 'GRANTED', 4500, 10000, 22)],
     }),
     // Gold - moderate customer
     makeCustomer({
@@ -283,7 +283,7 @@ function createCustomers() {
       globalLifetime: 6500,
       tier: 'GOLD',
       monthlyProgress: 3800,
-      enrollments: [makeEnrollment(shawarma, 50, 'granted', 2200, 4000, 12)],
+      enrollments: [makeEnrollment(shawarma, 50, 'GRANTED', 2200, 4000, 12)],
     }),
     // Bronze - occasional visitor
     makeCustomer({
@@ -294,7 +294,7 @@ function createCustomers() {
       globalLifetime: 1200,
       tier: 'BRONZE',
       monthlyProgress: 900,
-      enrollments: [makeEnrollment(shawarma, 20, 'granted', 600, 900, 5)],
+      enrollments: [makeEnrollment(shawarma, 20, 'GRANTED', 600, 900, 5)],
     }),
     // Inactive - decay candidate
     makeCustomer({
@@ -308,7 +308,7 @@ function createCustomers() {
       lastActivity: daysAgo(95),
       decayPhase: 1,
       decayStartDate: daysAgo(65),
-      enrollments: [makeEnrollment(shawarma, 140, 'granted', 1000, 4500, 10)],
+      enrollments: [makeEnrollment(shawarma, 140, 'GRANTED', 1000, 4500, 10)],
     }),
     // Pending consent
     makeCustomer({
@@ -319,7 +319,7 @@ function createCustomers() {
       globalLifetime: 0,
       tier: 'BRONZE',
       monthlyProgress: 0,
-      enrollments: [makeEnrollment(shawarma, 1, 'pending', 0, 0, 0)],
+      enrollments: [makeEnrollment(shawarma, 1, 'PENDING', 0, 0, 0)],
       gsi3pk: `MERCHANT#${shawarma}#PENDING_CONSENT`,
     }),
     // Platinum - Jeddah regular (multi-enrolled: shawarma + nayomi)
@@ -332,8 +332,8 @@ function createCustomers() {
       tier: 'PLATINUM',
       monthlyProgress: 8200,
       enrollments: [
-        makeEnrollment(shawarma, 80, 'granted', 3800, 8000, 18),
-        makeEnrollment(nayomi, 60, 'granted', 2800, 5500, 8),
+        makeEnrollment(shawarma, 80, 'GRANTED', 3800, 8000, 18),
+        makeEnrollment(nayomi, 60, 'GRANTED', 2800, 5500, 8),
       ],
     }),
     // Hana - new Shawarma House customer
@@ -345,7 +345,7 @@ function createCustomers() {
       globalLifetime: 2600,
       tier: 'BRONZE',
       monthlyProgress: 1800,
-      enrollments: [makeEnrollment(shawarma, 30, 'granted', 1200, 2000, 7)],
+      enrollments: [makeEnrollment(shawarma, 30, 'GRANTED', 1200, 2000, 7)],
     }),
 
     // === Dose Cafe Customers ===
@@ -358,7 +358,7 @@ function createCustomers() {
       globalLifetime: 680,
       tier: 'BRONZE',
       monthlyProgress: 480,
-      enrollments: [makeEnrollment(dose, 40, 'granted', 480, 680, 10)],
+      enrollments: [makeEnrollment(dose, 40, 'GRANTED', 480, 680, 10)],
     }),
     // Layla - occasional visitor
     makeCustomer({
@@ -369,7 +369,7 @@ function createCustomers() {
       globalLifetime: 180,
       tier: 'BRONZE',
       monthlyProgress: 180,
-      enrollments: [makeEnrollment(dose, 14, 'granted', 180, 180, 3)],
+      enrollments: [makeEnrollment(dose, 14, 'GRANTED', 180, 180, 3)],
     }),
 
     // === Nayomi Fashion Customers ===
@@ -382,7 +382,7 @@ function createCustomers() {
       globalLifetime: 22000,
       tier: 'DIAMOND',
       monthlyProgress: 12000,
-      enrollments: [makeEnrollment(nayomi, 90, 'granted', 9500, 18000, 15)],
+      enrollments: [makeEnrollment(nayomi, 90, 'GRANTED', 9500, 18000, 15)],
     }),
     // Tariq - occasional shopper
     makeCustomer({
@@ -393,7 +393,7 @@ function createCustomers() {
       globalLifetime: 3800,
       tier: 'BRONZE',
       monthlyProgress: 2500,
-      enrollments: [makeEnrollment(nayomi, 45, 'granted', 2500, 3800, 5)],
+      enrollments: [makeEnrollment(nayomi, 45, 'GRANTED', 2500, 3800, 5)],
     }),
   ];
 }
@@ -437,18 +437,15 @@ function makeCustomer({
     GSI1SK: 'CUSTOMER',
   };
 
-  const grantedMerchantIds = enrollments
-    .filter((e) => e.consentStatus === 'granted')
-    .map((e) => e.merchantId);
-
-  if (grantedMerchantIds.length > 0) {
-    item.GSI2PK = `MERCHANT#${grantedMerchantIds[0]}#CUSTOMERS`;
-    item.GSI2SK = `CUSTOMER#${id}`;
-    item.grantedMerchantIds = grantedMerchantIds;
-  }
   if (gsi3pk) {
     item.GSI3PK = gsi3pk;
   }
+
+  // Per-merchant index items are created separately (adjacency list pattern)
+  // No GSI2PK on the main customer item
+  item._grantedMerchantIds = enrollments
+    .filter((e) => e.consentStatus === 'GRANTED')
+    .map((e) => e.merchantId);
 
   return item;
 }
@@ -463,7 +460,7 @@ function makeEnrollment(merchantId, daysAgoEnrolled, consent, balance, lifetime,
     transactionCount: txnCount,
     daysAgo: daysAgoEnrolled,
   };
-  if (consent === 'granted') {
+  if (consent === 'GRANTED') {
     enrollment.consentGrantedAt = daysAgo(daysAgoEnrolled);
     enrollment.lastTransactionAt = hoursAgo(Math.floor(Math.random() * 48) + 1);
   }
@@ -866,6 +863,14 @@ async function cleanSeedData() {
   for (const id of Object.values(CUSTOMER_IDS)) {
     try {
       await deleteItem(TABLES.userLedger, `CUSTOMER#${id}`, 'PROFILE');
+      // Also delete per-merchant index items (adjacency list)
+      for (const mid of Object.values(MERCHANT_IDS)) {
+        try {
+          await deleteItem(TABLES.userLedger, `CUSTOMER#${id}`, `MERCHANT_INDEX#${mid}`);
+        } catch {
+          // index item may not exist
+        }
+      }
       console.log(`  Deleted customer: ${id}`);
     } catch {
       // ignore
@@ -897,11 +902,28 @@ async function seed() {
   const customers = createCustomers();
   console.log(`\nSeeding ${customers.length} customers...`);
   for (const c of customers) {
+    // Extract merchant IDs before cleaning up the temp field
+    const grantedMerchantIds = c._grantedMerchantIds || [];
+    delete c._grantedMerchantIds;
+
     await putItem(TABLES.userLedger, c);
+
+    // Create per-merchant index items (adjacency list pattern)
+    for (const merchantId of grantedMerchantIds) {
+      await putItem(TABLES.userLedger, {
+        PK: `CUSTOMER#${c.customerId}`,
+        SK: `MERCHANT_INDEX#${merchantId}`,
+        EntityType: 'MERCHANT_CUSTOMER_INDEX',
+        GSI2PK: `MERCHANT#${merchantId}#CUSTOMERS`,
+        GSI2SK: `CUSTOMER#${c.customerId}`,
+        customerId: c.customerId,
+      });
+    }
+
     const name = c.name || c.phone;
     const enrollCount = c.enrollments.length;
     console.log(
-      `  [+] ${name} - ${c.currentTier} tier, ${c.globalPointsBalance} pts, ${enrollCount} enrollment(s)`,
+      `  [+] ${name} - ${c.currentTier} tier, ${c.globalPointsBalance} pts, ${enrollCount} enrollment(s), ${grantedMerchantIds.length} index item(s)`,
     );
   }
 

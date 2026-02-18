@@ -1,6 +1,7 @@
 import type { Secret } from '@fastify/jwt';
 import fastifyJwt from '@fastify/jwt';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
+import fp from 'fastify-plugin';
 import jwksRsa from 'jwks-rsa';
 import { ForbiddenError, UnauthorizedError } from '../../../domain/errors/DomainError';
 import EnvironmentConfig from '../../../infrastructure/config/Environment';
@@ -19,7 +20,7 @@ function getCustomerJwksClient(region: string, userPoolId: string): jwksRsa.Jwks
   return customerJwksClient;
 }
 
-export async function cognitoCustomerAuthPlugin(server: FastifyInstance): Promise<void> {
+export const cognitoCustomerAuthPlugin = fp(async function cognitoCustomerAuthPlugin(server: FastifyInstance): Promise<void> {
   const env = EnvironmentConfig.get();
   const region = env.AWS_REGION;
   const userPoolId = env.CUSTOMER_USER_POOL_ID;
@@ -49,6 +50,7 @@ export async function cognitoCustomerAuthPlugin(server: FastifyInstance): Promis
 
   await server.register(fastifyJwt, {
     secret,
+    decode: { complete: true },
     verify: {
       allowedIss: issuer,
     },
@@ -56,7 +58,7 @@ export async function cognitoCustomerAuthPlugin(server: FastifyInstance): Promis
   });
 
   server.decorateRequest('customerId', '');
-}
+});
 
 export async function verifyCustomerToken(request: FastifyRequest): Promise<void> {
   const env = EnvironmentConfig.get();

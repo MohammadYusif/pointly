@@ -1,5 +1,4 @@
 import {
-  CustomerTier,
   Money,
   NotFoundError,
   Points,
@@ -131,16 +130,42 @@ export class RecordPurchaseUseCase {
 
     // 5. Get current balances before transaction
     const merchantBalanceBefore = customer.getMerchantPointsBalance(request.merchantId);
+    const globalBalanceBefore = customer.getGlobalPointsBalance();
 
-    // 6. Create transaction record
+    // 5b. Calculate boosted global points (tier multiplier applied)
+    const earningMultiplier = customer.getEarningMultiplier();
+    const boostedGlobalPoints = Points.from(
+      Math.floor(globalPoints.toNumber() * earningMultiplier),
+    );
+
+    // 5c. Capture tier before awarding points (for upgrade detection)
+    const tierBefore = customer.getCurrentTier();
+
+    // 6. Create merchant transaction record
     const transaction = Transaction.createEarn(
       request.merchantId,
       request.customerId,
-      merchantPoints, // We track merchant points in the transaction
+      merchantPoints,
       amount,
       merchantBalanceBefore,
       request.idempotencyKey,
       request.metadata || {},
+      locationId,
+    );
+
+    // 6b. Create global points audit trail
+    const globalTransaction = Transaction.createEarn(
+      'POINTLY_NETWORK',
+      request.customerId,
+      boostedGlobalPoints,
+      amount,
+      globalBalanceBefore,
+      `${request.idempotencyKey}_global`,
+      {
+        ...(request.metadata || {}),
+        source: 'purchase',
+        sourceMerchantId: request.merchantId,
+      },
       locationId,
     );
 
@@ -150,18 +175,21 @@ export class RecordPurchaseUseCase {
     // 8. Update merchant stats
     merchant.incrementTransactionCount();
 
-    // Mark transaction as completed
+    // Mark transactions as completed
     transaction.complete();
+    globalTransaction.complete();
 
     // 9. Save everything atomically (or fall back to sequential saves)
     if (this.atomicWrite) {
       await this.atomicWrite([
-        this.transactionRepository.toPersistenceItem(transaction),
-        this.customerRepository.toPersistenceItem(customer),
-        this.merchantRepository.toPersistenceItem(merchant),
+        ...this.transactionRepository.toPersistenceItem(transaction),
+        ...this.transactionRepository.toPersistenceItem(globalTransaction),
+        ...this.customerRepository.toPersistenceItem(customer),
+        ...this.merchantRepository.toPersistenceItem(merchant),
       ]);
     } else {
       await this.transactionRepository.save(transaction);
+      await this.transactionRepository.save(globalTransaction);
       await this.customerRepository.save(customer);
       await this.merchantRepository.save(merchant);
     }
@@ -170,24 +198,18 @@ export class RecordPurchaseUseCase {
     const response: RecordPurchaseResponse = {
       transactionId: transaction.getTransactionId(),
       merchantPoints: merchantPoints.toNumber(),
-      globalPoints: globalPoints.toNumber(),
+      globalPoints: boostedGlobalPoints.toNumber(),
       newMerchantBalance: customer.getMerchantPointsBalance(request.merchantId).toNumber(),
       newGlobalBalance: customer.getGlobalPointsBalance().toNumber(),
 
-      // NEW - Tier info
+      // Tier info
       currentTier: customer.getCurrentTier().getDisplayName(),
-      tierUpgrade: customer
-        .getCurrentTier()
-        .isHigherThan(
-          CustomerTier.fromMonthlyProgress(
-            customer.getMonthlyProgress().toNumber() - globalPoints.toNumber(),
-          ),
-        ),
+      tierUpgrade: customer.getCurrentTier().isHigherThan(tierBefore),
       earningMultiplier: customer.getEarningMultiplier(),
       isDecayImmune: customer.isDecayImmune(),
       pointsToNextTier: customer.getPointsToNextTier(),
 
-      message: `Purchase recorded! Earned ${merchantPoints.toNumber()} merchant points and ${globalPoints.toNumber()} Pointly Network points`,
+      message: `Purchase recorded! Earned ${merchantPoints.toNumber()} merchant points and ${boostedGlobalPoints.toNumber()} Pointly Network points`,
     };
 
     await this.idempotencyService.storeResult(
@@ -201,7 +223,7 @@ export class RecordPurchaseUseCase {
       const customerPhone = customer.getPhone().toE164();
       this.smsPublisher.publish({
         phone: customerPhone,
-        body: `You earned ${merchantPoints.toNumber()} points at ${merchant.getBusinessName()}! New balance: ${response.newMerchantBalance}`,
+        body: `You earned ${merchantPoints.toNumber()} merchant + ${boostedGlobalPoints.toNumber()} network points at ${merchant.getBusinessName()}! Balance: ${response.newMerchantBalance}`,
         merchantId: request.merchantId,
         type: 'POINTS_EARNED',
       });

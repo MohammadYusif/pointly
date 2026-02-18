@@ -127,18 +127,16 @@ export default function ManualEntryPage() {
     window.print();
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!result || !customer || !merchant) return;
-    generateReceiptPDF({
+    await generateReceiptPDF({
       transactionId: result.transactionId,
       businessName: merchant.businessName,
       customerName: customer.name,
       customerPhone: customer.phone,
       amount: Number(amount),
       merchantPoints: result.merchantPoints,
-      globalPoints: result.globalPoints,
       newMerchantBalance: result.newMerchantBalance,
-      newGlobalBalance: result.newGlobalBalance,
       currentTier: result.currentTier,
       date: new Date(),
     });
@@ -194,7 +192,7 @@ export default function ManualEntryPage() {
                 {isMultiLocation && (
                   <div>
                     <label htmlFor="location-input" className="text-sm font-medium mb-1 block">
-                      {language === 'ar' ? 'الفرع' : 'Location'}
+                      {t('merchant.locations')}
                     </label>
                     <select
                       id="location-input"
@@ -203,24 +201,27 @@ export default function ManualEntryPage() {
                       required
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                     >
-                      <option value="">
-                        {language === 'ar' ? 'اختر الفرع...' : 'Select location...'}
-                      </option>
+                      <option value="">{t('merchant.selectLocation')}</option>
                       {locations.map((loc) => (
                         <option key={loc.locationId} value={loc.locationId}>
                           {loc.name}
                         </option>
                       ))}
                     </select>
+                    {isMultiLocation && !selectedLocationId && (
+                      <p className="text-xs text-destructive mt-1">
+                        {t('errors.locationRequired')}
+                      </p>
+                    )}
                   </div>
                 )}
                 <div>
                   <label htmlFor="cashier-input" className="text-sm font-medium mb-1 block">
-                    {t('common.actions')} ({language === 'ar' ? 'اختياري' : 'optional'})
+                    {t('transaction.cashierName')} ({t('common.optional')})
                   </label>
                   <Input
                     id="cashier-input"
-                    placeholder={language === 'ar' ? 'اسم الكاشير' : 'Cashier name'}
+                    placeholder={t('transaction.cashierNamePlaceholder')}
                     value={cashierName}
                     onChange={(e) => setCashierName(e.target.value)}
                   />
@@ -268,7 +269,13 @@ export default function ManualEntryPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('customer.points')}</span>
-                  <span className="font-medium">{formatNumber(customer.globalPointsBalance)}</span>
+                  <span className="font-medium">
+                    {formatNumber(
+                      customer.enrollments?.find(
+                        (e: { merchantId: string }) => e.merchantId === merchant?.merchantId,
+                      )?.merchantPointsBalance ?? 0,
+                    )}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -315,13 +322,14 @@ export default function ManualEntryPage() {
                 <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
                 <div>
                   <p className="text-lg font-bold text-green-600">
-                    +{formatNumber(result.merchantPoints + result.globalPoints)}{' '}
-                    {t('common.points')}
+                    +{formatNumber(result.merchantPoints)} {t('common.points')}
                   </p>
-                  <p className="text-sm text-muted-foreground">{result.message}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t('transaction.purchaseSuccess')}
+                  </p>
                   {result.tierUpgrade && (
                     <p className={`text-sm font-medium mt-1 ${getTierColor(result.currentTier)}`}>
-                      Tier: {result.currentTier}
+                      {t('customer.tier')}: {result.currentTier}
                     </p>
                   )}
                 </div>
@@ -337,9 +345,7 @@ export default function ManualEntryPage() {
                 customerPhone={customer.phone}
                 amount={Number(amount)}
                 merchantPoints={result.merchantPoints}
-                globalPoints={result.globalPoints}
                 newMerchantBalance={result.newMerchantBalance}
-                newGlobalBalance={result.newGlobalBalance}
                 currentTier={result.currentTier}
                 date={new Date()}
               />
@@ -348,17 +354,17 @@ export default function ManualEntryPage() {
             <div className="flex gap-3">
               <Button variant="outline" className="flex-1" onClick={handlePrint}>
                 <Printer className="h-4 w-4 me-2" />
-                {t('common.actions')}
+                {t('transaction.printReceipt')}
               </Button>
               <Button variant="outline" className="flex-1" onClick={handleDownloadPDF}>
                 <Download className="h-4 w-4 me-2" />
-                PDF
+                {t('transaction.downloadPdf')}
               </Button>
             </div>
 
             <Button className="w-full" onClick={handleNewTransaction}>
               <RotateCcw className="h-4 w-4 me-2" />
-              {t('common.add')} {t('transaction.purchase')}
+              {t('transaction.newPurchase')}
             </Button>
           </div>
         )}

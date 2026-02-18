@@ -108,7 +108,7 @@ export default function DashboardPage() {
           loading={isLoading}
         />
         <KPICard
-          title={language === 'ar' ? 'عملاء فريدون' : 'Unique Customers'}
+          title={t('dashboard.uniqueCustomers')}
           value={formatNumber(summary?.uniqueCustomers ?? 0)}
           icon={<Users className="h-4 w-4" />}
           loading={isLoading}
@@ -137,13 +137,13 @@ function LocationSummary({
 }: {
   locations: { locationId: string; name: string; city: string; isActive: boolean }[];
 }) {
-  const { language } = useTranslation();
+  const { t } = useTranslation();
 
   const activeLocations = locations.filter((l) => l.isActive);
 
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-3">{language === 'ar' ? 'الفروع' : 'Locations'}</h2>
+      <h2 className="text-lg font-semibold mb-3">{t('dashboard.locations')}</h2>
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {activeLocations.map((loc) => (
           <div
@@ -153,7 +153,7 @@ function LocationSummary({
             <p className="font-medium">{loc.name}</p>
             <p className="text-sm text-muted-foreground">{loc.city}</p>
             <span className="inline-block mt-2 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800">
-              {language === 'ar' ? 'نشط' : 'Active'}
+              {t('common.active')}
             </span>
           </div>
         ))}

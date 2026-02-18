@@ -71,6 +71,9 @@ importers:
       fastify:
         specifier: 5.2.0
         version: 5.2.0
+      fastify-plugin:
+        specifier: ^5.1.0
+        version: 5.1.0
       jwks-rsa:
         specifier: ^3.2.2
         version: 3.2.2

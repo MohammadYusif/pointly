@@ -62,12 +62,13 @@ export const merchantApi = {
 
   getTransactions: (
     merchantId: string,
-    params?: { limit?: number; nextToken?: string; locationId?: string },
+    params?: { limit?: number; nextToken?: string; locationId?: string; sortOrder?: 'ASC' | 'DESC' },
   ) => {
     const query = new URLSearchParams();
     if (params?.limit) query.set('limit', String(params.limit));
     if (params?.nextToken) query.set('nextToken', params.nextToken);
     if (params?.locationId) query.set('locationId', params.locationId);
+    if (params?.sortOrder) query.set('sortOrder', params.sortOrder);
     return fetchApi<PaginatedResponse<TransactionResponse>>(
       `/v1/merchants/${merchantId}/transactions?${query}`,
     );
@@ -133,10 +134,14 @@ export const customerApi = {
       body: JSON.stringify({ merchantId, action: 'grant' }),
     }),
 
-  getTransactions: (customerId: string, params?: { limit?: number; nextToken?: string }) => {
+  getTransactions: (
+    customerId: string,
+    params?: { limit?: number; nextToken?: string; sortOrder?: 'ASC' | 'DESC' },
+  ) => {
     const query = new URLSearchParams();
     if (params?.limit) query.set('limit', String(params.limit));
     if (params?.nextToken) query.set('nextToken', params.nextToken);
+    if (params?.sortOrder) query.set('sortOrder', params.sortOrder);
     return fetchApi<PaginatedResponse<TransactionResponse>>(
       `/v1/customers/${customerId}/transactions?${query}`,
     );

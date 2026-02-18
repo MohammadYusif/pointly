@@ -15,8 +15,8 @@ export class TransactionalWriter {
 
   async writeAll(items: TransactItem[]): Promise<void> {
     if (items.length === 0) return;
-    if (items.length > 100) {
-      throw new Error('DynamoDB TransactWriteItems supports a maximum of 100 items');
+    if (items.length > 25) {
+      throw new Error('DynamoDB TransactWriteItems supports a maximum of 25 items');
     }
 
     await this.client.send(

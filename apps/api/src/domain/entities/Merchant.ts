@@ -395,6 +395,11 @@ export class Merchant {
   }
 
   useSMS(count = 1): void {
+    // Lazy reset: if we've passed the reset date, reset quota first
+    if (new Date() >= this.props.smsQuota.resetDate) {
+      this.resetSMSQuota();
+    }
+
     if (this.props.smsQuota.currentUsage + count > this.props.smsQuota.monthlyLimit) {
       throw new ValidationError('SMS quota exceeded');
     }

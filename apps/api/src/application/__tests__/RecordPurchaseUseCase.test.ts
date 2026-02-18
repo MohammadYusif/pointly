@@ -123,8 +123,8 @@ describe('RecordPurchaseUseCase', () => {
       expect(result.newGlobalBalance).toBe(100);
       expect(result.transactionId).toBeTruthy();
 
-      // Verify repositories were called
-      expect(mockTransactionRepo.save).toHaveBeenCalledTimes(1);
+      // Verify repositories were called (2 transactions: merchant + global audit trail)
+      expect(mockTransactionRepo.save).toHaveBeenCalledTimes(2);
       expect(mockCustomerRepo.save).toHaveBeenCalledTimes(1);
       expect(mockMerchantRepo.save).toHaveBeenCalledTimes(1);
       expect(mockIdempotencyService.storeResult).toHaveBeenCalledWith(
@@ -560,7 +560,7 @@ describe('RecordPurchaseUseCase', () => {
         idempotencyKey: 'repo_save_key',
       });
 
-      expect(mockTransactionRepo.save).toHaveBeenCalledTimes(1);
+      expect(mockTransactionRepo.save).toHaveBeenCalledTimes(2);
       expect(mockCustomerRepo.save).toHaveBeenCalledTimes(1);
       expect(mockMerchantRepo.save).toHaveBeenCalledTimes(1);
     });

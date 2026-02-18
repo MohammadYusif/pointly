@@ -57,6 +57,7 @@ const getMerchantTransactionsQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(100).optional().default(20),
   nextToken: z.string().optional(),
   locationId: z.string().optional(),
+  sortOrder: z.enum(['ASC', 'DESC']).optional().default('DESC'),
 });
 
 const analyticsQuerySchema = z.object({
@@ -144,6 +145,7 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
 
       const queryOptions = {
         limit: query.limit,
+        sortOrder: query.sortOrder as 'ASC' | 'DESC',
         ...(query.nextToken && { nextToken: query.nextToken }),
       };
 

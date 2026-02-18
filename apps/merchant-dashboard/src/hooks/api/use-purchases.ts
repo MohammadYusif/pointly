@@ -8,6 +8,7 @@ export function useRecordPurchase() {
     mutationFn: purchaseApi.record,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['merchant'] });
+      queryClient.invalidateQueries({ queryKey: ['customer'] });
     },
   });
 }
@@ -19,6 +20,7 @@ export function useRedeemPoints() {
     mutationFn: purchaseApi.redeem,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['merchant'] });
+      queryClient.invalidateQueries({ queryKey: ['customer'] });
     },
   });
 }

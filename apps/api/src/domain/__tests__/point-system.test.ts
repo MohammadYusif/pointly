@@ -611,9 +611,9 @@ describe('Point System - Real World Scenarios', () => {
         // Earn 1000 base points
         customer.addPointsFromPurchase('merchant_123', Points.from(1000), Points.from(500));
 
-        // Assert: 1000 * 1.1 = 1100
+        // Assert: balance gets 1000 * 1.1 = 1100, monthly progress tracks raw 1000
         expect(customer.getGlobalPointsBalance().toNumber()).toBe(1100);
-        expect(customer.getMonthlyProgress().toNumber()).toBe(1100);
+        expect(customer.getMonthlyProgress().toNumber()).toBe(1000);
       });
 
       it('should apply 1.2x multiplier for Diamond', () => {
@@ -623,9 +623,9 @@ describe('Point System - Real World Scenarios', () => {
         // Earn 1000 base points
         customer.addPointsFromPurchase('merchant_123', Points.from(1000), Points.from(500));
 
-        // Assert: 1000 * 1.2 = 1200
+        // Assert: balance gets 1000 * 1.2 = 1200, monthly progress tracks raw 1000
         expect(customer.getGlobalPointsBalance().toNumber()).toBe(1200);
-        expect(customer.getMonthlyProgress().toNumber()).toBe(1200);
+        expect(customer.getMonthlyProgress().toNumber()).toBe(1000);
       });
 
       it('should floor fractional points from multiplier', () => {
@@ -920,7 +920,7 @@ describe('Point System - Real World Scenarios', () => {
       setGlobalPointsBalance(customer, 14800);
       setMonthlyProgressResetDate(customer, new Date());
 
-      // Action: Earn 300 points → 14800 + 330 (1.1x Gold) = 15130 → crosses 15000
+      // Action: Earn 300 raw points → 14800 + 300 = 15100 → crosses 15000
       customer.addPointsFromPurchase('merchant_123', Points.from(300), Points.from(300));
 
       // Assert: Upgraded to Diamond
@@ -951,10 +951,10 @@ describe('Point System - Real World Scenarios', () => {
       customer.addPointsFromPurchase('merchant_123', Points.from(600), Points.from(600));
       expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.GOLD);
 
-      // Second purchase: Now Gold (1.1x) → 100 base → 110 actual
+      // Second purchase: Now Gold (1.1x) → 100 base → 110 balance, raw 100 for progress
       customer.addPointsFromPurchase('merchant_123', Points.from(100), Points.from(100));
-      // 4500 + 600 (Bronze 1.0x) + 110 (Gold 1.1x) = 5210
-      expect(customer.getMonthlyProgress().toNumber()).toBe(5210);
+      // Monthly progress tracks raw: 4500 + 600 + 100 = 5200
+      expect(customer.getMonthlyProgress().toNumber()).toBe(5200);
     });
   });
 

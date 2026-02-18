@@ -19,7 +19,12 @@
     "close": "إغلاق",
     "viewAll": "عرض كل",
     "noData": "لا توجد بيانات",
-    "actions": "الإجراءات"
+    "actions": "الإجراءات",
+    "optional": "اختياري",
+    "loadMore": "تحميل المزيد",
+    "active": "نشط",
+    "readOnly": "غير قابل للتعديل",
+    "inactive": "غير نشط"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -56,7 +61,9 @@
     "activeCustomers": "{{count}} نشط",
     "recentTransactions": "المعاملات الأخيرة",
     "fromLastMonth": "+{{percent}}% من الشهر الماضي",
-    "pointsRate": "١ ريال = ١ نقطة"
+    "pointsRate": "١ ريال = ١ نقطة",
+    "uniqueCustomers": "عملاء فريدون",
+    "locations": "الفروع"
   },
   "customer": {
     "title": "العملاء",
@@ -77,7 +84,8 @@
     "enrolled": "تاريخ التسجيل",
     "recordPurchase": "تسجيل عملية شراء",
     "redeemPoints": "استبدال النقاط",
-    "exportCSV": "تصدير CSV"
+    "exportCSV": "تصدير CSV",
+    "phonePlaceholder": "+966 5XX XXX XXXX"
   },
   "merchant": {
     "title": "التاجر",
@@ -87,7 +95,12 @@
     "locations": "المواقع",
     "addLocation": "إضافة موقع",
     "businessType": "نوع النشاط التجاري",
-    "contactInfo": "معلومات الاتصال"
+    "contactInfo": "معلومات الاتصال",
+    "selectLocation": "اختر الموقع...",
+    "contactName": "اسم جهة الاتصال",
+    "locationName": "اسم الفرع",
+    "address": "العنوان",
+    "city": "المدينة"
   },
   "transaction": {
     "title": "المعاملات",
@@ -102,7 +115,17 @@
     "pending": "قيد الانتظار",
     "completed": "مكتمل",
     "cancelled": "ملغي",
-    "viewDetails": "عرض التفاصيل"
+    "viewDetails": "عرض التفاصيل",
+    "cashierName": "اسم الكاشير",
+    "cashierNamePlaceholder": "مثال: جون دو",
+    "printReceipt": "اطبع الإيصال",
+    "downloadPdf": "تحميل PDF",
+    "newPurchase": "عملية شراء جديدة",
+    "purchaseSuccess": "تمت عملية الشراء بنجاح!",
+    "allTypes": "كل الأنواع",
+    "sortNewest": "الأحدث",
+    "sortOldest": "الأقدم",
+    "minAmount": "المبلغ (أدنى)"
   },
   "settings": {
     "title": "الإعدادات",
@@ -115,7 +138,10 @@
     "theme": "المظهر",
     "light": "فاتح",
     "dark": "داكن",
-    "system": "النظام"
+    "system": "النظام",
+    "redemptionRate": "معدل الاستبدال",
+    "sms": "SMS",
+    "used": "الاستخدام"
   },
   "errors": {
     "required": "هذا الحقل مطلوب",
@@ -126,7 +152,8 @@
     "networkError": "خطأ في الشبكة. يرجى المحاولة مرة أخرى.",
     "serverError": "خطأ في الخادم. يرجى المحاولة لاحقاً.",
     "unauthorized": "غير مصرح لك بتنفيذ هذا الإجراء",
-    "notFound": "المورد المطلوب غير موجود"
+    "notFound": "المورد المطلوب غير موجود",
+    "locationRequired": "الموقع مطلوب"
   },
   "redeem": {
     "title": "استبدال النقاط",
@@ -141,7 +168,21 @@
     "merchantBalance": "نقاط التاجر",
     "globalBalance": "النقاط العامة",
     "redemptionBreakdown": "تفاصيل الاستبدال",
-    "newBalances": "الأرصدة الجديدة"
+    "newBalances": "الأرصدة الجديدة",
+    "totalAvailable": "الإجمالي المتاح",
+    "newRedemption": "استبدال جديد",
+    "multiplesOf": "يجب أن تكون النقاط من مضاعفات {{min}}",
+    "successMessage": "تم استبدال {{points}} نقطة بنجاح مقابل {{value}}.",
+    "errorZero": "يجب أن تكون نقاط الاستبدال أكبر من صفر.",
+    "errorMinimum": "يجب استبدال {{min}} نقطة على الأقل.",
+    "errorInsufficient": "لا يمكنك استبدال نقاط أكثر مما يمتلكه العميل."
+  },
+  "billing": {
+    "currentPlan": "خطتك الحالية",
+    "current": "الحالي",
+    "management": "إدارة الفوترة",
+    "comingSoon": "قريباً",
+    "managementDesc": "ستتوفر قريباً إدارة طرق الدفع والفواتير والاستخدام. للترقية أو الاستفسار عن الفوترة، تواصل مع فريق الدعم."
   },
   "success": {
     "saved": "تم حفظ التغييرات بنجاح",

@@ -252,12 +252,12 @@ export class Customer {
     const earningMultiplier = this.props.currentTier.getEarningMultiplier();
     const boostedPoints = Points.from(Math.floor(globalPoints.toNumber() * earningMultiplier));
 
-    // Add boosted global points to balance
+    // Add boosted global points to balance (reward)
     this.props.globalPointsBalance = this.props.globalPointsBalance.add(boostedPoints);
     this.props.globalLifetimePoints = this.props.globalLifetimePoints.add(boostedPoints);
 
-    // Add boosted points to monthly progress
-    this.props.monthlyProgress = this.props.monthlyProgress.add(boostedPoints);
+    // Track RAW points for monthly progress (tier qualification based on actual spending)
+    this.props.monthlyProgress = this.props.monthlyProgress.add(globalPoints);
 
     // NEW - Check if tier should be upgraded immediately
     const potentialTier = CustomerTier.fromMonthlyProgress(this.props.monthlyProgress.toNumber());

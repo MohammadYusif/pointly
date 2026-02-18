@@ -100,7 +100,8 @@ export function getCurrentSession(): Promise<{
 export async function getAccessToken(): Promise<string | null> {
   const result = await getCurrentSession();
   if (!result) return null;
-  return result.session.getAccessToken().getJwtToken();
+  // Use ID token — it contains custom:merchantId needed by the backend
+  return result.session.getIdToken().getJwtToken();
 }
 
 export function setAuthCookie(): void {

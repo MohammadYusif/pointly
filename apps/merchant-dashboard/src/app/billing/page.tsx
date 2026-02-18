@@ -39,7 +39,7 @@ const tiers = [
 ];
 
 export default function BillingPage() {
-  const { language } = useTranslation();
+  const { t, language } = useTranslation();
   const { textStart } = useRTL();
   const { merchant: authMerchant } = useAuth();
   const { data: merchantData, isLoading } = useMerchant();
@@ -49,9 +49,7 @@ export default function BillingPage() {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <p className="text-center text-muted-foreground py-8">
-          {language === 'ar' ? 'جاري التحميل...' : 'Loading...'}
-        </p>
+        <p className="text-center text-muted-foreground py-8">{t('common.loading')}</p>
       </DashboardLayout>
     );
   }
@@ -60,24 +58,24 @@ export default function BillingPage() {
     <DashboardLayout>
       <div className="mb-6">
         <h1 className={`text-2xl md:text-3xl font-bold text-foreground ${textStart}`}>
-          {language === 'ar' ? 'الفوترة' : 'Billing'}
+          {t('navigation.billing')}
         </h1>
       </div>
 
       {/* Current Plan */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>{language === 'ar' ? 'خطتك الحالية' : 'Current Plan'}</CardTitle>
+          <CardTitle>{t('billing.currentPlan')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-3">
-            <span className="text-2xl font-bold" style={{ color: '#08b0a2' }}>
-              {tiers.find((t) => t.key === currentTier)?.[
+            <span className="text-2xl font-bold text-primary">
+              {tiers.find((tier) => tier.key === currentTier)?.[
                 language === 'ar' ? 'nameAr' : 'nameEn'
               ] || currentTier}
             </span>
-            <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-[#08b0a2]/10 text-[#08b0a2]">
-              {language === 'ar' ? 'نشط' : 'Active'}
+            <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
+              {t('common.active')}
             </span>
           </div>
         </CardContent>
@@ -88,13 +86,13 @@ export default function BillingPage() {
         {tiers.map((tier) => {
           const isCurrentTier = tier.key === currentTier;
           return (
-            <Card key={tier.key} className={isCurrentTier ? 'border-[#08b0a2] border-2' : ''}>
+            <Card key={tier.key} className={isCurrentTier ? 'border-primary border-2' : ''}>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>{language === 'ar' ? tier.nameAr : tier.nameEn}</span>
                   {isCurrentTier && (
-                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-[#08b0a2]/10 text-[#08b0a2]">
-                      {language === 'ar' ? 'الحالي' : 'Current'}
+                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
+                      {t('billing.current')}
                     </span>
                   )}
                 </CardTitle>
@@ -103,7 +101,7 @@ export default function BillingPage() {
                 <ul className="space-y-2">
                   {tier.features[language === 'ar' ? 'ar' : 'en'].map((feature) => (
                     <li key={feature} className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-[#08b0a2] shrink-0" />
+                      <Check className="h-4 w-4 text-primary shrink-0" />
                       {feature}
                     </li>
                   ))}
@@ -118,18 +116,14 @@ export default function BillingPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            {language === 'ar' ? 'إدارة الفوترة' : 'Billing Management'}
+            {t('billing.management')}
             <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-amber-100 text-amber-800">
-              {language === 'ar' ? 'قريباً' : 'Coming Soon'}
+              {t('billing.comingSoon')}
             </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            {language === 'ar'
-              ? 'ستتوفر قريباً إدارة طرق الدفع والفواتير والاستخدام. للترقية أو الاستفسار عن الفوترة، تواصل مع فريق الدعم.'
-              : 'Payment methods, invoices, and usage management will be available soon. To upgrade or for billing inquiries, contact our support team.'}
-          </p>
+          <p className="text-sm text-muted-foreground">{t('billing.managementDesc')}</p>
         </CardContent>
       </Card>
     </DashboardLayout>

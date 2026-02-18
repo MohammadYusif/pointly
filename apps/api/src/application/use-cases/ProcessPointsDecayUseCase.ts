@@ -2,6 +2,7 @@ import { type Customer, Transaction } from '../../domain';
 import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { ITransactionRepository } from '../repositories/ITransactionRepository';
 import type { IDecayCalculatorService } from '../services/IDecayCalculatorService';
+import type { PersistenceItem } from '../shared/interfaces/BaseRepository';
 
 export interface DecayProcessingResult {
   totalCustomersProcessed: number;
@@ -26,6 +27,7 @@ export class ProcessPointsDecayUseCase {
     private customerRepository: ICustomerRepository,
     private transactionRepository: ITransactionRepository,
     private decayCalculator: IDecayCalculatorService,
+    private atomicWrite?: (items: PersistenceItem[]) => Promise<void>,
   ) {}
 
   async execute(): Promise<DecayProcessingResult> {
@@ -80,9 +82,16 @@ export class ProcessPointsDecayUseCase {
               },
             );
 
-            // Save transaction and customer
-            await this.transactionRepository.save(transaction);
-            await this.customerRepository.save(customer);
+            // Save transaction and customer atomically
+            if (this.atomicWrite) {
+              await this.atomicWrite([
+                ...this.transactionRepository.toPersistenceItem(transaction),
+                ...this.customerRepository.toPersistenceItem(customer),
+              ]);
+            } else {
+              await this.transactionRepository.save(transaction);
+              await this.customerRepository.save(customer);
+            }
           } else {
             // Just save customer with updated phase
             await this.customerRepository.save(customer);

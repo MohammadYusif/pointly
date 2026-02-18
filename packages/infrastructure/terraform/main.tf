@@ -38,6 +38,10 @@ module "api" {
   sms_quota_table_name         = module.database.sms_quota_table_name
   wallet_passes_table_name     = module.database.wallet_passes_table_name
 
+  # Cognito
+  merchant_user_pool_id        = module.auth.merchant_user_pool_id
+  merchant_user_pool_client_id = module.auth.merchant_user_pool_client_id
+
   # DynamoDB table ARNs
   user_ledger_table_arn       = module.database.user_ledger_table_arn
   transaction_audit_table_arn = module.database.transaction_audit_table_arn

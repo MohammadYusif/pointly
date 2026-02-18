@@ -20,12 +20,17 @@ export function useCustomerTransactions(
   });
 }
 
-export function useInfiniteCustomerTransactions(customerId: string, limit = 20) {
+export function useInfiniteCustomerTransactions(
+  customerId: string,
+  limit = 20,
+  sortOrder: 'ASC' | 'DESC' = 'DESC',
+) {
   return useInfiniteQuery({
-    queryKey: ['customer', customerId, 'transactions', 'infinite', limit],
+    queryKey: ['customer', customerId, 'transactions', 'infinite', limit, sortOrder],
     queryFn: ({ pageParam }) =>
       customerApi.getTransactions(customerId, {
         limit,
+        sortOrder,
         ...(pageParam ? { nextToken: pageParam } : {}),
       }),
     enabled: !!customerId,

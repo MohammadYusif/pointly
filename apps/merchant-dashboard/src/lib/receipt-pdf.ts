@@ -1,23 +1,47 @@
 import type { ReceiptData } from '@/components/receipt/ThermalReceipt';
-import jsPDF from 'jspdf';
 
-export function generateReceiptPDF(data: ReceiptData): void {
+async function loadImageAsBase64(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function generateReceiptPDF(data: ReceiptData): Promise<void> {
+  const { default: jsPDF } = await import('jspdf');
+
   const doc = new jsPDF({
     unit: 'mm',
-    format: [80, 150],
+    format: [80, 160],
   });
 
-  const totalPoints = data.merchantPoints + data.globalPoints;
-  let y = 10;
+  let y = 6;
   const leftMargin = 4;
   const rightMargin = 76;
 
-  // Header
+  // Logo
+  const logoData = await loadImageAsBase64('/logos/pointlylogo.png');
+  if (logoData) {
+    // Logo aspect ratio is 1080x720 = 1.5:1
+    doc.addImage(logoData, 'PNG', 15, y, 50, 33.3);
+    y += 36;
+  } else {
+    doc.setFontSize(10);
+    doc.text('Pointly', 40, y + 4, { align: 'center' });
+    y += 10;
+  }
+
+  // Business name
   doc.setFontSize(14);
   doc.text(data.businessName, 40, y, { align: 'center' });
-  y += 5;
-  doc.setFontSize(8);
-  doc.text('Pointly Loyalty', 40, y, { align: 'center' });
   y += 6;
 
   // Dashed line
@@ -56,27 +80,18 @@ export function generateReceiptPDF(data: ReceiptData): void {
   y += 5;
 
   // Points
-  doc.text('Store Points:', leftMargin, y);
-  doc.text(`+${data.merchantPoints}`, rightMargin, y, { align: 'right' });
-  y += 4;
-  doc.text('Network Points:', leftMargin, y);
-  doc.text(`+${data.globalPoints}`, rightMargin, y, { align: 'right' });
-  y += 4;
   doc.setFontSize(10);
-  doc.text('Total Earned:', leftMargin, y);
-  doc.text(`+${totalPoints}`, rightMargin, y, { align: 'right' });
+  doc.text('Points Earned:', leftMargin, y);
+  doc.text(`+${data.merchantPoints}`, rightMargin, y, { align: 'right' });
   y += 5;
 
   doc.setFontSize(9);
   doc.line(leftMargin, y, rightMargin, y);
   y += 5;
 
-  // Balances
+  // Balance
   doc.text('Store Balance:', leftMargin, y);
   doc.text(`${data.newMerchantBalance}`, rightMargin, y, { align: 'right' });
-  y += 4;
-  doc.text('Network Balance:', leftMargin, y);
-  doc.text(`${data.newGlobalBalance}`, rightMargin, y, { align: 'right' });
   y += 5;
 
   doc.line(leftMargin, y, rightMargin, y);

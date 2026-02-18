@@ -7,7 +7,7 @@ import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { getStatusBadge, getTypeBadge } from '@pointly/shared';
 import { Button, Card, CardContent, useRTL } from '@pointly/ui';
-import { Download } from 'lucide-react';
+import { ArrowDownUp, Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -26,6 +26,7 @@ export default function TransactionsPage() {
   const { textStart, textEnd } = useRTL();
   const [locationId, setLocationId] = useState<string | undefined>(undefined);
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC');
 
   const { data: merchantData } = useMerchant();
   const {
@@ -35,7 +36,7 @@ export default function TransactionsPage() {
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useInfiniteTransactions(50, locationId);
+  } = useInfiniteTransactions(50, locationId, sortOrder);
   const { data: customersData } = useMerchantCustomers({ limit: 100 });
 
   const allTransactions = (txPages?.pages.flatMap((p) => p.transactions || []) ||
@@ -77,6 +78,19 @@ export default function TransactionsPage() {
             <option value="EXPIRATION">{language === 'ar' ? 'انتهاء' : 'Expiration'}</option>
           </select>
           <LocationSelector locations={locations} selected={locationId} onChange={setLocationId} />
+          <Button
+            variant="outline"
+            onClick={() => setSortOrder((prev) => (prev === 'DESC' ? 'ASC' : 'DESC'))}
+          >
+            <ArrowDownUp className="h-4 w-4 me-2" />
+            {sortOrder === 'DESC'
+              ? language === 'ar'
+                ? 'الأحدث أولاً'
+                : 'Newest'
+              : language === 'ar'
+                ? 'الأقدم أولاً'
+                : 'Oldest'}
+          </Button>
           <Button
             variant="outline"
             onClick={() => {

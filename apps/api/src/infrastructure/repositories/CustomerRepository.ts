@@ -80,23 +80,38 @@ export class CustomerRepository
   }
 
   async findByMerchant(merchantId: string, options?: QueryOptions): Promise<QueryResult<Customer>> {
-    const result = await this.query<CustomerItem>(
+    // Step 1: Query GSI2 for per-merchant index items (adjacency list pattern)
+    const indexResult = await this.query<{ customerId: string }>(
       {
         IndexName: 'MerchantCustomersIndex',
         KeyConditionExpression: 'GSI2PK = :pk',
-        FilterExpression: 'contains(grantedMerchantIds, :mid)',
         ExpressionAttributeValues: {
           ':pk': `MERCHANT#${merchantId}#CUSTOMERS`,
-          ':mid': merchantId,
         },
       },
       options,
     );
 
+    if (indexResult.items.length === 0) {
+      return { items: [], count: 0, nextToken: indexResult.nextToken };
+    }
+
+    // Step 2: Batch-get full customer records
+    const customers = await Promise.all(
+      indexResult.items.map((idx) => this.findById(idx.customerId)),
+    );
+
+    // Filter out nulls and stale index items (customer revoked consent)
+    const validCustomers = customers.filter((c): c is Customer => {
+      if (!c) return false;
+      const enrollment = c.getEnrollment(merchantId);
+      return enrollment?.consentStatus === ConsentStatus.GRANTED;
+    });
+
     return {
-      items: result.items.map((item) => this.itemToEntity(item)),
-      count: result.count,
-      nextToken: result.nextToken,
+      items: validCustomers,
+      count: validCustomers.length,
+      nextToken: indexResult.nextToken,
     };
   }
 
@@ -156,16 +171,23 @@ export class CustomerRepository
   }
 
   async save(entity: Customer): Promise<void> {
-    const item = this.toItem(entity);
-    await this.putItem(item);
+    const items = this.toPersistenceItem(entity);
+    for (const persistenceItem of items) {
+      await this.putItem(persistenceItem.item);
+    }
   }
 
   toPersistenceItem(entity: Customer) {
-    return { tableName: this.tableName, item: this.toItem(entity) as Record<string, unknown> };
+    const mainItem = { tableName: this.tableName, item: this.toItem(entity) as Record<string, unknown> };
+    const indexItems = this.toMerchantIndexItems(entity);
+    return [mainItem, ...indexItems];
   }
 
   async delete(id: string): Promise<void> {
+    // Delete main customer item
     await this.deleteItem(`CUSTOMER#${id}`, 'PROFILE');
+    // Note: merchant index items (SK=MERCHANT_INDEX#*) become stale
+    // but are harmless — findByMerchant filters by consent status
   }
 
   async exists(id: string): Promise<boolean> {
@@ -266,6 +288,32 @@ export class CustomerRepository
     return this.itemToEntity(item as unknown as CustomerItem);
   }
 
+  /**
+   * Build per-merchant index items (adjacency list pattern).
+   * One index item per granted merchant, each projecting into GSI2
+   * so findByMerchant can query MERCHANT#<id>#CUSTOMERS efficiently.
+   */
+  private toMerchantIndexItems(entity: Customer) {
+    const json = entity.toJSON();
+    const grantedMerchantIds = json.enrollments
+      // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
+      .filter((e: any) => e.consentStatus === ConsentStatus.GRANTED)
+      // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
+      .map((e: any) => e.merchantId as string);
+
+    return grantedMerchantIds.map((merchantId: string) => ({
+      tableName: this.tableName,
+      item: {
+        PK: `CUSTOMER#${json.customerId}`,
+        SK: `MERCHANT_INDEX#${merchantId}`,
+        EntityType: 'MERCHANT_CUSTOMER_INDEX',
+        GSI2PK: `MERCHANT#${merchantId}#CUSTOMERS`,
+        GSI2SK: `CUSTOMER#${json.customerId}`,
+        customerId: json.customerId,
+      } as Record<string, unknown>,
+    }));
+  }
+
   protected toItem(entity: Customer): Record<string, unknown> {
     const json = entity.toJSON();
     // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
@@ -283,6 +331,8 @@ export class CustomerRepository
       return enrollment;
     });
 
+    // Main customer item — no GSI2 here.
+    // Per-merchant GSI2 entries are separate index items (adjacency list pattern).
     const item: CustomerItem = {
       PK: `CUSTOMER#${json.customerId}`,
       SK: 'PROFILE',
@@ -307,20 +357,6 @@ export class CustomerRepository
       GSI1PK: `PHONE#${json.phone}`,
       GSI1SK: 'CUSTOMER',
     };
-
-    // Store ALL granted merchant IDs for FilterExpression-based lookup
-    const grantedMerchantIds = enrollments
-      .filter((e) => e.consentStatus === ConsentStatus.GRANTED)
-      .map((e) => e.merchantId);
-
-    // Index under first granted merchant for GSI2 partition (pagination anchor)
-    if (grantedMerchantIds.length > 0) {
-      item.GSI2PK = `MERCHANT#${grantedMerchantIds[0]}#CUSTOMERS`;
-      item.GSI2SK = `CUSTOMER#${json.customerId}`;
-    }
-
-    // biome-ignore lint/suspicious/noExplicitAny: adding dynamic attribute for GSI filter
-    (item as any).grantedMerchantIds = grantedMerchantIds;
 
     return item as unknown as Record<string, unknown>;
   }

@@ -5,9 +5,7 @@ export interface ReceiptData {
   customerPhone: string;
   amount: number;
   merchantPoints: number;
-  globalPoints: number;
   newMerchantBalance: number;
-  newGlobalBalance: number;
   currentTier: string;
   date: Date;
 }
@@ -20,14 +18,10 @@ export function ThermalReceipt(props: ReceiptData) {
     customerPhone,
     amount,
     merchantPoints,
-    globalPoints,
     newMerchantBalance,
-    newGlobalBalance,
     currentTier,
     date,
   } = props;
-
-  const totalPoints = merchantPoints + globalPoints;
 
   return (
     <div
@@ -36,8 +30,12 @@ export function ThermalReceipt(props: ReceiptData) {
     >
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+        {/* biome-ignore lint/a11y/useAltText: receipt logo */}
+        <img
+          src="/logos/pointlylogo.png"
+          style={{ width: '40mm', margin: '0 auto 4px', display: 'block' }}
+        />
         <div style={{ fontSize: '16px', fontWeight: 'bold' }}>{businessName}</div>
-        <div style={{ fontSize: '10px', color: '#666' }}>Pointly Loyalty</div>
       </div>
 
       <div style={{ borderTop: '1px dashed #000', margin: '4px 0' }} />
@@ -71,38 +69,25 @@ export function ThermalReceipt(props: ReceiptData) {
 
       {/* Points */}
       <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span>Store Points:</span>
-          <span>+{merchantPoints}</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span>Network Points:</span>
-          <span>+{globalPoints}</span>
-        </div>
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             fontWeight: 'bold',
-            marginTop: '4px',
           }}
         >
-          <span>Total Earned:</span>
-          <span>+{totalPoints}</span>
+          <span>Points Earned:</span>
+          <span>+{merchantPoints}</span>
         </div>
       </div>
 
       <div style={{ borderTop: '1px dashed #000', margin: '4px 0' }} />
 
-      {/* Balances */}
+      {/* Balance */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span>Store Balance:</span>
           <span>{newMerchantBalance}</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span>Network Balance:</span>
-          <span>{newGlobalBalance}</span>
         </div>
       </div>
 

@@ -7,6 +7,7 @@ import type { IIdempotencyService } from '../../application/services/IIdempotenc
 import type { ISmsPublisherService } from '../../application/services/ISmsPublisherService';
 import { GenerateQRCodeUseCase } from '../../application/use-cases/GenerateQRCodeUseCase';
 import { GetAnalyticsUseCase } from '../../application/use-cases/GetAnalyticsUseCase';
+import { ProcessMonthlyTierResetUseCase } from '../../application/use-cases/ProcessMonthlyTierResetUseCase';
 import { ProcessPointsDecayUseCase } from '../../application/use-cases/ProcessPointsDecayUseCase';
 import { RecordPurchaseUseCase } from '../../application/use-cases/RecordPurchaseUseCase';
 import { RedeemPointsUseCase } from '../../application/use-cases/RedeemPointsUseCase';
@@ -39,6 +40,7 @@ export interface Container {
   recordPurchaseUseCase: RecordPurchaseUseCase;
   redeemPointsUseCase: RedeemPointsUseCase;
   processPointsDecayUseCase: ProcessPointsDecayUseCase;
+  processMonthlyTierResetUseCase: ProcessMonthlyTierResetUseCase;
   getAnalyticsUseCase: GetAnalyticsUseCase;
   generateQRCodeUseCase: GenerateQRCodeUseCase;
 }
@@ -83,7 +85,10 @@ export function createContainer(): Container {
     customerRepository,
     transactionRepository,
     decayCalculatorService,
+    (items) => transactionalWriter.writeAll(items),
   );
+
+  const processMonthlyTierResetUseCase = new ProcessMonthlyTierResetUseCase(customerRepository);
 
   // Create analytics use case
   const getAnalyticsUseCase = new GetAnalyticsUseCase(merchantRepository, transactionRepository);
@@ -102,6 +107,7 @@ export function createContainer(): Container {
     recordPurchaseUseCase,
     redeemPointsUseCase,
     processPointsDecayUseCase,
+    processMonthlyTierResetUseCase,
     getAnalyticsUseCase,
     generateQRCodeUseCase,
   };
