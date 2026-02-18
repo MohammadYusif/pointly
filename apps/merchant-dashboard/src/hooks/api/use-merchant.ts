@@ -61,10 +61,22 @@ export function useInfiniteCustomers(limit = 20) {
   });
 }
 
-export function useInfiniteTransactions(limit = 50, locationId?: string, sortOrder: 'ASC' | 'DESC' = 'DESC') {
+export function useInfiniteTransactions(
+  limit = 50,
+  locationId?: string,
+  sortOrder: 'ASC' | 'DESC' = 'DESC',
+) {
   const { merchant } = useAuth();
   return useInfiniteQuery({
-    queryKey: ['merchant', merchant?.merchantId, 'transactions', 'infinite', limit, locationId, sortOrder],
+    queryKey: [
+      'merchant',
+      merchant?.merchantId,
+      'transactions',
+      'infinite',
+      limit,
+      locationId,
+      sortOrder,
+    ],
     queryFn: ({ pageParam }) =>
       merchantApi.getTransactions(merchant?.merchantId as string, {
         limit,

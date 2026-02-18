@@ -23,7 +23,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function DashboardPage() {
-  const { t, formatCurrency, formatNumber, language } = useTranslation();
+  const { t, formatCurrency, formatNumber } = useTranslation();
   const { textStart, flipIcon } = useRTL();
   const { merchant: authMerchant, isLoading: authLoading } = useAuth();
 

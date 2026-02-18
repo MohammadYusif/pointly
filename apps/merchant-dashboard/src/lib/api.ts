@@ -62,7 +62,12 @@ export const merchantApi = {
 
   getTransactions: (
     merchantId: string,
-    params?: { limit?: number; nextToken?: string; locationId?: string; sortOrder?: 'ASC' | 'DESC' },
+    params?: {
+      limit?: number;
+      nextToken?: string;
+      locationId?: string;
+      sortOrder?: 'ASC' | 'DESC';
+    },
   ) => {
     const query = new URLSearchParams();
     if (params?.limit) query.set('limit', String(params.limit));

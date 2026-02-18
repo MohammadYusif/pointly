@@ -16,9 +16,8 @@ import { useState } from 'react';
 
 type Step = 'input' | 'confirming' | 'submitting' | 'receipt';
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: multi-step form with 4 states requires conditional rendering
 export default function ManualEntryPage() {
-  const { t, formatCurrency, formatNumber, language } = useTranslation();
+  const { t, formatCurrency, formatNumber } = useTranslation();
   const { textStart } = useRTL();
   const { merchant } = useAuth();
   const { data: merchantData } = useMerchant();

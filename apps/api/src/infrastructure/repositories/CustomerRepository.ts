@@ -178,7 +178,10 @@ export class CustomerRepository
   }
 
   toPersistenceItem(entity: Customer) {
-    const mainItem = { tableName: this.tableName, item: this.toItem(entity) as Record<string, unknown> };
+    const mainItem = {
+      tableName: this.tableName,
+      item: this.toItem(entity) as Record<string, unknown>,
+    };
     const indexItems = this.toMerchantIndexItems(entity);
     return [mainItem, ...indexItems];
   }

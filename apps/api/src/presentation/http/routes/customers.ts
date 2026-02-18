@@ -37,7 +37,15 @@ export async function customerRoutes(server: FastifyInstance): Promise<void> {
       // Privacy: strip internal fields and other merchants' data when called by a merchant
       // Keep globalPointsBalance visible — merchants need it for redemption
       if (callerMerchantId) {
-        const { globalLifetimePoints, monthlyProgress, globalPointsDecayPhase, decayStartDate, lastDecayAppliedAt, lastNetworkActivity, ...safe } = json;
+        const {
+          globalLifetimePoints,
+          monthlyProgress,
+          globalPointsDecayPhase,
+          decayStartDate,
+          lastDecayAppliedAt,
+          lastNetworkActivity,
+          ...safe
+        } = json;
         return reply.send({
           success: true,
           data: {
@@ -78,7 +86,15 @@ export async function customerRoutes(server: FastifyInstance): Promise<void> {
       const json = customer.toJSON();
 
       if (callerMerchantId) {
-        const { globalLifetimePoints, monthlyProgress, globalPointsDecayPhase, decayStartDate, lastDecayAppliedAt, lastNetworkActivity, ...safe } = json;
+        const {
+          globalLifetimePoints,
+          monthlyProgress,
+          globalPointsDecayPhase,
+          decayStartDate,
+          lastDecayAppliedAt,
+          lastNetworkActivity,
+          ...safe
+        } = json;
         return reply.send({
           success: true,
           data: {

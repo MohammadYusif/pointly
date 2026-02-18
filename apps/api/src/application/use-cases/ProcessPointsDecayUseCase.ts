@@ -30,6 +30,7 @@ export class ProcessPointsDecayUseCase {
     private atomicWrite?: (items: PersistenceItem[]) => Promise<void>,
   ) {}
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: decay logic requires scanning all customers and applying tier-based rules
   async execute(): Promise<DecayProcessingResult> {
     const result: DecayProcessingResult = {
       totalCustomersProcessed: 0,

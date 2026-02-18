@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: settings page with edit mode and location management
 export default function SettingsPage() {
-  const { t, formatNumber, language } = useTranslation();
+  const { t, formatNumber } = useTranslation();
   const { textStart } = useRTL();
   const { merchant: authMerchant } = useAuth();
 

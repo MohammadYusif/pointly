@@ -7,14 +7,7 @@ import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { formatPhone, getStatusBadge, getTierColor, getTypeBadge } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, useRTL } from '@pointly/ui';
-import {
-  ArrowDownUp,
-  ArrowLeft,
-  ArrowRight,
-  Download,
-  Receipt,
-  ShoppingCart,
-} from 'lucide-react';
+import { ArrowDownUp, ArrowLeft, ArrowRight, Download, Receipt, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';

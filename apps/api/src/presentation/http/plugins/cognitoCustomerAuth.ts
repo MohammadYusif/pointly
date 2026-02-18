@@ -20,7 +20,9 @@ function getCustomerJwksClient(region: string, userPoolId: string): jwksRsa.Jwks
   return customerJwksClient;
 }
 
-export const cognitoCustomerAuthPlugin = fp(async function cognitoCustomerAuthPlugin(server: FastifyInstance): Promise<void> {
+export const cognitoCustomerAuthPlugin = fp(async function cognitoCustomerAuthPlugin(
+  server: FastifyInstance,
+): Promise<void> {
   const env = EnvironmentConfig.get();
   const region = env.AWS_REGION;
   const userPoolId = env.CUSTOMER_USER_POOL_ID;

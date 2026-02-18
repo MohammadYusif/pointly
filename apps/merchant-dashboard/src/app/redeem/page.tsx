@@ -28,7 +28,7 @@ interface RedeemResult {
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: multi-step form with 4 states requires conditional rendering
 export default function RedeemPage() {
-  const { t, formatNumber, formatCurrency, language } = useTranslation();
+  const { t, formatNumber, formatCurrency } = useTranslation();
   const { textStart } = useRTL();
   const { merchant } = useAuth();
   const { data: merchantData } = useMerchant();
@@ -81,13 +81,20 @@ export default function RedeemPage() {
       return;
     }
 
-    if (step === 'confirming' && customer && points > getTotalAvailable()) {
-      setValidationError(t('redeem.errorInsufficient'));
-      return;
+    if (step === 'confirming' && customer) {
+      const merchantBal =
+        customer.enrollments?.find(
+          (e: { merchantId: string }) => e.merchantId === merchant?.merchantId,
+        )?.merchantPointsBalance ?? 0;
+      const globalBal = customer.globalPointsBalance ?? 0;
+      if (points > merchantBal + globalBal) {
+        setValidationError(t('redeem.errorInsufficient'));
+        return;
+      }
     }
 
     setValidationError('');
-  }, [pointsToRedeem, customer, minimumRedemption, step, t, getTotalAvailable]);
+  }, [pointsToRedeem, customer, merchant, minimumRedemption, step, t]);
 
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
