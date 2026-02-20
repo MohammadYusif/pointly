@@ -208,11 +208,16 @@ export class CustomerRepository
   }
 
   async delete(id: string): Promise<void> {
-    // Delete main customer item
     await this.deleteItem(`CUSTOMER#${id}`, 'PROFILE');
-    // TODO: also delete all MERCHANT_INDEX#* items for this customer
-    // (low priority — findByMerchant already filters by consent status;
-    //  a full cleanup would require scanning for SK begins_with MERCHANT_INDEX#)
+    const indexItems = await this.query<{ PK: string; SK: string }>(
+      {
+        KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
+        ExpressionAttributeValues: { ':pk': `CUSTOMER#${id}`, ':prefix': 'MERCHANT_INDEX#' },
+        ProjectionExpression: 'PK, SK',
+      },
+      { limit: 500 },
+    );
+    await Promise.all(indexItems.items.map((item) => this.deleteItem(item.PK, item.SK)));
   }
 
   async exists(id: string): Promise<boolean> {
