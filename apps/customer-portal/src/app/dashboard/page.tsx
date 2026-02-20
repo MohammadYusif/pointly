@@ -1,6 +1,7 @@
 'use client';
 
 import { CustomerLayout } from '@/components/CustomerLayout';
+import { PerksSection } from '@/components/PerksSection';
 import { getCustomer, getCustomerTransactions } from '@/lib/api';
 import { useTranslation } from '@pointly/i18n';
 import type { CustomerEnrollment, CustomerResponse, TransactionResponse } from '@pointly/shared';
@@ -126,18 +127,40 @@ export default function CustomerDashboard() {
           </Card>
         )}
 
-        {/* Decay Warning */}
-        {customer.monthsOfInactivity >= 3 && customer.globalPointsBalance > 0 && (
-          <Card className="border-amber-300 bg-amber-50 dark:bg-amber-900/20">
-            <CardContent className="p-4">
-              <p className="text-sm text-amber-800 dark:text-amber-200">
-                {language === 'ar'
-                  ? 'ستبدأ نقاطك بالانتهاء قريباً. قم بعملية شراء لإعادة تعيين نشاطك.'
-                  : 'Your points will start expiring soon. Make a purchase to reset your activity.'}
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        {/* Points Expiry Card */}
+        {customer.nextDecayDate &&
+          customer.globalPointsBalance > 0 &&
+          // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: expiry card with urgency logic and locale-aware text
+          (() => {
+            const daysToExpiry = Math.floor(
+              (new Date(customer.nextDecayDate).getTime() - Date.now()) / 86400000,
+            );
+            const isUrgent = daysToExpiry < 30;
+            if (daysToExpiry > 365) return null;
+            return (
+              <Card
+                className={
+                  isUrgent
+                    ? 'border-red-300 bg-red-50 dark:bg-red-900/20'
+                    : 'border-amber-300 bg-amber-50 dark:bg-amber-900/20'
+                }
+              >
+                <CardContent className="p-4">
+                  <p
+                    className={`text-sm ${isUrgent ? 'text-red-800 dark:text-red-200' : 'text-amber-800 dark:text-amber-200'}`}
+                  >
+                    {daysToExpiry <= 0
+                      ? language === 'ar'
+                        ? t('expiry.pointsExpireToday')
+                        : t('expiry.pointsExpireToday')
+                      : language === 'ar'
+                        ? `${t('expiry.pointsExpireIn')} ${daysToExpiry} ${daysToExpiry === 1 ? 'يوم' : 'يوم'}. ${t('expiry.resetHint')}`
+                        : `${t('expiry.pointsExpireIn')} ${daysToExpiry} ${daysToExpiry === 1 ? 'day' : 'days'}. ${t('expiry.resetHint')}`}
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          })()}
 
         {/* Recent Transactions */}
         <Card>
@@ -194,6 +217,9 @@ export default function CustomerDashboard() {
             </CardContent>
           </Card>
         )}
+
+        {/* VIP Perks */}
+        <PerksSection />
       </div>
     </CustomerLayout>
   );

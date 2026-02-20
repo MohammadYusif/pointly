@@ -42,6 +42,16 @@ interface MerchantItem {
   totalCustomers: number;
   activeCustomers: number;
   totalTransactions: number;
+  activePerks?: Array<{
+    id: string;
+    type: string;
+    title: string;
+    description: string;
+    requiredTier: string;
+    capacityLimit?: number;
+    isActive: boolean;
+    createdAt: string;
+  }>;
   createdAt: string;
   updatedAt: string;
   verifiedAt?: string;
@@ -216,6 +226,19 @@ export class MerchantRepository
       enableMultiLocation: rawConfig.enableMultiLocation ?? false,
     };
 
+    const activePerks = (item.activePerks || []).map((p) => ({
+      id: p.id,
+      // biome-ignore lint/suspicious/noExplicitAny: DynamoDB strings cast to domain enum types
+      type: p.type as any,
+      title: p.title,
+      description: p.description,
+      // biome-ignore lint/suspicious/noExplicitAny: DynamoDB strings cast to domain enum types
+      requiredTier: p.requiredTier as any,
+      ...(p.capacityLimit !== undefined && { capacityLimit: p.capacityLimit }),
+      isActive: p.isActive,
+      createdAt: new Date(p.createdAt),
+    }));
+
     const props: MerchantProps = {
       merchantId: item.merchantId,
       businessName: item.businessName,
@@ -227,6 +250,7 @@ export class MerchantRepository
       loyaltyConfig,
       smsQuota,
       locations,
+      activePerks,
       maxLocations: item.maxLocations ?? 3,
       totalCustomers: item.totalCustomers ?? 0,
       activeCustomers: item.activeCustomers ?? 0,
@@ -262,6 +286,7 @@ export class MerchantRepository
             ? json.smsQuota.resetDate.toISOString()
             : json.smsQuota.resetDate,
       },
+      activePerks: json.activePerks,
       locations: json.locations,
       maxLocations: json.maxLocations,
       totalCustomers: json.totalCustomers,

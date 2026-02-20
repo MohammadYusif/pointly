@@ -158,6 +158,68 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
     return reply.send({ success: true, data: result });
   });
 
+  // GET /v1/me/perks — View all perks from enrolled merchants, annotated with tier unlock status
+  server.get('/perks', async (request: FastifyRequest, reply: FastifyReply) => {
+    const { customerId } = request;
+    if (!customerId) {
+      throw new ValidationError('Customer ID not found in token');
+    }
+
+    const tierOrder: Record<string, number> = { BRONZE: 0, GOLD: 1, PLATINUM: 2, DIAMOND: 3 };
+
+    const container = getContainer();
+    const customer = await container.customerRepository.findById(customerId);
+    if (!customer) {
+      return reply.status(404).send({ success: false, error: 'Customer not found' });
+    }
+
+    const customerTierLevel = customer.getCurrentTier().getLevel();
+    const customerTierRank = tierOrder[customerTierLevel] ?? 0;
+
+    // Collect all enrolled merchants with granted consent
+    const enrolledMerchantIds = customer
+      .toJSON()
+      // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
+      .enrollments.filter((e: any) => e.consentStatus === 'GRANTED')
+      // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
+      .map((e: any) => e.merchantId as string);
+
+    const perksView: Array<{
+      perkId: string;
+      type: string;
+      title: string;
+      description: string;
+      requiredTier: string;
+      capacityLimit?: number;
+      isUnlocked: boolean;
+      merchantId: string;
+      merchantName: string;
+    }> = [];
+
+    for (const merchantId of enrolledMerchantIds) {
+      const merchant = await container.merchantRepository.findById(merchantId);
+      if (!merchant) continue;
+
+      const activePerks = merchant.getPerks().filter((p) => p.isActive);
+      for (const perk of activePerks) {
+        const requiredRank = tierOrder[perk.requiredTier] ?? 0;
+        perksView.push({
+          perkId: perk.id,
+          type: perk.type,
+          title: perk.title,
+          description: perk.description,
+          requiredTier: perk.requiredTier,
+          ...(perk.capacityLimit !== undefined && { capacityLimit: perk.capacityLimit }),
+          isUnlocked: customerTierRank >= requiredRank,
+          merchantId,
+          merchantName: merchant.toJSON().businessName,
+        });
+      }
+    }
+
+    return reply.send({ success: true, data: perksView });
+  });
+
   // POST /v1/me/consent — Grant/revoke consent
   server.post(
     '/consent',

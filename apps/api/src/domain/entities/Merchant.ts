@@ -46,6 +46,20 @@ export interface PointsCalculation {
   globalPoints: number;
 }
 
+export type PerkType = 'EARLY_ACCESS' | 'EXCLUSIVE_PRODUCT' | 'EVENT';
+export type CustomerTierLevel = 'BRONZE' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
+
+export interface MerchantPerk {
+  id: string;
+  type: PerkType;
+  title: string;
+  description: string;
+  requiredTier: CustomerTierLevel;
+  capacityLimit?: number;
+  isActive: boolean;
+  createdAt: Date;
+}
+
 export interface MerchantProps {
   merchantId: string;
   businessName: string;
@@ -58,6 +72,7 @@ export interface MerchantProps {
   smsQuota: SMSQuota;
   locations: LocationInfo[];
   maxLocations: number;
+  activePerks: MerchantPerk[];
   totalCustomers: number;
   activeCustomers: number;
   totalTransactions: number;
@@ -103,6 +118,7 @@ export class Merchant {
       smsQuota: defaultSMSQuota,
       locations: [primaryLocation],
       maxLocations,
+      activePerks: [],
       totalCustomers: 0,
       activeCustomers: 0,
       totalTransactions: 0,
@@ -442,6 +458,41 @@ export class Merchant {
     return { merchantPoints, globalPoints };
   }
 
+  // Perk management
+  getPerks(): MerchantPerk[] {
+    return [...this.props.activePerks];
+  }
+
+  addPerk(data: Omit<MerchantPerk, 'id' | 'isActive' | 'createdAt'>): MerchantPerk {
+    const perk: MerchantPerk = {
+      id: ulid(),
+      ...data,
+      isActive: true,
+      createdAt: new Date(),
+    };
+    this.props.activePerks.push(perk);
+    this.props.updatedAt = new Date();
+    return perk;
+  }
+
+  updatePerk(perkId: string, data: Partial<Omit<MerchantPerk, 'id' | 'createdAt'>>): void {
+    const perk = this.props.activePerks.find((p) => p.id === perkId);
+    if (!perk) {
+      throw new ValidationError(`Perk ${perkId} not found`);
+    }
+    Object.assign(perk, data);
+    this.props.updatedAt = new Date();
+  }
+
+  removePerk(perkId: string): void {
+    const perk = this.props.activePerks.find((p) => p.id === perkId);
+    if (!perk) {
+      throw new ValidationError(`Perk ${perkId} not found`);
+    }
+    perk.isActive = false;
+    this.props.updatedAt = new Date();
+  }
+
   // Serialization
   toJSON() {
     return {
@@ -459,6 +510,10 @@ export class Merchant {
         createdAt: loc.createdAt.toISOString(),
       })),
       maxLocations: this.props.maxLocations,
+      activePerks: this.props.activePerks.map((p) => ({
+        ...p,
+        createdAt: p.createdAt.toISOString(),
+      })),
       totalCustomers: this.props.totalCustomers,
       activeCustomers: this.props.activeCustomers,
       totalTransactions: this.props.totalTransactions,

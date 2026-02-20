@@ -5,6 +5,9 @@ export {
   useMerchantTransactions,
   useInfiniteCustomers,
   useInfiniteTransactions,
+  usePerks,
+  useCreatePerk,
+  useDeletePerk,
 } from './use-merchant';
 export {
   useCustomerByPhone,

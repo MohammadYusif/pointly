@@ -349,6 +349,14 @@ export class Transaction {
       balanceBefore: this.props.balanceBefore.toNumber(),
       balanceAfter: this.props.balanceAfter.toNumber(),
       metadata: this.props.metadata,
+      // ZATCA fields (stored in metadata, surfaced at top level for API consumers)
+      ...(() => {
+        const m = this.props.metadata as { vatAmount?: unknown; merchantVatId?: unknown };
+        return {
+          vatAmount: typeof m.vatAmount === 'number' ? m.vatAmount : undefined,
+          merchantVatId: typeof m.merchantVatId === 'string' ? m.merchantVatId : undefined,
+        };
+      })(),
       idempotencyKey: this.props.idempotencyKey,
       reversedTransactionId: this.props.reversedTransactionId,
       createdAt: this.props.createdAt.toISOString(),

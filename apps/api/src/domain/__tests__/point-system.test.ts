@@ -247,7 +247,7 @@ describe('Point System - Real World Scenarios', () => {
         setMerchantPointsBalance(customer, 'merchant_a', 500);
         setMerchantPointsBalance(customer, 'merchant_b', 300);
         setGlobalPointsBalance(customer, 1000);
-        setLastActivityDate(customer, 7); // 7 months inactive = Phase 2
+        setLastActivityDate(customer, 18); // 18 months inactive = Phase 2
 
         // Action: Apply decay
         const decayAmount = customer.applyGlobalPointsDecay();
@@ -264,7 +264,7 @@ describe('Point System - Real World Scenarios', () => {
         setCustomerTier(customer, CustomerTier.gold());
         setMerchantPointsBalance(customer, 'merchant_123', 800);
         setGlobalPointsBalance(customer, 5000);
-        setLastActivityDate(customer, 7); // Phase 2
+        setLastActivityDate(customer, 18); // Phase 2
 
         // Action: Apply decay
         const decayAmount = customer.applyGlobalPointsDecay();
@@ -281,7 +281,7 @@ describe('Point System - Real World Scenarios', () => {
         setCustomerTier(customer, CustomerTier.diamond());
         setMerchantPointsBalance(customer, 'merchant_123', 1500);
         setGlobalPointsBalance(customer, 20000);
-        setLastActivityDate(customer, 8); // Phase 2
+        setLastActivityDate(customer, 19); // Phase 2
 
         // Action: Apply decay
         customer.applyGlobalPointsDecay();
@@ -308,7 +308,7 @@ describe('Point System - Real World Scenarios', () => {
         const customer = createCustomerWithEnrollment('merchant_123');
         setMerchantPointsBalance(customer, 'merchant_123', 500);
         setGlobalPointsBalance(customer, 1000);
-        setLastActivityDate(customer, 4); // 4 months = Phase 1
+        setLastActivityDate(customer, 13); // 13 months = Phase 1
 
         customer.applyGlobalPointsDecay();
 
@@ -318,10 +318,10 @@ describe('Point System - Real World Scenarios', () => {
     });
 
     describe('Decay Edge Cases', () => {
-      it('should handle small balance decay: 10 points at Phase 1 (4 months)', () => {
+      it('should handle small balance decay: 10 points at Phase 1 (13 months)', () => {
         const customer = createCustomerWithEnrollment('merchant_123');
         setGlobalPointsBalance(customer, 10);
-        setLastActivityDate(customer, 4); // 4 months = 1 month in Phase 1
+        setLastActivityDate(customer, 13); // 13 months = 1 month in Phase 1
 
         const decayAmount = customer.calculateDecayAmount();
 
@@ -333,44 +333,44 @@ describe('Point System - Real World Scenarios', () => {
       it('should handle zero global points decay at Phase 1', () => {
         const customer = createCustomerWithEnrollment('merchant_123');
         setGlobalPointsBalance(customer, 0);
-        setLastActivityDate(customer, 4); // Phase 1
+        setLastActivityDate(customer, 13); // Phase 1
 
         const decayAmount = customer.calculateDecayAmount();
 
         expect(decayAmount.toNumber()).toBe(0);
       });
 
-      it('should start Phase 1 at exactly 3 months of inactivity', () => {
+      it('should start Phase 1 at exactly 12 months of inactivity', () => {
         const customer = createCustomerWithEnrollment('merchant_123');
         setGlobalPointsBalance(customer, 1000);
-        setLastActivityDate(customer, 3); // Exactly 3 months
+        setLastActivityDate(customer, 12); // Exactly 12 months
 
         const phase = customer.calculateDecayPhase();
 
-        expect(phase).toBe(1); // Phase 1 starts at month 3
+        expect(phase).toBe(1); // Phase 1 starts at month 12
       });
 
-      it('should start Phase 2 at exactly 6 months of inactivity', () => {
+      it('should start Phase 2 at exactly 18 months of inactivity', () => {
         const customer = createCustomerWithEnrollment('merchant_123');
         setGlobalPointsBalance(customer, 1000);
-        setLastActivityDate(customer, 6); // Exactly 6 months
+        setLastActivityDate(customer, 18); // Exactly 18 months
 
         const phase = customer.calculateDecayPhase();
 
-        expect(phase).toBe(2); // Phase 2 starts at month 6
+        expect(phase).toBe(2); // Phase 2 starts at month 18
       });
 
       it('should compound decay when applied twice', () => {
         // First application
         const customer1 = createCustomerWithEnrollment('merchant_123');
         setGlobalPointsBalance(customer1, 1000);
-        setLastActivityDate(customer1, 4); // Phase 1
+        setLastActivityDate(customer1, 13); // Phase 1
 
         const firstDecay = customer1.applyGlobalPointsDecay();
         const balanceAfterFirst = customer1.getGlobalPointsBalance().toNumber();
 
         // Second application (simulate continued inactivity)
-        setLastActivityDate(customer1, 4); // Still Phase 1 after time passes
+        setLastActivityDate(customer1, 13); // Still Phase 1 after time passes
         const secondDecay = customer1.applyGlobalPointsDecay();
         const balanceAfterSecond = customer1.getGlobalPointsBalance().toNumber();
 
@@ -399,10 +399,10 @@ describe('Point System - Real World Scenarios', () => {
     });
 
     describe('Decay phases and rates', () => {
-      it('should apply 5% decay per month in Phase 1 (months 3-5)', () => {
+      it('should apply 5% decay per month in Phase 1 (months 12-17)', () => {
         const customer = createCustomerWithEnrollment('merchant_123');
         setGlobalPointsBalance(customer, 1000);
-        setLastActivityDate(customer, 4); // 4 months = 1 month in Phase 1
+        setLastActivityDate(customer, 13); // 13 months = 1 month in Phase 1
 
         const decayAmount = customer.calculateDecayAmount();
 
@@ -410,25 +410,25 @@ describe('Point System - Real World Scenarios', () => {
         expect(decayAmount.toNumber()).toBe(50);
       });
 
-      it('should apply 15% decay per month in Phase 2 (month 6+)', () => {
+      it('should apply compounded decay in Phase 2 (month 18+)', () => {
         const customer = createCustomerWithEnrollment('merchant_123');
         setGlobalPointsBalance(customer, 1000);
-        setLastActivityDate(customer, 7); // 7 months = 3 months Phase 1 + 1 month Phase 2
+        setLastActivityDate(customer, 19); // 19 months = 6 months Phase 1 + 1 month Phase 2
 
         const decayAmount = customer.calculateDecayAmount();
 
-        // 3 months at 5%: 1000 * 0.95^3 = 857 (approx)
-        // 1 month at 15%: 857 * 0.85 = 728 (approx)
-        // Decay = 1000 - 728 = 272
-        expect(decayAmount.toNumber()).toBeGreaterThan(250);
-        expect(decayAmount.toNumber()).toBeLessThan(300);
+        // 6 months at 5%: 1000 * 0.95^6 = 735 (approx)
+        // 1 month at 15%: 735 * 0.85 = 625 (approx)
+        // Decay = 1000 - 625 = 375
+        expect(decayAmount.toNumber()).toBeGreaterThan(340);
+        expect(decayAmount.toNumber()).toBeLessThan(410);
       });
 
       it('should apply zero decay for decay-immune tiers', () => {
         const customer = createCustomerWithEnrollment('merchant_123');
         setCustomerTier(customer, CustomerTier.gold());
         setGlobalPointsBalance(customer, 1000);
-        setLastActivityDate(customer, 4); // Would be Phase 1 for Bronze
+        setLastActivityDate(customer, 13); // Would be Phase 1 for Bronze
 
         const decayAmount = customer.calculateDecayAmount();
 

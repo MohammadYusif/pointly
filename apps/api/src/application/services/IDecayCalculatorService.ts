@@ -33,4 +33,10 @@ export interface IDecayCalculatorService {
    * Calculate decay for a batch of customers
    */
   calculateBatchDecay(customers: Customer[]): Map<string, number>;
+
+  /**
+   * Returns the inactivity milestone (3, 6, or 9 months) if an engagement
+   * SMS should be sent now, or null if no SMS needed.
+   */
+  getInactivityMilestone(customer: Customer): 3 | 6 | 9 | null;
 }

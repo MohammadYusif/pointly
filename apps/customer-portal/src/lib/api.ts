@@ -1,4 +1,4 @@
-import type { CustomerResponse, TransactionResponse } from '@pointly/shared';
+import type { CustomerPerkView, CustomerResponse, TransactionResponse } from '@pointly/shared';
 import { getAccessToken, signOut } from './auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -51,4 +51,8 @@ export function updateCustomer(data: { name?: string }) {
 
 export function generateQRCode() {
   return fetchApi<{ qrPayload: string; expiresAt: number }>('/v1/me/qr-code', { method: 'POST' });
+}
+
+export function getMyPerks() {
+  return fetchApi<CustomerPerkView[]>('/v1/me/perks');
 }

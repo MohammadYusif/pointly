@@ -31,6 +31,9 @@ export {
 
 // API Response Types
 export type {
+  PerkType,
+  MerchantPerk,
+  CustomerPerkView,
   MerchantLocation,
   MerchantResponse,
   CustomerResponse,

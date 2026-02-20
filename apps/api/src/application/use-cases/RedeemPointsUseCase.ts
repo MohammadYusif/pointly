@@ -58,7 +58,7 @@ export class RedeemPointsUseCase {
     private merchantRepository: IMerchantRepository,
     private transactionRepository: ITransactionRepository,
     private idempotencyService: IIdempotencyService,
-    private atomicWrite?: (items: PersistenceItem[]) => Promise<void>,
+    private atomicWrite: (items: PersistenceItem[]) => Promise<void>,
   ) {}
 
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: redemption flow with validation, smart redeem, and dual transactions
@@ -172,23 +172,15 @@ export class RedeemPointsUseCase {
       transactionIds.push(globalTx.getTransactionId());
     }
 
-    // 8. Save everything atomically (or fall back to sequential saves)
+    // 8. Save everything atomically
     merchant.incrementTransactionCount();
 
-    if (this.atomicWrite) {
-      const items: PersistenceItem[] = [
-        ...transactions.flatMap((tx) => this.transactionRepository.toPersistenceItem(tx)),
-        ...this.customerRepository.toPersistenceItem(customer),
-        ...this.merchantRepository.toPersistenceItem(merchant),
-      ];
-      await this.atomicWrite(items);
-    } else {
-      for (const tx of transactions) {
-        await this.transactionRepository.save(tx);
-      }
-      await this.customerRepository.save(customer);
-      await this.merchantRepository.save(merchant);
-    }
+    const items: PersistenceItem[] = [
+      ...transactions.flatMap((tx) => this.transactionRepository.toPersistenceItem(tx)),
+      ...this.customerRepository.toPersistenceItem(customer),
+      ...this.merchantRepository.toPersistenceItem(merchant),
+    ];
+    await this.atomicWrite(items);
 
     // 9. Store idempotency result and return
     const response: RedeemPointsResponse = {

@@ -34,6 +34,7 @@ interface CustomerItem {
   globalPointsDecayPhase: number;
   decayStartDate: string | undefined;
   lastDecayAppliedAt: string | undefined;
+  lastInactivityWarningSentAt: string | undefined;
   enrollments: EnrollmentItem[];
   createdAt: string;
   updatedAt: string;
@@ -283,6 +284,12 @@ export class CustomerRepository
         createdAt,
       );
     }
+    if (customerItem.lastInactivityWarningSentAt) {
+      props.lastInactivityWarningSentAt = CustomerRepository.parseDate(
+        customerItem.lastInactivityWarningSentAt,
+        createdAt,
+      );
+    }
 
     return Customer.reconstitute(props);
   }
@@ -354,6 +361,7 @@ export class CustomerRepository
       globalPointsDecayPhase: json.globalPointsDecayPhase,
       decayStartDate: json.decayStartDate,
       lastDecayAppliedAt: json.lastDecayAppliedAt,
+      lastInactivityWarningSentAt: json.lastInactivityWarningSentAt,
       enrollments,
       createdAt: json.createdAt,
       updatedAt: json.updatedAt,

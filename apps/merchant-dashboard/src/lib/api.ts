@@ -1,6 +1,7 @@
 import type {
   AnalyticsData,
   CustomerResponse,
+  MerchantPerk,
   MerchantResponse,
   MerchantStatsResponse,
   PaginatedResponse,
@@ -195,6 +196,45 @@ export const purchaseApi = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+};
+
+// Perk API
+export const perkApi = {
+  getPerks: (merchantId: string) => fetchApi<MerchantPerk[]>(`/v1/merchants/${merchantId}/perks`),
+
+  createPerk: (
+    merchantId: string,
+    data: {
+      type: string;
+      title: string;
+      description: string;
+      requiredTier: string;
+      capacityLimit?: number;
+    },
+  ) =>
+    fetchApi<MerchantPerk>(`/v1/merchants/${merchantId}/perks`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updatePerk: (
+    merchantId: string,
+    perkId: string,
+    data: {
+      title?: string;
+      description?: string;
+      requiredTier?: string;
+      capacityLimit?: number;
+      isActive?: boolean;
+    },
+  ) =>
+    fetchApi<MerchantPerk>(`/v1/merchants/${merchantId}/perks/${perkId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  deletePerk: (merchantId: string, perkId: string) =>
+    fetchApi<void>(`/v1/merchants/${merchantId}/perks/${perkId}`, { method: 'DELETE' }),
 };
 
 // Merchant update API

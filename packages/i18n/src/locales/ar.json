@@ -189,5 +189,25 @@
     "deleted": "تم حذف العنصر بنجاح",
     "created": "تم إنشاء العنصر بنجاح",
     "updated": "تم تحديث العنصر بنجاح"
+  },
+  "perks": {
+    "title": "مزايا VIP",
+    "available": "متاح",
+    "locked": "مقفل",
+    "addPerk": "إضافة ميزة",
+    "managedPerks": "إدارة المزايا",
+    "earlyAccess": "وصول مبكر",
+    "exclusiveProduct": "منتج حصري",
+    "event": "فعالية",
+    "perkType": "نوع الميزة",
+    "requiredTier": "المستوى المطلوب",
+    "description": "الوصف",
+    "title_field": "العنوان"
+  },
+  "expiry": {
+    "pointsExpireIn": "تنتهي نقاطك خلال",
+    "pointsExpireToday": "تنتهي نقاطك اليوم! قم بعملية شراء للحفاظ عليها.",
+    "resetHint": "قم بعملية شراء لإعادة تعيين مؤقت نشاطك.",
+    "noExpiry": "نقاطك لا تنتهي"
   }
 }

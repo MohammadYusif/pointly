@@ -1,6 +1,6 @@
-import { merchantApi } from '@/lib/api';
+import { merchantApi, perkApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useMerchant() {
   const { merchant } = useAuth();
@@ -58,6 +58,48 @@ export function useInfiniteCustomers(limit = 20) {
     enabled: !!merchant?.merchantId,
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextToken,
+  });
+}
+
+export function usePerks() {
+  const { merchant } = useAuth();
+  return useQuery({
+    queryKey: ['merchant', merchant?.merchantId, 'perks'],
+    // biome-ignore lint/style/noNonNullAssertion: enabled guard ensures merchantId exists
+    queryFn: () => perkApi.getPerks(merchant!.merchantId),
+    enabled: !!merchant?.merchantId,
+  });
+}
+
+export function useCreatePerk() {
+  const { merchant } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      type: string;
+      title: string;
+      description: string;
+      requiredTier: string;
+      capacityLimit?: number;
+    }) =>
+      // biome-ignore lint/style/noNonNullAssertion: merchantId is required for perk creation
+      perkApi.createPerk(merchant!.merchantId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['merchant', merchant?.merchantId, 'perks'] });
+    },
+  });
+}
+
+export function useDeletePerk() {
+  const { merchant } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (perkId: string) =>
+      // biome-ignore lint/style/noNonNullAssertion: merchantId is required for perk deletion
+      perkApi.deletePerk(merchant!.merchantId, perkId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['merchant', merchant?.merchantId, 'perks'] });
+    },
   });
 }
 

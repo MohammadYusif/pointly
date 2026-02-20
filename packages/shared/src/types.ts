@@ -2,6 +2,32 @@
  * Shared API response types used by both merchant-dashboard and customer-portal.
  */
 
+export type PerkType = 'EARLY_ACCESS' | 'EXCLUSIVE_PRODUCT' | 'EVENT';
+type CustomerTierLevel = 'BRONZE' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
+
+export interface MerchantPerk {
+  id: string;
+  type: PerkType;
+  title: string;
+  description: string;
+  requiredTier: CustomerTierLevel;
+  capacityLimit?: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface CustomerPerkView {
+  perkId: string;
+  type: PerkType;
+  title: string;
+  description: string;
+  requiredTier: CustomerTierLevel;
+  capacityLimit?: number;
+  isUnlocked: boolean;
+  merchantId: string;
+  merchantName: string;
+}
+
 export interface MerchantLocation {
   locationId: string;
   name: string;
@@ -20,6 +46,7 @@ export interface MerchantResponse {
   tier: string;
   status: string;
   verifiedAt?: string;
+  activePerks?: MerchantPerk[];
   loyaltyConfig: {
     pointsPerSAR: number;
     globalPointsPerSAR: number;
@@ -51,6 +78,7 @@ export interface CustomerResponse {
   globalPointsBalance: number;
   globalLifetimePoints: number;
   monthlyProgress: number;
+  nextDecayDate?: string;
   enrollments: CustomerEnrollment[];
   createdAt: string;
   updatedAt: string;

@@ -86,6 +86,7 @@ export function createContainer(): Container {
     transactionRepository,
     decayCalculatorService,
     (items) => transactionalWriter.writeAll(items),
+    smsPublisherService,
   );
 
   const processMonthlyTierResetUseCase = new ProcessMonthlyTierResetUseCase(customerRepository);

@@ -399,6 +399,141 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
     },
   );
 
+  // GET /:merchantId/perks — List active perks
+  server.get(
+    '/:merchantId/perks',
+    async (request: FastifyRequest<{ Params: { merchantId: string } }>, reply: FastifyReply) => {
+      enforceMerchantAccess(request);
+      const { merchantId } = request.params;
+
+      const { merchantRepository } = getContainer();
+      const merchant = await merchantRepository.findById(merchantId);
+      if (!merchant) {
+        return reply.status(404).send({ success: false, error: 'Merchant not found' });
+      }
+
+      return reply.send({ success: true, data: merchant.getPerks().filter((p) => p.isActive) });
+    },
+  );
+
+  // POST /:merchantId/perks — Create perk
+  server.post(
+    '/:merchantId/perks',
+    async (
+      request: FastifyRequest<{
+        Params: { merchantId: string };
+        Body: {
+          type: string;
+          title: string;
+          description: string;
+          requiredTier: string;
+          capacityLimit?: number;
+        };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      enforceMerchantAccess(request);
+      const { merchantId } = request.params;
+
+      const perkSchema = z.object({
+        type: z.enum(['EARLY_ACCESS', 'EXCLUSIVE_PRODUCT', 'EVENT']),
+        title: z.string().min(1).max(100),
+        description: z.string().min(1).max(500),
+        requiredTier: z.enum(['BRONZE', 'GOLD', 'PLATINUM', 'DIAMOND']),
+        capacityLimit: z.number().int().positive().optional(),
+      });
+      const body = perkSchema.parse(request.body);
+
+      const { merchantRepository } = getContainer();
+      const merchant = await merchantRepository.findById(merchantId);
+      if (!merchant) {
+        return reply.status(404).send({ success: false, error: 'Merchant not found' });
+      }
+
+      const perk = merchant.addPerk({
+        type: body.type,
+        title: body.title,
+        description: body.description,
+        requiredTier: body.requiredTier,
+        ...(body.capacityLimit !== undefined && { capacityLimit: body.capacityLimit }),
+      });
+      await merchantRepository.save(merchant);
+
+      return reply.status(201).send({ success: true, data: perk });
+    },
+  );
+
+  // PATCH /:merchantId/perks/:perkId — Update perk
+  server.patch(
+    '/:merchantId/perks/:perkId',
+    async (
+      request: FastifyRequest<{
+        Params: { merchantId: string; perkId: string };
+        Body: {
+          title?: string;
+          description?: string;
+          requiredTier?: string;
+          capacityLimit?: number;
+          isActive?: boolean;
+        };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      enforceMerchantAccess(request);
+      const { merchantId, perkId } = request.params;
+
+      const updateSchema = z.object({
+        title: z.string().min(1).max(100).optional(),
+        description: z.string().min(1).max(500).optional(),
+        requiredTier: z.enum(['BRONZE', 'GOLD', 'PLATINUM', 'DIAMOND']).optional(),
+        capacityLimit: z.number().int().positive().optional(),
+        isActive: z.boolean().optional(),
+      });
+      const body = updateSchema.parse(request.body);
+
+      const { merchantRepository } = getContainer();
+      const merchant = await merchantRepository.findById(merchantId);
+      if (!merchant) {
+        return reply.status(404).send({ success: false, error: 'Merchant not found' });
+      }
+
+      merchant.updatePerk(perkId, {
+        ...(body.title !== undefined && { title: body.title }),
+        ...(body.description !== undefined && { description: body.description }),
+        ...(body.requiredTier !== undefined && { requiredTier: body.requiredTier }),
+        ...(body.capacityLimit !== undefined && { capacityLimit: body.capacityLimit }),
+        ...(body.isActive !== undefined && { isActive: body.isActive }),
+      });
+      await merchantRepository.save(merchant);
+
+      const updated = merchant.getPerks().find((p) => p.id === perkId);
+      return reply.send({ success: true, data: updated });
+    },
+  );
+
+  // DELETE /:merchantId/perks/:perkId — Soft-delete perk
+  server.delete(
+    '/:merchantId/perks/:perkId',
+    async (
+      request: FastifyRequest<{ Params: { merchantId: string; perkId: string } }>,
+      reply: FastifyReply,
+    ) => {
+      enforceMerchantAccess(request);
+      const { merchantId, perkId } = request.params;
+
+      const { merchantRepository } = getContainer();
+      const merchant = await merchantRepository.findById(merchantId);
+      if (!merchant) {
+        return reply.status(404).send({ success: false, error: 'Merchant not found' });
+      }
+
+      merchant.removePerk(perkId);
+      await merchantRepository.save(merchant);
+
+      return reply.send({ success: true });
+    },
+  );
+
   // POST /:merchantId/verify-qr — Verify customer QR code
   server.post(
     '/:merchantId/verify-qr',

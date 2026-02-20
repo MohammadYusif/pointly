@@ -48,6 +48,7 @@ export interface CustomerProps {
   globalPointsDecayPhase: number;
   decayStartDate?: Date;
   lastDecayAppliedAt?: Date;
+  lastInactivityWarningSentAt?: Date; // dedup for 3/6/9-month engagement SMS
 
   enrollments: Map<string, CustomerEnrollment>;
   createdAt: Date;
@@ -434,21 +435,42 @@ export class Customer {
 
   /**
    * Determine decay phase based on inactivity
-   * Uses 3-month grace period:
-   * - Months 0-2: Active (no decay)
-   * - Months 3-5: Light decay (5% per month)
-   * - Months 6+: Heavy decay (15% per month)
+   * KSA Ministry of Commerce compliant — 12-month grace period:
+   * - Months 0-11: Active (no decay)
+   * - Months 12-17: Light decay (5% per month)
+   * - Months 18+: Heavy decay (15% per month)
    */
   calculateDecayPhase(): number {
     const monthsInactive = this.getMonthsOfInactivity();
 
-    if (monthsInactive < 3) {
-      return 0; // Active - no decay (3-month grace period)
+    if (monthsInactive < 12) {
+      return 0; // Active — no decay (12-month grace period)
     }
-    if (monthsInactive < 6) {
-      return 1; // Light decay (months 3-5) - 5% per month
+    if (monthsInactive < 18) {
+      return 1; // Light decay (months 12-17) — 5% per month
     }
-    return 2; // Heavy decay (month 6+) - 15% per month
+    return 2; // Heavy decay (month 18+) — 15% per month
+  }
+
+  /**
+   * Get the date when points will start to decay (lastNetworkActivity + 12 months).
+   * Shown to customers as a countdown for retention engagement.
+   */
+  getNextDecayDate(): Date {
+    return new Date(this.props.lastNetworkActivity.getTime() + 365 * 24 * 60 * 60 * 1000);
+  }
+
+  /**
+   * Mark that an inactivity warning SMS was sent this month.
+   * Used to dedup 3/6/9-month engagement messages.
+   */
+  markInactivityWarningSent(): void {
+    this.props.lastInactivityWarningSentAt = new Date();
+    this.props.updatedAt = new Date();
+  }
+
+  getLastInactivityWarningSentAt(): Date | undefined {
+    return this.props.lastInactivityWarningSentAt;
   }
 
   /**
@@ -469,9 +491,9 @@ export class Customer {
     const monthsInactive = this.getMonthsOfInactivity();
     let balance = this.props.globalPointsBalance.toNumber();
 
-    // Calculate months in each phase
-    const lightDecayMonths = Math.min(Math.max(monthsInactive - 3, 0), 3); // Months 3-5 (up to 3 months)
-    const heavyDecayMonths = Math.max(monthsInactive - 6, 0); // Month 6+
+    // Calculate months in each phase (12-month grace period)
+    const lightDecayMonths = Math.min(Math.max(monthsInactive - 12, 0), 6); // Months 12-17 (up to 6 months)
+    const heavyDecayMonths = Math.max(monthsInactive - 18, 0); // Month 18+
 
     // Apply light decay (5% per month) for months 3-5
     for (let i = 0; i < lightDecayMonths; i++) {
@@ -666,9 +688,11 @@ export class Customer {
 
       // Decay tracking
       lastNetworkActivity: this.props.lastNetworkActivity.toISOString(),
+      nextDecayDate: this.getNextDecayDate().toISOString(),
       globalPointsDecayPhase: this.props.globalPointsDecayPhase,
       decayStartDate: this.props.decayStartDate?.toISOString(),
       lastDecayAppliedAt: this.props.lastDecayAppliedAt?.toISOString(),
+      lastInactivityWarningSentAt: this.props.lastInactivityWarningSentAt?.toISOString(),
       monthsOfInactivity: this.getMonthsOfInactivity(),
 
       enrollments: Array.from(this.props.enrollments.entries()).map(([, enrollment]) => ({

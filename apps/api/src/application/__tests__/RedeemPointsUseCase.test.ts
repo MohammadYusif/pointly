@@ -22,6 +22,7 @@ describe('RedeemPointsUseCase', () => {
   let mockMerchantRepo: IMerchantRepository;
   let mockTransactionRepo: ITransactionRepository;
   let mockIdempotencyService: IIdempotencyService;
+  let mockAtomicWrite: ReturnType<typeof vi.fn>;
 
   let testCustomer: Customer;
   let testMerchant: Merchant;
@@ -45,6 +46,8 @@ describe('RedeemPointsUseCase', () => {
     );
     testMerchant.verify();
 
+    mockAtomicWrite = vi.fn().mockResolvedValue(undefined);
+
     mockCustomerRepo = {
       findById: vi.fn(),
       save: vi.fn(),
@@ -54,6 +57,8 @@ describe('RedeemPointsUseCase', () => {
       findByMerchant: vi.fn(),
       findPendingConsents: vi.fn(),
       isEnrolled: vi.fn(),
+      // biome-ignore lint/suspicious/noExplicitAny: test mock returns empty persistence items
+      toPersistenceItem: vi.fn().mockReturnValue([]) as any,
     };
 
     mockMerchantRepo = {
@@ -66,6 +71,8 @@ describe('RedeemPointsUseCase', () => {
       findVerified: vi.fn(),
       findPendingVerification: vi.fn(),
       findByTier: vi.fn(),
+      // biome-ignore lint/suspicious/noExplicitAny: test mock returns empty persistence items
+      toPersistenceItem: vi.fn().mockReturnValue([]) as any,
     };
 
     mockTransactionRepo = {
@@ -79,6 +86,8 @@ describe('RedeemPointsUseCase', () => {
       findByCustomerAndMerchant: vi.fn(),
       getMerchantStats: vi.fn(),
       getCustomerStats: vi.fn(),
+      // biome-ignore lint/suspicious/noExplicitAny: test mock returns empty persistence items
+      toPersistenceItem: vi.fn().mockReturnValue([]) as any,
     };
 
     mockIdempotencyService = {
@@ -92,6 +101,7 @@ describe('RedeemPointsUseCase', () => {
       mockMerchantRepo,
       mockTransactionRepo,
       mockIdempotencyService,
+      mockAtomicWrite,
     );
   });
 
@@ -126,7 +136,7 @@ describe('RedeemPointsUseCase', () => {
       expect(result.globalPointsRedeemed).toBe(0);
       expect(result.transactionIds).toHaveLength(1);
       expect(result.sarValue).toBe(1); // 100 * 0.01
-      expect(vi.mocked(mockTransactionRepo.save)).toHaveBeenCalledTimes(1);
+      expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
     });
 
     it('should use merchant points first then global (smart redeem)', async () => {
@@ -144,7 +154,7 @@ describe('RedeemPointsUseCase', () => {
       expect(result.globalPointsRedeemed).toBe(100);
       expect(result.totalPointsRedeemed).toBe(300);
       expect(result.transactionIds).toHaveLength(2);
-      expect(vi.mocked(mockTransactionRepo.save)).toHaveBeenCalledTimes(2);
+      expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
     });
 
     it('should calculate correct SAR value based on redemption rate', async () => {
@@ -330,8 +340,7 @@ describe('RedeemPointsUseCase', () => {
         idempotencyKey: 'redeem_save_1',
       });
 
-      expect(vi.mocked(mockCustomerRepo.save)).toHaveBeenCalledTimes(1);
-      expect(vi.mocked(mockMerchantRepo.save)).toHaveBeenCalledTimes(1);
+      expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
       expect(vi.mocked(mockIdempotencyService.storeResult)).toHaveBeenCalledTimes(1);
     });
   });

@@ -2,6 +2,7 @@ import { type Customer, Transaction } from '../../domain';
 import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { ITransactionRepository } from '../repositories/ITransactionRepository';
 import type { IDecayCalculatorService } from '../services/IDecayCalculatorService';
+import type { ISmsPublisherService } from '../services/ISmsPublisherService';
 import type { PersistenceItem } from '../shared/interfaces/BaseRepository';
 
 export interface DecayProcessingResult {
@@ -15,12 +16,13 @@ export interface DecayProcessingResult {
 /**
  * ProcessPointsDecayUseCase - Monthly job to process global points decay
  *
- * Decay timeline (3-month grace period):
- * - Months 0-2: Active (no decay)
- * - Months 3-5: Light decay (5% per month)
- * - Months 6+: Heavy decay (15% per month)
+ * KSA Ministry of Commerce compliant — 12-month grace period:
+ * - Months 0-11: Active (no decay) — engagement SMS at months 3, 6, 9
+ * - Months 12-17: Light decay (5% per month)
+ * - Months 18+: Heavy decay (15% per month)
  *
- * This should run as a Lambda on a monthly schedule (EventBridge)
+ * SMS is only sent during KSA legal hours (8:00 AM – 10:00 PM, UTC+3).
+ * This should run as a Lambda on a monthly schedule (EventBridge).
  */
 export class ProcessPointsDecayUseCase {
   constructor(
@@ -28,6 +30,7 @@ export class ProcessPointsDecayUseCase {
     private transactionRepository: ITransactionRepository,
     private decayCalculator: IDecayCalculatorService,
     private atomicWrite?: (items: PersistenceItem[]) => Promise<void>,
+    private smsPublisher?: ISmsPublisherService,
   ) {}
 
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: decay logic requires scanning all customers and applying tier-based rules
@@ -40,28 +43,46 @@ export class ProcessPointsDecayUseCase {
       errors: [],
     };
 
+    const ksaHoursOk = this.isWithinKsaLegalHours();
+
     try {
-      // Get all customers (in production, this would be paginated)
       const customers = await this.getAllCustomers();
 
       for (const customer of customers) {
         try {
           result.totalCustomersProcessed++;
-
-          // Update decay phase
           customer.updateDecayPhase();
 
-          // Check if customer needs warning
+          // --- Proactive engagement SMS at 3/6/9 months (during grace period) ---
+          const milestone = this.decayCalculator.getInactivityMilestone(customer);
+          if (milestone && ksaHoursOk && this.smsPublisher) {
+            const monthsLeft = 12 - milestone;
+            const balance = customer.getGlobalPointsBalance().toNumber();
+            await this.smsPublisher.publish({
+              phone: customer.getPhone().toE164(),
+              body: `[Pointly] You have ${balance} points. ${monthsLeft} months until inactivity expiry — shop now to keep them! | لديك ${balance} نقطة. ${monthsLeft} أشهر حتى انتهاء صلاحية النقاط بسبب عدم النشاط — تسوق الآن للحفاظ عليها!`,
+              merchantId: 'SYSTEM',
+              type: 'DECAY_WARNING',
+            });
+            customer.markInactivityWarningSent();
+            result.warningsSent++;
+          }
+
+          // --- Phase-1 decay warning SMS (months 12-17, decay has started) ---
           if (this.decayCalculator.shouldWarnCustomer(customer)) {
             const warning = this.decayCalculator.generateWarningMessage(customer);
-            if (warning) {
-              // Send SMS warning (would integrate with SNS/SQS here)
-              console.log(`Warning for customer ${warning.customerId}: ${warning.message}`);
+            if (warning && ksaHoursOk && this.smsPublisher) {
+              await this.smsPublisher.publish({
+                phone: warning.phone,
+                body: warning.message,
+                merchantId: 'SYSTEM',
+                type: 'DECAY_WARNING',
+              });
               result.warningsSent++;
             }
           }
 
-          // Calculate and apply decay
+          // --- Apply decay ---
           const balanceBeforeDecay = customer.getGlobalPointsBalance();
           const decayAmount = customer.applyGlobalPointsDecay();
 
@@ -69,7 +90,6 @@ export class ProcessPointsDecayUseCase {
             result.customersWithDecay++;
             result.totalPointsDecayed += decayAmount.toNumber();
 
-            // Create expiration transaction
             const transaction = Transaction.createExpiration(
               'SYSTEM',
               customer.getCustomerId(),
@@ -83,7 +103,6 @@ export class ProcessPointsDecayUseCase {
               },
             );
 
-            // Save transaction and customer atomically
             if (this.atomicWrite) {
               await this.atomicWrite([
                 ...this.transactionRepository.toPersistenceItem(transaction),
@@ -94,7 +113,6 @@ export class ProcessPointsDecayUseCase {
               await this.customerRepository.save(customer);
             }
           } else {
-            // Just save customer with updated phase
             await this.customerRepository.save(customer);
           }
         } catch (error) {
@@ -110,6 +128,15 @@ export class ProcessPointsDecayUseCase {
     }
 
     return result;
+  }
+
+  /**
+   * Returns true if the current time is within KSA legal SMS hours.
+   * KSA is UTC+3. Legal hours: 8:00 AM – 10:00 PM.
+   */
+  private isWithinKsaLegalHours(): boolean {
+    const h = (new Date().getUTCHours() + 3) % 24;
+    return h >= 8 && h < 22;
   }
 
   private async getAllCustomers(): Promise<Customer[]> {

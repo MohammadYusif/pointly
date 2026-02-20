@@ -189,5 +189,25 @@
     "deleted": "Item deleted successfully",
     "created": "Item created successfully",
     "updated": "Item updated successfully"
+  },
+  "perks": {
+    "title": "VIP Perks",
+    "available": "Available",
+    "locked": "Locked",
+    "addPerk": "Add Perk",
+    "managedPerks": "Perks Manager",
+    "earlyAccess": "Early Access",
+    "exclusiveProduct": "Exclusive Product",
+    "event": "Event",
+    "perkType": "Perk Type",
+    "requiredTier": "Required Tier",
+    "description": "Description",
+    "title_field": "Title"
+  },
+  "expiry": {
+    "pointsExpireIn": "Your points expire in",
+    "pointsExpireToday": "Your points expire today! Make a purchase to keep them.",
+    "resetHint": "Make a purchase to reset your activity timer.",
+    "noExpiry": "Your points do not expire"
   }
 }
