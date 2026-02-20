@@ -27,9 +27,7 @@ export function EarnRedeemBreakdown({ data, loading }: EarnRedeemBreakdownProps)
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm md:text-base">
-            {language === 'ar' ? 'النقاط المكتسبة والمستبدلة' : 'Points Earned vs Redeemed'}
-          </CardTitle>
+          <CardTitle className="text-sm md:text-base">{t('analytics.earnedVsRedeemed')}</CardTitle>
         </CardHeader>
         <CardContent className="h-75 flex items-center justify-center">
           <p className="text-muted-foreground">{t('common.loading')}</p>
@@ -42,14 +40,10 @@ export function EarnRedeemBreakdown({ data, loading }: EarnRedeemBreakdownProps)
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm md:text-base">
-            {language === 'ar' ? 'النقاط المكتسبة والمستبدلة' : 'Points Earned vs Redeemed'}
-          </CardTitle>
+          <CardTitle className="text-sm md:text-base">{t('analytics.earnedVsRedeemed')}</CardTitle>
         </CardHeader>
         <CardContent className="h-75 flex items-center justify-center">
-          <p className="text-muted-foreground">
-            {language === 'ar' ? 'لا توجد بيانات في هذه الفترة' : 'No data for this period'}
-          </p>
+          <p className="text-muted-foreground">{t('analytics.noDataForPeriod')}</p>
         </CardContent>
       </Card>
     );
@@ -64,9 +58,7 @@ export function EarnRedeemBreakdown({ data, loading }: EarnRedeemBreakdownProps)
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm md:text-base">
-          {language === 'ar' ? 'النقاط المكتسبة والمستبدلة' : 'Points Earned vs Redeemed'}
-        </CardTitle>
+        <CardTitle className="text-sm md:text-base">{t('analytics.earnedVsRedeemed')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div dir="ltr" className="h-75">
@@ -79,13 +71,13 @@ export function EarnRedeemBreakdown({ data, loading }: EarnRedeemBreakdownProps)
               <Legend />
               <Bar
                 dataKey="earned"
-                name={language === 'ar' ? 'مكتسبة' : 'Earned'}
+                name={t('analytics.earned')}
                 fill="#22c55e"
                 radius={[4, 4, 0, 0]}
               />
               <Bar
                 dataKey="redeemed"
-                name={language === 'ar' ? 'مستبدلة' : 'Redeemed'}
+                name={t('analytics.redeemed')}
                 fill="#f97316"
                 radius={[4, 4, 0, 0]}
               />

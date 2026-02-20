@@ -26,9 +26,7 @@ export function RevenueChart({ data, loading }: RevenueChartProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm md:text-base">
-            {language === 'ar' ? 'الإيرادات' : 'Revenue'}
-          </CardTitle>
+          <CardTitle className="text-sm md:text-base">{t('analytics.revenue')}</CardTitle>
         </CardHeader>
         <CardContent className="h-75 flex items-center justify-center">
           <p className="text-muted-foreground">{t('common.loading')}</p>
@@ -41,14 +39,10 @@ export function RevenueChart({ data, loading }: RevenueChartProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm md:text-base">
-            {language === 'ar' ? 'الإيرادات' : 'Revenue (SAR)'}
-          </CardTitle>
+          <CardTitle className="text-sm md:text-base">{t('analytics.revenueSar')}</CardTitle>
         </CardHeader>
         <CardContent className="h-75 flex items-center justify-center">
-          <p className="text-muted-foreground">
-            {language === 'ar' ? 'لا توجد بيانات في هذه الفترة' : 'No data for this period'}
-          </p>
+          <p className="text-muted-foreground">{t('analytics.noDataForPeriod')}</p>
         </CardContent>
       </Card>
     );
@@ -62,9 +56,7 @@ export function RevenueChart({ data, loading }: RevenueChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm md:text-base">
-          {language === 'ar' ? 'الإيرادات' : 'Revenue (SAR)'}
-        </CardTitle>
+        <CardTitle className="text-sm md:text-base">{t('analytics.revenueSar')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div dir="ltr" className="h-75">
@@ -90,7 +82,7 @@ export function RevenueChart({ data, loading }: RevenueChartProps) {
               <Area
                 type="monotone"
                 dataKey="revenue"
-                name={language === 'ar' ? 'الإيرادات' : 'Revenue'}
+                name={t('analytics.revenue')}
                 stroke="#6366f1"
                 strokeWidth={2}
                 fill="url(#revenueGradient)"

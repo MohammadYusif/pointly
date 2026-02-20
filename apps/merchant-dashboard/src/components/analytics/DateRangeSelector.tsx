@@ -55,18 +55,18 @@ export function DateRangeSelector({
   onPresetChange,
   onGroupByChange,
 }: DateRangeSelectorProps) {
-  const { language } = useTranslation();
+  const { t } = useTranslation();
 
   const presetLabels: Record<DatePreset, string> = {
-    '7d': language === 'ar' ? '7 أيام' : '7 Days',
-    '30d': language === 'ar' ? '30 يوم' : '30 Days',
-    '90d': language === 'ar' ? '3 أشهر' : '3 Months',
+    '7d': t('analytics.days7'),
+    '30d': t('analytics.days30'),
+    '90d': t('analytics.months3'),
   };
 
   const groupByLabels: Record<GroupBy, string> = {
-    day: language === 'ar' ? 'يوم' : 'Day',
-    week: language === 'ar' ? 'أسبوع' : 'Week',
-    month: language === 'ar' ? 'شهر' : 'Month',
+    day: t('analytics.day'),
+    week: t('analytics.week'),
+    month: t('analytics.month'),
   };
 
   const validGroupBys = VALID_GROUP_BY[preset];

@@ -37,7 +37,9 @@
     "signUp": "Sign Up",
     "signIn": "Sign In",
     "rememberMe": "Remember me",
-    "resetPassword": "Reset Password"
+    "resetPassword": "Reset Password",
+    "customerPortal": "Customer Portal",
+    "verificationCode": "Verification Code"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -48,7 +50,8 @@
     "loyalty": "Loyalty Program",
     "profile": "Profile",
     "help": "Help",
-    "billing": "Billing"
+    "billing": "Billing",
+    "qr": "QR Code"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -63,7 +66,22 @@
     "fromLastMonth": "+{{percent}}% from last month",
     "pointsRate": "1 SAR = 1 Point",
     "uniqueCustomers": "Unique Customers",
-    "locations": "Locations"
+    "locations": "Locations",
+    "pointlyPoints": "Pointly Points",
+    "merchantPoints": "Merchant Points",
+    "pointsToNextTier": "points to next tier",
+    "enrolledMerchants": "Enrolled Merchants"
+  },
+  "qr": {
+    "title": "Your QR Code",
+    "retry": "Retry",
+    "expiresIn": "Expires in",
+    "refresh": "Refresh",
+    "generateError": "Failed to generate QR code. Please try again.",
+    "showToMerchant": "Show this code to the merchant at checkout"
+  },
+  "profile": {
+    "personalInfo": "Personal Information"
   },
   "customer": {
     "title": "Customers",
@@ -85,7 +103,8 @@
     "recordPurchase": "Record Purchase",
     "redeemPoints": "Redeem Points",
     "exportCSV": "Export CSV",
-    "phonePlaceholder": "+966 5XX XXX XXXX"
+    "phonePlaceholder": "+966 5XX XXX XXXX",
+    "transactions": "transactions"
   },
   "merchant": {
     "title": "Merchant",
@@ -100,7 +119,8 @@
     "contactName": "Contact Name",
     "locationName": "Location name",
     "address": "Address",
-    "city": "City"
+    "city": "City",
+    "allLocations": "All Locations"
   },
   "transaction": {
     "title": "Transactions",
@@ -125,7 +145,31 @@
     "allTypes": "All Types",
     "sortNewest": "Newest",
     "sortOldest": "Oldest",
-    "minAmount": "Amount (min)"
+    "minAmount": "Amount (min)",
+    "expiration": "Expiration"
+  },
+  "tier": {
+    "bronze": "Bronze",
+    "gold": "Gold",
+    "platinum": "Platinum",
+    "diamond": "Diamond"
+  },
+  "analytics": {
+    "revenue": "Revenue",
+    "revenueSar": "Revenue (SAR)",
+    "noDataForPeriod": "No data for this period",
+    "earnedVsRedeemed": "Points Earned vs Redeemed",
+    "earned": "Earned",
+    "redeemed": "Redeemed",
+    "transactionTrends": "Transaction Trends",
+    "earn": "Earn",
+    "redeem": "Redeem",
+    "days7": "7 Days",
+    "days30": "30 Days",
+    "months3": "3 Months",
+    "day": "Day",
+    "week": "Week",
+    "month": "Month"
   },
   "settings": {
     "title": "Settings",
@@ -208,6 +252,8 @@
     "pointsExpireIn": "Your points expire in",
     "pointsExpireToday": "Your points expire today! Make a purchase to keep them.",
     "resetHint": "Make a purchase to reset your activity timer.",
-    "noExpiry": "Your points do not expire"
+    "noExpiry": "Your points do not expire",
+    "day": "day",
+    "days": "days"
   }
 }

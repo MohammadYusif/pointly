@@ -17,7 +17,7 @@ interface CustomerProfile extends CustomerResponse {
 }
 
 export default function ProfilePage() {
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const { textStart } = useRTL();
   const router = useRouter();
 
@@ -67,9 +67,7 @@ export default function ProfilePage() {
       <div className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
-              {language === 'ar' ? 'المعلومات الشخصية' : 'Personal Information'}
-            </CardTitle>
+            <CardTitle className="text-base">{t('profile.personalInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
@@ -110,9 +108,7 @@ export default function ProfilePage() {
         {(customer?.enrollments?.length ?? 0) > 0 && customer && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">
-                {language === 'ar' ? 'التجار المسجلين' : 'Enrolled Merchants'}
-              </CardTitle>
+              <CardTitle className="text-base">{t('dashboard.enrolledMerchants')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {customer.enrollments.map((e) => (

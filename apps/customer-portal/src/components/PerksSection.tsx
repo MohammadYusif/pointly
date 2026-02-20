@@ -6,26 +6,20 @@ import type { CustomerPerkView } from '@pointly/shared';
 import { Card, CardContent, CardHeader, CardTitle } from '@pointly/ui';
 import { useEffect, useState } from 'react';
 
-const perkTypeLabel: Record<string, { en: string; ar: string }> = {
-  EARLY_ACCESS: { en: 'Early Access', ar: 'وصول مبكر' },
-  EXCLUSIVE_PRODUCT: { en: 'Exclusive Product', ar: 'منتج حصري' },
-  EVENT: { en: 'Event', ar: 'فعالية' },
+const perkTypeKey: Record<string, string> = {
+  EARLY_ACCESS: 'perks.earlyAccess',
+  EXCLUSIVE_PRODUCT: 'perks.exclusiveProduct',
+  EVENT: 'perks.event',
 };
 
-const tierLabel: Record<string, { en: string; ar: string }> = {
-  BRONZE: { en: 'Bronze', ar: 'برونزي' },
-  GOLD: { en: 'Gold', ar: 'ذهبي' },
-  PLATINUM: { en: 'Platinum', ar: 'بلاتيني' },
-  DIAMOND: { en: 'Diamond', ar: 'ماسي' },
+const tierKey: Record<string, string> = {
+  BRONZE: 'tier.bronze',
+  GOLD: 'tier.gold',
+  PLATINUM: 'tier.platinum',
+  DIAMOND: 'tier.diamond',
 };
 
-function PerkItem({
-  perk,
-  language,
-  t,
-}: { perk: CustomerPerkView; language: string; t: (key: string) => string }) {
-  const typeInfo = perkTypeLabel[perk.type] ?? { en: perk.type, ar: perk.type };
-  const tierInfo = tierLabel[perk.requiredTier] ?? { en: perk.requiredTier, ar: perk.requiredTier };
+function PerkItem({ perk, t }: { perk: CustomerPerkView; t: (key: string) => string }) {
   return (
     <div
       className={`p-3 rounded-md border ${perk.isUnlocked ? 'border-green-300 bg-green-50 dark:bg-green-900/10' : 'border-gray-200 bg-gray-50 dark:bg-gray-900/10 opacity-60'}`}
@@ -35,7 +29,7 @@ function PerkItem({
           <p className="text-sm font-medium">{perk.title}</p>
           <p className="text-xs text-muted-foreground">{perk.description}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            {language === 'ar' ? typeInfo.ar : typeInfo.en} · {perk.merchantName}
+            {t(perkTypeKey[perk.type] ?? perk.type)} · {perk.merchantName}
           </p>
         </div>
         <span
@@ -43,7 +37,7 @@ function PerkItem({
         >
           {perk.isUnlocked
             ? t('perks.available')
-            : `${language === 'ar' ? tierInfo.ar : tierInfo.en}+`}
+            : `${t(tierKey[perk.requiredTier] ?? perk.requiredTier)}+`}
         </span>
       </div>
     </div>
@@ -51,7 +45,7 @@ function PerkItem({
 }
 
 export function PerksSection() {
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const [perks, setPerks] = useState<CustomerPerkView[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -71,7 +65,7 @@ export function PerksSection() {
       </CardHeader>
       <CardContent className="space-y-3">
         {perks.map((perk) => (
-          <PerkItem key={perk.perkId} perk={perk} language={language} t={t} />
+          <PerkItem key={perk.perkId} perk={perk} t={t} />
         ))}
       </CardContent>
     </Card>

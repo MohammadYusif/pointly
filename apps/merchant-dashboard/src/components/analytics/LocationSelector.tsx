@@ -10,7 +10,7 @@ interface LocationSelectorProps {
 }
 
 export function LocationSelector({ locations, selected, onChange }: LocationSelectorProps) {
-  const { language } = useTranslation();
+  const { t } = useTranslation();
 
   if (locations.length <= 1) return null;
 
@@ -20,7 +20,7 @@ export function LocationSelector({ locations, selected, onChange }: LocationSele
       onChange={(e) => onChange(e.target.value || undefined)}
       className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
     >
-      <option value="">{language === 'ar' ? 'جميع الفروع' : 'All Locations'}</option>
+      <option value="">{t('merchant.allLocations')}</option>
       {locations
         .filter((l) => l.isActive)
         .map((loc) => (

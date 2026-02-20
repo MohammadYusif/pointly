@@ -37,7 +37,9 @@
     "signUp": "إنشاء حساب",
     "signIn": "تسجيل الدخول",
     "rememberMe": "تذكرني",
-    "resetPassword": "إعادة تعيين كلمة المرور"
+    "resetPassword": "إعادة تعيين كلمة المرور",
+    "customerPortal": "بوابة العملاء",
+    "verificationCode": "رمز التحقق"
   },
   "navigation": {
     "dashboard": "لوحة التحكم",
@@ -48,7 +50,8 @@
     "loyalty": "برنامج الولاء",
     "profile": "الملف الشخصي",
     "help": "المساعدة",
-    "billing": "الفوترة"
+    "billing": "الفوترة",
+    "qr": "رمز QR"
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -63,7 +66,22 @@
     "fromLastMonth": "+{{percent}}% من الشهر الماضي",
     "pointsRate": "١ ريال = ١ نقطة",
     "uniqueCustomers": "عملاء فريدون",
-    "locations": "الفروع"
+    "locations": "الفروع",
+    "pointlyPoints": "نقاط Pointly",
+    "merchantPoints": "نقاط التجار",
+    "pointsToNextTier": "نقطة للمستوى التالي",
+    "enrolledMerchants": "التجار المسجلين"
+  },
+  "qr": {
+    "title": "رمز QR الخاص بك",
+    "retry": "إعادة المحاولة",
+    "expiresIn": "ينتهي خلال",
+    "refresh": "تحديث",
+    "generateError": "فشل في إنشاء رمز QR. حاول مرة أخرى.",
+    "showToMerchant": "أظهر هذا الرمز للتاجر عند الدفع"
+  },
+  "profile": {
+    "personalInfo": "المعلومات الشخصية"
   },
   "customer": {
     "title": "العملاء",
@@ -85,7 +103,8 @@
     "recordPurchase": "تسجيل عملية شراء",
     "redeemPoints": "استبدال النقاط",
     "exportCSV": "تصدير CSV",
-    "phonePlaceholder": "+966 5XX XXX XXXX"
+    "phonePlaceholder": "+966 5XX XXX XXXX",
+    "transactions": "عملية"
   },
   "merchant": {
     "title": "التاجر",
@@ -100,7 +119,8 @@
     "contactName": "اسم جهة الاتصال",
     "locationName": "اسم الفرع",
     "address": "العنوان",
-    "city": "المدينة"
+    "city": "المدينة",
+    "allLocations": "جميع الفروع"
   },
   "transaction": {
     "title": "المعاملات",
@@ -125,7 +145,31 @@
     "allTypes": "كل الأنواع",
     "sortNewest": "الأحدث",
     "sortOldest": "الأقدم",
-    "minAmount": "المبلغ (أدنى)"
+    "minAmount": "المبلغ (أدنى)",
+    "expiration": "انتهاء"
+  },
+  "tier": {
+    "bronze": "برونزي",
+    "gold": "ذهبي",
+    "platinum": "بلاتيني",
+    "diamond": "ماسي"
+  },
+  "analytics": {
+    "revenue": "الإيرادات",
+    "revenueSar": "الإيرادات",
+    "noDataForPeriod": "لا توجد بيانات في هذه الفترة",
+    "earnedVsRedeemed": "النقاط المكتسبة والمستبدلة",
+    "earned": "مكتسبة",
+    "redeemed": "مستبدلة",
+    "transactionTrends": "اتجاه المعاملات",
+    "earn": "كسب",
+    "redeem": "استبدال",
+    "days7": "7 أيام",
+    "days30": "30 يوم",
+    "months3": "3 أشهر",
+    "day": "يوم",
+    "week": "أسبوع",
+    "month": "شهر"
   },
   "settings": {
     "title": "الإعدادات",
@@ -208,6 +252,8 @@
     "pointsExpireIn": "تنتهي نقاطك خلال",
     "pointsExpireToday": "تنتهي نقاطك اليوم! قم بعملية شراء للحفاظ عليها.",
     "resetHint": "قم بعملية شراء لإعادة تعيين مؤقت نشاطك.",
-    "noExpiry": "نقاطك لا تنتهي"
+    "noExpiry": "نقاطك لا تنتهي",
+    "day": "يوم",
+    "days": "يوم"
   }
 }

@@ -27,9 +27,7 @@ export function TransactionTrendChart({ data, loading }: TransactionTrendChartPr
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm md:text-base">
-            {language === 'ar' ? 'اتجاه المعاملات' : 'Transaction Trends'}
-          </CardTitle>
+          <CardTitle className="text-sm md:text-base">{t('analytics.transactionTrends')}</CardTitle>
         </CardHeader>
         <CardContent className="h-75 flex items-center justify-center">
           <p className="text-muted-foreground">{t('common.loading')}</p>
@@ -42,14 +40,10 @@ export function TransactionTrendChart({ data, loading }: TransactionTrendChartPr
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm md:text-base">
-            {language === 'ar' ? 'اتجاه المعاملات' : 'Transaction Trends'}
-          </CardTitle>
+          <CardTitle className="text-sm md:text-base">{t('analytics.transactionTrends')}</CardTitle>
         </CardHeader>
         <CardContent className="h-75 flex items-center justify-center">
-          <p className="text-muted-foreground">
-            {language === 'ar' ? 'لا توجد بيانات في هذه الفترة' : 'No data for this period'}
-          </p>
+          <p className="text-muted-foreground">{t('analytics.noDataForPeriod')}</p>
         </CardContent>
       </Card>
     );
@@ -64,9 +58,7 @@ export function TransactionTrendChart({ data, loading }: TransactionTrendChartPr
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm md:text-base">
-          {language === 'ar' ? 'اتجاه المعاملات' : 'Transaction Trends'}
-        </CardTitle>
+        <CardTitle className="text-sm md:text-base">{t('analytics.transactionTrends')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div dir="ltr" className="h-75">
@@ -80,7 +72,7 @@ export function TransactionTrendChart({ data, loading }: TransactionTrendChartPr
               <Line
                 type="monotone"
                 dataKey="earn"
-                name={language === 'ar' ? 'كسب' : 'Earn'}
+                name={t('analytics.earn')}
                 stroke="#22c55e"
                 strokeWidth={2}
                 dot={false}
@@ -88,7 +80,7 @@ export function TransactionTrendChart({ data, loading }: TransactionTrendChartPr
               <Line
                 type="monotone"
                 dataKey="redeem"
-                name={language === 'ar' ? 'استبدال' : 'Redeem'}
+                name={t('analytics.redeem')}
                 stroke="#f97316"
                 strokeWidth={2}
                 dot={false}

@@ -14,12 +14,12 @@ const navItems = [
 ];
 
 export function CustomerLayout({ children }: { children: ReactNode }) {
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const pathname = usePathname();
 
   const labels: Record<string, string> = {
     dashboard: t('navigation.dashboard'),
-    qr: language === 'ar' ? 'رمز QR' : 'QR Code',
+    qr: t('navigation.qr'),
     history: t('navigation.transactions'),
     profile: t('navigation.profile'),
   };

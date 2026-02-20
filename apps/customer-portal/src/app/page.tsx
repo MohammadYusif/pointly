@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export default function LoginPage() {
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   useRTL();
   const router = useRouter();
 
@@ -56,9 +56,7 @@ export default function LoginPage() {
           <CardTitle className="text-2xl font-bold" style={{ color: '#08b0a2' }}>
             Pointly
           </CardTitle>
-          <p className="text-muted-foreground text-sm">
-            {language === 'ar' ? 'بوابة العملاء' : 'Customer Portal'}
-          </p>
+          <p className="text-muted-foreground text-sm">{t('auth.customerPortal')}</p>
         </CardHeader>
         <CardContent>
           {step === 'phone' ? (
@@ -86,7 +84,7 @@ export default function LoginPage() {
             <form onSubmit={handleOtpSubmit} className="space-y-4">
               <div>
                 <label htmlFor="otp-input" className="text-sm font-medium mb-1 block">
-                  {language === 'ar' ? 'رمز التحقق' : 'Verification Code'}
+                  {t('auth.verificationCode')}
                 </label>
                 <Input
                   id="otp-input"

@@ -10,9 +10,8 @@ import { RefreshCw } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useCallback, useEffect, useState } from 'react';
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: QR page with loading/error/timer states
 export default function QRCodePage() {
-  const { language } = useTranslation();
+  const { t } = useTranslation();
   const { textStart } = useRTL();
 
   const [qrPayload, setQrPayload] = useState<string | null>(null);
@@ -34,15 +33,11 @@ export default function QRCodePage() {
       setExpiresAt(qrData.expiresAt);
       if (!customer) setCustomer(custData);
     } catch {
-      setError(
-        language === 'ar'
-          ? 'فشل في إنشاء رمز QR. حاول مرة أخرى.'
-          : 'Failed to generate QR code. Please try again.',
-      );
+      setError(t('qr.generateError'));
     } finally {
       setLoading(false);
     }
-  }, [customer, language]);
+  }, [customer, t]);
 
   useEffect(() => {
     fetchQR();
@@ -67,9 +62,7 @@ export default function QRCodePage() {
   return (
     <CustomerLayout>
       <div className="space-y-4">
-        <h1 className={`text-xl font-bold ${textStart}`}>
-          {language === 'ar' ? 'رمز QR الخاص بك' : 'Your QR Code'}
-        </h1>
+        <h1 className={`text-xl font-bold ${textStart}`}>{t('qr.title')}</h1>
 
         <Card>
           <CardContent className="p-6 flex flex-col items-center space-y-4">
@@ -85,7 +78,7 @@ export default function QRCodePage() {
                   onClick={fetchQR}
                   className="px-4 py-2 bg-[#08b0a2] text-white rounded-md text-sm font-medium"
                 >
-                  {language === 'ar' ? 'إعادة المحاولة' : 'Retry'}
+                  {t('qr.retry')}
                 </button>
               </div>
             ) : (
@@ -103,9 +96,7 @@ export default function QRCodePage() {
 
                 {/* Timer */}
                 <div className="text-center">
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? 'ينتهي خلال' : 'Expires in'}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{t('qr.expiresIn')}</p>
                   <p
                     className={`text-2xl font-mono font-bold ${timeLeft <= 30 ? 'text-red-500' : 'text-foreground'}`}
                   >
@@ -120,7 +111,7 @@ export default function QRCodePage() {
                   className="flex items-center gap-2 px-4 py-2 border border-border rounded-md text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
                 >
                   <RefreshCw className="h-4 w-4" />
-                  {language === 'ar' ? 'تحديث' : 'Refresh'}
+                  {t('qr.refresh')}
                 </button>
               </>
             )}
@@ -135,11 +126,7 @@ export default function QRCodePage() {
               <p className="text-sm text-muted-foreground" dir="ltr">
                 {formatPhone(customer.phone)}
               </p>
-              <p className="text-xs text-muted-foreground">
-                {language === 'ar'
-                  ? 'أظهر هذا الرمز للتاجر عند الدفع'
-                  : 'Show this code to the merchant at checkout'}
-              </p>
+              <p className="text-xs text-muted-foreground">{t('qr.showToMerchant')}</p>
             </CardContent>
           </Card>
         )}

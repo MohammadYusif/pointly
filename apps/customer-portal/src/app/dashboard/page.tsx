@@ -15,9 +15,8 @@ interface CustomerProfile extends CustomerResponse {
   monthsOfInactivity: number;
 }
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: <explanation>
 export default function CustomerDashboard() {
-  const { t, formatNumber, language, locale } = useTranslation();
+  const { t, formatNumber, locale } = useTranslation();
   const { textStart } = useRTL();
   const [customer, setCustomer] = useState<CustomerProfile | null>(null);
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
@@ -81,9 +80,7 @@ export default function CustomerDashboard() {
               <p className="text-2xl font-bold" style={{ color: '#08b0a2' }}>
                 {formatNumber(customer.globalPointsBalance)}
               </p>
-              <p className="text-xs text-muted-foreground">
-                {language === 'ar' ? 'نقاط Pointly' : 'Pointly Points'}
-              </p>
+              <p className="text-xs text-muted-foreground">{t('dashboard.pointlyPoints')}</p>
             </CardContent>
           </Card>
           <Card>
@@ -96,9 +93,7 @@ export default function CustomerDashboard() {
                   ),
                 )}
               </p>
-              <p className="text-xs text-muted-foreground">
-                {language === 'ar' ? 'نقاط التجار' : 'Merchant Points'}
-              </p>
+              <p className="text-xs text-muted-foreground">{t('dashboard.merchantPoints')}</p>
             </CardContent>
           </Card>
         </div>
@@ -120,8 +115,7 @@ export default function CustomerDashboard() {
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {formatNumber(customer.pointsToNextTier || 0)}{' '}
-                {language === 'ar' ? 'نقطة للمستوى التالي' : 'points to next tier'}
+                {formatNumber(customer.pointsToNextTier || 0)} {t('dashboard.pointsToNextTier')}
               </p>
             </CardContent>
           </Card>
@@ -130,7 +124,6 @@ export default function CustomerDashboard() {
         {/* Points Expiry Card */}
         {customer.nextDecayDate &&
           customer.globalPointsBalance > 0 &&
-          // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: expiry card with urgency logic and locale-aware text
           (() => {
             const daysToExpiry = Math.floor(
               (new Date(customer.nextDecayDate).getTime() - Date.now()) / 86400000,
@@ -150,12 +143,8 @@ export default function CustomerDashboard() {
                     className={`text-sm ${isUrgent ? 'text-red-800 dark:text-red-200' : 'text-amber-800 dark:text-amber-200'}`}
                   >
                     {daysToExpiry <= 0
-                      ? language === 'ar'
-                        ? t('expiry.pointsExpireToday')
-                        : t('expiry.pointsExpireToday')
-                      : language === 'ar'
-                        ? `${t('expiry.pointsExpireIn')} ${daysToExpiry} ${daysToExpiry === 1 ? 'يوم' : 'يوم'}. ${t('expiry.resetHint')}`
-                        : `${t('expiry.pointsExpireIn')} ${daysToExpiry} ${daysToExpiry === 1 ? 'day' : 'days'}. ${t('expiry.resetHint')}`}
+                      ? t('expiry.pointsExpireToday')
+                      : `${t('expiry.pointsExpireIn')} ${daysToExpiry} ${daysToExpiry === 1 ? t('expiry.day') : t('expiry.days')}. ${t('expiry.resetHint')}`}
                   </p>
                 </CardContent>
               </Card>
@@ -165,9 +154,7 @@ export default function CustomerDashboard() {
         {/* Recent Transactions */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
-              {language === 'ar' ? 'آخر المعاملات' : 'Recent Transactions'}
-            </CardTitle>
+            <CardTitle className="text-base">{t('dashboard.recentTransactions')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {transactions.length === 0 && (
@@ -201,9 +188,7 @@ export default function CustomerDashboard() {
         {customer.enrollments?.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">
-                {language === 'ar' ? 'التجار المسجلين' : 'Enrolled Merchants'}
-              </CardTitle>
+              <CardTitle className="text-base">{t('dashboard.enrolledMerchants')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {customer.enrollments.map((e: CustomerEnrollment) => (

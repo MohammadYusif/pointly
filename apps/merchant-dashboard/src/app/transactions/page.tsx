@@ -20,9 +20,8 @@ function getAmount(amount: unknown): number {
   return 0;
 }
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: page component with filtering, export, and conditional rendering
 export default function TransactionsPage() {
-  const { t, formatCurrency, formatNumber, language, locale } = useTranslation();
+  const { t, formatCurrency, formatNumber, locale } = useTranslation();
   const { textStart, textEnd } = useRTL();
   const [locationId, setLocationId] = useState<string | undefined>(undefined);
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -72,10 +71,10 @@ export default function TransactionsPage() {
             onChange={(e) => setTypeFilter(e.target.value)}
             className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
           >
-            <option value="all">{language === 'ar' ? 'كل الأنواع' : 'All Types'}</option>
+            <option value="all">{t('transaction.allTypes')}</option>
             <option value="EARN">{t('transaction.purchase')}</option>
             <option value="REDEEM">{t('transaction.redemption')}</option>
-            <option value="EXPIRATION">{language === 'ar' ? 'انتهاء' : 'Expiration'}</option>
+            <option value="EXPIRATION">{t('transaction.expiration')}</option>
           </select>
           <LocationSelector locations={locations} selected={locationId} onChange={setLocationId} />
           <Button
@@ -83,13 +82,7 @@ export default function TransactionsPage() {
             onClick={() => setSortOrder((prev) => (prev === 'DESC' ? 'ASC' : 'DESC'))}
           >
             <ArrowDownUp className="h-4 w-4 me-2" />
-            {sortOrder === 'DESC'
-              ? language === 'ar'
-                ? 'الأحدث أولاً'
-                : 'Newest'
-              : language === 'ar'
-                ? 'الأقدم أولاً'
-                : 'Oldest'}
+            {sortOrder === 'DESC' ? t('transaction.sortNewest') : t('transaction.sortOldest')}
           </Button>
           <Button
             variant="outline"
@@ -187,11 +180,7 @@ export default function TransactionsPage() {
           onClick={() => fetchNextPage()}
           disabled={isFetchingNextPage}
         >
-          {isFetchingNextPage
-            ? t('common.loading')
-            : language === 'ar'
-              ? 'تحميل المزيد'
-              : 'Load More'}
+          {isFetchingNextPage ? t('common.loading') : t('common.loadMore')}
         </Button>
       )}
     </DashboardLayout>

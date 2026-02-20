@@ -9,7 +9,7 @@ import { Button, Card, CardContent, useRTL } from '@pointly/ui';
 import { useCallback, useEffect, useState } from 'react';
 
 export default function HistoryPage() {
-  const { t, formatNumber, language, locale } = useTranslation();
+  const { t, formatNumber, locale } = useTranslation();
   const { textStart } = useRTL();
 
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
@@ -86,7 +86,7 @@ export default function HistoryPage() {
           onClick={handleLoadMore}
           disabled={loadingMore}
         >
-          {loadingMore ? t('common.loading') : language === 'ar' ? 'تحميل المزيد' : 'Load More'}
+          {loadingMore ? t('common.loading') : t('common.loadMore')}
         </Button>
       )}
     </CustomerLayout>

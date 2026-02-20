@@ -109,8 +109,7 @@ export default function CustomersPage() {
                       {formatPhone(customer.phone)}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {formatNumber(customer.transactionCount)}{' '}
-                      {language === 'ar' ? 'عملية' : 'transactions'}
+                      {formatNumber(customer.transactionCount)} {t('customer.transactions')}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -138,11 +137,7 @@ export default function CustomersPage() {
           onClick={() => fetchNextPage()}
           disabled={isFetchingNextPage}
         >
-          {isFetchingNextPage
-            ? t('common.loading')
-            : language === 'ar'
-              ? 'تحميل المزيد'
-              : 'Load More'}
+          {isFetchingNextPage ? t('common.loading') : t('common.loadMore')}
         </Button>
       )}
     </DashboardLayout>
