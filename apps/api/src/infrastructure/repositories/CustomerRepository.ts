@@ -176,6 +176,26 @@ export class CustomerRepository
     for (const persistenceItem of items) {
       await this.putItem(persistenceItem.item);
     }
+    await this.deleteStaleIndexItems(entity);
+  }
+
+  /**
+   * Delete per-merchant GSI2 index items for any enrollment with REVOKED consent.
+   * Called automatically by save() to keep the MerchantCustomersIndex clean.
+   */
+  private async deleteStaleIndexItems(entity: Customer): Promise<void> {
+    const customerId = entity.getCustomerId();
+    const deletePromises: Promise<void>[] = [];
+
+    for (const [merchantId, enrollment] of entity.getEnrollments()) {
+      if (enrollment.consentStatus === ConsentStatus.REVOKED) {
+        deletePromises.push(
+          this.deleteItem(`CUSTOMER#${customerId}`, `MERCHANT_INDEX#${merchantId}`),
+        );
+      }
+    }
+
+    await Promise.all(deletePromises);
   }
 
   toPersistenceItem(entity: Customer) {
@@ -190,8 +210,9 @@ export class CustomerRepository
   async delete(id: string): Promise<void> {
     // Delete main customer item
     await this.deleteItem(`CUSTOMER#${id}`, 'PROFILE');
-    // Note: merchant index items (SK=MERCHANT_INDEX#*) become stale
-    // but are harmless — findByMerchant filters by consent status
+    // TODO: also delete all MERCHANT_INDEX#* items for this customer
+    // (low priority — findByMerchant already filters by consent status;
+    //  a full cleanup would require scanning for SK begins_with MERCHANT_INDEX#)
   }
 
   async exists(id: string): Promise<boolean> {

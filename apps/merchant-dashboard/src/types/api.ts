@@ -6,6 +6,7 @@ export type {
   MerchantLocation,
   MerchantResponse,
   CustomerResponse,
+  MerchantScopedCustomerResponse,
   CustomerEnrollment,
   TransactionResponse,
   MerchantStatsResponse,

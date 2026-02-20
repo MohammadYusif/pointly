@@ -32,34 +32,20 @@ export async function customerRoutes(server: FastifyInstance): Promise<void> {
         });
       }
 
-      const json = customer.toJSON();
-
-      // Privacy: strip internal fields and other merchants' data when called by a merchant
-      // Keep globalPointsBalance visible — merchants need it for redemption
       if (callerMerchantId) {
-        const {
-          globalLifetimePoints,
-          monthlyProgress,
-          globalPointsDecayPhase,
-          decayStartDate,
-          lastDecayAppliedAt,
-          lastNetworkActivity,
-          ...safe
-        } = json;
-        return reply.send({
-          success: true,
-          data: {
-            ...safe,
-            enrollments: json.enrollments.filter(
-              (e: { merchantId: string }) => e.merchantId === callerMerchantId,
-            ),
-          },
-        });
+        const scopedView = customer.toMerchantScopedView(callerMerchantId);
+        if (!scopedView) {
+          return reply.status(404).send({
+            success: false,
+            error: 'Customer not enrolled with this merchant',
+          });
+        }
+        return reply.send({ success: true, data: scopedView });
       }
 
       return reply.send({
         success: true,
-        data: json,
+        data: customer.toJSON(),
       });
     },
   );
@@ -83,32 +69,20 @@ export async function customerRoutes(server: FastifyInstance): Promise<void> {
         });
       }
 
-      const json = customer.toJSON();
-
       if (callerMerchantId) {
-        const {
-          globalLifetimePoints,
-          monthlyProgress,
-          globalPointsDecayPhase,
-          decayStartDate,
-          lastDecayAppliedAt,
-          lastNetworkActivity,
-          ...safe
-        } = json;
-        return reply.send({
-          success: true,
-          data: {
-            ...safe,
-            enrollments: json.enrollments.filter(
-              (e: { merchantId: string }) => e.merchantId === callerMerchantId,
-            ),
-          },
-        });
+        const scopedView = customer.toMerchantScopedView(callerMerchantId);
+        if (!scopedView) {
+          return reply.status(404).send({
+            success: false,
+            error: 'Customer not enrolled with this merchant',
+          });
+        }
+        return reply.send({ success: true, data: scopedView });
       }
 
       return reply.send({
         success: true,
-        data: json,
+        data: customer.toJSON(),
       });
     },
   );

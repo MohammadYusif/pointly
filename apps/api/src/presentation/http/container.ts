@@ -35,6 +35,7 @@ export interface Container {
   idempotencyService: IIdempotencyService;
   decayCalculatorService: IDecayCalculatorService;
   smsPublisherService: ISmsPublisherService;
+  transactionalWriter: TransactionalWriter;
 
   // Use Cases
   recordPurchaseUseCase: RecordPurchaseUseCase;
@@ -105,6 +106,7 @@ export function createContainer(): Container {
     idempotencyService,
     decayCalculatorService,
     smsPublisherService,
+    transactionalWriter,
     recordPurchaseUseCase,
     redeemPointsUseCase,
     processPointsDecayUseCase,

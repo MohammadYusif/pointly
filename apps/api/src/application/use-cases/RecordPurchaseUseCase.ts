@@ -132,14 +132,15 @@ export class RecordPurchaseUseCase {
     const merchantBalanceBefore = customer.getMerchantPointsBalance(request.merchantId);
     const globalBalanceBefore = customer.getGlobalPointsBalance();
 
-    // 5b. Calculate boosted global points (tier multiplier applied)
-    const earningMultiplier = customer.getEarningMultiplier();
-    const boostedGlobalPoints = Points.from(
-      Math.floor(globalPoints.toNumber() * earningMultiplier),
-    );
-
-    // 5c. Capture tier before awarding points (for upgrade detection)
+    // 5b. Capture tier before awarding points (for upgrade detection)
     const tierBefore = customer.getCurrentTier();
+
+    // 5c. Award points to customer — entity applies tier multiplier and returns boosted amount
+    const { boostedGlobalPoints } = customer.addPointsFromPurchase(
+      request.merchantId,
+      globalPoints,
+      merchantPoints,
+    );
 
     // 6. Create merchant transaction record
     const transaction = Transaction.createEarn(
@@ -168,9 +169,6 @@ export class RecordPurchaseUseCase {
       },
       locationId,
     );
-
-    // 7. Award points to customer (both types)
-    customer.addPointsFromPurchase(request.merchantId, globalPoints, merchantPoints);
 
     // 8. Update merchant stats
     merchant.incrementTransactionCount();

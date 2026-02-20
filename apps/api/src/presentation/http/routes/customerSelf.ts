@@ -131,8 +131,10 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
       customer.enrollWithMerchant(body.merchantId);
       merchant.incrementCustomerCount();
 
-      await customerRepository.save(customer);
-      await merchantRepository.save(merchant);
+      await container.transactionalWriter.writeAll([
+        ...customerRepository.toPersistenceItem(customer),
+        ...merchantRepository.toPersistenceItem(merchant),
+      ]);
 
       return reply.status(201).send({
         success: true,

@@ -84,6 +84,21 @@ export interface CustomerResponse {
   updatedAt: string;
 }
 
+/** Merchant-scoped customer view — excludes global points, other merchants' data */
+export interface MerchantScopedCustomerResponse {
+  customerId: string;
+  name?: string;
+  phone: string;
+  status: string;
+  currentTier: string;
+  tierDisplayName: string;
+  tierColor: string;
+  nextDecayDate: string;
+  enrollment: CustomerEnrollment;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CustomerEnrollment {
   merchantId: string;
   enrolledAt: string;

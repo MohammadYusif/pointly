@@ -3,10 +3,10 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { ThermalReceipt } from '@/components/receipt/ThermalReceipt';
 import { useMerchant, useRecordPurchase } from '@/hooks/api';
-import { customerApi, normalizePhone } from '@/lib/api';
+import { merchantApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { generateReceiptPDF } from '@/lib/receipt-pdf';
-import type { CustomerResponse, RecordPurchaseResponse } from '@/types/api';
+import type { MerchantScopedCustomerResponse, RecordPurchaseResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { getTierColor } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
@@ -16,6 +16,7 @@ import { useState } from 'react';
 
 type Step = 'input' | 'confirming' | 'submitting' | 'receipt';
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: multi-step purchase flow with input/confirming/submitting/receipt states
 export default function ManualEntryPage() {
   const { t, formatCurrency, formatNumber } = useTranslation();
   const { textStart } = useRTL();
@@ -32,58 +33,24 @@ export default function ManualEntryPage() {
 
   const locations = merchantData?.locations?.filter((l) => l.isActive) || [];
   const isMultiLocation = locations.length > 1;
-  const [customer, setCustomer] = useState<CustomerResponse | null>(null);
+  const [customer, setCustomer] = useState<MerchantScopedCustomerResponse | null>(null);
   const [result, setResult] = useState<RecordPurchaseResponse | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
 
   const purchaseMutation = useRecordPurchase();
 
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: lookup flow with QR parsing, phone validation, and error handling
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLookingUp(true);
 
-    const normalizedPhone = normalizePhone(phone);
-
     try {
-      // Try to find existing customer
-      const foundCustomer = await customerApi.getByPhone(normalizedPhone);
-      setCustomer(foundCustomer);
-
-      // Check if enrolled with this merchant, if not auto-enroll
-      if (merchant) {
-        const enrollment = foundCustomer.enrollments?.find(
-          (en: { merchantId: string }) => en.merchantId === merchant.merchantId,
-        );
-        if (!enrollment) {
-          await customerApi.enroll(foundCustomer.customerId, merchant.merchantId);
-          await customerApi.grantConsent(foundCustomer.customerId, merchant.merchantId);
-          // Re-fetch to get updated enrollment data
-          const updated = await customerApi.getByPhone(normalizedPhone);
-          setCustomer(updated);
-        } else if (enrollment.consentStatus !== 'GRANTED') {
-          await customerApi.grantConsent(foundCustomer.customerId, merchant.merchantId);
-          const updated = await customerApi.getByPhone(normalizedPhone);
-          setCustomer(updated);
-        }
-      }
-
+      if (!merchant) throw new Error('No merchant context');
+      const result = await merchantApi.registerCustomer(merchant.merchantId, phone);
+      setCustomer(result);
       setStep('confirming');
-    } catch {
-      // Customer not found — auto-create, enroll, and grant consent
-      try {
-        if (!merchant) throw new Error('No merchant context');
-        const newCustomer = await customerApi.create(normalizedPhone);
-        await customerApi.enroll(newCustomer.customerId, merchant.merchantId);
-        await customerApi.grantConsent(newCustomer.customerId, merchant.merchantId);
-        // Re-fetch to get full data with enrollment
-        const updated = await customerApi.getByPhone(normalizedPhone);
-        setCustomer(updated);
-        setStep('confirming');
-      } catch (createErr) {
-        setError(createErr instanceof Error ? createErr.message : t('errors.serverError'));
-      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('errors.serverError'));
     } finally {
       setIsLookingUp(false);
     }
@@ -131,7 +98,7 @@ export default function ManualEntryPage() {
     await generateReceiptPDF({
       transactionId: result.transactionId,
       businessName: merchant.businessName,
-      customerName: customer.name,
+      customerName: customer.name ?? '',
       customerPhone: customer.phone,
       amount: Number(amount),
       merchantPoints: result.merchantPoints,
@@ -269,11 +236,7 @@ export default function ManualEntryPage() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('customer.points')}</span>
                   <span className="font-medium">
-                    {formatNumber(
-                      customer.enrollments?.find(
-                        (e: { merchantId: string }) => e.merchantId === merchant?.merchantId,
-                      )?.merchantPointsBalance ?? 0,
-                    )}
+                    {formatNumber(customer.enrollment?.merchantPointsBalance ?? 0)}
                   </span>
                 </div>
               </CardContent>
@@ -340,7 +303,7 @@ export default function ManualEntryPage() {
               <ThermalReceipt
                 transactionId={result.transactionId}
                 businessName={merchant.businessName}
-                customerName={customer.name}
+                customerName={customer.name ?? ''}
                 customerPhone={customer.phone}
                 amount={Number(amount)}
                 merchantPoints={result.merchantPoints}

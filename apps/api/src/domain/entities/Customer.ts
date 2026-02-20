@@ -234,7 +234,11 @@ export class Customer {
   /**
    * Add points from a purchase - awards both global (Pointly Network) and merchant-specific points
    */
-  addPointsFromPurchase(merchantId: string, globalPoints: Points, merchantPoints: Points): void {
+  addPointsFromPurchase(
+    merchantId: string,
+    globalPoints: Points,
+    merchantPoints: Points,
+  ): { boostedGlobalPoints: Points } {
     const enrollment = this.props.enrollments.get(merchantId);
     if (!enrollment) {
       throw new ValidationError('Customer not enrolled with this merchant');
@@ -279,6 +283,8 @@ export class Customer {
     this.resetDecayTimer();
 
     this.props.updatedAt = new Date();
+
+    return { boostedGlobalPoints: boostedPoints };
   }
 
   /**
@@ -665,6 +671,39 @@ export class Customer {
     if (!next) return 0; // Already at max tier
     return Math.max(0, next.getMonthlyMinimum() - currentProgress);
   }
+  /**
+   * Merchant-scoped view: exposes only the data a merchant is allowed to see.
+   * Excludes global points balance and other merchants' enrollments.
+   * Returns null if the customer is not enrolled with the given merchant.
+   */
+  toMerchantScopedView(merchantId: string) {
+    const enrollment = this.props.enrollments.get(merchantId);
+    if (!enrollment) return null;
+
+    return {
+      customerId: this.props.customerId,
+      phone: this.props.phone.toString(),
+      name: this.props.name,
+      status: this.props.status,
+      currentTier: this.props.currentTier.getLevel(),
+      tierDisplayName: this.props.currentTier.getDisplayName(),
+      tierColor: this.props.currentTier.getColor(),
+      nextDecayDate: this.getNextDecayDate().toISOString(),
+      enrollment: {
+        merchantId: enrollment.merchantId,
+        enrolledAt: enrollment.enrolledAt.toISOString(),
+        consentStatus: enrollment.consentStatus,
+        consentGrantedAt: enrollment.consentGrantedAt?.toISOString(),
+        merchantPointsBalance: enrollment.merchantPointsBalance.toNumber(),
+        merchantLifetimePoints: enrollment.merchantLifetimePoints.toNumber(),
+        transactionCount: enrollment.transactionCount,
+        lastTransactionAt: enrollment.lastTransactionAt?.toISOString(),
+      },
+      createdAt: this.props.createdAt.toISOString(),
+      updatedAt: this.props.updatedAt.toISOString(),
+    };
+  }
+
   // Serialization
   toJSON() {
     return {

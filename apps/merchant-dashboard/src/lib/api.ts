@@ -3,6 +3,7 @@ import type {
   CustomerResponse,
   MerchantPerk,
   MerchantResponse,
+  MerchantScopedCustomerResponse,
   MerchantStatsResponse,
   PaginatedResponse,
   RecordPurchaseResponse,
@@ -110,6 +111,12 @@ export const merchantApi = {
       `/v1/merchants/${merchantId}/analytics/locations/${locationId}?${query}`,
     );
   },
+
+  registerCustomer: (merchantId: string, phone: string, name?: string) =>
+    fetchApi<MerchantScopedCustomerResponse>(`/v1/merchants/${merchantId}/register-customer`, {
+      method: 'POST',
+      body: JSON.stringify({ phone, ...(name && { name }) }),
+    }),
 };
 
 // Re-export so existing imports from '@/lib/api' continue to work
@@ -126,18 +133,6 @@ export const customerApi = {
     fetchApi<CustomerResponse>('/v1/customers', {
       method: 'POST',
       body: JSON.stringify({ phone, ...(name && { name }) }),
-    }),
-
-  enroll: (customerId: string, merchantId: string) =>
-    fetchApi<{ customerId: string; merchantId: string }>(`/v1/customers/${customerId}/enroll`, {
-      method: 'POST',
-      body: JSON.stringify({ merchantId }),
-    }),
-
-  grantConsent: (customerId: string, merchantId: string) =>
-    fetchApi<{ customerId: string; merchantId: string }>(`/v1/customers/${customerId}/consent`, {
-      method: 'POST',
-      body: JSON.stringify({ merchantId, action: 'grant' }),
     }),
 
   getTransactions: (

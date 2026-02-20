@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import { PhoneNumber, ValidationError } from '../../../domain';
+import { Customer, PhoneNumber, ValidationError } from '../../../domain';
 import { ForbiddenError } from '../../../domain/errors/DomainError';
 import { getContainer } from '../container';
 
@@ -531,6 +531,140 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       await merchantRepository.save(merchant);
 
       return reply.send({ success: true });
+    },
+  );
+
+  // POST /:merchantId/register-customer — Find-or-create customer + enroll + grant consent atomically
+  server.post(
+    '/:merchantId/register-customer',
+    async (
+      request: FastifyRequest<{
+        Params: { merchantId: string };
+        Body: { phone: string; name?: string };
+      }>,
+      reply: FastifyReply,
+      // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: composite find-or-create + enroll + consent flow
+    ) => {
+      enforceMerchantAccess(request);
+      const { merchantId } = request.params;
+
+      const registerSchema = z.object({
+        phone: z.string().min(1),
+        name: z.string().optional(),
+      });
+      const body = registerSchema.parse(request.body);
+
+      let normalizedPhone: PhoneNumber;
+      try {
+        normalizedPhone = new PhoneNumber(body.phone);
+      } catch {
+        throw new ValidationError(
+          'Invalid Saudi phone number format. Use 05XXXXXXXX or +9665XXXXXXXX',
+        );
+      }
+
+      const container = getContainer();
+      const { customerRepository, merchantRepository } = container;
+
+      const merchant = await merchantRepository.findById(merchantId);
+      if (!merchant) {
+        return reply.status(404).send({ success: false, error: 'Merchant not found' });
+      }
+
+      if (!merchant.isVerified()) {
+        throw new ValidationError('Merchant is not verified');
+      }
+
+      // Find or create customer
+      let customer = await customerRepository.findByPhone(normalizedPhone.toE164());
+      let newlyCreated = false;
+
+      if (!customer) {
+        customer = Customer.create(normalizedPhone, body.name);
+        newlyCreated = true;
+      }
+
+      // Enroll and grant consent if needed
+      const enrollment = customer.getEnrollment(merchantId);
+      let customerChanged = newlyCreated;
+
+      if (!enrollment) {
+        customer.enrollWithMerchant(merchantId);
+        customer.grantConsent(merchantId);
+        merchant.incrementCustomerCount();
+        customerChanged = true;
+      } else if (enrollment.consentStatus !== 'GRANTED') {
+        customer.grantConsent(merchantId);
+        customerChanged = true;
+      }
+
+      if (customerChanged) {
+        await container.transactionalWriter.writeAll([
+          ...customerRepository.toPersistenceItem(customer),
+          ...merchantRepository.toPersistenceItem(merchant),
+        ]);
+      }
+
+      const scopedView = customer.toMerchantScopedView(merchantId);
+      return reply.status(newlyCreated ? 201 : 200).send({ success: true, data: scopedView });
+    },
+  );
+
+  // POST /:merchantId/enroll-customer — Enroll a customer with this merchant (merchant-auth only)
+  server.post(
+    '/:merchantId/enroll-customer',
+    async (
+      request: FastifyRequest<{
+        Params: { merchantId: string };
+        Body: { customerId: string; grantConsent?: boolean };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      enforceMerchantAccess(request);
+      const { merchantId } = request.params;
+
+      const enrollSchema = z.object({
+        customerId: z.string().min(1),
+        grantConsent: z.boolean().optional().default(false),
+      });
+      const body = enrollSchema.parse(request.body);
+
+      const container = getContainer();
+      const { customerRepository, merchantRepository } = container;
+
+      const customer = await customerRepository.findById(body.customerId);
+      if (!customer) {
+        return reply.status(404).send({ success: false, error: 'Customer not found' });
+      }
+
+      const merchant = await merchantRepository.findById(merchantId);
+      if (!merchant) {
+        return reply.status(404).send({ success: false, error: 'Merchant not found' });
+      }
+
+      if (!merchant.isVerified()) {
+        throw new ValidationError('Merchant is not verified');
+      }
+
+      customer.enrollWithMerchant(merchantId);
+      if (body.grantConsent) {
+        customer.grantConsent(merchantId);
+      }
+      merchant.incrementCustomerCount();
+
+      await container.transactionalWriter.writeAll([
+        ...customerRepository.toPersistenceItem(customer),
+        ...merchantRepository.toPersistenceItem(merchant),
+      ]);
+
+      return reply.status(201).send({
+        success: true,
+        data: {
+          customerId: body.customerId,
+          merchantId,
+          enrollment: customer.getEnrollment(merchantId),
+        },
+      });
     },
   );
 
