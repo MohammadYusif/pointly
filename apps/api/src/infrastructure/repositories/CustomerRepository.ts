@@ -60,6 +60,7 @@ interface EnrollmentItem {
   merchantLifetimePoints: number;
   transactionCount: number;
   lastTransactionAt: string | undefined;
+  welcomeBonusApplied?: boolean;
 }
 
 export class CustomerRepository
@@ -267,6 +268,7 @@ export class CustomerRepository
         merchantPointsBalance: Points.from(enrollment.merchantPointsBalance ?? 0),
         merchantLifetimePoints: Points.from(enrollment.merchantLifetimePoints ?? 0),
         transactionCount: enrollment.transactionCount ?? 0,
+        welcomeBonusApplied: enrollment.welcomeBonusApplied ?? false,
       };
 
       const consentDate = CustomerRepository.parseDateOptional(enrollment.consentGrantedAt);
@@ -375,6 +377,7 @@ export class CustomerRepository
         merchantLifetimePoints: e.merchantLifetimePoints,
         transactionCount: e.transactionCount,
         lastTransactionAt: e.lastTransactionAt,
+        welcomeBonusApplied: e.welcomeBonusApplied ?? false,
       };
       return enrollment;
     });

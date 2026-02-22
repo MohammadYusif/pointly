@@ -17,6 +17,7 @@ import {
 import { BaseDynamoDBRepository } from './BaseRepository';
 
 interface MerchantItem {
+  [key: string]: unknown;
   PK: string;
   SK: string;
   EntityType: 'MERCHANT';

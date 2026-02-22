@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import { Customer, PhoneNumber, ValidationError } from '../../../domain';
+import { Customer, type CustomerTierLevel, PhoneNumber, ValidationError } from '../../../domain';
 import { ForbiddenError } from '../../../domain/errors/DomainError';
 import { getContainer } from '../container';
 
@@ -457,7 +457,7 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
         type: body.type,
         title: body.title,
         description: body.description,
-        requiredTier: body.requiredTier,
+        requiredTier: body.requiredTier as CustomerTierLevel,
         ...(body.capacityLimit !== undefined && { capacityLimit: body.capacityLimit }),
       });
       await merchantRepository.save(merchant);
@@ -503,7 +503,9 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       merchant.updatePerk(perkId, {
         ...(body.title !== undefined && { title: body.title }),
         ...(body.description !== undefined && { description: body.description }),
-        ...(body.requiredTier !== undefined && { requiredTier: body.requiredTier }),
+        ...(body.requiredTier !== undefined && {
+          requiredTier: body.requiredTier as CustomerTierLevel,
+        }),
         ...(body.capacityLimit !== undefined && { capacityLimit: body.capacityLimit }),
         ...(body.isActive !== undefined && { isActive: body.isActive }),
       });
