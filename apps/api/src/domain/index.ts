@@ -27,6 +27,7 @@ export type {
   SMSQuota,
   LocationInfo,
   PointsCalculation,
+  PerkType,
 } from './entities/Merchant';
 
 export {

@@ -1,4 +1,5 @@
 import { ulid } from 'ulid';
+import type { CustomerTierLevel } from '../config/TierConfig';
 import { ValidationError } from '../errors/DomainError';
 import type { Email } from '../value-objects/Email';
 import type { PhoneNumber } from '../value-objects/PhoneNumber';
@@ -47,7 +48,6 @@ export interface PointsCalculation {
 }
 
 export type PerkType = 'EARLY_ACCESS' | 'EXCLUSIVE_PRODUCT' | 'EVENT';
-export type CustomerTierLevel = 'BRONZE' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
 
 export interface MerchantPerk {
   id: string;

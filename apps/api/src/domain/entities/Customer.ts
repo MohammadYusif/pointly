@@ -25,6 +25,7 @@ export interface CustomerEnrollment {
   merchantLifetimePoints: Points;
   transactionCount: number;
   lastTransactionAt?: Date;
+  welcomeBonusApplied: boolean;
 }
 
 export interface CustomerProps {
@@ -46,8 +47,8 @@ export interface CustomerProps {
   // Decay tracking (existing)
   lastNetworkActivity: Date;
   globalPointsDecayPhase: number;
-  decayStartDate?: Date;
-  lastDecayAppliedAt?: Date;
+  decayStartDate?: Date | undefined;
+  lastDecayAppliedAt?: Date | undefined;
   lastInactivityWarningSentAt?: Date; // dedup for 3/6/9-month engagement SMS
 
   enrollments: Map<string, CustomerEnrollment>;
@@ -200,6 +201,7 @@ export class Customer {
       merchantPointsBalance: Points.zero(),
       merchantLifetimePoints: Points.zero(),
       transactionCount: 0,
+      welcomeBonusApplied: false,
     };
 
     this.props.enrollments.set(merchantId, enrollment);
@@ -228,6 +230,31 @@ export class Customer {
     }
 
     enrollment.consentStatus = ConsentStatus.REVOKED;
+    this.props.updatedAt = new Date();
+  }
+
+  /**
+   * Apply the merchant's welcome bonus points at enrollment time.
+   * Does NOT require consent — this is part of the enrollment flow itself.
+   * Can only be applied once per enrollment.
+   */
+  applyWelcomeBonus(merchantId: string, globalPoints: Points, merchantPoints: Points): void {
+    const enrollment = this.props.enrollments.get(merchantId);
+    if (!enrollment) {
+      throw new ValidationError('Customer not enrolled with this merchant');
+    }
+
+    if (enrollment.welcomeBonusApplied) {
+      throw new ValidationError('Welcome bonus has already been applied for this merchant');
+    }
+
+    this.props.globalPointsBalance = this.props.globalPointsBalance.add(globalPoints);
+    this.props.globalLifetimePoints = this.props.globalLifetimePoints.add(globalPoints);
+
+    enrollment.merchantPointsBalance = enrollment.merchantPointsBalance.add(merchantPoints);
+    enrollment.merchantLifetimePoints = enrollment.merchantLifetimePoints.add(merchantPoints);
+
+    enrollment.welcomeBonusApplied = true;
     this.props.updatedAt = new Date();
   }
 
@@ -311,6 +338,10 @@ export class Customer {
    * Redeem merchant-specific points (only at that merchant)
    */
   redeemMerchantPoints(merchantId: string, points: Points): void {
+    if (this.props.status !== CustomerStatus.ACTIVE) {
+      throw new ValidationError('Customer must be active to redeem points');
+    }
+
     const enrollment = this.props.enrollments.get(merchantId);
     if (!enrollment) {
       throw new ValidationError('Customer not enrolled with this merchant');
@@ -568,10 +599,8 @@ export class Customer {
   resetDecayTimer(): void {
     this.props.lastNetworkActivity = new Date();
     this.props.globalPointsDecayPhase = 0;
-    // biome-ignore lint/performance/noDelete: Required for exactOptionalPropertyTypes
-    delete this.props.decayStartDate;
-    // biome-ignore lint/performance/noDelete: Required for exactOptionalPropertyTypes
-    delete this.props.lastDecayAppliedAt;
+    this.props.decayStartDate = undefined;
+    this.props.lastDecayAppliedAt = undefined;
     this.props.updatedAt = new Date();
   }
 
@@ -698,6 +727,7 @@ export class Customer {
         merchantLifetimePoints: enrollment.merchantLifetimePoints.toNumber(),
         transactionCount: enrollment.transactionCount,
         lastTransactionAt: enrollment.lastTransactionAt?.toISOString(),
+        welcomeBonusApplied: enrollment.welcomeBonusApplied,
       },
       createdAt: this.props.createdAt.toISOString(),
       updatedAt: this.props.updatedAt.toISOString(),
@@ -743,6 +773,7 @@ export class Customer {
         merchantLifetimePoints: enrollment.merchantLifetimePoints.toNumber(),
         transactionCount: enrollment.transactionCount,
         lastTransactionAt: enrollment.lastTransactionAt?.toISOString(),
+        welcomeBonusApplied: enrollment.welcomeBonusApplied,
       })),
       createdAt: this.props.createdAt.toISOString(),
       updatedAt: this.props.updatedAt.toISOString(),

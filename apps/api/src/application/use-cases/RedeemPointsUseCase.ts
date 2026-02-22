@@ -1,4 +1,6 @@
 import {
+  type Customer,
+  type Merchant,
   Money,
   NotFoundError,
   Points,
@@ -6,11 +8,14 @@ import {
   UnauthorizedError,
   ValidationError,
 } from '../../domain';
+import type { LoyaltyConfiguration } from '../../domain';
 import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
 import type { ITransactionRepository } from '../repositories/ITransactionRepository';
 import type { IIdempotencyService } from '../services/IIdempotencyService';
 import type { PersistenceItem } from '../shared/interfaces/BaseRepository';
+
+const IDEMPOTENCY_TTL_SECONDS = 3600;
 
 export interface RedeemPointsRequest {
   merchantId: string;
@@ -61,7 +66,6 @@ export class RedeemPointsUseCase {
     private atomicWrite: (items: PersistenceItem[]) => Promise<void>,
   ) {}
 
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: redemption flow with validation, smart redeem, and dual transactions
   async execute(request: RedeemPointsRequest): Promise<RedeemPointsResponse> {
     // 1. Check idempotency
     const existingResult = await this.idempotencyService.getResult<RedeemPointsResponse>(
@@ -72,65 +76,28 @@ export class RedeemPointsUseCase {
     }
 
     // 2. Validate merchant
-    const merchant = await this.merchantRepository.findById(request.merchantId);
-    if (!merchant) {
-      throw new NotFoundError('Merchant', request.merchantId);
-    }
-
-    if (!merchant.isVerified()) {
-      throw new UnauthorizedError('Merchant is not verified');
-    }
-
-    // 2b. Resolve locationId
-    let locationId = request.locationId;
-    const locations = merchant.getLocations();
-    if (locationId) {
-      const location = locations.find((l) => l.locationId === locationId && l.isActive);
-      if (!location) {
-        throw new ValidationError(`Location ${locationId} not found or inactive`);
-      }
-    } else if (locations.length === 1 && locations[0]) {
-      locationId = locations[0].locationId;
-    }
+    const { merchant, resolvedLocationId } = await this.validateMerchant(
+      request.merchantId,
+      request.locationId,
+    );
 
     // 3. Validate customer
-    const customer = await this.customerRepository.findById(request.customerId);
-    if (!customer) {
-      throw new NotFoundError('Customer', request.customerId);
-    }
-
-    const enrollment = customer.getEnrollment(request.merchantId);
-    if (!enrollment) {
-      throw new ValidationError('Customer is not enrolled with this merchant');
-    }
-
-    if (enrollment.consentStatus !== 'GRANTED') {
-      throw new UnauthorizedError('Customer consent required to redeem points');
-    }
+    const customer = await this.validateCustomerAndEnrollment(
+      request.customerId,
+      request.merchantId,
+    );
 
     // 4. Validate redemption amount
     const loyaltyConfig = merchant.getLoyaltyConfig();
-    const pointsToRedeem = request.pointsToRedeem;
-
-    if (pointsToRedeem < loyaltyConfig.minimumRedemption) {
-      throw new ValidationError(`Minimum redemption is ${loyaltyConfig.minimumRedemption} points`);
-    }
-
-    if (!loyaltyConfig.allowPartialRedemption) {
-      if (pointsToRedeem % loyaltyConfig.minimumRedemption !== 0) {
-        throw new ValidationError(
-          `Points must be an exact multiple of ${loyaltyConfig.minimumRedemption} (partial redemption not allowed)`,
-        );
-      }
-    }
+    this.validateRedemptionAmount(request.pointsToRedeem, loyaltyConfig);
 
     // 5. Calculate SAR value
-    const sarValue = pointsToRedeem * loyaltyConfig.redemptionRate;
+    const sarValue = request.pointsToRedeem * loyaltyConfig.redemptionRate;
 
     // 6. Smart redeem: merchant points first, then global
     const { merchantPointsUsed, globalPointsUsed } = customer.redeemSmart(
       request.merchantId,
-      Points.from(pointsToRedeem),
+      Points.from(request.pointsToRedeem),
     );
 
     // 7. Create transaction record(s)
@@ -148,7 +115,7 @@ export class RedeemPointsUseCase {
         `${request.idempotencyKey}_MERCHANT`,
         { ...metadata, walletType: 'MERCHANT' },
         loyaltyConfig.redemptionRate,
-        locationId,
+        resolvedLocationId,
       );
       merchantTx.complete();
       transactions.push(merchantTx);
@@ -165,7 +132,7 @@ export class RedeemPointsUseCase {
         `${request.idempotencyKey}_GLOBAL`,
         { ...metadata, walletType: 'GLOBAL' },
         loyaltyConfig.redemptionRate,
-        locationId,
+        resolvedLocationId,
       );
       globalTx.complete();
       transactions.push(globalTx);
@@ -187,16 +154,85 @@ export class RedeemPointsUseCase {
       transactionIds,
       merchantPointsRedeemed: merchantPointsUsed.toNumber(),
       globalPointsRedeemed: globalPointsUsed.toNumber(),
-      totalPointsRedeemed: pointsToRedeem,
+      totalPointsRedeemed: request.pointsToRedeem,
       sarValue,
       newMerchantBalance: customer.getMerchantPointsBalance(request.merchantId).toNumber(),
       newGlobalBalance: customer.getGlobalPointsBalance().toNumber(),
       currentTier: customer.getCurrentTier().getDisplayName(),
-      message: `Redeemed ${pointsToRedeem} points for ${sarValue.toFixed(2)} SAR`,
+      message: `Redeemed ${request.pointsToRedeem} points for ${sarValue.toFixed(2)} SAR`,
     };
 
-    await this.idempotencyService.storeResult(request.idempotencyKey, response, 3600);
+    await this.idempotencyService.storeResult(
+      request.idempotencyKey,
+      response,
+      IDEMPOTENCY_TTL_SECONDS,
+    );
 
     return response;
+  }
+
+  private async validateMerchant(
+    merchantId: string,
+    locationId?: string,
+  ): Promise<{ merchant: Merchant; resolvedLocationId: string | undefined }> {
+    const merchant = await this.merchantRepository.findById(merchantId);
+    if (!merchant) {
+      throw new NotFoundError('Merchant', merchantId);
+    }
+
+    if (!merchant.isVerified()) {
+      throw new UnauthorizedError('Merchant is not verified');
+    }
+
+    let resolvedLocationId = locationId;
+    const locations = merchant.getLocations();
+    if (locationId) {
+      const location = locations.find((l) => l.locationId === locationId && l.isActive);
+      if (!location) {
+        throw new ValidationError(`Location ${locationId} not found or inactive`);
+      }
+    } else if (locations.length === 1 && locations[0]) {
+      resolvedLocationId = locations[0].locationId;
+    }
+
+    return { merchant, resolvedLocationId };
+  }
+
+  private async validateCustomerAndEnrollment(
+    customerId: string,
+    merchantId: string,
+  ): Promise<Customer> {
+    const customer = await this.customerRepository.findById(customerId);
+    if (!customer) {
+      throw new NotFoundError('Customer', customerId);
+    }
+
+    const enrollment = customer.getEnrollment(merchantId);
+    if (!enrollment) {
+      throw new ValidationError('Customer is not enrolled with this merchant');
+    }
+
+    if (enrollment.consentStatus !== 'GRANTED') {
+      throw new UnauthorizedError('Customer consent required to redeem points');
+    }
+
+    return customer;
+  }
+
+  private validateRedemptionAmount(
+    pointsToRedeem: number,
+    loyaltyConfig: LoyaltyConfiguration,
+  ): void {
+    if (pointsToRedeem < loyaltyConfig.minimumRedemption) {
+      throw new ValidationError(`Minimum redemption is ${loyaltyConfig.minimumRedemption} points`);
+    }
+
+    if (!loyaltyConfig.allowPartialRedemption) {
+      if (pointsToRedeem % loyaltyConfig.minimumRedemption !== 0) {
+        throw new ValidationError(
+          `Points must be an exact multiple of ${loyaltyConfig.minimumRedemption} (partial redemption not allowed)`,
+        );
+      }
+    }
   }
 }

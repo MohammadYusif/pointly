@@ -83,6 +83,7 @@ src/
 
 | Use Case | Description |
 |----------|-------------|
+| `EnrollCustomerUseCase` | Enroll a customer with a merchant, apply welcome bonus |
 | `RecordPurchaseUseCase` | Process a purchase, award dual points |
 | `RedeemPointsUseCase` | Redeem global points with tier multiplier |
 | `ProcessPointsDecayUseCase` | Monthly job to decay inactive points |

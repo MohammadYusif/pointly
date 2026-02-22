@@ -1,13 +1,16 @@
+import type { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import type { IMerchantRepository } from '../../application/repositories/IMerchantRepository';
 import type { QueryOptions, QueryResult } from '../../application/shared/interfaces/BaseRepository';
 import {
+  CustomerTierLevel,
   Email,
   type LocationInfo,
   type LoyaltyConfiguration,
   Merchant,
   type MerchantProps,
   MerchantStatus,
-  type MerchantTier,
+  MerchantTier,
+  type PerkType,
   PhoneNumber,
   type SMSQuota,
 } from '../../domain';
@@ -63,13 +66,70 @@ interface MerchantItem {
   GSI3SK?: string; // MERCHANT#<id>
 }
 
+/** Map a raw DynamoDB string to a valid MerchantTier, defaulting to BASIC for unknown values. */
+function toMerchantTier(value: string): MerchantTier {
+  const valid: Record<string, MerchantTier> = {
+    BASIC: MerchantTier.BASIC,
+    PROFESSIONAL: MerchantTier.PROFESSIONAL,
+    ENTERPRISE: MerchantTier.ENTERPRISE,
+  };
+  return valid[value] ?? MerchantTier.BASIC;
+}
+
+/** Map a raw DynamoDB string to a valid PerkType, defaulting to EARLY_ACCESS for unknown values. */
+function toPerkType(value: string): PerkType {
+  const valid: Record<string, PerkType> = {
+    EARLY_ACCESS: 'EARLY_ACCESS',
+    EXCLUSIVE_PRODUCT: 'EXCLUSIVE_PRODUCT',
+    EVENT: 'EVENT',
+  };
+  return valid[value] ?? 'EARLY_ACCESS';
+}
+
+/** Map a raw DynamoDB string to a valid CustomerTierLevel, defaulting to BRONZE for unknown values. */
+function toCustomerTierLevel(value: string): CustomerTierLevel {
+  const valid: Record<string, CustomerTierLevel> = {
+    BRONZE: CustomerTierLevel.BRONZE,
+    GOLD: CustomerTierLevel.GOLD,
+    PLATINUM: CustomerTierLevel.PLATINUM,
+    DIAMOND: CustomerTierLevel.DIAMOND,
+  };
+  return valid[value] ?? CustomerTierLevel.BRONZE;
+}
+
 export class MerchantRepository
   extends BaseDynamoDBRepository<Merchant>
   implements IMerchantRepository
 {
+  private readonly cache = new Map<string, { merchant: Merchant; expiresAt: number }>();
+  private readonly cacheTtlMs: number;
+
+  /**
+   * @param client - DynamoDB document client
+   * @param tableName - DynamoDB table name
+   * @param cacheTtlMs - In-memory cache TTL in milliseconds (default 60 s). Set to 0 to disable.
+   */
+  constructor(client: DynamoDBDocumentClient, tableName: string, cacheTtlMs = 60_000) {
+    super(client, tableName);
+    this.cacheTtlMs = cacheTtlMs;
+  }
+
   async findById(id: string): Promise<Merchant | null> {
+    if (this.cacheTtlMs > 0) {
+      const cached = this.cache.get(id);
+      if (cached && Date.now() < cached.expiresAt) {
+        return cached.merchant;
+      }
+    }
+
     const item = await this.getItem<MerchantItem>(`MERCHANT#${id}`, 'PROFILE');
-    return item ? this.toEntity(item) : null;
+    const merchant = item ? this.toEntity(item) : null;
+
+    if (merchant && this.cacheTtlMs > 0) {
+      this.cache.set(id, { merchant, expiresAt: Date.now() + this.cacheTtlMs });
+    }
+
+    return merchant;
   }
 
   async findByEmail(email: string): Promise<Merchant | null> {
@@ -160,6 +220,12 @@ export class MerchantRepository
   async save(entity: Merchant): Promise<void> {
     const item = this.entityToItem(entity);
     await this.putItem(item);
+    this.invalidateCache(entity.getMerchantId());
+  }
+
+  /** Remove a single merchant entry from the in-memory cache. */
+  invalidateCache(merchantId: string): void {
+    this.cache.delete(merchantId);
   }
 
   toPersistenceItem(entity: Merchant) {
@@ -179,8 +245,7 @@ export class MerchantRepository
     return super.exists(`MERCHANT#${id}`, 'PROFILE');
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: Base class override requires any for DynamoDB item
-  protected toEntity(item: any): Merchant {
+  protected toEntity(item: Record<string, unknown>): Merchant {
     return this.itemToEntity(item as MerchantItem);
   }
 
@@ -208,13 +273,15 @@ export class MerchantRepository
         : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1),
     };
 
-    // Normalize tier — map legacy values to valid MerchantTier enum
-    const validTiers = ['BASIC', 'PROFESSIONAL', 'ENTERPRISE'];
-    const tier = (validTiers.includes(item.tier) ? item.tier : 'BASIC') as MerchantTier;
+    // Normalize tier — map legacy/unknown values to a valid MerchantTier enum member
+    const tier = toMerchantTier(item.tier);
 
-    // Apply defaults for any missing loyaltyConfig fields (guards against old/manual records)
-    // biome-ignore lint/suspicious/noExplicitAny: DynamoDB records may have legacy field names
-    const rawConfig = (item.loyaltyConfig || {}) as any;
+    // Apply defaults for any missing loyaltyConfig fields (guards against old/manual records).
+    // Includes legacy field aliases (pointsPerUnit, minimumTransaction) from pre-migration records.
+    const rawConfig = (item.loyaltyConfig || {}) as Partial<LoyaltyConfiguration> & {
+      pointsPerUnit?: number;
+      minimumTransaction?: number;
+    };
     const loyaltyConfig: LoyaltyConfiguration = {
       pointsPerSAR: rawConfig.pointsPerSAR ?? rawConfig.pointsPerUnit ?? 1,
       globalPointsPerSAR: rawConfig.globalPointsPerSAR ?? rawConfig.pointsPerUnit ?? 1,
@@ -228,12 +295,10 @@ export class MerchantRepository
 
     const activePerks = (item.activePerks || []).map((p) => ({
       id: p.id,
-      // biome-ignore lint/suspicious/noExplicitAny: DynamoDB strings cast to domain enum types
-      type: p.type as any,
+      type: toPerkType(p.type),
       title: p.title,
       description: p.description,
-      // biome-ignore lint/suspicious/noExplicitAny: DynamoDB strings cast to domain enum types
-      requiredTier: p.requiredTier as any,
+      requiredTier: toCustomerTierLevel(p.requiredTier),
       ...(p.capacityLimit !== undefined && { capacityLimit: p.capacityLimit }),
       isActive: p.isActive,
       createdAt: new Date(p.createdAt),

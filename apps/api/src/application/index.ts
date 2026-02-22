@@ -1,5 +1,10 @@
 // Use Cases
 export {
+  EnrollCustomerUseCase,
+  type EnrollCustomerRequest,
+  type EnrollCustomerResponse,
+} from './use-cases/EnrollCustomerUseCase';
+export {
   RecordPurchaseUseCase,
   type RecordPurchaseRequest,
   type RecordPurchaseResponse,

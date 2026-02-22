@@ -63,6 +63,24 @@ export async function createServer(): Promise<FastifyInstance> {
   // Register error handler
   server.setErrorHandler(errorHandler);
 
+  // Structured audit log for every completed request — critical for a financial system.
+  // Registered before routes so all handlers are covered.
+  server.addHook('onResponse', (request, reply, done) => {
+    request.log.info(
+      {
+        method: request.method,
+        url: request.url,
+        statusCode: reply.statusCode,
+        responseTime: reply.elapsedTime,
+        merchantId: request.merchantId || undefined,
+        customerId: request.customerId || undefined,
+        userAgent: request.headers['user-agent'],
+      },
+      'request completed',
+    );
+    done();
+  });
+
   // Register routes
   // biome-ignore lint/suspicious/noExplicitAny: FastifyInstance type variance issue
   await registerRoutes(server as any);

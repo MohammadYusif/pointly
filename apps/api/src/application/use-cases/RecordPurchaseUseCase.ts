@@ -1,4 +1,6 @@
 import {
+  type Customer,
+  type Merchant,
   Money,
   NotFoundError,
   Points,
@@ -6,12 +8,15 @@ import {
   UnauthorizedError,
   ValidationError,
 } from '../../domain';
+import type { TransactionMetadata } from '../../domain';
 import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
 import type { ITransactionRepository } from '../repositories/ITransactionRepository';
 import type { IIdempotencyService } from '../services/IIdempotencyService';
 import type { ISmsPublisherService } from '../services/ISmsPublisherService';
 import type { PersistenceItem } from '../shared/interfaces/BaseRepository';
+
+const IDEMPOTENCY_TTL_SECONDS = 3600;
 
 export interface RecordPurchaseRequest {
   merchantId: string;
@@ -63,11 +68,10 @@ export class RecordPurchaseUseCase {
     private merchantRepository: IMerchantRepository,
     private transactionRepository: ITransactionRepository,
     private idempotencyService: IIdempotencyService,
+    private atomicWrite: (items: PersistenceItem[]) => Promise<void>,
     private smsPublisher?: ISmsPublisherService,
-    private atomicWrite?: (items: PersistenceItem[]) => Promise<void>,
   ) {}
 
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: core transaction flow with validation, dual points, and atomic saves
   async execute(request: RecordPurchaseRequest): Promise<RecordPurchaseResponse> {
     // 1. Check idempotency - prevent duplicate transactions
     const existingResult = await this.idempotencyService.getResult<RecordPurchaseResponse>(
@@ -78,42 +82,13 @@ export class RecordPurchaseUseCase {
     }
 
     // 2. Validate merchant
-    const merchant = await this.merchantRepository.findById(request.merchantId);
-    if (!merchant) {
-      throw new NotFoundError('Merchant', request.merchantId);
-    }
-
-    if (!merchant.isVerified()) {
-      throw new UnauthorizedError('Merchant is not verified');
-    }
-
-    // 2b. Resolve locationId
-    let locationId = request.locationId;
-    const locations = merchant.getLocations();
-    if (locationId) {
-      const location = locations.find((l) => l.locationId === locationId && l.isActive);
-      if (!location) {
-        throw new ValidationError(`Location ${locationId} not found or inactive`);
-      }
-    } else if (locations.length === 1 && locations[0]) {
-      locationId = locations[0].locationId;
-    }
+    const { merchant, resolvedLocationId } = await this.validateMerchant(
+      request.merchantId,
+      request.locationId,
+    );
 
     // 3. Validate customer
-    const customer = await this.customerRepository.findById(request.customerId);
-    if (!customer) {
-      throw new NotFoundError('Customer', request.customerId);
-    }
-
-    // Check enrollment
-    const enrollment = customer.getEnrollment(request.merchantId);
-    if (!enrollment) {
-      throw new ValidationError('Customer is not enrolled with this merchant');
-    }
-
-    if (enrollment.consentStatus !== 'GRANTED') {
-      throw new UnauthorizedError('Customer consent required to earn points');
-    }
+    const customer = await this.validateCustomer(request.customerId, request.merchantId);
 
     // 4. Calculate dual points
     const amount = Money.fromSAR(request.amountSAR);
@@ -151,23 +126,19 @@ export class RecordPurchaseUseCase {
       merchantBalanceBefore,
       request.idempotencyKey,
       request.metadata || {},
-      locationId,
+      resolvedLocationId,
     );
 
     // 6b. Create global points audit trail
-    const globalTransaction = Transaction.createEarn(
-      'POINTLY_NETWORK',
+    const globalTransaction = this.createAuditTrail(
+      request.merchantId,
       request.customerId,
       boostedGlobalPoints,
       amount,
       globalBalanceBefore,
-      `${request.idempotencyKey}_global`,
-      {
-        ...(request.metadata || {}),
-        source: 'purchase',
-        sourceMerchantId: request.merchantId,
-      },
-      locationId,
+      request.idempotencyKey,
+      request.metadata || {},
+      resolvedLocationId,
     );
 
     // 8. Update merchant stats
@@ -177,20 +148,13 @@ export class RecordPurchaseUseCase {
     transaction.complete();
     globalTransaction.complete();
 
-    // 9. Save everything atomically (or fall back to sequential saves)
-    if (this.atomicWrite) {
-      await this.atomicWrite([
-        ...this.transactionRepository.toPersistenceItem(transaction),
-        ...this.transactionRepository.toPersistenceItem(globalTransaction),
-        ...this.customerRepository.toPersistenceItem(customer),
-        ...this.merchantRepository.toPersistenceItem(merchant),
-      ]);
-    } else {
-      await this.transactionRepository.save(transaction);
-      await this.transactionRepository.save(globalTransaction);
-      await this.customerRepository.save(customer);
-      await this.merchantRepository.save(merchant);
-    }
+    // 9. Save everything atomically
+    await this.atomicWrite([
+      ...this.transactionRepository.toPersistenceItem(transaction),
+      ...this.transactionRepository.toPersistenceItem(globalTransaction),
+      ...this.customerRepository.toPersistenceItem(customer),
+      ...this.merchantRepository.toPersistenceItem(merchant),
+    ]);
 
     // 10. Store idempotency result
     const response: RecordPurchaseResponse = {
@@ -213,7 +177,7 @@ export class RecordPurchaseUseCase {
     await this.idempotencyService.storeResult(
       request.idempotencyKey,
       response,
-      3600, // 1 hour TTL
+      IDEMPOTENCY_TTL_SECONDS,
     );
 
     // 11. Fire-and-forget SMS notification
@@ -228,5 +192,76 @@ export class RecordPurchaseUseCase {
     }
 
     return response;
+  }
+
+  private async validateMerchant(
+    merchantId: string,
+    locationId?: string,
+  ): Promise<{ merchant: Merchant; resolvedLocationId: string | undefined }> {
+    const merchant = await this.merchantRepository.findById(merchantId);
+    if (!merchant) {
+      throw new NotFoundError('Merchant', merchantId);
+    }
+
+    if (!merchant.isVerified()) {
+      throw new UnauthorizedError('Merchant is not verified');
+    }
+
+    let resolvedLocationId = locationId;
+    const locations = merchant.getLocations();
+    if (locationId) {
+      const location = locations.find((l) => l.locationId === locationId && l.isActive);
+      if (!location) {
+        throw new ValidationError(`Location ${locationId} not found or inactive`);
+      }
+    } else if (locations.length === 1 && locations[0]) {
+      resolvedLocationId = locations[0].locationId;
+    }
+
+    return { merchant, resolvedLocationId };
+  }
+
+  private async validateCustomer(customerId: string, merchantId: string): Promise<Customer> {
+    const customer = await this.customerRepository.findById(customerId);
+    if (!customer) {
+      throw new NotFoundError('Customer', customerId);
+    }
+
+    const enrollment = customer.getEnrollment(merchantId);
+    if (!enrollment) {
+      throw new ValidationError('Customer is not enrolled with this merchant');
+    }
+
+    if (enrollment.consentStatus !== 'GRANTED') {
+      throw new UnauthorizedError('Customer consent required to earn points');
+    }
+
+    return customer;
+  }
+
+  private createAuditTrail(
+    merchantId: string,
+    customerId: string,
+    boostedGlobalPoints: Points,
+    amount: Money,
+    globalBalanceBefore: Points,
+    idempotencyKey: string,
+    metadata: TransactionMetadata,
+    locationId?: string,
+  ): Transaction {
+    return Transaction.createEarn(
+      'POINTLY_NETWORK',
+      customerId,
+      boostedGlobalPoints,
+      amount,
+      globalBalanceBefore,
+      `${idempotencyKey}_global`,
+      {
+        ...metadata,
+        source: 'purchase',
+        sourceMerchantId: merchantId,
+      },
+      locationId,
+    );
   }
 }

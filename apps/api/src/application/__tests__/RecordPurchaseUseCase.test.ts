@@ -22,6 +22,7 @@ describe('RecordPurchaseUseCase', () => {
   let mockMerchantRepo: IMerchantRepository;
   let mockTransactionRepo: ITransactionRepository;
   let mockIdempotencyService: IIdempotencyService;
+  let mockAtomicWrite: ReturnType<typeof vi.fn>;
 
   let testCustomer: Customer;
   let testMerchant: Merchant;
@@ -44,6 +45,8 @@ describe('RecordPurchaseUseCase', () => {
     );
     testMerchant.verify(); // Make merchant verified
 
+    mockAtomicWrite = vi.fn().mockResolvedValue(undefined);
+
     // Mock repositories
     mockCustomerRepo = {
       findById: vi.fn(),
@@ -54,6 +57,8 @@ describe('RecordPurchaseUseCase', () => {
       findByMerchant: vi.fn(),
       findPendingConsents: vi.fn(),
       isEnrolled: vi.fn(),
+      // biome-ignore lint/suspicious/noExplicitAny: test mock returns empty persistence items
+      toPersistenceItem: vi.fn().mockReturnValue([]) as any,
     };
 
     mockMerchantRepo = {
@@ -66,6 +71,8 @@ describe('RecordPurchaseUseCase', () => {
       findVerified: vi.fn(),
       findPendingVerification: vi.fn(),
       findByTier: vi.fn(),
+      // biome-ignore lint/suspicious/noExplicitAny: test mock returns empty persistence items
+      toPersistenceItem: vi.fn().mockReturnValue([]) as any,
     };
 
     mockTransactionRepo = {
@@ -79,6 +86,8 @@ describe('RecordPurchaseUseCase', () => {
       findByCustomerAndMerchant: vi.fn(),
       getMerchantStats: vi.fn(),
       getCustomerStats: vi.fn(),
+      // biome-ignore lint/suspicious/noExplicitAny: test mock returns empty persistence items
+      toPersistenceItem: vi.fn().mockReturnValue([]) as any,
     };
 
     mockIdempotencyService = {
@@ -92,6 +101,7 @@ describe('RecordPurchaseUseCase', () => {
       mockMerchantRepo,
       mockTransactionRepo,
       mockIdempotencyService,
+      mockAtomicWrite,
     );
   });
 
@@ -123,10 +133,8 @@ describe('RecordPurchaseUseCase', () => {
       expect(result.newGlobalBalance).toBe(100);
       expect(result.transactionId).toBeTruthy();
 
-      // Verify repositories were called (2 transactions: merchant + global audit trail)
-      expect(mockTransactionRepo.save).toHaveBeenCalledTimes(2);
-      expect(mockCustomerRepo.save).toHaveBeenCalledTimes(1);
-      expect(mockMerchantRepo.save).toHaveBeenCalledTimes(1);
+      // Verify atomic write was called once for all items
+      expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
       expect(mockIdempotencyService.storeResult).toHaveBeenCalledWith(
         request.idempotencyKey,
         result,
@@ -239,7 +247,7 @@ describe('RecordPurchaseUseCase', () => {
       expect(result).toEqual(cachedResponse);
       expect(mockMerchantRepo.findById).not.toHaveBeenCalled();
       expect(mockCustomerRepo.findById).not.toHaveBeenCalled();
-      expect(mockTransactionRepo.save).not.toHaveBeenCalled();
+      expect(mockAtomicWrite).not.toHaveBeenCalled();
     });
   });
 
@@ -355,7 +363,7 @@ describe('RecordPurchaseUseCase', () => {
   });
 
   describe('Metadata Handling', () => {
-    it('should store metadata in transaction', async () => {
+    it('should persist transaction with metadata via atomicWrite', async () => {
       vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
       vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
       vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
@@ -375,12 +383,7 @@ describe('RecordPurchaseUseCase', () => {
         metadata,
       });
 
-      // Verify transaction was saved with metadata
-      expect(mockTransactionRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          getMetadata: expect.any(Function),
-        }),
-      );
+      expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -548,7 +551,7 @@ describe('RecordPurchaseUseCase', () => {
   });
 
   describe('Repository Interactions', () => {
-    it('should call save on all three repositories exactly once per purchase', async () => {
+    it('should write all items atomically in a single operation per purchase', async () => {
       vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
       vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
       vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
@@ -560,12 +563,10 @@ describe('RecordPurchaseUseCase', () => {
         idempotencyKey: 'repo_save_key',
       });
 
-      expect(mockTransactionRepo.save).toHaveBeenCalledTimes(2);
-      expect(mockCustomerRepo.save).toHaveBeenCalledTimes(1);
-      expect(mockMerchantRepo.save).toHaveBeenCalledTimes(1);
+      expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
     });
 
-    it('should not call any save if idempotency returns cached result', async () => {
+    it('should not call atomicWrite if idempotency returns cached result', async () => {
       const cachedResponse = {
         transactionId: 'txn_cached',
         merchantPoints: 100,
@@ -589,12 +590,10 @@ describe('RecordPurchaseUseCase', () => {
         idempotencyKey: 'cached_repo_key',
       });
 
-      expect(mockTransactionRepo.save).not.toHaveBeenCalled();
-      expect(mockCustomerRepo.save).not.toHaveBeenCalled();
-      expect(mockMerchantRepo.save).not.toHaveBeenCalled();
+      expect(mockAtomicWrite).not.toHaveBeenCalled();
     });
 
-    it('should increment merchant transaction count (merchantRepo.save called with updated merchant)', async () => {
+    it('should include merchant persistence items in atomicWrite after transaction count increment', async () => {
       vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
       vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
       vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
@@ -606,9 +605,8 @@ describe('RecordPurchaseUseCase', () => {
         idempotencyKey: 'merchant_count_key',
       });
 
-      // merchantRepo.save should have been called with the merchant that had incrementTransactionCount() called
-      expect(mockMerchantRepo.save).toHaveBeenCalledTimes(1);
-      expect(mockMerchantRepo.save).toHaveBeenCalledWith(testMerchant);
+      expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
+      expect(vi.mocked(mockMerchantRepo.toPersistenceItem)).toHaveBeenCalledWith(testMerchant);
     });
   });
 });

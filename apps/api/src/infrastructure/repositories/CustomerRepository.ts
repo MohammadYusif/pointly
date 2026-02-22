@@ -40,6 +40,13 @@ interface CustomerItem {
   updatedAt: string;
   GSI1PK: string | undefined;
   GSI1SK: string | undefined;
+  /**
+   * GSI2 is used for the merchant-customers adjacency list pattern.
+   * Access pattern: query MERCHANT#<id>#CUSTOMERS to list all customers of a merchant.
+   * These fields are NOT populated on the main PROFILE item — they live on separate
+   * MERCHANT_INDEX#<merchantId> items written by toMerchantIndexItems().
+   * Reserved here for type completeness only; never written on PROFILE records.
+   */
   GSI2PK?: string;
   GSI2SK?: string;
 }
@@ -225,8 +232,8 @@ export class CustomerRepository
   }
 
   /**
-   * Parse a date value that may be an ISO string, a Date, or an empty/invalid object
-   * (DynamoDB Document Client serializes Date objects as empty maps {"M":{}})
+   * Parse a date string with a guaranteed fallback (for required fields).
+   * Handles ISO strings, Date objects, and empty/invalid DynamoDB map values.
    */
   private static parseDate(value: unknown, fallback: Date): Date {
     if (!value) return fallback;
@@ -236,6 +243,16 @@ export class CustomerRepository
     }
     if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
     return fallback;
+  }
+
+  /**
+   * Parse a date string, returning undefined if not present or invalid (for optional fields).
+   * Eliminates the need for `null as unknown as Date` hacks on optional date fields.
+   */
+  private static parseDateOptional(value: string | undefined): Date | undefined {
+    if (!value) return undefined;
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? undefined : d;
   }
 
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: DynamoDB item mapping with many optional fields and date parsing
@@ -252,17 +269,11 @@ export class CustomerRepository
         transactionCount: enrollment.transactionCount ?? 0,
       };
 
-      const consentDate = CustomerRepository.parseDate(
-        enrollment.consentGrantedAt,
-        null as unknown as Date,
-      );
+      const consentDate = CustomerRepository.parseDateOptional(enrollment.consentGrantedAt);
       if (consentDate) {
         enrollmentData.consentGrantedAt = consentDate;
       }
-      const lastTxDate = CustomerRepository.parseDate(
-        enrollment.lastTransactionAt,
-        null as unknown as Date,
-      );
+      const lastTxDate = CustomerRepository.parseDateOptional(enrollment.lastTransactionAt);
       if (lastTxDate) {
         enrollmentData.lastTransactionAt = lastTxDate;
       }
@@ -301,20 +312,21 @@ export class CustomerRepository
     if (customerItem.name) {
       props.name = customerItem.name;
     }
-    if (customerItem.decayStartDate) {
-      props.decayStartDate = CustomerRepository.parseDate(customerItem.decayStartDate, createdAt);
+    const decayStartDate = CustomerRepository.parseDateOptional(customerItem.decayStartDate);
+    if (decayStartDate) {
+      props.decayStartDate = decayStartDate;
     }
-    if (customerItem.lastDecayAppliedAt) {
-      props.lastDecayAppliedAt = CustomerRepository.parseDate(
-        customerItem.lastDecayAppliedAt,
-        createdAt,
-      );
+    const lastDecayAppliedAt = CustomerRepository.parseDateOptional(
+      customerItem.lastDecayAppliedAt,
+    );
+    if (lastDecayAppliedAt) {
+      props.lastDecayAppliedAt = lastDecayAppliedAt;
     }
-    if (customerItem.lastInactivityWarningSentAt) {
-      props.lastInactivityWarningSentAt = CustomerRepository.parseDate(
-        customerItem.lastInactivityWarningSentAt,
-        createdAt,
-      );
+    const lastInactivityWarningSentAt = CustomerRepository.parseDateOptional(
+      customerItem.lastInactivityWarningSentAt,
+    );
+    if (lastInactivityWarningSentAt) {
+      props.lastInactivityWarningSentAt = lastInactivityWarningSentAt;
     }
 
     return Customer.reconstitute(props);

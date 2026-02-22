@@ -1080,6 +1080,131 @@ describe('Point System - Real World Scenarios', () => {
 
   /**
    * ============================================
+   * FIX: SUSPENDED/INACTIVE CUSTOMER CANNOT REDEEM MERCHANT POINTS
+   * ============================================
+   */
+  describe('Customer Status Guard on redeemMerchantPoints', () => {
+    it('should prevent a suspended customer from redeeming merchant points', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      customer.addPointsFromPurchase('merchant_123', Points.from(200), Points.from(100));
+      customer.suspend();
+
+      expect(() => {
+        customer.redeemMerchantPoints('merchant_123', Points.from(50));
+      }).toThrow('Customer must be active to redeem points');
+    });
+
+    it('should prevent an inactive customer from redeeming merchant points', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      customer.addPointsFromPurchase('merchant_123', Points.from(200), Points.from(100));
+      customer.deactivate();
+
+      expect(() => {
+        customer.redeemMerchantPoints('merchant_123', Points.from(50));
+      }).toThrow('Customer must be active to redeem points');
+    });
+
+    it('should allow an active customer to redeem merchant points normally', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      customer.addPointsFromPurchase('merchant_123', Points.from(200), Points.from(100));
+
+      customer.redeemMerchantPoints('merchant_123', Points.from(50));
+
+      expect(customer.getMerchantPointsBalance('merchant_123').toNumber()).toBe(50);
+    });
+  });
+
+  /**
+   * ============================================
+   * FIX: WELCOME BONUS
+   * ============================================
+   */
+  describe('Welcome Bonus (applyWelcomeBonus)', () => {
+    it('should add global and merchant points on first call', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+
+      customer.applyWelcomeBonus('merchant_123', Points.from(50), Points.from(50));
+
+      expect(customer.getGlobalPointsBalance().toNumber()).toBe(50);
+      expect(customer.getGlobalLifetimePoints().toNumber()).toBe(50);
+      expect(customer.getMerchantPointsBalance('merchant_123').toNumber()).toBe(50);
+    });
+
+    it('should reject the welcome bonus on a second call', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+
+      customer.applyWelcomeBonus('merchant_123', Points.from(50), Points.from(50));
+
+      expect(() => {
+        customer.applyWelcomeBonus('merchant_123', Points.from(50), Points.from(50));
+      }).toThrow('Welcome bonus has already been applied for this merchant');
+    });
+
+    it('should throw when applying bonus for a non-enrolled merchant', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+
+      expect(() => {
+        customer.applyWelcomeBonus('unknown_merchant', Points.from(50), Points.from(50));
+      }).toThrow('Customer not enrolled with this merchant');
+    });
+
+    it('should not require consent to apply the welcome bonus', () => {
+      const phone = new PhoneNumber('0501234567');
+      const customer = Customer.create(phone, 'Test Customer');
+      customer.enrollWithMerchant('merchant_123');
+      // Consent is still PENDING — bonus should still work
+
+      customer.applyWelcomeBonus('merchant_123', Points.from(100), Points.from(100));
+
+      expect(customer.getGlobalPointsBalance().toNumber()).toBe(100);
+      expect(customer.getMerchantPointsBalance('merchant_123').toNumber()).toBe(100);
+    });
+
+    it('should update both balance and lifetime points', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      // Earn some points first so lifetime > 0
+      customer.addPointsFromPurchase('merchant_123', Points.from(200), Points.from(150));
+
+      customer.applyWelcomeBonus('merchant_123', Points.from(50), Points.from(25));
+
+      expect(customer.getGlobalPointsBalance().toNumber()).toBe(250);
+      expect(customer.getGlobalLifetimePoints().toNumber()).toBe(250);
+    });
+
+    it('should set welcomeBonusApplied to true in serialized enrollment', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+
+      customer.applyWelcomeBonus('merchant_123', Points.from(50), Points.from(50));
+
+      const json = customer.toJSON();
+      const enrollment = json.enrollments.find((e) => e.merchantId === 'merchant_123');
+      expect(enrollment?.welcomeBonusApplied).toBe(true);
+    });
+
+    it('should have welcomeBonusApplied false before applying the bonus', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+
+      const json = customer.toJSON();
+      const enrollment = json.enrollments.find((e) => e.merchantId === 'merchant_123');
+      expect(enrollment?.welcomeBonusApplied).toBe(false);
+    });
+
+    it('should apply independent welcome bonuses per merchant', () => {
+      const customer = createCustomerWithEnrollment('merchant_a');
+      customer.enrollWithMerchant('merchant_b');
+      customer.grantConsent('merchant_b');
+
+      customer.applyWelcomeBonus('merchant_a', Points.from(50), Points.from(50));
+      customer.applyWelcomeBonus('merchant_b', Points.from(100), Points.from(100));
+
+      expect(customer.getGlobalPointsBalance().toNumber()).toBe(150);
+      expect(customer.getMerchantPointsBalance('merchant_a').toNumber()).toBe(50);
+      expect(customer.getMerchantPointsBalance('merchant_b').toNumber()).toBe(100);
+    });
+  });
+
+  /**
+   * ============================================
    * INTEGRATION SCENARIOS
    * ============================================
    */

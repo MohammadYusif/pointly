@@ -5,6 +5,7 @@ import type { ITransactionRepository } from '../../application/repositories/ITra
 import type { IDecayCalculatorService } from '../../application/services/IDecayCalculatorService';
 import type { IIdempotencyService } from '../../application/services/IIdempotencyService';
 import type { ISmsPublisherService } from '../../application/services/ISmsPublisherService';
+import { EnrollCustomerUseCase } from '../../application/use-cases/EnrollCustomerUseCase';
 import { GenerateQRCodeUseCase } from '../../application/use-cases/GenerateQRCodeUseCase';
 import { GetAnalyticsUseCase } from '../../application/use-cases/GetAnalyticsUseCase';
 import { ProcessMonthlyTierResetUseCase } from '../../application/use-cases/ProcessMonthlyTierResetUseCase';
@@ -38,6 +39,7 @@ export interface Container {
   transactionalWriter: TransactionalWriter;
 
   // Use Cases
+  enrollCustomerUseCase: EnrollCustomerUseCase;
   recordPurchaseUseCase: RecordPurchaseUseCase;
   redeemPointsUseCase: RedeemPointsUseCase;
   processPointsDecayUseCase: ProcessPointsDecayUseCase;
@@ -65,13 +67,19 @@ export function createContainer(): Container {
   const transactionalWriter = new TransactionalWriter(dbClient);
 
   // Create use cases
+  const enrollCustomerUseCase = new EnrollCustomerUseCase(
+    customerRepository,
+    merchantRepository,
+    (items) => transactionalWriter.writeAll(items),
+  );
+
   const recordPurchaseUseCase = new RecordPurchaseUseCase(
     customerRepository,
     merchantRepository,
     transactionRepository,
     idempotencyService,
-    smsPublisherService,
     (items) => transactionalWriter.writeAll(items),
+    smsPublisherService,
   );
 
   const redeemPointsUseCase = new RedeemPointsUseCase(
@@ -107,6 +115,7 @@ export function createContainer(): Container {
     decayCalculatorService,
     smsPublisherService,
     transactionalWriter,
+    enrollCustomerUseCase,
     recordPurchaseUseCase,
     redeemPointsUseCase,
     processPointsDecayUseCase,

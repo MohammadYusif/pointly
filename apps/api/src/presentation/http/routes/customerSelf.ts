@@ -112,36 +112,17 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
       const body = enrollSchema.parse(request.body);
 
       const container = getContainer();
-      const { customerRepository, merchantRepository } = container;
-
-      const customer = await customerRepository.findById(customerId);
-      if (!customer) {
-        return reply.status(404).send({ success: false, error: 'Customer not found' });
-      }
-
-      const merchant = await merchantRepository.findById(body.merchantId);
-      if (!merchant) {
-        return reply.status(404).send({ success: false, error: 'Merchant not found' });
-      }
-
-      if (!merchant.isVerified()) {
-        throw new ValidationError('Merchant is not verified');
-      }
-
-      customer.enrollWithMerchant(body.merchantId);
-      merchant.incrementCustomerCount();
-
-      await container.transactionalWriter.writeAll([
-        ...customerRepository.toPersistenceItem(customer),
-        ...merchantRepository.toPersistenceItem(merchant),
-      ]);
+      const result = await container.enrollCustomerUseCase.execute({
+        customerId,
+        merchantId: body.merchantId,
+      });
 
       return reply.status(201).send({
         success: true,
         data: {
-          customerId,
-          merchantId: body.merchantId,
-          enrollment: customer.getEnrollment(body.merchantId),
+          customerId: result.customerId,
+          merchantId: result.merchantId,
+          enrollment: result.enrollment,
         },
       });
     },
