@@ -1,7 +1,9 @@
 'use client';
 
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LocationSelector } from '@/components/analytics';
+import { ClientDate } from '@/components/ui/ClientDate';
 import { useInfiniteTransactions, useMerchant, useMerchantCustomers } from '@/hooks/api';
 import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
@@ -122,67 +124,71 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      <div className="space-y-3">
-        {isLoading && (
-          <p className="text-center text-muted-foreground py-8">{t('common.loading')}</p>
-        )}
-        {!isLoading && transactions.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">{t('common.noData')}</p>
-        )}
-        {transactions.map((tx) => {
-          const typeBadge = getTypeBadge(tx.type);
-          const statusBadge = getStatusBadge(tx.status);
-          return (
-            <Card key={tx.transactionId}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className={textStart}>
-                    <p className="font-medium text-sm">
-                      {customerNames[tx.customerId] || tx.customerId}
-                    </p>
-                    <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-                      {new Date(tx.createdAt).toLocaleString(locale)}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${typeBadge.className}`}>
-                        {typeBadge.label}
-                      </span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${statusBadge.className}`}>
-                        {statusBadge.label}
-                      </span>
-                      {tx.locationId && locationNames[tx.locationId] && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
-                          {locationNames[tx.locationId]}
+      <ErrorBoundary>
+        <div className="space-y-3">
+          {isLoading && (
+            <p className="text-center text-muted-foreground py-8">{t('common.loading')}</p>
+          )}
+          {!isLoading && transactions.length === 0 && (
+            <p className="text-center text-muted-foreground py-8">{t('common.noData')}</p>
+          )}
+          {transactions.map((tx) => {
+            const typeBadge = getTypeBadge(tx.type);
+            const statusBadge = getStatusBadge(tx.status);
+            return (
+              <Card key={tx.transactionId}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className={textStart}>
+                      <p className="font-medium text-sm">
+                        {customerNames[tx.customerId] || tx.customerId}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        <ClientDate date={tx.createdAt} format="datetime" locale={locale} />
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${typeBadge.className}`}>
+                          {typeBadge.label}
                         </span>
-                      )}
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full ${statusBadge.className}`}
+                        >
+                          {statusBadge.label}
+                        </span>
+                        {tx.locationId && locationNames[tx.locationId] && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
+                            {locationNames[tx.locationId]}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className={textEnd}>
+                      <p className="font-medium">{formatCurrency(getAmount(tx.amount))}</p>
+                      <p
+                        className={`text-sm ${tx.type === 'EARN' ? 'text-green-600' : 'text-orange-600'}`}
+                      >
+                        {tx.type === 'EARN' ? '+' : '-'}
+                        {formatNumber(tx.points)} {t('common.points')}
+                      </p>
                     </div>
                   </div>
-                  <div className={textEnd}>
-                    <p className="font-medium">{formatCurrency(getAmount(tx.amount))}</p>
-                    <p
-                      className={`text-sm ${tx.type === 'EARN' ? 'text-green-600' : 'text-orange-600'}`}
-                    >
-                      {tx.type === 'EARN' ? '+' : '-'}
-                      {formatNumber(tx.points)} {t('common.points')}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
 
-      {hasNextPage && (
-        <Button
-          variant="outline"
-          className="w-full mt-4"
-          onClick={() => fetchNextPage()}
-          disabled={isFetchingNextPage}
-        >
-          {isFetchingNextPage ? t('common.loading') : t('common.loadMore')}
-        </Button>
-      )}
+        {hasNextPage && (
+          <Button
+            variant="outline"
+            className="w-full mt-4"
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+          >
+            {isFetchingNextPage ? t('common.loading') : t('common.loadMore')}
+          </Button>
+        )}
+      </ErrorBoundary>
     </DashboardLayout>
   );
 }

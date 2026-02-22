@@ -96,6 +96,7 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
   // Get merchant customers
   server.get(
     '/:merchantId/customers',
+    { config: { rateLimit: { max: 200, timeWindow: '1 minute' } } },
     async (
       request: FastifyRequest<{
         Params: { merchantId: string };
@@ -223,6 +224,7 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
   // Get merchant analytics
   server.get(
     '/:merchantId/analytics',
+    { config: { rateLimit: { max: 200, timeWindow: '1 minute' } } },
     async (
       request: FastifyRequest<{
         Params: { merchantId: string };
@@ -249,6 +251,7 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
   // Get location-specific analytics
   server.get(
     '/:merchantId/analytics/locations/:locationId',
+    { config: { rateLimit: { max: 200, timeWindow: '1 minute' } } },
     async (
       request: FastifyRequest<{
         Params: { merchantId: string; locationId: string };
@@ -630,39 +633,18 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       const body = enrollSchema.parse(request.body);
 
       const container = getContainer();
-      const { customerRepository, merchantRepository } = container;
-
-      const customer = await customerRepository.findById(body.customerId);
-      if (!customer) {
-        return reply.status(404).send({ success: false, error: 'Customer not found' });
-      }
-
-      const merchant = await merchantRepository.findById(merchantId);
-      if (!merchant) {
-        return reply.status(404).send({ success: false, error: 'Merchant not found' });
-      }
-
-      if (!merchant.isVerified()) {
-        throw new ValidationError('Merchant is not verified');
-      }
-
-      customer.enrollWithMerchant(merchantId);
-      if (body.grantConsent) {
-        customer.grantConsent(merchantId);
-      }
-      merchant.incrementCustomerCount();
-
-      await container.transactionalWriter.writeAll([
-        ...customerRepository.toPersistenceItem(customer),
-        ...merchantRepository.toPersistenceItem(merchant),
-      ]);
+      const result = await container.enrollCustomerUseCase.execute({
+        customerId: body.customerId,
+        merchantId,
+        grantConsent: body.grantConsent,
+      });
 
       return reply.status(201).send({
         success: true,
         data: {
-          customerId: body.customerId,
-          merchantId,
-          enrollment: customer.getEnrollment(merchantId),
+          customerId: result.customerId,
+          merchantId: result.merchantId,
+          enrollment: result.enrollment,
         },
       });
     },

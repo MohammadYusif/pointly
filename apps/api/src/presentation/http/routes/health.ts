@@ -8,27 +8,35 @@ interface HealthResponse {
 }
 
 export async function healthRoutes(server: FastifyInstance): Promise<void> {
-  server.get('/health', async (_request: FastifyRequest, _reply: FastifyReply) => {
-    const response: HealthResponse = {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      // biome-ignore lint/complexity/useLiteralKeys: Index signature requires bracket notation
-      version: process.env['npm_package_version'] || '1.0.0',
-      uptime: process.uptime(),
-    };
+  server.get(
+    '/health',
+    { config: { rateLimit: false } },
+    async (_request: FastifyRequest, _reply: FastifyReply) => {
+      const response: HealthResponse = {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        // biome-ignore lint/complexity/useLiteralKeys: Index signature requires bracket notation
+        version: process.env['npm_package_version'] || '1.0.0',
+        uptime: process.uptime(),
+      };
 
-    return response;
-  });
+      return response;
+    },
+  );
 
-  server.get('/v1/health', async (_request: FastifyRequest, _reply: FastifyReply) => {
-    const response: HealthResponse = {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      // biome-ignore lint/complexity/useLiteralKeys: Index signature requires bracket notation
-      version: process.env['npm_package_version'] || '1.0.0',
-      uptime: process.uptime(),
-    };
+  server.get(
+    '/v1/health',
+    { config: { rateLimit: false } },
+    async (_request: FastifyRequest, _reply: FastifyReply) => {
+      const response: HealthResponse = {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        // biome-ignore lint/complexity/useLiteralKeys: Index signature requires bracket notation
+        version: process.env['npm_package_version'] || '1.0.0',
+        uptime: process.uptime(),
+      };
 
-    return response;
-  });
+      return response;
+    },
+  );
 }

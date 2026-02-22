@@ -83,8 +83,8 @@ export function errorHandler(
       };
     } else if (error instanceof InsufficientPointsError) {
       response = {
-        statusCode: 422,
-        error: 'Unprocessable Entity',
+        statusCode: 400,
+        error: 'Insufficient Points',
         message: error.message,
         code: error.code,
       };
@@ -112,15 +112,19 @@ export function errorHandler(
     return;
   }
 
-  // Handle unknown errors
-  const isProduction =
-    // biome-ignore lint/complexity/useLiteralKeys: Index signature requires bracket notation
-    process.env['NODE_ENV'] === 'production';
-  response = {
+  // Handle unknown errors — never leak internals in production
+  // biome-ignore lint/complexity/useLiteralKeys: Index signature requires bracket notation
+  const isProduction = process.env['NODE_ENV'] === 'production';
+
+  if (isProduction) {
+    reply.status(500).send({ success: false, error: 'Internal server error' });
+    return;
+  }
+
+  reply.status(500).send({
     statusCode: 500,
     error: 'Internal Server Error',
-    message: isProduction ? 'An unexpected error occurred' : error.message,
-  };
-
-  reply.status(500).send(response);
+    message: error.message,
+    stack: error.stack,
+  });
 }

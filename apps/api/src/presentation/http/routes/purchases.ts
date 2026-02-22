@@ -50,6 +50,7 @@ type RecordPurchaseBody = z.infer<typeof recordPurchaseSchema>;
 export async function purchaseRoutes(server: FastifyInstance): Promise<void> {
   server.post(
     '/',
+    { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
     async (request: FastifyRequest<{ Body: RecordPurchaseBody }>, reply: FastifyReply) => {
       const body = recordPurchaseSchema.parse(request.body);
 
@@ -80,6 +81,7 @@ export async function purchaseRoutes(server: FastifyInstance): Promise<void> {
 
   server.post(
     '/redeem',
+    { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } },
     async (request: FastifyRequest<{ Body: RedeemPointsBody }>, reply: FastifyReply) => {
       const body = redeemPointsSchema.parse(request.body);
 

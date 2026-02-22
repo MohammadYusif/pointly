@@ -1,6 +1,7 @@
 'use client';
 
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import {
   type DatePreset,
   DateRangeSelector,
@@ -116,15 +117,17 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid gap-4 md:gap-6 lg:grid-cols-2 mb-6">
-        <RevenueChart data={dataPoints} loading={isLoading} />
-        <TransactionTrendChart data={dataPoints} loading={isLoading} />
-      </div>
+      <ErrorBoundary>
+        <div className="grid gap-4 md:gap-6 lg:grid-cols-2 mb-6">
+          <RevenueChart data={dataPoints} loading={isLoading} />
+          <TransactionTrendChart data={dataPoints} loading={isLoading} />
+        </div>
 
-      {/* Points Breakdown */}
-      <div className="mb-6">
-        <EarnRedeemBreakdown data={dataPoints} loading={isLoading} />
-      </div>
+        {/* Points Breakdown */}
+        <div className="mb-6">
+          <EarnRedeemBreakdown data={dataPoints} loading={isLoading} />
+        </div>
+      </ErrorBoundary>
 
       {/* Location Summary for multi-location merchants */}
       {locations.length > 1 && !locationId && <LocationSummary locations={locations} />}
