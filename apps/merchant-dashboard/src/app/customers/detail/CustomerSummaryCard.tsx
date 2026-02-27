@@ -1,13 +1,13 @@
 'use client';
 
 import { ClientDate } from '@/components/ui/ClientDate';
-import type { CustomerEnrollment, CustomerResponse } from '@/types/api';
+import type { CustomerEnrollment, MerchantScopedCustomerResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { formatPhone, getTierColor } from '@pointly/shared';
 import { Card, CardContent, useRTL } from '@pointly/ui';
 
 interface CustomerSummaryCardProps {
-  customer: CustomerResponse;
+  customer: MerchantScopedCustomerResponse;
   enrollment: CustomerEnrollment | undefined;
 }
 

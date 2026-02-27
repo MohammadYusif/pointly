@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { useMerchant, useRedeemPoints } from '@/hooks/api';
 import { customerApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-import type { CustomerResponse } from '@/types/api';
+import type { MerchantScopedCustomerResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { formatPhone } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
@@ -39,7 +39,7 @@ export default function RedeemPage() {
   const [pointsToRedeem, setPointsToRedeem] = useState('');
   const [error, setError] = useState('');
   const [validationError, setValidationError] = useState('');
-  const [customer, setCustomer] = useState<CustomerResponse | null>(null);
+  const [customer, setCustomer] = useState<MerchantScopedCustomerResponse | null>(null);
   const [result, setResult] = useState<RedeemResult | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
 
@@ -50,14 +50,13 @@ export default function RedeemPage() {
   const allowPartial = loyaltyConfig?.allowPartialRedemption ?? true;
 
   const getCustomerMerchantBalance = (): number => {
-    if (!customer || !merchant) return 0;
-    // biome-ignore lint/suspicious/noExplicitAny: enrollment shape varies
-    const enrollment = customer.enrollments?.find((e: any) => e.merchantId === merchant.merchantId);
-    return enrollment?.merchantPointsBalance ?? 0;
+    return customer?.enrollment?.merchantPointsBalance ?? 0;
   };
 
   const getCustomerGlobalBalance = (): number => {
-    return customer?.globalPointsBalance ?? 0;
+    // Global balance is intentionally excluded from the merchant-scoped view (privacy).
+    // The backend smart-redeem will use the real balance; we display 0 here as a safe default.
+    return 0;
   };
 
   const getTotalAvailable = (): number => {
@@ -82,19 +81,15 @@ export default function RedeemPage() {
     }
 
     if (step === 'confirming' && customer) {
-      const merchantBal =
-        customer.enrollments?.find(
-          (e: { merchantId: string }) => e.merchantId === merchant?.merchantId,
-        )?.merchantPointsBalance ?? 0;
-      const globalBal = customer.globalPointsBalance ?? 0;
-      if (points > merchantBal + globalBal) {
+      const merchantBal = customer.enrollment?.merchantPointsBalance ?? 0;
+      if (points > merchantBal) {
         setValidationError(t('redeem.errorInsufficient'));
         return;
       }
     }
 
     setValidationError('');
-  }, [pointsToRedeem, customer, merchant, minimumRedemption, step, t]);
+  }, [pointsToRedeem, customer, minimumRedemption, step, t]);
 
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();

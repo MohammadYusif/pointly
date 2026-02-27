@@ -124,10 +124,10 @@ export { normalizePhone };
 
 // Customer API
 export const customerApi = {
-  getById: (id: string) => fetchApi<CustomerResponse>(`/v1/customers/${id}`),
+  getById: (id: string) => fetchApi<MerchantScopedCustomerResponse>(`/v1/customers/${id}`),
 
   getByPhone: (phone: string) =>
-    fetchApi<CustomerResponse>(`/v1/customers/phone/${normalizePhone(phone)}`),
+    fetchApi<MerchantScopedCustomerResponse>(`/v1/customers/phone/${normalizePhone(phone)}`),
 
   create: (phone: string, name?: string) =>
     fetchApi<CustomerResponse>('/v1/customers', {

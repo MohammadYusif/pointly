@@ -3,7 +3,6 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useCustomerById, useInfiniteCustomerTransactions, useMerchant } from '@/hooks/api';
-import { useAuth } from '@/lib/auth-context';
 import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { Button, useRTL } from '@pointly/ui';
@@ -21,8 +20,6 @@ export default function CustomerDetailPage() {
 
   const { t, language } = useTranslation();
   const { textStart } = useRTL();
-  const { merchant } = useAuth();
-  const merchantId = merchant?.merchantId || '';
 
   const {
     data: customer,
@@ -53,7 +50,7 @@ export default function CustomerDetailPage() {
     locationNames[loc.locationId] = loc.name;
   }
 
-  const enrollment = customer?.enrollments?.find((e) => e.merchantId === merchantId);
+  const enrollment = customer?.enrollment;
 
   useEffect(() => {
     if (customerError) toast.error(customerError.message || t('errors.serverError'));
