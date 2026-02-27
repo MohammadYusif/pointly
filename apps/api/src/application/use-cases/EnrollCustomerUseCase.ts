@@ -4,7 +4,6 @@ import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
 import type { PersistenceItem } from '../shared/interfaces/BaseRepository';
 
-
 export interface EnrollCustomerRequest {
   customerId: string;
   merchantId: string;

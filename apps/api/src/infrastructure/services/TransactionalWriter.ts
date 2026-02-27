@@ -31,9 +31,7 @@ export class TransactionalWriter {
     if (items.length === 0) return;
     if (items.length > TRANSACT_WRITE_MAX_ITEMS) {
       throw new Error(
-        `DynamoDB TransactWriteItems supports a maximum of ${TRANSACT_WRITE_MAX_ITEMS} items, got ${items.length}. ` +
-          'Use toPersistenceItem (profile only) for purchase/redemption/decay writes, ' +
-          'and toEnrollmentItems only during consent-granting enrollment.',
+        `DynamoDB TransactWriteItems supports a maximum of ${TRANSACT_WRITE_MAX_ITEMS} items, got ${items.length}. Use toPersistenceItem (profile only) for purchase/redemption/decay writes, and toEnrollmentItems only during consent-granting enrollment.`,
       );
     }
 
