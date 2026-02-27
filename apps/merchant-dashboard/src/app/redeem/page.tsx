@@ -53,16 +53,6 @@ export default function RedeemPage() {
     return customer?.enrollment?.merchantPointsBalance ?? 0;
   };
 
-  const getCustomerGlobalBalance = (): number => {
-    // Global balance is intentionally excluded from the merchant-scoped view (privacy).
-    // The backend smart-redeem will use the real balance; we display 0 here as a safe default.
-    return 0;
-  };
-
-  const getTotalAvailable = (): number => {
-    return getCustomerMerchantBalance() + getCustomerGlobalBalance();
-  };
-
   useEffect(() => {
     const points = Number(pointsToRedeem);
     if (!pointsToRedeem) {
@@ -80,16 +70,8 @@ export default function RedeemPage() {
       return;
     }
 
-    if (step === 'confirming' && customer) {
-      const merchantBal = customer.enrollment?.merchantPointsBalance ?? 0;
-      if (points > merchantBal) {
-        setValidationError(t('redeem.errorInsufficient'));
-        return;
-      }
-    }
-
     setValidationError('');
-  }, [pointsToRedeem, customer, minimumRedemption, step, t]);
+  }, [pointsToRedeem, minimumRedemption, t]);
 
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -244,16 +226,6 @@ export default function RedeemPage() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('redeem.merchantBalance')}</span>
                   <span className="font-medium">{formatNumber(getCustomerMerchantBalance())}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('redeem.globalBalance')}</span>
-                  <span className="font-medium">{formatNumber(getCustomerGlobalBalance())}</span>
-                </div>
-                <div className="flex justify-between border-t pt-2">
-                  <span className="text-muted-foreground font-medium">
-                    {t('redeem.totalAvailable')}
-                  </span>
-                  <span className="font-bold">{formatNumber(getTotalAvailable())}</span>
                 </div>
               </CardContent>
             </Card>
