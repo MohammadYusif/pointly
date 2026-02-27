@@ -68,10 +68,22 @@ export class EnrollCustomerUseCase {
 
     merchant.incrementCustomerCount();
 
-    await this.atomicWrite([
+    const persistenceItems: PersistenceItem[] = [
       ...this.customerRepository.toPersistenceItem(customer),
       ...this.merchantRepository.toPersistenceItem(merchant),
-    ]);
+    ];
+
+    // Write the GSI2 index item only when consent is granted during enrollment.
+    // This is the only time the index item is needed; purchase/redemption flows
+    // must NOT include it to stay within DynamoDB's 25-item TransactWriteItems limit.
+    if (request.grantConsent) {
+      const indexItem = this.customerRepository.toMerchantIndexItem(customer, request.merchantId);
+      if (indexItem) {
+        persistenceItems.push(indexItem);
+      }
+    }
+
+    await this.atomicWrite(persistenceItems);
 
     const enrollment = customer.getEnrollment(request.merchantId);
     if (!enrollment) {

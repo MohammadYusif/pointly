@@ -10,8 +10,6 @@ interface IdempotencyItem {
 }
 
 export class IdempotencyService implements IIdempotencyService {
-  private readonly ttlSeconds = 24 * 60 * 60; // 24 hours
-
   constructor(
     private readonly client: DynamoDBDocumentClient,
     private readonly tableName: string,
@@ -33,9 +31,9 @@ export class IdempotencyService implements IIdempotencyService {
     return JSON.parse(item.result) as T;
   }
 
-  async storeResult<T>(key: string, result: T): Promise<void> {
+  async storeResult<T>(key: string, result: T, ttlSeconds: number): Promise<void> {
     const now = new Date();
-    const ttl = Math.floor(now.getTime() / 1000) + this.ttlSeconds;
+    const ttl = Math.floor(now.getTime() / 1000) + ttlSeconds;
 
     const item: IdempotencyItem = {
       PK: `IDEMPOTENCY#${key}`,

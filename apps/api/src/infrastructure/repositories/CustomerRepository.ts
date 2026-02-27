@@ -207,12 +207,41 @@ export class CustomerRepository
   }
 
   toPersistenceItem(entity: Customer) {
-    const mainItem = {
+    return [
+      {
+        tableName: this.tableName,
+        item: this.toItem(entity) as Record<string, unknown>,
+      },
+    ];
+  }
+
+  /**
+   * Return the GSI2 index item for a single merchant enrollment.
+   * Only call this when first granting consent for a merchant (enrollment flow).
+   * Returns null if the enrollment is not found or consent is not GRANTED.
+   *
+   * Kept separate from toPersistenceItem to avoid including every enrolled
+   * merchant's index item in every purchase/redemption transaction
+   * (which would blow the DynamoDB 25-item TransactWriteItems limit).
+   */
+  toMerchantIndexItem(entity: Customer, merchantId: string) {
+    const json = entity.toJSON();
+    // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
+    const enrollment = json.enrollments.find((e: any) => e.merchantId === merchantId);
+    if (!enrollment || enrollment.consentStatus !== ConsentStatus.GRANTED) {
+      return null;
+    }
+    return {
       tableName: this.tableName,
-      item: this.toItem(entity) as Record<string, unknown>,
+      item: {
+        PK: `CUSTOMER#${json.customerId}`,
+        SK: `MERCHANT_INDEX#${merchantId}`,
+        EntityType: 'MERCHANT_CUSTOMER_INDEX',
+        GSI2PK: `MERCHANT#${merchantId}#CUSTOMERS`,
+        GSI2SK: `CUSTOMER#${json.customerId}`,
+        customerId: json.customerId,
+      } as Record<string, unknown>,
     };
-    const indexItems = this.toMerchantIndexItems(entity);
-    return [mainItem, ...indexItems];
   }
 
   async delete(id: string): Promise<void> {
@@ -336,32 +365,6 @@ export class CustomerRepository
 
   protected toEntity(item: Record<string, unknown>): Customer {
     return this.itemToEntity(item as unknown as CustomerItem);
-  }
-
-  /**
-   * Build per-merchant index items (adjacency list pattern).
-   * One index item per granted merchant, each projecting into GSI2
-   * so findByMerchant can query MERCHANT#<id>#CUSTOMERS efficiently.
-   */
-  private toMerchantIndexItems(entity: Customer) {
-    const json = entity.toJSON();
-    const grantedMerchantIds = json.enrollments
-      // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
-      .filter((e: any) => e.consentStatus === ConsentStatus.GRANTED)
-      // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
-      .map((e: any) => e.merchantId as string);
-
-    return grantedMerchantIds.map((merchantId: string) => ({
-      tableName: this.tableName,
-      item: {
-        PK: `CUSTOMER#${json.customerId}`,
-        SK: `MERCHANT_INDEX#${merchantId}`,
-        EntityType: 'MERCHANT_CUSTOMER_INDEX',
-        GSI2PK: `MERCHANT#${merchantId}#CUSTOMERS`,
-        GSI2SK: `CUSTOMER#${json.customerId}`,
-        customerId: json.customerId,
-      } as Record<string, unknown>,
-    }));
   }
 
   protected toItem(entity: Customer): Record<string, unknown> {
