@@ -29,11 +29,10 @@ export class ProcessPointsDecayUseCase {
     private customerRepository: ICustomerRepository,
     private transactionRepository: ITransactionRepository,
     private decayCalculator: IDecayCalculatorService,
-    private atomicWrite?: (items: PersistenceItem[]) => Promise<void>,
+    private atomicWrite: (items: PersistenceItem[]) => Promise<void>,
     private smsPublisher?: ISmsPublisherService,
   ) {}
 
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: decay logic requires scanning all customers and applying tier-based rules
   async execute(): Promise<DecayProcessingResult> {
     const result: DecayProcessingResult = {
       totalCustomersProcessed: 0,
@@ -51,70 +50,7 @@ export class ProcessPointsDecayUseCase {
       for (const customer of customers) {
         try {
           result.totalCustomersProcessed++;
-          customer.updateDecayPhase();
-
-          // --- Proactive engagement SMS at 3/6/9 months (during grace period) ---
-          const milestone = this.decayCalculator.getInactivityMilestone(customer);
-          if (milestone && ksaHoursOk && this.smsPublisher) {
-            const monthsLeft = 12 - milestone;
-            const balance = customer.getGlobalPointsBalance().toNumber();
-            await this.smsPublisher.publish({
-              phone: customer.getPhone().toE164(),
-              body: `[Pointly] You have ${balance} points. ${monthsLeft} months until inactivity expiry — shop now to keep them! | لديك ${balance} نقطة. ${monthsLeft} أشهر حتى انتهاء صلاحية النقاط بسبب عدم النشاط — تسوق الآن للحفاظ عليها!`,
-              merchantId: 'SYSTEM',
-              type: 'DECAY_WARNING',
-            });
-            customer.markInactivityWarningSent();
-            result.warningsSent++;
-          }
-
-          // --- Phase-1 decay warning SMS (months 12-17, decay has started) ---
-          if (this.decayCalculator.shouldWarnCustomer(customer)) {
-            const warning = this.decayCalculator.generateWarningMessage(customer);
-            if (warning && ksaHoursOk && this.smsPublisher) {
-              await this.smsPublisher.publish({
-                phone: warning.phone,
-                body: warning.message,
-                merchantId: 'SYSTEM',
-                type: 'DECAY_WARNING',
-              });
-              result.warningsSent++;
-            }
-          }
-
-          // --- Apply decay ---
-          const balanceBeforeDecay = customer.getGlobalPointsBalance();
-          const decayAmount = customer.applyGlobalPointsDecay();
-
-          if (!decayAmount.isZero()) {
-            result.customersWithDecay++;
-            result.totalPointsDecayed += decayAmount.toNumber();
-
-            const transaction = Transaction.createExpiration(
-              'SYSTEM',
-              customer.getCustomerId(),
-              decayAmount,
-              balanceBeforeDecay,
-              `decay_${customer.getCustomerId()}_${Date.now()}`,
-              {
-                reason: 'monthly_inactivity_decay',
-                decayPhase: customer.getGlobalPointsDecayPhase().toString(),
-                monthsInactive: customer.getMonthsOfInactivity().toString(),
-              },
-            );
-
-            if (this.atomicWrite) {
-              await this.atomicWrite([
-                ...this.transactionRepository.toPersistenceItem(transaction),
-                ...this.customerRepository.toPersistenceItem(customer),
-              ]);
-            } else {
-              await this.transactionRepository.save(transaction);
-              await this.customerRepository.save(customer);
-            }
-          } else {
-            await this.customerRepository.save(customer);
-          }
+          await this.processOneCustomer(customer, ksaHoursOk, result);
         } catch (error) {
           result.errors.push(
             `Error processing customer ${customer.getCustomerId()}: ${error instanceof Error ? error.message : String(error)}`,
@@ -128,6 +64,92 @@ export class ProcessPointsDecayUseCase {
     }
 
     return result;
+  }
+
+  private async processOneCustomer(
+    customer: Customer,
+    ksaHoursOk: boolean,
+    result: DecayProcessingResult,
+  ): Promise<void> {
+    customer.updateDecayPhase();
+    await this.maybeSendEngagementSms(customer, ksaHoursOk, result);
+    await this.maybeSendDecayWarningSms(customer, ksaHoursOk, result);
+    await this.applyDecay(customer, result);
+  }
+
+  /** Proactive engagement SMS at 3/6/9 months of inactivity (during grace period). */
+  private async maybeSendEngagementSms(
+    customer: Customer,
+    ksaHoursOk: boolean,
+    result: DecayProcessingResult,
+  ): Promise<void> {
+    if (!this.smsPublisher || !ksaHoursOk) return;
+    const milestone = this.decayCalculator.getInactivityMilestone(customer);
+    if (!milestone) return;
+
+    const monthsLeft = 12 - milestone;
+    const balance = customer.getGlobalPointsBalance().toNumber();
+    await this.smsPublisher.publish({
+      phone: customer.getPhone().toE164(),
+      body: `[Pointly] You have ${balance} points. ${monthsLeft} months until inactivity expiry — shop now to keep them! | لديك ${balance} نقطة. ${monthsLeft} أشهر حتى انتهاء صلاحية النقاط بسبب عدم النشاط — تسوق الآن للحفاظ عليها!`,
+      merchantId: 'SYSTEM',
+      type: 'DECAY_WARNING',
+    });
+    customer.markInactivityWarningSent();
+    result.warningsSent++;
+  }
+
+  /** Phase-1 decay warning SMS (months 12-17, decay has started). */
+  private async maybeSendDecayWarningSms(
+    customer: Customer,
+    ksaHoursOk: boolean,
+    result: DecayProcessingResult,
+  ): Promise<void> {
+    if (!this.smsPublisher || !ksaHoursOk) return;
+    if (!this.decayCalculator.shouldWarnCustomer(customer)) return;
+
+    const warning = this.decayCalculator.generateWarningMessage(customer);
+    if (!warning) return;
+
+    await this.smsPublisher.publish({
+      phone: warning.phone,
+      body: warning.message,
+      merchantId: 'SYSTEM',
+      type: 'DECAY_WARNING',
+    });
+    result.warningsSent++;
+  }
+
+  /** Apply decay to the customer and persist. No-op (profile-only save) when no decay occurs. */
+  private async applyDecay(customer: Customer, result: DecayProcessingResult): Promise<void> {
+    const balanceBeforeDecay = customer.getGlobalPointsBalance();
+    const decayAmount = customer.applyGlobalPointsDecay();
+
+    if (decayAmount.isZero()) {
+      await this.customerRepository.save(customer);
+      return;
+    }
+
+    result.customersWithDecay++;
+    result.totalPointsDecayed += decayAmount.toNumber();
+
+    const transaction = Transaction.createExpiration(
+      'SYSTEM',
+      customer.getCustomerId(),
+      decayAmount,
+      balanceBeforeDecay,
+      `decay_${customer.getCustomerId()}_${Date.now()}`,
+      {
+        reason: 'monthly_inactivity_decay',
+        decayPhase: customer.getGlobalPointsDecayPhase().toString(),
+        monthsInactive: customer.getMonthsOfInactivity().toString(),
+      },
+    );
+
+    await this.atomicWrite([
+      ...this.transactionRepository.toPersistenceItem(transaction),
+      ...this.customerRepository.toPersistenceItem(customer),
+    ]);
   }
 
   /**
