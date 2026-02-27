@@ -219,7 +219,8 @@
     "successMessage": "Successfully redeemed {{points}} points for {{value}}.",
     "errorZero": "Points to redeem must be greater than zero.",
     "errorMinimum": "You must redeem at least {{min}} points.",
-    "errorInsufficient": "You cannot redeem more points than the customer has."
+    "errorInsufficient": "You cannot redeem more points than the customer has.",
+    "globalPointsNote": "{{points}} global points will be drawn from the customer's network balance to cover this redemption."
   },
   "billing": {
     "currentPlan": "Current Plan",

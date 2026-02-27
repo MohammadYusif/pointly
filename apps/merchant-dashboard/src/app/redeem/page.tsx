@@ -247,6 +247,11 @@ export default function RedeemPage() {
                   <span className="text-muted-foreground font-medium">{t('redeem.sarValue')}</span>
                   <span className="font-bold text-green-600">{formatCurrency(sarValue)}</span>
                 </div>
+                {globalUsed > 0 && (
+                  <p className="text-xs text-muted-foreground pt-1">
+                    {t('redeem.globalPointsNote', { points: formatNumber(globalUsed) })}
+                  </p>
+                )}
               </CardContent>
             </Card>
 
