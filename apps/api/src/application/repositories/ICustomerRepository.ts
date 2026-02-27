@@ -12,8 +12,15 @@ export interface ICustomerRepository extends BaseRepository<Customer> {
   findPendingConsents(merchantId: string, options?: QueryOptions): Promise<QueryResult<Customer>>;
   findAll(options?: QueryOptions): Promise<QueryResult<Customer>>;
   isEnrolled(customerId: string, merchantId: string): Promise<boolean>;
-  /** Return the GSI2 adjacency-list index item for a single merchant enrollment.
-   *  Returns null if the enrollment is missing or consent is not GRANTED.
-   *  Use this (not toPersistenceItem) to write the index item during enrollment. */
-  toMerchantIndexItem(entity: Customer, merchantId: string): PersistenceItem | null;
+
+  /**
+   * Returns persistence items for an enrollment write where consent is being granted.
+   * Always returns [profile, merchantIndex] as a unit — callers never need to know
+   * that two items are required, and can never forget to include the index.
+   *
+   * Use toPersistenceItem() (profile-only) for all other writes
+   * (purchase, redemption, decay) that must stay within the
+   * DynamoDB 25-item TransactWriteItems budget.
+   */
+  toEnrollmentItems(entity: Customer, merchantId: string): PersistenceItem[];
 }

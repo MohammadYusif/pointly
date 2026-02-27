@@ -216,15 +216,28 @@ export class CustomerRepository
   }
 
   /**
-   * Return the GSI2 index item for a single merchant enrollment.
-   * Only call this when first granting consent for a merchant (enrollment flow).
-   * Returns null if the enrollment is not found or consent is not GRANTED.
+   * Returns [profile, merchantIndex] persistence items for an enrollment where
+   * consent is granted. Callers never need to know two items are required and
+   * can never forget to include the index.
    *
-   * Kept separate from toPersistenceItem to avoid including every enrolled
-   * merchant's index item in every purchase/redemption transaction
-   * (which would blow the DynamoDB 25-item TransactWriteItems limit).
+   * Use toPersistenceItem() (profile-only) for purchase / redemption / decay
+   * writes that must stay within DynamoDB's 25-item TransactWriteItems limit.
    */
-  toMerchantIndexItem(entity: Customer, merchantId: string) {
+  toEnrollmentItems(entity: Customer, merchantId: string) {
+    const profileItem = {
+      tableName: this.tableName,
+      item: this.toItem(entity) as Record<string, unknown>,
+    };
+    const indexItem = this.buildMerchantIndexItem(entity, merchantId);
+    return indexItem ? [profileItem, indexItem] : [profileItem];
+  }
+
+  /**
+   * Build the GSI2 adjacency-list index item for one merchant enrollment.
+   * Returns null when the enrollment is missing or consent is not GRANTED.
+   * Private — call toEnrollmentItems() from outside this class.
+   */
+  private buildMerchantIndexItem(entity: Customer, merchantId: string) {
     const json = entity.toJSON();
     // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
     const enrollment = json.enrollments.find((e: any) => e.merchantId === merchantId);

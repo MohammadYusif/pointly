@@ -4,6 +4,7 @@ import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
 import type { PersistenceItem } from '../shared/interfaces/BaseRepository';
 
+
 export interface EnrollCustomerRequest {
   customerId: string;
   merchantId: string;
@@ -68,22 +69,18 @@ export class EnrollCustomerUseCase {
 
     merchant.incrementCustomerCount();
 
-    const persistenceItems: PersistenceItem[] = [
-      ...this.customerRepository.toPersistenceItem(customer),
+    // toEnrollmentItems returns [profile, merchantIndex] when consent is granted,
+    // or [profile] only when consent is still pending — the repository owns that logic.
+    // Purchase / redemption / decay flows use toPersistenceItem (profile only) to
+    // stay within DynamoDB's 25-item TransactWriteItems limit.
+    const customerItems = request.grantConsent
+      ? this.customerRepository.toEnrollmentItems(customer, request.merchantId)
+      : this.customerRepository.toPersistenceItem(customer);
+
+    await this.atomicWrite([
+      ...customerItems,
       ...this.merchantRepository.toPersistenceItem(merchant),
-    ];
-
-    // Write the GSI2 index item only when consent is granted during enrollment.
-    // This is the only time the index item is needed; purchase/redemption flows
-    // must NOT include it to stay within DynamoDB's 25-item TransactWriteItems limit.
-    if (request.grantConsent) {
-      const indexItem = this.customerRepository.toMerchantIndexItem(customer, request.merchantId);
-      if (indexItem) {
-        persistenceItems.push(indexItem);
-      }
-    }
-
-    await this.atomicWrite(persistenceItems);
+    ]);
 
     const enrollment = customer.getEnrollment(request.merchantId);
     if (!enrollment) {
