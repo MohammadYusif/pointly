@@ -4,6 +4,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LocationSelector } from '@/components/analytics';
 import { ClientDate } from '@/components/ui/ClientDate';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { useInfiniteTransactions, useMerchant, useMerchantCustomers } from '@/hooks/api';
 import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
@@ -12,6 +13,34 @@ import { Button, Card, CardContent, useRTL } from '@pointly/ui';
 import { ArrowDownUp, Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+
+function TransactionsTableSkeleton() {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: 8 }, (_, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton indices
+        <Card key={i} className="stagger-item">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-3 w-28" />
+                <div className="flex gap-2 mt-1">
+                  <Skeleton className="h-4 w-14 rounded-full" />
+                  <Skeleton className="h-4 w-14 rounded-full" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
 
 /** Extract numeric amount — handles both `{amount, currency}` object and plain number */
 function getAmount(amount: unknown): number {
@@ -126,9 +155,7 @@ export default function TransactionsPage() {
 
       <ErrorBoundary>
         <div className="space-y-3">
-          {isLoading && (
-            <p className="text-center text-muted-foreground py-8">{t('common.loading')}</p>
-          )}
+          {isLoading && <TransactionsTableSkeleton />}
           {!isLoading && transactions.length === 0 && (
             <p className="text-center text-muted-foreground py-8">{t('common.noData')}</p>
           )}
@@ -136,7 +163,7 @@ export default function TransactionsPage() {
             const typeBadge = getTypeBadge(tx.type);
             const statusBadge = getStatusBadge(tx.status);
             return (
-              <Card key={tx.transactionId}>
+              <Card key={tx.transactionId} className="stagger-item">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className={textStart}>

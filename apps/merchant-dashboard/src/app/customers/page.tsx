@@ -1,6 +1,7 @@
 'use client';
 
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { useCustomerByPhone, useInfiniteCustomers } from '@/hooks/api';
 import { useTranslation } from '@pointly/i18n';
 import { formatPhone } from '@pointly/shared';
@@ -9,6 +10,36 @@ import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+
+function CustomersListSkeleton() {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: 6 }, (_, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton indices
+        <div key={i} className="stagger-item">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-12" />
+                    <Skeleton className="h-3 w-10" />
+                  </div>
+                  <Skeleton className="h-4 w-4 rounded" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface MerchantCustomerView {
   customerId: string;
@@ -88,9 +119,7 @@ export default function CustomersPage() {
 
       {/* Customer List */}
       <div className="space-y-3">
-        {isLoading && (
-          <p className="text-center text-muted-foreground py-8">{t('common.loading')}</p>
-        )}
+        {isLoading && <CustomersListSkeleton />}
         {!isLoading && displayCustomers.length === 0 && (
           <p className="text-center text-muted-foreground py-8">{t('common.noData')}</p>
         )}
@@ -98,9 +127,9 @@ export default function CustomersPage() {
           <Link
             key={customer.customerId}
             href={`/customers/detail?id=${customer.customerId}`}
-            className="block"
+            className="block stagger-item"
           >
-            <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer card-interactive">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className={textStart}>

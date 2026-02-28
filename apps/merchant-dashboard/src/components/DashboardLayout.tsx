@@ -1,6 +1,7 @@
 'use client';
 
 import { Logo } from '@/components/Logo';
+import { PageTransition } from '@/components/PageTransition';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslation } from '@pointly/i18n';
 import { Button, Container, type NavItem, Navbar } from '@pointly/ui';
@@ -73,13 +74,21 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         logo={<Logo width={120} className="md:w-35" />}
         showLanguageToggle
         rightContent={
-          <Button variant="ghost" size="icon" onClick={signOut} title={t('auth.logout')}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={signOut}
+            title={t('auth.logout')}
+            className="icon-hover-rotate"
+          >
             <LogOut className="h-4 w-4" />
           </Button>
         }
       />
       <main className="py-4 md:py-8">
-        <Container>{children}</Container>
+        <Container>
+          <PageTransition>{children}</PageTransition>
+        </Container>
       </main>
     </div>
   );

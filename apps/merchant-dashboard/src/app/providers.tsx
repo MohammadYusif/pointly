@@ -37,7 +37,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <DirectionProvider defaultLanguage="ar">
         <AuthProvider>{children}</AuthProvider>
       </DirectionProvider>
-      <Toaster position="top-center" richColors closeButton />
+      <Toaster position="top-center" richColors closeButton toastOptions={{ duration: 3000 }} />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

@@ -93,26 +93,38 @@ export default function DashboardPage() {
         <KPICard
           title={t('dashboard.totalRevenue')}
           value={formatCurrency(summary?.totalRevenue ?? 0)}
+          rawValue={summary?.totalRevenue ?? 0}
+          format={formatCurrency}
           icon={<DollarSign className="h-4 w-4" />}
           loading={isLoading}
+          className="stagger-item"
         />
         <KPICard
           title={t('dashboard.totalTransactions')}
           value={formatNumber(summary?.totalTransactions ?? 0)}
+          rawValue={summary?.totalTransactions ?? 0}
+          format={formatNumber}
           icon={<CreditCard className="h-4 w-4" />}
           loading={isLoading}
+          className="stagger-item"
         />
         <KPICard
           title={t('dashboard.pointsIssued')}
           value={formatNumber(summary?.totalPointsEarned ?? 0)}
+          rawValue={summary?.totalPointsEarned ?? 0}
+          format={formatNumber}
           icon={<ArrowUpRight className={`h-4 w-4 ${flipIcon}`} />}
           loading={isLoading}
+          className="stagger-item"
         />
         <KPICard
           title={t('dashboard.uniqueCustomers')}
           value={formatNumber(summary?.uniqueCustomers ?? 0)}
+          rawValue={summary?.uniqueCustomers ?? 0}
+          format={formatNumber}
           icon={<Users className="h-4 w-4" />}
           loading={isLoading}
+          className="stagger-item"
         />
       </div>
 

@@ -265,3 +265,106 @@ html.notready #app-content {
   --slide-start: -100%;
   --slide-end: 100%;
 }
+
+/* ============================================================================
+   Page & Content Transition Animations
+   ============================================================================ */
+
+/* Page enter — used by PageTransition component */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-enter {
+  animation: pageEnter 0.25s ease-out both;
+}
+
+/* Stagger fade-in for grid/list items */
+@keyframes staggerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-item {
+  animation: staggerFadeIn 0.35s ease-out both;
+}
+
+.stagger-item:nth-child(1) {
+  animation-delay: 0ms;
+}
+.stagger-item:nth-child(2) {
+  animation-delay: 60ms;
+}
+.stagger-item:nth-child(3) {
+  animation-delay: 120ms;
+}
+.stagger-item:nth-child(4) {
+  animation-delay: 180ms;
+}
+.stagger-item:nth-child(5) {
+  animation-delay: 240ms;
+}
+.stagger-item:nth-child(6) {
+  animation-delay: 300ms;
+}
+.stagger-item:nth-child(n + 7) {
+  animation-delay: 360ms;
+}
+
+/* ============================================================================
+   Micro-interaction Utilities (hover-capable devices only)
+   ============================================================================ */
+
+@media (hover: hover) {
+  /* Tactile lift for clickable cards */
+  .card-interactive {
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .card-interactive:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Icon button rotation on hover */
+  .icon-hover-rotate svg {
+    transition: transform 150ms ease;
+  }
+
+  .icon-hover-rotate:hover svg {
+    transform: rotate(-10deg);
+  }
+}
+
+/* ============================================================================
+   Reduced Motion — disable all custom animations & transitions globally
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
