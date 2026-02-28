@@ -64,6 +64,18 @@ module "frontend" {
   certificate_arn = var.certificate_arn
 }
 
+
+# ===========================================
+# Landing Page — S3 + CloudFront
+# ===========================================
+module "landing" {
+  source      = "./modules/landing"
+  environment = var.environment
+
+  domain_name     = var.domain_name != "" ? var.domain_name : ""
+  certificate_arn = var.certificate_arn
+}
+
 # ===========================================
 # Monitoring — CloudWatch Alarms + Dashboard
 # ===========================================

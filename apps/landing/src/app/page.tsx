@@ -1,0 +1,48 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { type Locale, translations } from '@/i18n/translations';
+import { AboutSection } from '@/components/AboutSection';
+import { CTASection } from '@/components/CTASection';
+import { Features } from '@/components/Features';
+import { Footer } from '@/components/Footer';
+import { Hero } from '@/components/Hero';
+import { Navbar } from '@/components/Navbar';
+import { NetworkSection } from '@/components/NetworkSection';
+import { PricingSection } from '@/components/PricingSection';
+import { StatsBar } from '@/components/StatsBar';
+import { TiersSection } from '@/components/TiersSection';
+
+export default function LandingPage() {
+  const [locale, setLocale] = useState<Locale>('en');
+  const t = translations[locale];
+
+  const handleLocaleChange = (newLocale: Locale) => {
+    setLocale(newLocale);
+    document.documentElement.lang = newLocale;
+    document.documentElement.dir = newLocale === 'ar' ? 'rtl' : 'ltr';
+  };
+
+  // Set initial HTML attributes
+  useEffect(() => {
+    document.documentElement.lang = locale;
+    document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
+  }, [locale]);
+
+  return (
+    <>
+      <Navbar t={t} locale={locale} onLocaleChange={handleLocaleChange} />
+      <main>
+        <Hero t={t} />
+        <StatsBar t={t} />
+        <Features t={t} />
+        <NetworkSection t={t} />
+        <TiersSection t={t} />
+        <PricingSection t={t} />
+        <AboutSection t={t} />
+        <CTASection t={t} />
+      </main>
+      <Footer t={t} />
+    </>
+  );
+}

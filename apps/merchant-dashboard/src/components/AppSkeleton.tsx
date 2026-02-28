@@ -5,7 +5,7 @@
  */
 export function AppSkeleton() {
   return (
-    <div className="app-skeleton min-h-screen bg-muted/30">
+    <div className="app-skeleton min-h-screen">
       {/* Navbar skeleton */}
       <header className="bg-card border-b h-14 md:h-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">

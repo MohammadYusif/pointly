@@ -22,7 +22,8 @@
     "infra:deploy": "pnpm --filter @pointly/infrastructure deploy",
     "infra:destroy": "pnpm --filter @pointly/infrastructure destroy",
     "seed": "cd apps/api && node ../../scripts/seed-data.mjs",
-    "seed:clean": "cd apps/api && node ../../scripts/seed-data.mjs --clean"
+    "seed:clean": "cd apps/api && node ../../scripts/seed-data.mjs --clean",
+    "dev:landing": "turbo run dev --filter=@pointly/landing"
   },
   "pnpm": {
     "overrides": {
@@ -34,7 +35,12 @@
       "@next/swc-linux-arm64-gnu": "15.5.11",
       "@next/swc-linux-arm64-musl": "15.5.11"
     },
-    "ignoredBuiltDependencies": ["@biomejs/biome", "core-js", "esbuild", "sharp"]
+    "ignoredBuiltDependencies": [
+      "@biomejs/biome",
+      "core-js",
+      "esbuild",
+      "sharp"
+    ]
   },
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "^3.992.0",

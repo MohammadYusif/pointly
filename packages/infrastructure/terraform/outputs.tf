@@ -58,3 +58,16 @@ output "decay_function_name" {
 output "tier_reset_function_name" {
   value = module.api.tier_reset_lambda_function_name
 }
+
+# Landing
+output "landing_bucket_name" {
+  value = module.landing.bucket_name
+}
+
+output "landing_distribution_id" {
+  value = module.landing.distribution_id
+}
+
+output "landing_url" {
+  value = module.landing.landing_url
+}
