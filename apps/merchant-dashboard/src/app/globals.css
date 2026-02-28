@@ -115,8 +115,7 @@ html.notready #app-content {
   }
 
   body {
-    background:
-      radial-gradient(ellipse 60% 50% at 85% 5%, rgba(8, 176, 162, 0.05), transparent 70%),
+    background: radial-gradient(ellipse 60% 50% at 85% 5%, rgba(8, 176, 162, 0.05), transparent 70%),
       radial-gradient(circle, rgba(8, 176, 162, 0.07) 1px, transparent 1px),
       linear-gradient(180deg, #f8fafa 0%, #f2f3f4 100%);
     background-size: 100% 100%, 28px 28px, 100% 100%;
@@ -127,8 +126,7 @@ html.notready #app-content {
   }
 
   .dark body {
-    background:
-      radial-gradient(ellipse 60% 50% at 85% 5%, rgba(8, 176, 162, 0.07), transparent 70%),
+    background: radial-gradient(ellipse 60% 50% at 85% 5%, rgba(8, 176, 162, 0.07), transparent 70%),
       radial-gradient(circle, rgba(8, 176, 162, 0.09) 1px, transparent 1px),
       linear-gradient(180deg, #0a0a0a 0%, #111113 100%);
     background-size: 100% 100%, 28px 28px, 100% 100%;
@@ -384,7 +382,7 @@ html.notready #app-content {
 }
 
 .login-wrapper::before {
-  content: '';
+  content: "";
   position: fixed;
   top: 0;
   left: 50%;
