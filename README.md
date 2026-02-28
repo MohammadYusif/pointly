@@ -166,22 +166,26 @@ pointly/
 ### Points System
 - **Dual Currency**: Global points (network-wide) + Merchant points (store-specific)
 - **Simplified Earning**: 1 SAR = 1 point for all merchant tiers
-- **Decay System**: 3-month grace period, then gradual decay for inactive accounts
+- **Decay System**: 12-month grace period (no decay), then Phase 1 (5%/month, months 12–17) and Phase 2 (15%/month, months 18+). Gold, Platinum, and Diamond customers are decay-immune.
 
 ### Customer Tiers
-| Tier | Monthly Points | Earning Multiplier |
-|------|---------------|-------------------|
-| Bronze | 0 - 4,999 | 1.0x |
-| Gold | 5,000 - 9,999 | 1.1x |
-| Platinum | 10,000 - 14,999 | 1.15x |
-| Diamond | 15,000+ | 1.2x |
+| Tier | Monthly Points | Earning Multiplier | Decay |
+|------|---------------|-------------------|-------|
+| Bronze | 0 – 4,999 | 1.0x | Yes |
+| Gold | 5,000 – 9,999 | 1.1x | Immune |
+| Platinum | 10,000 – 14,999 | 1.15x | Immune |
+| Diamond | 15,000+ | 1.2x | Immune |
+
+Tiers are evaluated monthly based on points earned in the current calendar month. Progress resets lazily on the first transaction of the new month.
 
 ### Merchant Tiers
-| Tier | Features |
-|------|----------|
-| Basic | Standard loyalty program |
-| Professional | Custom branding, analytics |
-| Enterprise | API access, white-label |
+| Tier | Price | Points Rate | Min Purchase | Welcome Bonus | Locations | SMS/month | Min Redemption |
+|------|-------|-------------|--------------|---------------|-----------|-----------|----------------|
+| Basic | 75 SAR/mo | 1 pt/SAR | 10 SAR | 50 pts | 1 | 100 | 100 pts |
+| Professional | 105 SAR/mo | 1 pt/SAR | 5 SAR | 100 pts | 3 | 500 | 50 pts |
+| Enterprise | 175 SAR/mo | 1 pt/SAR | None | 200 pts | Unlimited | 2,000 | 25 pts |
+
+All tiers use a fixed redemption rate of 0.01 SAR per point.
 
 ## Scripts
 

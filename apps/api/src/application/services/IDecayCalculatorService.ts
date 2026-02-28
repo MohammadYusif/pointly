@@ -13,10 +13,11 @@ export interface DecayWarning {
 /**
  * Service for calculating and managing points decay
  *
- * Decay timeline (3-month grace period):
- * - Months 0-2: Active (no decay)
- * - Months 3-5: Light decay (5% per month)
- * - Months 6+: Heavy decay (15% per month)
+ * Decay timeline (12-month grace period):
+ * - Months 0-11: Active, no decay (engagement SMS at months 3, 6, 9)
+ * - Months 12-17: Phase 1 — 5% per month
+ * - Months 18+: Phase 2 — 15% per month
+ * Gold, Platinum, and Diamond customers are decay-immune.
  */
 export interface IDecayCalculatorService {
   /**

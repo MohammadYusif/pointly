@@ -65,7 +65,7 @@ src/
 
 ### Customer
 - Manages global and merchant-specific point balances
-- Tracks tier status (Bronze, Platinum, Diamond)
+- Tracks tier status (Bronze, Gold, Platinum, Diamond)
 - Handles enrollment and consent per merchant
 - Implements decay tracking for inactive accounts
 
@@ -161,15 +161,62 @@ pnpm test:coverage
 pnpm test:watch
 ```
 
-## API Endpoints (Planned)
+## API Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/v1/health` | Health check |
-| `POST` | `/v1/purchases` | Record a purchase |
-| `POST` | `/v1/redemptions` | Redeem points |
-| `GET` | `/v1/customers/:id` | Get customer details |
-| `GET` | `/v1/merchants/:id` | Get merchant details |
+All financial write routes are rate-limited to 30 req/min. Read-heavy routes (customer lists, analytics) allow 200 req/min. Health endpoints are exempt.
+
+### Health
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/health` | None | Health check (legacy) |
+| `GET` | `/v1/health` | None | Health check |
+
+### Purchases (merchant auth required)
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/v1/purchases` | Merchant | Record purchase, award dual points. Returns `currentTier`, `tierUpgrade`, `earningMultiplier`, `isDecayImmune`, `pointsToNextTier`. |
+| `POST` | `/v1/purchases/redeem` | Merchant | Smart-redeem: merchant points first, then global. Idempotent via `idempotencyKey`. |
+| `GET` | `/v1/purchases/:transactionId` | Merchant | Fetch transaction details |
+
+### Customers (merchant auth, scoped to caller's merchant)
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/v1/customers/:customerId` | Merchant | Get customer profile scoped to merchant |
+| `GET` | `/v1/customers/phone/:phone` | Merchant | Look up customer by phone |
+| `GET` | `/v1/customers/:customerId/transactions` | Merchant | Customer's transactions for this merchant |
+| `GET` | `/v1/customers/:customerId/stats` | Merchant | Aggregate stats |
+
+### Merchants (merchant auth, enforced ownership)
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/v1/merchants/:merchantId` | Merchant | Merchant profile + loyalty config |
+| `PATCH` | `/v1/merchants/:merchantId` | Merchant | Update business profile |
+| `GET` | `/v1/merchants/:merchantId/customers` | Merchant | Paginated customer list |
+| `GET` | `/v1/merchants/:merchantId/transactions` | Merchant | Transaction history |
+| `GET` | `/v1/merchants/:merchantId/stats` | Merchant | Aggregate stats |
+| `GET` | `/v1/merchants/:merchantId/analytics` | Merchant | Time-series analytics |
+| `GET` | `/v1/merchants/:merchantId/analytics/locations/:locationId` | Merchant | Per-location analytics |
+| `POST` | `/v1/merchants/:merchantId/locations` | Merchant | Add location (Professional/Enterprise) |
+| `GET` | `/v1/merchants/:merchantId/pending-consents` | Merchant | Customers awaiting consent |
+| `PATCH` | `/v1/merchants/:merchantId/pending-consents/:customerId` | Merchant | Approve or deny consent |
+| `GET` | `/v1/merchants/:merchantId/perks` | Merchant | List tier-gated perks |
+| `POST` | `/v1/merchants/:merchantId/perks` | Merchant | Create perk |
+| `PATCH` | `/v1/merchants/:merchantId/perks/:perkId` | Merchant | Update perk |
+| `DELETE` | `/v1/merchants/:merchantId/perks/:perkId` | Merchant | Soft-delete perk |
+| `POST` | `/v1/merchants/:merchantId/register-customer` | Merchant | Atomic find-or-create + enroll + grant consent. Applies `welcomeBonusApplied` on first enrollment. |
+| `POST` | `/v1/merchants/:merchantId/enroll-customer` | Merchant | Enroll an existing customer |
+| `POST` | `/v1/merchants/:merchantId/verify-qr` | Merchant | Verify customer QR nonce |
+
+### Customer Self-Service (customer auth)
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/v1/me` | Customer | Own profile with global balance and tier |
+| `PATCH` | `/v1/me` | Customer | Update display name |
+| `GET` | `/v1/me/transactions` | Customer | Own transaction history |
+| `POST` | `/v1/me/enroll` | Customer | Enroll at a merchant, triggers welcome bonus if eligible |
+| `POST` | `/v1/me/qr-code` | Customer | Generate short-lived QR nonce for in-store use |
+| `GET` | `/v1/me/perks` | Customer | All perks from enrolled merchants with tier unlock status |
+| `POST` | `/v1/me/consent` | Customer | Grant or revoke merchant consent |
 
 ## Dependencies
 
