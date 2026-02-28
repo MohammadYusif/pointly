@@ -29,7 +29,14 @@ export function Hero({ t }: HeroProps) {
             <div className="hero-actions">
               <button type="button" className="btn-primary" onClick={() => scrollTo('pricing')}>
                 {t.hero.cta}
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  aria-hidden="true"
+                  className="dir-arrow"
+                >
                   <path
                     d="M3 8h10M9 4l4 4-4 4"
                     stroke="currentColor"
@@ -47,7 +54,7 @@ export function Hero({ t }: HeroProps) {
 
           {/* Right: card mockup */}
           <div className="hero-visual">
-            <div className="relative w-full max-w-[400px]">
+            <div className="relative w-full max-w-100">
               <div className="hero-card">
                 <div className="hero-card-header">
                   <span className="hero-card-merchant">Al-Noor Coffee</span>
@@ -86,7 +93,14 @@ export function Hero({ t }: HeroProps) {
                 +240 pts earned
               </div>
               <div className="hero-float-card hero-float-redeem">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  aria-hidden="true"
+                  className="dir-arrow"
+                >
                   <path
                     d="M2 7h10M8 3l4 4-4 4"
                     stroke="currentColor"

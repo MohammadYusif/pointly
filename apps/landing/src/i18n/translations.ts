@@ -12,7 +12,7 @@ export const translations = {
       login: 'Merchant Login',
     },
     hero: {
-      badge: 'Now live in Saudi Arabia',
+      badge: 'Coming soon to Saudi Arabia',
       title: 'One loyalty card.',
       titleHighlight: 'Every merchant.',
       subtitle:
@@ -21,10 +21,10 @@ export const translations = {
       secondary: 'See how it works',
     },
     stats: {
-      merchants: 'Active Merchants',
-      customers: 'Enrolled Customers',
-      points: 'Points Issued',
-      cities: 'Cities',
+      merchants: 'Merchant Plans',
+      customers: 'Loyalty Tiers',
+      points: 'SAR to Points',
+      cities: 'Region',
     },
     features: {
       label: 'Features',
@@ -168,23 +168,23 @@ export const translations = {
         },
       ],
       stats: [
-        { label: 'Founded', value: '2024' },
-        { label: 'Merchants', value: '200+' },
-        { label: 'Cities', value: '12' },
+        { label: 'Founded', value: '2026' },
         { label: 'Region', value: 'KSA' },
+        { label: 'Merchant Plans', value: '3' },
+        { label: 'Loyalty Tiers', value: '4' },
       ],
     },
     cta: {
       label: 'Get Started',
       title: 'Ready to grow with loyalty?',
       subtitle:
-        'Join hundreds of Saudi merchants already using Pointly to retain customers and grow revenue.',
+        'Be among the first Saudi merchants to launch a loyalty program that keeps customers coming back.',
       primary: 'Start your free trial',
       note: 'No credit card required. 14-day free trial.',
     },
     footer: {
       tagline: 'The unified loyalty network for Saudi merchants.',
-      copy: '© 2025 Pointly. All rights reserved.',
+      copy: '© 2026 Pointly. All rights reserved.',
       legal: ['Privacy Policy', 'Terms of Service'],
       columns: [
         {
@@ -213,7 +213,7 @@ export const translations = {
       login: 'دخول التاجر',
     },
     hero: {
-      badge: 'متاح الآن في المملكة العربية السعودية',
+      badge: 'قادم قريباً إلى المملكة العربية السعودية',
       title: 'بطاقة ولاء واحدة.',
       titleHighlight: 'كل التجار.',
       subtitle:
@@ -222,10 +222,10 @@ export const translations = {
       secondary: 'شاهد كيف يعمل',
     },
     stats: {
-      merchants: 'تاجر نشط',
-      customers: 'عميل مسجل',
-      points: 'نقطة تم إصدارها',
-      cities: 'مدن',
+      merchants: 'خطط التجار',
+      customers: 'مستويات الولاء',
+      points: 'ريال مقابل نقطة',
+      cities: 'المنطقة',
     },
     features: {
       label: 'المميزات',
@@ -368,23 +368,22 @@ export const translations = {
         },
       ],
       stats: [
-        { label: 'تأسست', value: '2024' },
-        { label: 'التجار', value: '+200' },
-        { label: 'مدن', value: '12' },
-        { label: 'المنطقة', value: 'المملكة' },
+        { label: 'تأسست', value: '2026' },
+        { label: 'المنطقة', value: 'KSA' },
+        { label: 'خطط التجار', value: '3' },
+        { label: 'مستويات الولاء', value: '4' },
       ],
     },
     cta: {
       label: 'ابدأ الآن',
       title: 'هل أنت مستعد للنمو مع برنامج الولاء؟',
-      subtitle:
-        'انضم إلى مئات التجار السعوديين الذين يستخدمون بوينتلي بالفعل لاستبقاء العملاء وزيادة الإيرادات.',
+      subtitle: 'كن من أوائل التجار السعوديين الذين يطلقون برنامج ولاء يجعل العملاء يعودون دائماً.',
       primary: 'ابدأ تجربتك المجانية',
       note: 'لا حاجة لبطاقة ائتمان. تجربة مجانية لمدة 14 يومًا.',
     },
     footer: {
       tagline: 'شبكة الولاء الموحدة للتجار السعوديين.',
-      copy: '© 2025 بوينتلي. جميع الحقوق محفوظة.',
+      copy: '© 2026 بوينتلي. جميع الحقوق محفوظة.',
       legal: ['سياسة الخصوصية', 'شروط الخدمة'],
       columns: [
         {

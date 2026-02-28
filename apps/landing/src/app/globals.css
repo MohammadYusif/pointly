@@ -1324,7 +1324,7 @@
     gap: 12px;
   }
   .footer-brand img {
-    height: 32px;
+    height: 38px;
     width: auto;
   }
   .footer-tagline {
@@ -1455,5 +1455,8 @@
   }
   [dir="rtl"] .footer-tagline {
     max-width: 100%;
+  }
+  [dir="rtl"] .dir-arrow {
+    transform: scaleX(-1);
   }
 }

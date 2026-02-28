@@ -6,10 +6,10 @@ interface StatsBarProps {
 }
 
 const STATS = [
-  { value: '200+', key: 'merchants' as const },
-  { value: '15K+', key: 'customers' as const },
-  { value: '2M+', key: 'points' as const },
-  { value: '12', key: 'cities' as const },
+  { value: '3', key: 'merchants' as const },
+  { value: '4', key: 'customers' as const },
+  { value: '1:1', key: 'points' as const },
+  { value: 'KSA', key: 'cities' as const },
 ];
 
 export function StatsBar({ t }: StatsBarProps) {
