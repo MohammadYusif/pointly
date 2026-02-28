@@ -13,9 +13,7 @@ export function Footer({ t }: FooterProps) {
           <ul className="footer-links">
             {t.footer.links.map((link) => (
               <li key={link}>
-                <a href="#" className="footer-link">
-                  {link}
-                </a>
+                <span className="footer-link">{link}</span>
               </li>
             ))}
           </ul>

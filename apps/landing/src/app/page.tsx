@@ -1,7 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { type Locale, translations } from '@/i18n/translations';
 import { AboutSection } from '@/components/AboutSection';
 import { CTASection } from '@/components/CTASection';
 import { Features } from '@/components/Features';
@@ -12,6 +10,8 @@ import { NetworkSection } from '@/components/NetworkSection';
 import { PricingSection } from '@/components/PricingSection';
 import { StatsBar } from '@/components/StatsBar';
 import { TiersSection } from '@/components/TiersSection';
+import { type Locale, translations } from '@/i18n/translations';
+import { useEffect, useState } from 'react';
 
 export default function LandingPage() {
   const [locale, setLocale] = useState<Locale>('en');

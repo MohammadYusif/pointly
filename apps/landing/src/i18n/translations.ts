@@ -66,14 +66,7 @@ export const translations = {
       pointOne: 'Earn global points at any Pointly merchant',
       pointTwo: 'Plus earn bonus points specific to each store',
       pointThree: 'Redeem anywhere in the network',
-      merchants: [
-        '☕ Café',
-        '🍕 Restaurant',
-        '💇 Salon',
-        '🛒 Grocery',
-        '🏋️ Gym',
-        '📚 Bookstore',
-      ],
+      merchants: ['☕ Café', '🍕 Restaurant', '💇 Salon', '🛒 Grocery', '🏋️ Gym', '📚 Bookstore'],
     },
     tiers: {
       label: 'Customer Tiers',
@@ -104,8 +97,7 @@ export const translations = {
     pricing: {
       label: 'Simple Pricing',
       title: 'Transparent, flat-rate plans',
-      subtitle:
-        'No per-transaction fees. No hidden costs. Pick the plan that fits your business.',
+      subtitle: 'No per-transaction fees. No hidden costs. Pick the plan that fits your business.',
       plans: [
         {
           name: 'Starter',
@@ -219,8 +211,7 @@ export const translations = {
     features: {
       label: 'المميزات',
       title: 'كل ما تحتاجه لإدارة برنامج ولاء',
-      subtitle:
-        'بدون أجهزة. بدون تعقيدات تكنولوجية. فقط لوحة تحكم بسيطة وشبكة تنمو مع كل تاجر.',
+      subtitle: 'بدون أجهزة. بدون تعقيدات تكنولوجية. فقط لوحة تحكم بسيطة وشبكة تنمو مع كل تاجر.',
       items: [
         {
           title: 'إعداد فوري',
@@ -375,4 +366,4 @@ export const translations = {
   },
 } as const;
 
-export type TranslationKeys = typeof translations.en;
+export type TranslationKeys = (typeof translations)[Locale];

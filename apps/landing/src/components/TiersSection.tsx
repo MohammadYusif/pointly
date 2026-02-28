@@ -23,7 +23,9 @@ export function TiersSection({ t }: TiersSectionProps) {
                 <div className="tier-name">{tier.name}</div>
                 <div className="tier-threshold">{tier.threshold}</div>
                 <div className="tier-threshold-label">{t.tiers.thresholdLabel}</div>
-                <div className="tier-multiplier">{tier.multiplier} {t.tiers.multiplierLabel}</div>
+                <div className="tier-multiplier">
+                  {tier.multiplier} {t.tiers.multiplierLabel}
+                </div>
               </div>
             </ScrollReveal>
           ))}

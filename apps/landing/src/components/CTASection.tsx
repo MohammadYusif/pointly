@@ -16,12 +16,25 @@ export function CTASection({ t }: CTASectionProps) {
             <p className="section-sub">{t.cta.subtitle}</p>
 
             <div className="cta-actions">
-              <a href="#" className="btn-primary" style={{ fontSize: '1rem', padding: '14px 32px', borderRadius: '12px' }}>
+              <button
+                type="button"
+                className="btn-primary"
+                style={{ fontSize: '1rem', padding: '14px 32px', borderRadius: '12px' }}
+                onClick={() =>
+                  document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })
+                }
+              >
                 {t.cta.primary}
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path
+                    d="M3 8h10M9 4l4 4-4 4"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
-              </a>
+              </button>
             </div>
             <p className="cta-note">{t.cta.note}</p>
           </ScrollReveal>

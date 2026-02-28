@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import type { Locale, TranslationKeys } from '@/i18n/translations';
+import { useEffect, useState } from 'react';
 
 interface NavbarProps {
   t: TranslationKeys;
@@ -29,7 +29,7 @@ export function Navbar({ t, locale, onLocaleChange }: NavbarProps) {
           {/* Logo */}
           <div className="nav-logo">
             <div className="nav-logo-dot">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <circle cx="8" cy="8" r="3" fill="white" />
                 <circle cx="8" cy="2" r="1.5" fill="white" opacity="0.7" />
                 <circle cx="14" cy="8" r="1.5" fill="white" opacity="0.7" />
@@ -50,7 +50,7 @@ export function Navbar({ t, locale, onLocaleChange }: NavbarProps) {
               { label: t.nav.about, id: 'about' },
             ].map((item) => (
               <li key={item.id}>
-                <button className="nav-link" onClick={() => scrollTo(item.id)}>
+                <button type="button" className="nav-link" onClick={() => scrollTo(item.id)}>
                   {item.label}
                 </button>
               </li>
@@ -60,14 +60,20 @@ export function Navbar({ t, locale, onLocaleChange }: NavbarProps) {
           {/* Actions */}
           <div className="nav-actions">
             <button
+              type="button"
               className="lang-toggle"
               onClick={() => onLocaleChange(locale === 'en' ? 'ar' : 'en')}
             >
               {locale === 'en' ? 'العربية' : 'English'}
             </button>
-            <a href="#" className="btn-primary" style={{ fontSize: '0.85rem', padding: '8px 18px' }}>
+            <button
+              type="button"
+              className="btn-primary"
+              style={{ fontSize: '0.85rem', padding: '8px 18px' }}
+              onClick={() => scrollTo('pricing')}
+            >
               {t.nav.getStarted}
-            </a>
+            </button>
           </div>
         </div>
       </div>

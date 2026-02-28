@@ -19,23 +19,22 @@ export function PricingSection({ t }: PricingSectionProps) {
           {t.pricing.plans.map((plan, i) => (
             <ScrollReveal key={plan.name} delay={(i + 1) as 1 | 2 | 3}>
               <div className={`pricing-card${plan.popular ? ' popular' : ''}`}>
-                {plan.popular && (
-                  <div className="popular-badge">{t.pricing.mostPopular}</div>
-                )}
+                {plan.popular && <div className="popular-badge">{t.pricing.mostPopular}</div>}
                 <div className="pricing-plan">{plan.name}</div>
                 <div className="pricing-price">
                   {plan.price} <span>{t.pricing.perMonth}</span>
                 </div>
                 <p className="pricing-desc">{plan.desc}</p>
                 <ul className="pricing-features">
-                  {plan.features.map((feature, j) => (
-                    <li key={j} className="pricing-feature">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="pricing-feature">
                       <svg
                         className="pricing-feature-check"
                         width="16"
                         height="16"
                         viewBox="0 0 16 16"
                         fill="none"
+                        aria-hidden="true"
                       >
                         <path
                           d="M3 8l3 3 7-7"
@@ -49,7 +48,9 @@ export function PricingSection({ t }: PricingSectionProps) {
                     </li>
                   ))}
                 </ul>
-                <button className="pricing-cta">{plan.cta}</button>
+                <button type="button" className="pricing-cta">
+                  {plan.cta}
+                </button>
               </div>
             </ScrollReveal>
           ))}
