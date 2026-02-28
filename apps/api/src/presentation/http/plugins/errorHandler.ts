@@ -1,14 +1,6 @@
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
-import {
-  ConflictError,
-  DomainError,
-  ForbiddenError,
-  InsufficientPointsError,
-  NotFoundError,
-  UnauthorizedError,
-  ValidationError,
-} from '../../../domain';
+import { DomainError } from '../../../domain';
 
 interface ErrorResponse {
   statusCode: number;
@@ -18,7 +10,6 @@ interface ErrorResponse {
   details?: unknown;
 }
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Error handling requires conditional checks
 export function errorHandler(
   error: FastifyError,
   request: FastifyRequest,
@@ -44,60 +35,17 @@ export function errorHandler(
     return;
   }
 
-  // Handle domain errors
+  // Handle all domain errors via base class properties — no subclass switch needed.
+  // Each DomainError subclass sets its own statusCode, code, and name in its constructor,
+  // so new error types are handled automatically without modifying this file.
   if (error instanceof DomainError) {
-    if (error instanceof ValidationError) {
-      response = {
-        statusCode: 400,
-        error: 'Validation Error',
-        message: error.message,
-        code: error.code,
-      };
-    } else if (error instanceof NotFoundError) {
-      response = {
-        statusCode: 404,
-        error: 'Not Found',
-        message: error.message,
-        code: error.code,
-      };
-    } else if (error instanceof ConflictError) {
-      response = {
-        statusCode: 409,
-        error: 'Conflict',
-        message: error.message,
-        code: error.code,
-      };
-    } else if (error instanceof UnauthorizedError) {
-      response = {
-        statusCode: 401,
-        error: 'Unauthorized',
-        message: error.message,
-        code: error.code,
-      };
-    } else if (error instanceof ForbiddenError) {
-      response = {
-        statusCode: 403,
-        error: 'Forbidden',
-        message: error.message,
-        code: error.code,
-      };
-    } else if (error instanceof InsufficientPointsError) {
-      response = {
-        statusCode: 400,
-        error: 'Insufficient Points',
-        message: error.message,
-        code: error.code,
-      };
-    } else {
-      response = {
-        statusCode: error.statusCode || 500,
-        error: 'Domain Error',
-        message: error.message,
-        code: error.code,
-      };
-    }
-
-    reply.status(response.statusCode).send(response);
+    response = {
+      statusCode: error.statusCode,
+      error: error.name,
+      message: error.message,
+      code: error.code,
+    };
+    reply.status(error.statusCode).send(response);
     return;
   }
 

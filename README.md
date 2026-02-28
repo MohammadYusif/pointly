@@ -169,12 +169,12 @@ pointly/
 - **Decay System**: 12-month grace period (no decay), then Phase 1 (5%/month, months 12–17) and Phase 2 (15%/month, months 18+). Gold, Platinum, and Diamond customers are decay-immune.
 
 ### Customer Tiers
-| Tier | Monthly Points | Earning Multiplier | Decay |
-|------|---------------|-------------------|-------|
-| Bronze | 0 – 4,999 | 1.0x | Yes |
-| Gold | 5,000 – 9,999 | 1.1x | Immune |
-| Platinum | 10,000 – 14,999 | 1.15x | Immune |
-| Diamond | 15,000+ | 1.2x | Immune |
+| Tier     | Monthly Points   | Earning Multiplier | Decay Immune |
+|----------|------------------|--------------------|--------------|
+| Bronze   | 0 – 4,999        | 1.0x               | No           |
+| Gold     | 5,000 – 9,999    | 1.1x               | Yes          |
+| Platinum | 10,000 – 14,999  | 1.15x              | Yes          |
+| Diamond  | 15,000+          | 1.2x               | Yes          |
 
 Tiers are evaluated monthly based on points earned in the current calendar month. Progress resets lazily on the first transaction of the new month.
 

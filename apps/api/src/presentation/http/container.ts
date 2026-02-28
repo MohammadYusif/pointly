@@ -5,9 +5,11 @@ import type { ITransactionRepository } from '../../application/repositories/ITra
 import type { IDecayCalculatorService } from '../../application/services/IDecayCalculatorService';
 import type { IIdempotencyService } from '../../application/services/IIdempotencyService';
 import type { ISmsPublisherService } from '../../application/services/ISmsPublisherService';
+import { ApproveConsentUseCase } from '../../application/use-cases/ApproveConsentUseCase';
 import { EnrollCustomerUseCase } from '../../application/use-cases/EnrollCustomerUseCase';
 import { GenerateQRCodeUseCase } from '../../application/use-cases/GenerateQRCodeUseCase';
 import { GetAnalyticsUseCase } from '../../application/use-cases/GetAnalyticsUseCase';
+import { ManagePerkUseCase } from '../../application/use-cases/ManagePerkUseCase';
 import { ProcessMonthlyTierResetUseCase } from '../../application/use-cases/ProcessMonthlyTierResetUseCase';
 import { ProcessPointsDecayUseCase } from '../../application/use-cases/ProcessPointsDecayUseCase';
 import { RecordPurchaseUseCase } from '../../application/use-cases/RecordPurchaseUseCase';
@@ -39,7 +41,9 @@ export interface Container {
   transactionalWriter: TransactionalWriter;
 
   // Use Cases
+  approveConsentUseCase: ApproveConsentUseCase;
   enrollCustomerUseCase: EnrollCustomerUseCase;
+  managePerkUseCase: ManagePerkUseCase;
   recordPurchaseUseCase: RecordPurchaseUseCase;
   redeemPointsUseCase: RedeemPointsUseCase;
   processPointsDecayUseCase: ProcessPointsDecayUseCase;
@@ -67,6 +71,12 @@ export function createContainer(): Container {
   const transactionalWriter = new TransactionalWriter(dbClient);
 
   // Create use cases
+  const approveConsentUseCase = new ApproveConsentUseCase(
+    customerRepository,
+    merchantRepository,
+    (items) => transactionalWriter.writeAll(items),
+  );
+
   const enrollCustomerUseCase = new EnrollCustomerUseCase(
     customerRepository,
     merchantRepository,
@@ -98,7 +108,14 @@ export function createContainer(): Container {
     smsPublisherService,
   );
 
-  const processMonthlyTierResetUseCase = new ProcessMonthlyTierResetUseCase(customerRepository);
+  const managePerkUseCase = new ManagePerkUseCase(merchantRepository, (items) =>
+    transactionalWriter.writeAll(items),
+  );
+
+  const processMonthlyTierResetUseCase = new ProcessMonthlyTierResetUseCase(
+    customerRepository,
+    (items) => transactionalWriter.writeAll(items),
+  );
 
   // Create analytics use case
   const getAnalyticsUseCase = new GetAnalyticsUseCase(merchantRepository, transactionRepository);
@@ -115,7 +132,9 @@ export function createContainer(): Container {
     decayCalculatorService,
     smsPublisherService,
     transactionalWriter,
+    approveConsentUseCase,
     enrollCustomerUseCase,
+    managePerkUseCase,
     recordPurchaseUseCase,
     redeemPointsUseCase,
     processPointsDecayUseCase,

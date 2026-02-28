@@ -1,5 +1,9 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import type {
+  CreatePerkRequest,
+  UpdatePerkRequest,
+} from '../../../application/use-cases/ManagePerkUseCase';
 import { Customer, type CustomerTierLevel, PhoneNumber, ValidationError } from '../../../domain';
 import { ForbiddenError } from '../../../domain/errors/DomainError';
 import { getContainer } from '../container';
@@ -376,29 +380,13 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       const body = actionSchema.parse(request.body);
 
       const container = getContainer();
-      const { customerRepository } = container;
-
-      const customer = await customerRepository.findById(customerId);
-      if (!customer) {
-        return reply.status(404).send({ success: false, error: 'Customer not found' });
-      }
-
-      if (body.action === 'approve') {
-        customer.grantConsent(merchantId);
-      } else {
-        customer.revokeConsent(merchantId);
-      }
-
-      await customerRepository.save(customer);
-
-      return reply.send({
-        success: true,
-        data: {
-          customerId,
-          merchantId,
-          consentStatus: customer.getEnrollment(merchantId)?.consentStatus,
-        },
+      const result = await container.approveConsentUseCase.execute({
+        merchantId,
+        customerId,
+        action: body.action,
       });
+
+      return reply.send({ success: true, data: result });
     },
   );
 
@@ -447,21 +435,15 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       });
       const body = perkSchema.parse(request.body);
 
-      const { merchantRepository } = getContainer();
-      const merchant = await merchantRepository.findById(merchantId);
-      if (!merchant) {
-        return reply.status(404).send({ success: false, error: 'Merchant not found' });
-      }
-
-      const perk = merchant.addPerk({
-        type: body.type,
+      const data: CreatePerkRequest = {
+        type: body.type as CreatePerkRequest['type'],
         title: body.title,
         description: body.description,
         requiredTier: body.requiredTier as CustomerTierLevel,
         ...(body.capacityLimit !== undefined && { capacityLimit: body.capacityLimit }),
-      });
-      await merchantRepository.save(merchant);
+      };
 
+      const perk = await getContainer().managePerkUseCase.createPerk(merchantId, data);
       return reply.status(201).send({ success: true, data: perk });
     },
   );
@@ -494,13 +476,7 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       });
       const body = updateSchema.parse(request.body);
 
-      const { merchantRepository } = getContainer();
-      const merchant = await merchantRepository.findById(merchantId);
-      if (!merchant) {
-        return reply.status(404).send({ success: false, error: 'Merchant not found' });
-      }
-
-      merchant.updatePerk(perkId, {
+      const data: UpdatePerkRequest = {
         ...(body.title !== undefined && { title: body.title }),
         ...(body.description !== undefined && { description: body.description }),
         ...(body.requiredTier !== undefined && {
@@ -508,10 +484,9 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
         }),
         ...(body.capacityLimit !== undefined && { capacityLimit: body.capacityLimit }),
         ...(body.isActive !== undefined && { isActive: body.isActive }),
-      });
-      await merchantRepository.save(merchant);
+      };
 
-      const updated = merchant.getPerks().find((p) => p.id === perkId);
+      const updated = await getContainer().managePerkUseCase.updatePerk(merchantId, perkId, data);
       return reply.send({ success: true, data: updated });
     },
   );
@@ -526,15 +501,7 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       enforceMerchantAccess(request);
       const { merchantId, perkId } = request.params;
 
-      const { merchantRepository } = getContainer();
-      const merchant = await merchantRepository.findById(merchantId);
-      if (!merchant) {
-        return reply.status(404).send({ success: false, error: 'Merchant not found' });
-      }
-
-      merchant.removePerk(perkId);
-      await merchantRepository.save(merchant);
-
+      await getContainer().managePerkUseCase.deletePerk(merchantId, perkId);
       return reply.send({ success: true });
     },
   );
