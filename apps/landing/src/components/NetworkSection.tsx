@@ -5,6 +5,87 @@ interface NetworkSectionProps {
   t: TranslationKeys;
 }
 
+function MerchantIcon({ index }: { index: number }) {
+  const common = {
+    width: 22,
+    height: 22,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: '#08b0a2',
+    strokeWidth: 1.8,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+  };
+
+  if (index === 0) {
+    // Café — coffee cup
+    return (
+      <svg {...common} aria-hidden="true">
+        <path d="M17 8h1a4 4 0 0 1 0 8h-1" />
+        <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
+        <line x1="6" x2="6" y1="2" y2="4" />
+        <line x1="10" x2="10" y1="2" y2="4" />
+        <line x1="14" x2="14" y1="2" y2="4" />
+      </svg>
+    );
+  }
+
+  if (index === 1) {
+    // Restaurant — utensils (fork + knife)
+    return (
+      <svg {...common} aria-hidden="true">
+        <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+        <path d="M7 2v20" />
+        <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7" />
+      </svg>
+    );
+  }
+
+  if (index === 2) {
+    // Salon — scissors
+    return (
+      <svg {...common} aria-hidden="true">
+        <circle cx="6" cy="6" r="3" />
+        <circle cx="6" cy="18" r="3" />
+        <line x1="20" x2="8.12" y1="4" y2="15.88" />
+        <line x1="14.47" x2="20" y1="14.48" y2="20" />
+        <line x1="8.12" x2="12" y1="8.12" y2="12" />
+      </svg>
+    );
+  }
+
+  if (index === 3) {
+    // Grocery — shopping bag
+    return (
+      <svg {...common} aria-hidden="true">
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+        <line x1="3" x2="21" y1="6" y2="6" />
+        <path d="M16 10a4 4 0 0 1-8 0" />
+      </svg>
+    );
+  }
+
+  if (index === 4) {
+    // Gym — dumbbell
+    return (
+      <svg {...common} aria-hidden="true">
+        <line x1="6.5" x2="17.5" y1="12" y2="12" />
+        <line x1="6" x2="6" y1="9" y2="15" />
+        <line x1="3" x2="3" y1="10" y2="14" />
+        <line x1="18" x2="18" y1="9" y2="15" />
+        <line x1="21" x2="21" y1="10" y2="14" />
+      </svg>
+    );
+  }
+
+  // index === 5: Bookstore — book
+  return (
+    <svg {...common} aria-hidden="true">
+      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+    </svg>
+  );
+}
+
 export function NetworkSection({ t }: NetworkSectionProps) {
   const points = [t.network.pointOne, t.network.pointTwo, t.network.pointThree];
 
@@ -77,9 +158,9 @@ export function NetworkSection({ t }: NetworkSectionProps) {
               <div className="network-hub">Pointly</div>
 
               {/* Merchant nodes */}
-              {t.network.merchants.map((label) => (
+              {t.network.merchants.map((label, i) => (
                 <div key={label} className="network-node" title={label}>
-                  <span className="text-[1.2rem]">{label.split(' ')[0]}</span>
+                  <MerchantIcon index={i} />
                 </div>
               ))}
             </div>
