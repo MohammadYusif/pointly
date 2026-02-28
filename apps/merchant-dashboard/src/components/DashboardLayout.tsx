@@ -67,7 +67,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30 overflow-x-hidden">
+    <div className="dashboard-bg overflow-x-hidden">
       <Navbar
         items={navItems}
         onNavItemClick={handleNavClick}

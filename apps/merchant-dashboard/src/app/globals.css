@@ -355,6 +355,91 @@ html.notready #app-content {
 }
 
 /* ============================================================================
+   Background System — dashboard & login
+   ============================================================================ */
+
+/* Dashboard: subtle dot grid + teal radial accent + gradient wash */
+.dashboard-bg {
+  background: radial-gradient(ellipse 60% 50% at 85% 5%, rgba(8, 176, 162, 0.04), transparent 70%),
+    radial-gradient(circle, rgba(8, 176, 162, 0.07) 1px, transparent 1px),
+    linear-gradient(180deg, #f8fafa 0%, #f4f5f5 100%);
+  background-size: 100% 100%, 24px 24px, 100% 100%;
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+.dark .dashboard-bg {
+  background: radial-gradient(ellipse 60% 50% at 85% 5%, rgba(8, 176, 162, 0.06), transparent 70%),
+    radial-gradient(circle, rgba(8, 176, 162, 0.08) 1px, transparent 1px),
+    linear-gradient(180deg, #0a0a0a 0%, #111113 100%);
+  background-size: 100% 100%, 24px 24px, 100% 100%;
+  background-attachment: fixed;
+}
+
+/* Login: more dramatic — two-glow treatment (teal top + navy corner) */
+.login-bg {
+  background: radial-gradient(ellipse 50% 40% at 50% 0%, rgba(8, 176, 162, 0.08), transparent 70%),
+    radial-gradient(ellipse 40% 50% at 0% 100%, rgba(38, 52, 82, 0.05), transparent 60%),
+    radial-gradient(circle, rgba(8, 176, 162, 0.06) 1px, transparent 1px),
+    linear-gradient(180deg, #f8fafa 0%, #f0f1f1 100%);
+  background-size: 100% 100%, 100% 100%, 24px 24px, 100% 100%;
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+.dark .login-bg {
+  background: radial-gradient(ellipse 50% 40% at 50% 0%, rgba(8, 176, 162, 0.1), transparent 70%),
+    radial-gradient(ellipse 40% 50% at 0% 100%, rgba(38, 52, 82, 0.08), transparent 60%),
+    radial-gradient(circle, rgba(8, 176, 162, 0.08) 1px, transparent 1px),
+    linear-gradient(180deg, #0a0a0a 0%, #0f0f11 100%);
+  background-size: 100% 100%, 100% 100%, 24px 24px, 100% 100%;
+  background-attachment: fixed;
+}
+
+/* Card elevation on textured background — frosted glass lift */
+.dashboard-bg .card,
+.dashboard-bg [data-slot="card"] {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  border-color: rgba(228, 228, 231, 0.8);
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.dark .dashboard-bg .card,
+.dark .dashboard-bg [data-slot="card"] {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.1);
+  border-color: rgba(39, 39, 42, 0.8);
+  background: rgba(24, 24, 27, 0.85);
+}
+
+/* Navbar frosted glass — lets dot grid show through subtly on scroll */
+.dashboard-bg header {
+  backdrop-filter: blur(12px) saturate(1.2);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.dark .dashboard-bg header {
+  backdrop-filter: blur(12px) saturate(1.2);
+  background: rgba(24, 24, 27, 0.8);
+}
+
+/* iOS Safari fallback — background-attachment: fixed causes issues on mobile WebKit */
+@supports not (background-attachment: fixed) {
+  .dashboard-bg,
+  .login-bg {
+    background-attachment: scroll;
+  }
+}
+
+/* Mobile: slightly larger dot spacing to avoid density on small screens */
+@media (max-width: 640px) {
+  .dashboard-bg,
+  .login-bg {
+    background-size: 100% 100%, 20px 20px, 100% 100%;
+  }
+}
+
+/* ============================================================================
    Reduced Motion — disable all custom animations & transitions globally
    ============================================================================ */
 
