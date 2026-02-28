@@ -28,16 +28,7 @@ export function Navbar({ t, locale, onLocaleChange }: NavbarProps) {
         <div className="nav-inner">
           {/* Logo */}
           <div className="nav-logo">
-            <div className="nav-logo-dot">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <circle cx="8" cy="8" r="3" fill="white" />
-                <circle cx="8" cy="2" r="1.5" fill="white" opacity="0.7" />
-                <circle cx="14" cy="8" r="1.5" fill="white" opacity="0.7" />
-                <circle cx="8" cy="14" r="1.5" fill="white" opacity="0.7" />
-                <circle cx="2" cy="8" r="1.5" fill="white" opacity="0.7" />
-              </svg>
-            </div>
-            Pointly
+            <img src="/logo.svg" alt="Pointly" height={36} />
           </div>
 
           {/* Desktop nav links */}

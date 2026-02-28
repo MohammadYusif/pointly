@@ -31,6 +31,11 @@ export default function LandingPage() {
 
   return (
     <>
+      {/* Ambient glow orbs */}
+      <div className="glow-orb teal" />
+      <div className="glow-orb navy" />
+      <div className="glow-orb orange" />
+
       <Navbar t={t} locale={locale} onLocaleChange={handleLocaleChange} />
       <main>
         <Hero t={t} />

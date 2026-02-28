@@ -164,10 +164,11 @@ export const translations = {
           desc: 'Every new merchant makes the network more valuable for everyone — customers and businesses alike.',
         },
       ],
-      cards: [
+      stats: [
         { label: 'Founded', value: '2024' },
-        { label: 'Region', value: 'KSA' },
         { label: 'Merchants', value: '200+' },
+        { label: 'Cities', value: '12' },
+        { label: 'Region', value: 'KSA' },
       ],
     },
     cta: {
@@ -179,8 +180,23 @@ export const translations = {
       note: 'No credit card required. 14-day free trial.',
     },
     footer: {
+      tagline: 'The unified loyalty network for Saudi merchants.',
       copy: '© 2025 Pointly. All rights reserved.',
-      links: ['Privacy Policy', 'Terms of Service', 'Contact'],
+      legal: ['Privacy Policy', 'Terms of Service'],
+      columns: [
+        {
+          title: 'Product',
+          links: ['Features', 'Pricing', 'Tiers', 'Network'],
+        },
+        {
+          title: 'Company',
+          links: ['About', 'Blog', 'Careers'],
+        },
+        {
+          title: 'Support',
+          links: ['Contact', 'Help Center', 'Status'],
+        },
+      ],
     },
   },
   ar: {
@@ -345,10 +361,11 @@ export const translations = {
           desc: 'كل تاجر جديد يجعل الشبكة أكثر قيمة للجميع — العملاء والشركات على حد سواء.',
         },
       ],
-      cards: [
+      stats: [
         { label: 'تأسست', value: '2024' },
-        { label: 'المنطقة', value: 'المملكة العربية السعودية' },
         { label: 'التجار', value: '+200' },
+        { label: 'مدن', value: '12' },
+        { label: 'المنطقة', value: 'المملكة' },
       ],
     },
     cta: {
@@ -360,8 +377,23 @@ export const translations = {
       note: 'لا حاجة لبطاقة ائتمان. تجربة مجانية لمدة 14 يومًا.',
     },
     footer: {
+      tagline: 'شبكة الولاء الموحدة للتجار السعوديين.',
       copy: '© 2025 بوينتلي. جميع الحقوق محفوظة.',
-      links: ['سياسة الخصوصية', 'شروط الخدمة', 'تواصل معنا'],
+      legal: ['سياسة الخصوصية', 'شروط الخدمة'],
+      columns: [
+        {
+          title: 'المنتج',
+          links: ['المميزات', 'الأسعار', 'المستويات', 'الشبكة'],
+        },
+        {
+          title: 'الشركة',
+          links: ['عن بوينتلي', 'المدونة', 'الوظائف'],
+        },
+        {
+          title: 'الدعم',
+          links: ['تواصل معنا', 'مركز المساعدة', 'الحالة'],
+        },
+      ],
     },
   },
 } as const;
