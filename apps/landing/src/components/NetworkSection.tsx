@@ -186,7 +186,7 @@ export function NetworkSection({ t }: NetworkSectionProps) {
                       />
                     </svg>
                   </div>
-                  <span className="text-[0.95rem] text-text-secondary leading-[1.5]">{point}</span>
+                  <span className="text-[0.95rem] text-text-secondary">{point}</span>
                 </div>
               ))}
             </div>
