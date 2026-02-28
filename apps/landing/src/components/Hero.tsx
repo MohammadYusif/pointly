@@ -2,12 +2,17 @@ import type { TranslationKeys } from '@/i18n/translations';
 
 interface HeroProps {
   t: TranslationKeys;
+  isRtl: boolean;
 }
 
-export function Hero({ t }: HeroProps) {
+export function Hero({ t, isRtl }: HeroProps) {
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  // Direction-aware arrow paths — proper mirrored paths, not CSS transforms
+  const ctaArrow = isRtl ? 'M13 8H3M7 4l-4 4 4 4' : 'M3 8h10M9 4l4 4-4 4';
+  const redeemArrow = isRtl ? 'M12 7H2M6 3l-4 4 4 4' : 'M2 7h10M8 3l4 4-4 4';
 
   return (
     <section className="hero">
@@ -29,16 +34,9 @@ export function Hero({ t }: HeroProps) {
             <div className="hero-actions">
               <button type="button" className="btn-primary" onClick={() => scrollTo('pricing')}>
                 {t.hero.cta}
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  aria-hidden="true"
-                  className="dir-arrow"
-                >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                   <path
-                    d="M3 8h10M9 4l4 4-4 4"
+                    d={ctaArrow}
                     stroke="currentColor"
                     strokeWidth="1.5"
                     strokeLinecap="round"
@@ -90,26 +88,19 @@ export function Hero({ t }: HeroProps) {
                     strokeLinecap="round"
                   />
                 </svg>
-                +240 pts earned
+                {t.hero.floatEarned}
               </div>
               <div className="hero-float-card hero-float-redeem">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 14 14"
-                  fill="none"
-                  aria-hidden="true"
-                  className="dir-arrow"
-                >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                   <path
-                    d="M2 7h10M8 3l4 4-4 4"
+                    d={redeemArrow}
                     stroke="currentColor"
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
                 </svg>
-                −500 pts redeemed
+                {t.hero.floatRedeemed}
               </div>
             </div>
           </div>

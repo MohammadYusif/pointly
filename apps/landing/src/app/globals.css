@@ -1456,7 +1456,4 @@
   [dir="rtl"] .footer-tagline {
     max-width: 100%;
   }
-  [dir="rtl"] .dir-arrow {
-    transform: scaleX(-1);
-  }
 }

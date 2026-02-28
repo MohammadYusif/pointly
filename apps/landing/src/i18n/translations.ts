@@ -19,6 +19,8 @@ export const translations = {
         'Pointly connects Saudi businesses into a unified rewards network. Customers earn points everywhere — merchants grow together.',
       cta: 'Start free trial',
       secondary: 'See how it works',
+      floatEarned: '+240 pts earned',
+      floatRedeemed: '−500 pts redeemed',
     },
     stats: {
       merchants: 'Merchant Plans',
@@ -220,6 +222,8 @@ export const translations = {
         'بوينتلي يربط الشركات السعودية في شبكة مكافآت موحدة. يكسب العملاء النقاط في كل مكان — ويكبر التجار معاً.',
       cta: 'ابدأ تجربتك المجانية',
       secondary: 'شاهد كيف يعمل',
+      floatEarned: '+240 نقطة مكتسبة',
+      floatRedeemed: '−500 نقطة مستردة',
     },
     stats: {
       merchants: 'خطط التجار',

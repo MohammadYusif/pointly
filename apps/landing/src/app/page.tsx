@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react';
 export default function LandingPage() {
   const [locale, setLocale] = useState<Locale>('en');
   const t = translations[locale];
+  const isRtl = locale === 'ar';
 
   const handleLocaleChange = (newLocale: Locale) => {
     setLocale(newLocale);
@@ -38,14 +39,14 @@ export default function LandingPage() {
 
       <Navbar t={t} locale={locale} onLocaleChange={handleLocaleChange} />
       <main>
-        <Hero t={t} />
+        <Hero t={t} isRtl={isRtl} />
         <StatsBar t={t} />
         <Features t={t} />
         <NetworkSection t={t} />
         <TiersSection t={t} />
         <PricingSection t={t} />
         <AboutSection t={t} />
-        <CTASection t={t} />
+        <CTASection t={t} isRtl={isRtl} />
       </main>
       <Footer t={t} />
     </>

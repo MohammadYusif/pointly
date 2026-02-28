@@ -3,9 +3,13 @@ import { ScrollReveal } from './ScrollReveal';
 
 interface CTASectionProps {
   t: TranslationKeys;
+  isRtl: boolean;
 }
 
-export function CTASection({ t }: CTASectionProps) {
+export function CTASection({ t, isRtl }: CTASectionProps) {
+  // Direction-aware arrow — proper mirrored path, not CSS transform
+  const arrowPath = isRtl ? 'M13 8H3M7 4l-4 4 4 4' : 'M3 8h10M9 4l4 4-4 4';
+
   return (
     <section className="cta-section">
       <div className="container">
@@ -25,16 +29,9 @@ export function CTASection({ t }: CTASectionProps) {
                   }
                 >
                   {t.cta.primary}
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    aria-hidden="true"
-                    className="dir-arrow"
-                  >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                     <path
-                      d="M3 8h10M9 4l4 4-4 4"
+                      d={arrowPath}
                       stroke="currentColor"
                       strokeWidth="1.5"
                       strokeLinecap="round"
