@@ -47,7 +47,7 @@ export function Hero({ t }: HeroProps) {
 
           {/* Right: card mockup */}
           <div className="hero-visual">
-            <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
+            <div className="relative w-full max-w-[400px]">
               <div className="hero-card">
                 <div className="hero-card-header">
                   <span className="hero-card-merchant">Al-Noor Coffee</span>

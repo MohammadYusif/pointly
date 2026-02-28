@@ -79,7 +79,7 @@ export function NetworkSection({ t }: NetworkSectionProps) {
               {/* Merchant nodes */}
               {t.network.merchants.map((label) => (
                 <div key={label} className="network-node" title={label}>
-                  <span style={{ fontSize: '1.2rem' }}>{label.split(' ')[0]}</span>
+                  <span className="text-[1.2rem]">{label.split(' ')[0]}</span>
                 </div>
               ))}
             </div>
@@ -89,26 +89,12 @@ export function NetworkSection({ t }: NetworkSectionProps) {
           <ScrollReveal delay={1}>
             <div className="section-label">{t.network.label}</div>
             <h2 className="section-title">{t.network.title}</h2>
-            <p className="section-sub" style={{ marginBottom: '32px' }}>
-              {t.network.subtitle}
-            </p>
+            <p className="section-sub mb-8">{t.network.subtitle}</p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="flex flex-col gap-4">
               {points.map((point) => (
-                <div key={point} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                  <div
-                    style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '50%',
-                      background: 'rgba(8,176,162,0.1)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      marginTop: '1px',
-                    }}
-                  >
+                <div key={point} className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-teal/10 flex items-center justify-center shrink-0 mt-px">
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                       <path
                         d="M2 6l3 3 5-5"
@@ -119,15 +105,7 @@ export function NetworkSection({ t }: NetworkSectionProps) {
                       />
                     </svg>
                   </div>
-                  <span
-                    style={{
-                      fontSize: '0.95rem',
-                      color: 'var(--text-secondary)',
-                      lineHeight: '1.5',
-                    }}
-                  >
-                    {point}
-                  </span>
+                  <span className="text-[0.95rem] text-text-secondary leading-[1.5]">{point}</span>
                 </div>
               ))}
             </div>

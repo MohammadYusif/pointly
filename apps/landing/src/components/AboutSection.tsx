@@ -9,15 +9,7 @@ const VALUE_ICONS = ['🇸🇦', '📱', '🌐'];
 
 export function AboutSection({ t }: AboutSectionProps) {
   return (
-    <section
-      className="section"
-      id="about"
-      style={{
-        background: 'rgba(8,176,162,0.015)',
-        borderTop: '1px solid var(--border)',
-        borderBottom: '1px solid var(--border)',
-      }}
-    >
+    <section className="section about-section" id="about">
       <div className="container">
         <div className="about-layout">
           {/* Text */}
