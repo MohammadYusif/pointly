@@ -11,9 +11,8 @@ export const handler = async (_event: ScheduledEvent) => {
   const customerRepository = new CustomerRepository(dbClient, env.USER_LEDGER_TABLE);
   const transactionalWriter = new TransactionalWriter(dbClient);
 
-  const useCase = new ProcessMonthlyTierResetUseCase(
-    customerRepository,
-    (items) => transactionalWriter.writeAll(items),
+  const useCase = new ProcessMonthlyTierResetUseCase(customerRepository, (items) =>
+    transactionalWriter.writeAll(items),
   );
 
   console.log('Starting monthly tier reset processing...');
