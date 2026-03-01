@@ -26,7 +26,11 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="portal-layout">
-      <main className="max-w-lg mx-auto px-4 py-6 animate-fade-in">{children}</main>
+      <main className="max-w-lg mx-auto px-4 py-6">
+        <div key={pathname} className="animate-fade-in">
+          {children}
+        </div>
+      </main>
       <nav className="portal-nav fixed bottom-0 inset-x-0">
         <div className="max-w-lg mx-auto flex justify-around py-2">
           {navItems.map((item) => {
@@ -38,8 +42,10 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
               <Link
                 key={item.key}
                 href={item.href}
-                className={`flex flex-col items-center gap-1 px-4 py-1 text-xs ${
-                  isActive ? 'text-[#08b0a2] font-medium' : 'text-muted-foreground'
+                className={`flex flex-col items-center gap-1 px-4 py-1 text-xs transition-colors ${
+                  isActive
+                    ? 'text-[#08b0a2] font-medium'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Icon className="h-5 w-5" />

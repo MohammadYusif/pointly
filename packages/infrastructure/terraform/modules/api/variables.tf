@@ -25,6 +25,10 @@ variable "merchant_user_pool_client_id" {
   type = string
 }
 
+variable "customer_user_pool_id" {
+  type = string
+}
+
 # DynamoDB table names
 variable "user_ledger_table_name" {
   type = string

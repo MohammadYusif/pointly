@@ -41,6 +41,7 @@ module "api" {
   # Cognito
   merchant_user_pool_id        = module.auth.merchant_user_pool_id
   merchant_user_pool_client_id = module.auth.merchant_user_pool_client_id
+  customer_user_pool_id        = module.auth.customer_user_pool_id
 
   # DynamoDB table ARNs
   user_ledger_table_arn       = module.database.user_ledger_table_arn

@@ -158,6 +158,7 @@ resource "aws_lambda_function" "api" {
       SMS_QUEUE_URL                       = aws_sqs_queue.sms.url
       MERCHANT_USER_POOL_ID               = var.merchant_user_pool_id
       MERCHANT_USER_POOL_CLIENT_ID        = var.merchant_user_pool_client_id
+      CUSTOMER_USER_POOL_ID               = var.customer_user_pool_id
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
       LOG_LEVEL                           = local.is_prod ? "info" : "debug"
     }

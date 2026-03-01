@@ -8,6 +8,26 @@ import { getTypeBadge } from '@pointly/shared';
 import { Button, Card, CardContent, useRTL } from '@pointly/ui';
 import { useCallback, useEffect, useState } from 'react';
 
+function HistorySkeleton() {
+  return (
+    <div className="space-y-3">
+      {['a', 'b', 'c', 'd', 'e'].map((k) => (
+        <Card key={k}>
+          <CardContent className="p-3">
+            <div className="flex justify-between items-center">
+              <div className="space-y-1">
+                <div className="h-4 w-16 rounded-full bg-muted animate-pulse" />
+                <div className="h-3 w-20 rounded-md bg-muted animate-pulse" />
+              </div>
+              <div className="h-5 w-14 rounded-md bg-muted animate-pulse" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 export default function HistoryPage() {
   const { t, formatNumber, locale } = useTranslation();
   const { textStart } = useRTL();
@@ -45,35 +65,41 @@ export default function HistoryPage() {
     <CustomerLayout>
       <h1 className={`text-xl font-bold mb-4 ${textStart}`}>{t('customer.transactionHistory')}</h1>
 
-      {loading && <p className="text-center text-muted-foreground py-8">{t('common.loading')}</p>}
-
-      <div className="space-y-3">
-        {transactions.map((tx) => {
-          const badge = getTypeBadge(tx.type);
-          return (
-            <Card key={tx.transactionId}>
-              <CardContent className="p-3">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${badge.className}`}>
-                      {badge.label}
+      {loading ? (
+        <HistorySkeleton />
+      ) : (
+        <div className="space-y-3">
+          {transactions.map((tx, idx) => {
+            const badge = getTypeBadge(tx.type);
+            return (
+              <Card
+                key={tx.transactionId}
+                className="stagger-item"
+                style={{ animationDelay: `${Math.min(idx, 5) * 50}ms` }}
+              >
+                <CardContent className="p-3">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${badge.className}`}>
+                        {badge.label}
+                      </span>
+                      <p className="text-xs text-muted-foreground mt-1" suppressHydrationWarning>
+                        {new Date(tx.createdAt).toLocaleDateString(locale)}
+                      </p>
+                    </div>
+                    <span
+                      className={`font-medium ${tx.type === 'EARN' ? 'text-green-600' : 'text-amber-600'}`}
+                    >
+                      {tx.type === 'EARN' ? '+' : '-'}
+                      {formatNumber(tx.points)}
                     </span>
-                    <p className="text-xs text-muted-foreground mt-1" suppressHydrationWarning>
-                      {new Date(tx.createdAt).toLocaleDateString(locale)}
-                    </p>
                   </div>
-                  <span
-                    className={`font-medium ${tx.type === 'EARN' ? 'text-green-600' : 'text-amber-600'}`}
-                  >
-                    {tx.type === 'EARN' ? '+' : '-'}
-                    {formatNumber(tx.points)}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       {!loading && transactions.length === 0 && (
         <p className="text-center text-muted-foreground py-8">{t('common.noData')}</p>

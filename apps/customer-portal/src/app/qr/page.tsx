@@ -5,7 +5,7 @@ import { generateQRCode, getCustomer } from '@/lib/api';
 import { useTranslation } from '@pointly/i18n';
 import type { CustomerResponse } from '@pointly/shared';
 import { formatPhone } from '@pointly/shared';
-import { Card, CardContent, useRTL } from '@pointly/ui';
+import { Button, Card, CardContent, useRTL } from '@pointly/ui';
 import { RefreshCw } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useCallback, useEffect, useState } from 'react';
@@ -64,7 +64,7 @@ export default function QRCodePage() {
       <div className="space-y-4">
         <h1 className={`text-xl font-bold ${textStart}`}>{t('qr.title')}</h1>
 
-        <Card>
+        <Card className="stagger-item">
           <CardContent className="p-6 flex flex-col items-center space-y-4">
             {loading ? (
               <div className="w-64 h-64 flex items-center justify-center">
@@ -73,17 +73,13 @@ export default function QRCodePage() {
             ) : error ? (
               <div className="w-64 h-64 flex flex-col items-center justify-center text-center">
                 <p className="text-sm text-destructive mb-4">{error}</p>
-                <button
-                  type="button"
-                  onClick={fetchQR}
-                  className="px-4 py-2 bg-[#08b0a2] text-white rounded-md text-sm font-medium"
-                >
+                <Button onClick={fetchQR} size="sm">
                   {t('qr.retry')}
-                </button>
+                </Button>
               </div>
             ) : (
               <>
-                <div className="bg-white p-4 rounded-xl">
+                <div className="bg-white p-4 rounded-xl shadow-sm">
                   <QRCodeSVG
                     value={qrPayload || ''}
                     size={224}
@@ -105,14 +101,10 @@ export default function QRCodePage() {
                 </div>
 
                 {/* Refresh button */}
-                <button
-                  type="button"
-                  onClick={fetchQR}
-                  className="flex items-center gap-2 px-4 py-2 border border-border rounded-md text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
-                >
+                <Button variant="outline" onClick={fetchQR} className="gap-2">
                   <RefreshCw className="h-4 w-4" />
                   {t('qr.refresh')}
-                </button>
+                </Button>
               </>
             )}
           </CardContent>
@@ -120,7 +112,7 @@ export default function QRCodePage() {
 
         {/* Customer info for merchant reference */}
         {customer && (
-          <Card>
+          <Card className="stagger-item">
             <CardContent className="p-4 text-center space-y-1">
               <p className="font-medium text-lg">{customer.name}</p>
               <p className="text-sm text-muted-foreground" dir="ltr">

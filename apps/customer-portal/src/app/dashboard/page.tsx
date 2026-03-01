@@ -15,12 +15,60 @@ interface CustomerProfile extends CustomerResponse {
   monthsOfInactivity: number;
 }
 
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <div className="h-6 w-40 rounded-md bg-muted animate-pulse" />
+        <div className="h-4 w-20 rounded-md bg-muted animate-pulse" />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        {['global', 'merchant'].map((k) => (
+          <Card key={k}>
+            <CardContent className="p-4 text-center space-y-2">
+              <div className="h-8 w-16 mx-auto rounded-md bg-muted animate-pulse" />
+              <div className="h-3 w-24 mx-auto rounded-md bg-muted animate-pulse" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex justify-between">
+            <div className="h-4 w-20 rounded-md bg-muted animate-pulse" />
+            <div className="h-4 w-24 rounded-md bg-muted animate-pulse" />
+          </div>
+          <div className="h-2 w-full rounded-full bg-muted animate-pulse" />
+          <div className="h-3 w-32 rounded-md bg-muted animate-pulse" />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <div className="h-4 w-32 rounded-md bg-muted animate-pulse" />
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {['tx-a', 'tx-b', 'tx-c'].map((k) => (
+            <div key={k} className="flex justify-between items-center">
+              <div className="space-y-1">
+                <div className="h-4 w-16 rounded-full bg-muted animate-pulse" />
+                <div className="h-3 w-20 rounded-md bg-muted animate-pulse" />
+              </div>
+              <div className="h-5 w-12 rounded-md bg-muted animate-pulse" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function CustomerDashboard() {
   const { t, formatNumber, locale } = useTranslation();
   const { textStart } = useRTL();
   const [customer, setCustomer] = useState<CustomerProfile | null>(null);
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -32,7 +80,7 @@ export default function CustomerDashboard() {
         setCustomer(cust as CustomerProfile);
         setTransactions(txData.transactions || []);
       } catch {
-        // User may not be authenticated
+        setError(true);
       } finally {
         setLoading(false);
       }
@@ -43,12 +91,12 @@ export default function CustomerDashboard() {
   if (loading) {
     return (
       <CustomerLayout>
-        <p className="text-center text-muted-foreground py-8">{t('common.loading')}</p>
+        <DashboardSkeleton />
       </CustomerLayout>
     );
   }
 
-  if (!customer) {
+  if (error || !customer) {
     return (
       <CustomerLayout>
         <p className="text-center text-muted-foreground py-8">{t('errors.unauthorized')}</p>
@@ -64,7 +112,7 @@ export default function CustomerDashboard() {
     <CustomerLayout>
       <div className="space-y-4">
         {/* Welcome */}
-        <div className={textStart}>
+        <div className={`stagger-item ${textStart}`}>
           <h1 className="text-xl font-bold">
             {t('dashboard.welcome')} {customer.name || ''}
           </h1>
@@ -75,7 +123,7 @@ export default function CustomerDashboard() {
 
         {/* Point Balances */}
         <div className="grid grid-cols-2 gap-3">
-          <Card>
+          <Card className="stagger-item">
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold" style={{ color: '#08b0a2' }}>
                 {formatNumber(customer.globalPointsBalance)}
@@ -83,7 +131,7 @@ export default function CustomerDashboard() {
               <p className="text-xs text-muted-foreground">{t('dashboard.pointlyPoints')}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="stagger-item">
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold">
                 {formatNumber(
@@ -100,7 +148,7 @@ export default function CustomerDashboard() {
 
         {/* Tier Progress */}
         {tierTarget > 0 && (
-          <Card>
+          <Card className="stagger-item">
             <CardContent className="p-4">
               <div className="flex justify-between text-sm mb-2">
                 <span>{customer.tierDisplayName}</span>
@@ -110,7 +158,7 @@ export default function CustomerDashboard() {
               </div>
               <div className="w-full bg-muted rounded-full h-2">
                 <div
-                  className="h-2 rounded-full transition-all"
+                  className="h-2 rounded-full transition-all duration-500"
                   style={{ width: `${progressPercent}%`, backgroundColor: '#08b0a2' }}
                 />
               </div>
@@ -132,11 +180,11 @@ export default function CustomerDashboard() {
             if (daysToExpiry > 365) return null;
             return (
               <Card
-                className={
+                className={`stagger-item ${
                   isUrgent
                     ? 'border-red-300 bg-red-50 dark:bg-red-900/20'
                     : 'border-amber-300 bg-amber-50 dark:bg-amber-900/20'
-                }
+                }`}
               >
                 <CardContent className="p-4">
                   <p
@@ -152,7 +200,7 @@ export default function CustomerDashboard() {
           })()}
 
         {/* Recent Transactions */}
-        <Card>
+        <Card className="stagger-item">
           <CardHeader>
             <CardTitle className="text-base">{t('dashboard.recentTransactions')}</CardTitle>
           </CardHeader>
@@ -186,7 +234,7 @@ export default function CustomerDashboard() {
 
         {/* Enrolled Merchants */}
         {customer.enrollments?.length > 0 && (
-          <Card>
+          <Card className="stagger-item">
             <CardHeader>
               <CardTitle className="text-base">{t('dashboard.enrolledMerchants')}</CardTitle>
             </CardHeader>

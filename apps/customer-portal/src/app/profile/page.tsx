@@ -16,9 +16,30 @@ interface CustomerProfile extends CustomerResponse {
   tierDisplayName: string;
 }
 
+function ProfileSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <div className="h-4 w-28 rounded-md bg-muted animate-pulse" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="space-y-1">
+              <div className="h-3 w-16 rounded-md bg-muted animate-pulse" />
+              <div className="h-5 w-32 rounded-md bg-muted animate-pulse" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+      <div className="h-10 w-full rounded-md bg-muted animate-pulse" />
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const { t } = useTranslation();
-  const { textStart } = useRTL();
+  const { textStart, flipIcon } = useRTL();
   const router = useRouter();
 
   const [customer, setCustomer] = useState<CustomerProfile | null>(null);
@@ -55,7 +76,8 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <CustomerLayout>
-        <p className="text-center text-muted-foreground py-8">{t('common.loading')}</p>
+        <h1 className={`text-xl font-bold mb-4 ${textStart}`}>{t('navigation.profile')}</h1>
+        <ProfileSkeleton />
       </CustomerLayout>
     );
   }
@@ -65,7 +87,7 @@ export default function ProfilePage() {
       <h1 className={`text-xl font-bold mb-4 ${textStart}`}>{t('navigation.profile')}</h1>
 
       <div className="space-y-4">
-        <Card>
+        <Card className="stagger-item">
           <CardHeader>
             <CardTitle className="text-base">{t('profile.personalInfo')}</CardTitle>
           </CardHeader>
@@ -106,7 +128,7 @@ export default function ProfilePage() {
 
         {/* Enrolled Merchants */}
         {(customer?.enrollments?.length ?? 0) > 0 && customer && (
-          <Card>
+          <Card className="stagger-item">
             <CardHeader>
               <CardTitle className="text-base">{t('dashboard.enrolledMerchants')}</CardTitle>
             </CardHeader>
@@ -131,8 +153,8 @@ export default function ProfilePage() {
           </Card>
         )}
 
-        <Button variant="destructive" className="w-full" onClick={handleSignOut}>
-          <LogOut className="h-4 w-4 me-2" />
+        <Button variant="destructive" className="w-full stagger-item" onClick={handleSignOut}>
+          <LogOut className={`h-4 w-4 me-2 ${flipIcon}`} />
           {t('auth.logout')}
         </Button>
       </div>
