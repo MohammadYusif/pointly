@@ -39,7 +39,22 @@
     "rememberMe": "تذكرني",
     "resetPassword": "إعادة تعيين كلمة المرور",
     "customerPortal": "بوابة العملاء",
-    "verificationCode": "رمز التحقق"
+    "verificationCode": "رمز التحقق",
+    "welcomeBack": "مرحباً بك",
+    "otpSentTo": "تم إرسال رمز التحقق إلى",
+    "platformBadge": "برنامج الولاء الذكي",
+    "heroLine1": "نقاطك.",
+    "heroLine2": "مكافآتك.",
+    "heroSubtitle": "اكسب نقاطاً عند كل شراء واستمتع بمكافآت حصرية من محلاتك المفضلة.",
+    "statsRetry": "إعادة المحاولة",
+    "stats": {
+      "merchants": "50+ تاجر",
+      "tiers": "4 مستويات",
+      "customers": "12K+ عميل",
+      "merchantsLabel": "تاجر شريك",
+      "tiersLabel": "مستوى عضوية",
+      "customersLabel": "عميل نشط"
+    }
   },
   "navigation": {
     "dashboard": "لوحة التحكم",

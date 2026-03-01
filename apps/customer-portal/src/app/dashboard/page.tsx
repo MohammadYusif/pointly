@@ -6,8 +6,8 @@ import { getCustomer, getCustomerTransactions } from '@/lib/api';
 import { useTranslation } from '@pointly/i18n';
 import type { CustomerEnrollment, CustomerResponse, TransactionResponse } from '@pointly/shared';
 import { getTierColor, getTierTarget, getTypeBadge } from '@pointly/shared';
-import { Card, CardContent, CardHeader, CardTitle, useRTL } from '@pointly/ui';
-import { useEffect, useState } from 'react';
+import { Button, Card, CardContent, CardHeader, CardTitle, useRTL } from '@pointly/ui';
+import { useCallback, useEffect, useState } from 'react';
 
 interface CustomerProfile extends CustomerResponse {
   tierDisplayName: string;
@@ -70,23 +70,26 @@ export default function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [cust, txData] = await Promise.all([
-          getCustomer('me'),
-          getCustomerTransactions({ limit: 5 }),
-        ]);
-        setCustomer(cust as CustomerProfile);
-        setTransactions(txData.transactions || []);
-      } catch {
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const [cust, txData] = await Promise.all([
+        getCustomer('me'),
+        getCustomerTransactions({ limit: 5 }),
+      ]);
+      setCustomer(cust as CustomerProfile);
+      setTransactions(txData.transactions || []);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
     }
-    load();
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   if (loading) {
     return (
@@ -99,7 +102,12 @@ export default function CustomerDashboard() {
   if (error || !customer) {
     return (
       <CustomerLayout>
-        <p className="text-center text-muted-foreground py-8">{t('errors.unauthorized')}</p>
+        <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
+          <p className="text-muted-foreground">{t('common.error')}</p>
+          <Button variant="outline" onClick={load} size="sm">
+            {t('auth.statsRetry')}
+          </Button>
+        </div>
       </CustomerLayout>
     );
   }

@@ -39,7 +39,22 @@
     "rememberMe": "Remember me",
     "resetPassword": "Reset Password",
     "customerPortal": "Customer Portal",
-    "verificationCode": "Verification Code"
+    "verificationCode": "Verification Code",
+    "welcomeBack": "Welcome back",
+    "otpSentTo": "OTP sent to",
+    "platformBadge": "Smart Loyalty Platform",
+    "heroLine1": "Your Points.",
+    "heroLine2": "Your Rewards.",
+    "heroSubtitle": "Earn points at every purchase and enjoy exclusive rewards from your favourite stores.",
+    "statsRetry": "Try again",
+    "stats": {
+      "merchants": "50+ Merchants",
+      "tiers": "4 Tiers",
+      "customers": "12K+ Customers",
+      "merchantsLabel": "Partner merchants",
+      "tiersLabel": "Membership tiers",
+      "customersLabel": "Active customers"
+    }
   },
   "navigation": {
     "dashboard": "Dashboard",
