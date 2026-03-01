@@ -52,14 +52,14 @@ export function Hero({ t, isRtl }: HeroProps) {
 
           {/* Right: card mockup */}
           <div className="hero-visual">
-            <div className="relative w-full max-w-100">
+            <div className="hero-card-wrap">
               <div className="hero-card">
                 <div className="hero-card-header">
-                  <span className="hero-card-merchant">Al-Noor Coffee</span>
-                  <div className="hero-card-tier">★ Gold</div>
+                  <span className="hero-card-merchant">{t.hero.cardMerchant}</span>
+                  <div className="hero-card-tier">★ {t.tiers.items[1].name}</div>
                 </div>
                 <div className="hero-card-pts">12,400</div>
-                <div className="hero-card-pts-label">global points</div>
+                <div className="hero-card-pts-label">{t.hero.globalPoints}</div>
                 <div
                   style={{
                     display: 'flex',
@@ -70,7 +70,7 @@ export function Hero({ t, isRtl }: HeroProps) {
                     marginBottom: '8px',
                   }}
                 >
-                  <span>3,800 to Platinum</span>
+                  <span>3,800 {t.hero.cardToTier}</span>
                   <span>62%</span>
                 </div>
                 <div className="hero-card-progress-bar">

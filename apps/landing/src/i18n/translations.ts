@@ -21,6 +21,9 @@ export const translations = {
       secondary: 'See how it works',
       floatEarned: '+240 pts earned',
       floatRedeemed: '−500 pts redeemed',
+      cardMerchant: 'Al-Noor Coffee',
+      globalPoints: 'global points',
+      cardToTier: 'to Platinum',
     },
     stats: {
       merchants: 'Merchant Plans',
@@ -224,6 +227,9 @@ export const translations = {
       secondary: 'شاهد كيف يعمل',
       floatEarned: '+240 نقطة مكتسبة',
       floatRedeemed: '−500 نقطة مستردة',
+      cardMerchant: 'قهوة النور',
+      globalPoints: 'نقطة عالمية',
+      cardToTier: 'إلى بلاتيني',
     },
     stats: {
       merchants: 'خطط التجار',

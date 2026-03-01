@@ -591,15 +591,22 @@
     white-space: nowrap;
   }
 
+  .hero-card-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    padding-bottom: 64px;
+  }
+
   .hero-float-earn {
-    top: -18px;
-    right: -48px;
+    top: calc(100% - 52px);
+    left: 0;
     color: var(--teal);
     animation: float-up 4s ease-in-out infinite;
   }
   .hero-float-redeem {
-    bottom: 18px;
-    left: -48px;
+    top: calc(100% - 52px);
+    right: 0;
     color: #ef4444;
     animation: float-up 4s ease-in-out infinite 2s;
   }
@@ -1322,6 +1329,10 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    align-items: flex-start;
+  }
+  [dir="rtl"] .footer-brand {
+    align-items: flex-end;
   }
   .footer-brand img {
     height: 38px;
@@ -1427,12 +1438,12 @@
 
   /* RTL overrides */
   [dir="rtl"] .hero-float-earn {
-    right: auto;
-    left: -48px;
+    left: auto;
+    right: 0;
   }
   [dir="rtl"] .hero-float-redeem {
-    left: auto;
-    right: -48px;
+    right: auto;
+    left: 0;
   }
   [dir="rtl"] .network-node:nth-child(4) {
     right: auto;
