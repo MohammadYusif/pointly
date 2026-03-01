@@ -273,6 +273,19 @@
   --color-border: #e4e4e7;
 }
 
+/* Navy blue text in login inputs — readable on light card */
+.login-card input {
+  color: #263452;
+  background-color: rgba(248, 249, 255, 0.95);
+  -webkit-text-fill-color: #263452;
+}
+
+.login-card input::placeholder {
+  color: rgba(38, 52, 82, 0.4);
+  -webkit-text-fill-color: rgba(38, 52, 82, 0.4);
+  opacity: 1;
+}
+
 /* Mobile brand — shows on small screens instead of full hero */
 .login-mobile-brand {
   display: none;
@@ -342,6 +355,93 @@
 .dark .portal-nav {
   background: rgba(10, 10, 10, 0.88) !important;
   border-top-color: rgba(39, 39, 42, 0.6);
+}
+
+/* ============================================================================
+   Login Page — Animated Background Orbs
+   ============================================================================ */
+
+@keyframes floatOrb1 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(28px, -48px) scale(1.08);
+  }
+  66% {
+    transform: translate(-18px, 28px) scale(0.93);
+  }
+}
+
+@keyframes floatOrb2 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  40% {
+    transform: translate(-38px, 52px) scale(1.12);
+  }
+  80% {
+    transform: translate(22px, -22px) scale(0.9);
+  }
+}
+
+@keyframes floatOrb3 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  30% {
+    transform: translate(42px, 18px) scale(0.88);
+  }
+  70% {
+    transform: translate(-28px, -38px) scale(1.1);
+  }
+}
+
+.login-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+  filter: blur(80px);
+}
+
+.login-orb-1 {
+  width: 560px;
+  height: 560px;
+  background: rgba(8, 176, 162, 0.2);
+  top: -12%;
+  left: -8%;
+  animation: floatOrb1 14s ease-in-out infinite;
+}
+
+.login-orb-2 {
+  width: 480px;
+  height: 480px;
+  background: rgba(38, 52, 82, 0.55);
+  bottom: -8%;
+  right: -6%;
+  animation: floatOrb2 19s ease-in-out infinite;
+}
+
+.login-orb-3 {
+  width: 320px;
+  height: 320px;
+  background: rgba(8, 176, 162, 0.12);
+  top: 38%;
+  left: 42%;
+  animation: floatOrb3 11s ease-in-out infinite;
+}
+
+.login-orb-4 {
+  width: 260px;
+  height: 260px;
+  background: rgba(5, 161, 165, 0.15);
+  top: 15%;
+  right: 8%;
+  animation: floatOrb1 17s ease-in-out infinite reverse;
 }
 
 /* ============================================================================

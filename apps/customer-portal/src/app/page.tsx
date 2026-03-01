@@ -60,10 +60,16 @@ export default function LoginPage() {
 
   return (
     <div className="login-page">
+      {/* Animated background orbs */}
+      <div className="login-orb login-orb-1" aria-hidden="true" />
+      <div className="login-orb login-orb-2" aria-hidden="true" />
+      <div className="login-orb login-orb-3" aria-hidden="true" />
+      <div className="login-orb login-orb-4" aria-hidden="true" />
+
       <div className="login-lang-toggle">
         <LanguageToggle variant="ghost" showLabel={false} />
       </div>
-      <div className="login-grid">
+      <div className="login-grid" style={{ position: 'relative', zIndex: 1 }}>
         {/* ── Hero — desktop only ── */}
         <div className={`login-hero ${textStart}`}>
           <div className="mb-8">

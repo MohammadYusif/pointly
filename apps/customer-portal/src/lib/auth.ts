@@ -1,3 +1,4 @@
+import { normalizePhone } from '@pointly/shared';
 import { AuthenticationDetails, CognitoUser, CognitoUserPool } from 'amazon-cognito-identity-js';
 
 const userPoolId = process.env.NEXT_PUBLIC_CUSTOMER_USER_POOL_ID || '';
@@ -10,10 +11,13 @@ function getUserPool(): CognitoUserPool | null {
   return new CognitoUserPool(poolData);
 }
 
-export function signInWithPhone(phone: string): Promise<CognitoUser> {
+export function signInWithPhone(rawPhone: string): Promise<CognitoUser> {
   return new Promise((resolve, reject) => {
     const pool = getUserPool();
     if (!pool) return reject(new Error('Cognito not configured'));
+
+    // Cognito requires E.164 (+966XXXXXXXXX) — normalize any local format
+    const phone = normalizePhone(rawPhone);
 
     const user = new CognitoUser({ Username: phone, Pool: pool });
     const authDetails = new AuthenticationDetails({ Username: phone });
@@ -29,9 +33,11 @@ export function signInWithPhone(phone: string): Promise<CognitoUser> {
 
 export function confirmOtp(user: CognitoUser, code: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    user.sendCustomChallengeAnswer(code, {
+    user.sendCustomChallengeAnswer(code.trim(), {
       onSuccess: () => resolve(),
       onFailure: (err) => reject(err),
+      // Wrong OTP triggers another challenge instead of onFailure
+      customChallenge: () => reject(new Error('Invalid OTP. Please try again.')),
     });
   });
 }
