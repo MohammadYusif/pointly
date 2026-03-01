@@ -27,12 +27,16 @@ export const cognitoCustomerAuthPlugin = fp(async function cognitoCustomerAuthPl
   const region = env.AWS_REGION;
   const userPoolId = env.CUSTOMER_USER_POOL_ID;
 
+  // Always decorate before registering the JWT plugin so the property exists
+  // on every request regardless of whether Cognito is configured.
+  server.decorateRequest('customerUser', null);
+  server.decorateRequest('customerId', '');
+
   if (!userPoolId) {
     if (env.NODE_ENV === 'production') {
       throw new Error('CUSTOMER_USER_POOL_ID is required in production');
     }
     server.log.warn('CUSTOMER_USER_POOL_ID not set — Customer Cognito auth disabled');
-    server.decorateRequest('customerId', '');
     return;
   }
 
@@ -57,9 +61,11 @@ export const cognitoCustomerAuthPlugin = fp(async function cognitoCustomerAuthPl
       allowedIss: issuer,
     },
     namespace: 'customer',
+    // Explicitly name the request decorator so the decoded token lands on
+    // request.customerUser (not the default request.user which the merchant
+    // plugin already owns).
+    decoratorName: 'customerUser',
   });
-
-  server.decorateRequest('customerId', '');
 });
 
 export async function verifyCustomerToken(request: FastifyRequest): Promise<void> {
