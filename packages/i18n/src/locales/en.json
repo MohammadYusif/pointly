@@ -66,7 +66,8 @@
     "profile": "Profile",
     "help": "Help",
     "billing": "Billing",
-    "qr": "QR Code"
+    "qr": "QR Code",
+    "merchants": "Merchants"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -284,6 +285,52 @@
     "loginLink": "Sign In",
     "accountExists": "This phone number is already registered. Signing you in...",
     "otpStep": "Verify your phone",
-    "setupStep": "Setting up your account..."
+    "setupStep": "Setting up your account...",
+    "termsPrefix": "I agree to the",
+    "termsLink": "Terms of Use",
+    "termsAnd": "and",
+    "privacyLink": "Privacy Policy",
+    "termsRequired": "You must accept the terms to continue"
+  },
+  "enroll": {
+    "title": "Join a Merchant",
+    "subtitle": "Earn points at these merchants",
+    "alreadyEnrolled": "Enrolled",
+    "enrollButton": "Join",
+    "enrolling": "Joining...",
+    "enrollSuccess": "Successfully joined!",
+    "noMerchants": "No merchants available"
+  },
+  "terms": {
+    "title": "Terms of Use",
+    "lastUpdated": "Last updated: March 2026",
+    "intro": "By using Pointly, you agree to the following terms.",
+    "section1Title": "1. Loyalty Program",
+    "section1Body": "Pointly operates a loyalty rewards platform. Points are earned through purchases at participating merchants and may be redeemed according to the rules set by each merchant. Points have no cash value outside the platform.",
+    "section2Title": "2. Account",
+    "section2Body": "You are responsible for maintaining the security of your account. Your phone number is your unique identifier. You must be 13 years or older to register.",
+    "section3Title": "3. Points & Rewards",
+    "section3Body": "Points are credited at the discretion of merchants. Pointly reserves the right to correct point balances in case of errors. Unused points may expire per the merchant's policy.",
+    "section4Title": "4. Changes",
+    "section4Body": "We may update these terms at any time. Continued use of the platform constitutes acceptance of the revised terms.",
+    "section5Title": "5. Contact",
+    "section5Body": "For questions, contact support@pointly.sa."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: March 2026",
+    "intro": "Pointly is committed to protecting your personal information.",
+    "section1Title": "1. Information We Collect",
+    "section1Body": "We collect your phone number, name, and date of birth at registration. We also collect transaction data such as purchases and point redemptions.",
+    "section2Title": "2. How We Use Your Data",
+    "section2Body": "Your data is used to operate the loyalty program, credit and redeem points, and provide merchants with aggregated analytics. We do not sell your personal data.",
+    "section3Title": "3. Data Sharing",
+    "section3Body": "Your transaction history is shared with merchants you transact with. Your phone number is not disclosed to merchants beyond what is necessary for verification.",
+    "section4Title": "4. Security",
+    "section4Body": "We use industry-standard security measures including encryption and secure authentication (OTP) to protect your account.",
+    "section5Title": "5. Your Rights",
+    "section5Body": "You may request deletion of your account and personal data by contacting support@pointly.sa.",
+    "section6Title": "6. Contact",
+    "section6Body": "For privacy inquiries, email privacy@pointly.sa."
   }
 }

@@ -167,6 +167,23 @@ export interface AnalyticsDataPoint {
   uniqueCustomers: number;
 }
 
+export interface PublicMerchantSummary {
+  merchantId: string;
+  businessName: string;
+  tier: string;
+}
+
+export interface CustomerMerchantView {
+  merchantId: string;
+  businessName: string;
+  merchantPointsBalance: number;
+  merchantLifetimePoints: number;
+  consentStatus: string;
+  enrolledAt: string;
+  transactionCount: number;
+  lastTransactionAt?: string;
+}
+
 export interface AnalyticsData {
   summary: {
     totalTransactions: number;

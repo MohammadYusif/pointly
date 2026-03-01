@@ -218,7 +218,7 @@ resource "aws_cognito_user_pool_client" "customer_web" {
 
   generate_secret               = false
   prevent_user_existence_errors = "ENABLED"
-  refresh_token_validity        = 90
+  refresh_token_validity        = 30
   access_token_validity         = 24
   id_token_validity             = 24
 

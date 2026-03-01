@@ -21,6 +21,21 @@ const createMerchantSchema = z.object({
 type CreateMerchantBody = z.infer<typeof createMerchantSchema>;
 
 export async function merchantPublicRoutes(server: FastifyInstance): Promise<void> {
+  // GET /v1/merchants — List all verified merchants (PUBLIC, for customer discovery)
+  server.get('/', async (_request: FastifyRequest, reply: FastifyReply) => {
+    const container = getContainer();
+    const result = await container.merchantRepository.findVerified({ limit: 100 });
+    const merchants = result.items.map((m) => {
+      const json = m.toJSON();
+      return {
+        merchantId: json.merchantId,
+        businessName: json.businessName,
+        tier: json.tier,
+      };
+    });
+    return reply.send({ success: true, data: merchants });
+  });
+
   // POST /v1/merchants — Create merchant account (PUBLIC)
   server.post(
     '/',

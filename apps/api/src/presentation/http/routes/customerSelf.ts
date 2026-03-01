@@ -244,6 +244,40 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
     },
   );
 
+  // GET /v1/me/merchants — Enrolled merchant details with names
+  server.get('/merchants', async (request: FastifyRequest, reply: FastifyReply) => {
+    const { customerId } = request;
+    if (!customerId) {
+      throw new ValidationError('Customer ID not found in token');
+    }
+
+    const container = getContainer();
+    const customer = await container.customerRepository.findById(customerId);
+    if (!customer) {
+      return reply.status(404).send({ success: false, error: 'Customer not found' });
+    }
+
+    const enrollments = customer.toJSON().enrollments;
+    const results = await Promise.all(
+      // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollments
+      enrollments.map(async (e: any) => {
+        const merchant = await container.merchantRepository.findById(e.merchantId as string);
+        return {
+          merchantId: e.merchantId as string,
+          businessName: merchant?.toJSON().businessName ?? e.merchantId,
+          merchantPointsBalance: e.merchantPointsBalance as number,
+          merchantLifetimePoints: e.merchantLifetimePoints as number,
+          consentStatus: e.consentStatus as string,
+          enrolledAt: e.enrolledAt as string,
+          transactionCount: e.transactionCount as number,
+          lastTransactionAt: e.lastTransactionAt as string | undefined,
+        };
+      }),
+    );
+
+    return reply.send({ success: true, data: results });
+  });
+
   // POST /v1/me/consent — Grant/revoke consent
   server.post(
     '/consent',

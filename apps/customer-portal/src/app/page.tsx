@@ -74,9 +74,7 @@ export default function LoginPage() {
         {/* ── Hero — desktop only ── */}
         <div className={`login-hero ${textStart}`}>
           <div className="mb-8">
-            <span className="text-2xl font-extrabold tracking-tight" style={{ color: '#08b0a2' }}>
-              Pointly
-            </span>
+            <img src="/logo.svg" alt="Pointly" style={{ height: '30px', width: 'auto' }} />
           </div>
 
           <div className="login-badge">
@@ -113,7 +111,11 @@ export default function LoginPage() {
           <Card className="login-card">
             <CardHeader className="text-center pb-4">
               <div className="login-mobile-brand">
-                <span style={{ color: '#08b0a2' }}>Pointly</span>
+                <img
+                  src="/logo.svg"
+                  alt="Pointly"
+                  style={{ height: '26px', width: 'auto', margin: '0 auto' }}
+                />
               </div>
               <CardTitle className="text-2xl font-bold" style={{ color: '#21242d' }}>
                 {t('auth.welcomeBack')}

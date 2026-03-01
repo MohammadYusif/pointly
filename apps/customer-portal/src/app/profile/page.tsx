@@ -1,10 +1,10 @@
 'use client';
 
 import { CustomerLayout } from '@/components/CustomerLayout';
-import { getCustomer, updateCustomer } from '@/lib/api';
+import { getCustomer, getMyMerchants, updateCustomer } from '@/lib/api';
 import { signOut } from '@/lib/auth';
 import { useTranslation } from '@pointly/i18n';
-import type { CustomerResponse } from '@pointly/shared';
+import type { CustomerMerchantView, CustomerResponse } from '@pointly/shared';
 import { formatPhone } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
 import { LogOut } from 'lucide-react';
@@ -43,15 +43,17 @@ export default function ProfilePage() {
   const router = useRouter();
 
   const [customer, setCustomer] = useState<CustomerProfile | null>(null);
+  const [merchants, setMerchants] = useState<CustomerMerchantView[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    getCustomer('me')
-      .then((data) => {
+    Promise.all([getCustomer('me'), getMyMerchants()])
+      .then(([data, merchantData]) => {
         setCustomer(data as CustomerProfile);
         setName(data.name || '');
+        setMerchants(merchantData);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -127,25 +129,30 @@ export default function ProfilePage() {
         </Card>
 
         {/* Enrolled Merchants */}
-        {(customer?.enrollments?.length ?? 0) > 0 && customer && (
+        {merchants.length > 0 && (
           <Card className="stagger-item">
             <CardHeader>
               <CardTitle className="text-base">{t('dashboard.enrolledMerchants')}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              {customer.enrollments.map((e) => (
-                <div key={e.merchantId} className="flex justify-between items-center py-1">
-                  <span className="text-sm">{e.merchantId}</span>
+            <CardContent className="space-y-3">
+              {merchants.map((m) => (
+                <div key={m.merchantId} className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm font-medium">{m.businessName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {m.merchantPointsBalance} {t('common.points')}
+                    </p>
+                  </div>
                   <span
                     className={`text-xs px-2 py-0.5 rounded-full ${
-                      e.consentStatus === 'GRANTED'
+                      m.consentStatus === 'GRANTED'
                         ? 'bg-green-100 text-green-800'
-                        : e.consentStatus === 'PENDING'
+                        : m.consentStatus === 'PENDING'
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-red-100 text-red-800'
                     }`}
                   >
-                    {e.consentStatus}
+                    {m.consentStatus}
                   </span>
                 </div>
               ))}

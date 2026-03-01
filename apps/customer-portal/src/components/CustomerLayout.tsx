@@ -2,7 +2,7 @@
 
 import { useTranslation } from '@pointly/i18n';
 import { LanguageToggle } from '@pointly/ui';
-import { Clock, Home, QrCode, User } from 'lucide-react';
+import { Clock, Home, QrCode, Store, User } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -10,6 +10,7 @@ import type { ReactNode } from 'react';
 const navItems = [
   { key: 'dashboard', href: '/dashboard', icon: Home },
   { key: 'qr', href: '/qr', icon: QrCode },
+  { key: 'merchants', href: '/enroll', icon: Store },
   { key: 'history', href: '/history', icon: Clock },
   { key: 'profile', href: '/profile', icon: User },
 ];
@@ -21,6 +22,7 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
   const labels: Record<string, string> = {
     dashboard: t('navigation.dashboard'),
     qr: t('navigation.qr'),
+    merchants: t('navigation.merchants'),
     history: t('navigation.transactions'),
     profile: t('navigation.profile'),
   };
@@ -29,9 +31,7 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
     <div className="portal-layout">
       <header className="portal-header sticky top-0 z-20">
         <div className="max-w-lg mx-auto px-4 h-12 flex items-center justify-between">
-          <span className="text-base font-extrabold tracking-tight" style={{ color: '#08b0a2' }}>
-            Pointly
-          </span>
+          <img src="/logo.svg" alt="Pointly" style={{ height: '22px', width: 'auto' }} />
           <LanguageToggle showLabel={false} />
         </div>
       </header>

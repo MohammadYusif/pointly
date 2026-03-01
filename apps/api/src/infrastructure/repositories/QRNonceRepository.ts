@@ -16,14 +16,14 @@ export class QRNonceRepository implements IQRNonceRepository {
       new PutCommand({
         TableName: this.tableName,
         Item: {
-          PK: `NONCE#${nonce.nonce}`,
-          SK: 'QR',
+          jti: nonce.nonce,
           customerId: nonce.customerId,
           expiresAt: nonce.expiresAt,
           used: nonce.used,
+          ttl: nonce.expiresAt,
           createdAt: new Date().toISOString(),
         },
-        ConditionExpression: 'attribute_not_exists(PK)',
+        ConditionExpression: 'attribute_not_exists(jti)',
       }),
     );
   }
@@ -32,7 +32,7 @@ export class QRNonceRepository implements IQRNonceRepository {
     const result = await this.client.send(
       new GetCommand({
         TableName: this.tableName,
-        Key: { PK: `NONCE#${nonce}`, SK: 'QR' },
+        Key: { jti: nonce },
       }),
     );
 
@@ -54,7 +54,7 @@ export class QRNonceRepository implements IQRNonceRepository {
     await this.client.send(
       new UpdateCommand({
         TableName: this.tableName,
-        Key: { PK: `NONCE#${nonce}`, SK: 'QR' },
+        Key: { jti: nonce },
         UpdateExpression: 'SET used = :used',
         ExpressionAttributeValues: { ':used': true },
       }),

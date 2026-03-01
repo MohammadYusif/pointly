@@ -1,4 +1,10 @@
-import type { CustomerPerkView, CustomerResponse, TransactionResponse } from '@pointly/shared';
+import type {
+  CustomerMerchantView,
+  CustomerPerkView,
+  CustomerResponse,
+  PublicMerchantSummary,
+  TransactionResponse,
+} from '@pointly/shared';
 import { getAccessToken, signOut } from './auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -64,5 +70,20 @@ export function completeProfile(data: { name?: string; dateOfBirth?: string }) {
   return fetchApi<CustomerResponse>('/v1/me/setup', {
     method: 'POST',
     body: JSON.stringify(data),
+  });
+}
+
+export function getMyMerchants() {
+  return fetchApi<CustomerMerchantView[]>('/v1/me/merchants');
+}
+
+export function getPublicMerchants() {
+  return fetchApi<PublicMerchantSummary[]>('/v1/merchants');
+}
+
+export function enrollMerchant(merchantId: string) {
+  return fetchApi<{ customerId: string; merchantId: string }>('/v1/me/enroll', {
+    method: 'POST',
+    body: JSON.stringify({ merchantId }),
   });
 }

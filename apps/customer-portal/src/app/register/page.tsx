@@ -41,6 +41,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [cognitoUser, setCognitoUser] = useState<CognitoUser | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const handleInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,9 +95,7 @@ export default function RegisterPage() {
         {/* Hero — desktop only */}
         <div className={`login-hero ${textStart}`}>
           <div className="mb-8">
-            <span className="text-2xl font-extrabold tracking-tight" style={{ color: '#08b0a2' }}>
-              Pointly
-            </span>
+            <img src="/logo.svg" alt="Pointly" style={{ height: '30px', width: 'auto' }} />
           </div>
 
           <div className="login-badge">
@@ -133,7 +132,11 @@ export default function RegisterPage() {
           <Card className="login-card">
             <CardHeader className="text-center pb-4">
               <div className="login-mobile-brand">
-                <span style={{ color: '#08b0a2' }}>Pointly</span>
+                <img
+                  src="/logo.svg"
+                  alt="Pointly"
+                  style={{ height: '26px', width: 'auto', margin: '0 auto' }}
+                />
               </div>
               <CardTitle className="text-2xl font-bold" style={{ color: '#21242d' }}>
                 {t('register.title')}
@@ -204,9 +207,47 @@ export default function RegisterPage() {
                     />
                   </div>
 
+                  <div className="flex items-start gap-2 pt-1">
+                    <input
+                      id="terms-checkbox"
+                      type="checkbox"
+                      checked={termsAccepted}
+                      onChange={(e) => setTermsAccepted(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-[#08b0a2]"
+                    />
+                    <label
+                      htmlFor="terms-checkbox"
+                      className="text-xs leading-snug"
+                      style={{ color: '#71717a' }}
+                    >
+                      {t('register.termsPrefix')}{' '}
+                      <Link
+                        href="/terms"
+                        target="_blank"
+                        className="font-medium underline"
+                        style={{ color: '#08b0a2' }}
+                      >
+                        {t('register.termsLink')}
+                      </Link>{' '}
+                      {t('register.termsAnd')}{' '}
+                      <Link
+                        href="/privacy"
+                        target="_blank"
+                        className="font-medium underline"
+                        style={{ color: '#08b0a2' }}
+                      >
+                        {t('register.privacyLink')}
+                      </Link>
+                    </label>
+                  </div>
+
                   {error && <p className="text-sm text-red-600">{error}</p>}
 
-                  <Button type="submit" className="w-full h-11" disabled={loading || !phone}>
+                  <Button
+                    type="submit"
+                    className="w-full h-11"
+                    disabled={loading || !phone || !termsAccepted}
+                  >
                     {loading ? t('common.loading') : t('register.registerButton')}
                   </Button>
 
