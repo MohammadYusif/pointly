@@ -77,6 +77,18 @@ module "landing" {
 }
 
 # ===========================================
+# Customer Portal — S3 + CloudFront
+# ===========================================
+module "customer_portal" {
+  source      = "./modules/customer-portal"
+  environment = var.environment
+
+  api_url         = module.api.api_url
+  domain_name     = var.domain_name != "" ? "customer.${var.domain_name}" : ""
+  certificate_arn = var.certificate_arn
+}
+
+# ===========================================
 # Monitoring — CloudWatch Alarms + Dashboard
 # ===========================================
 module "monitoring" {

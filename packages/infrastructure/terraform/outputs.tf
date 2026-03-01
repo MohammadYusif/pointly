@@ -59,6 +59,19 @@ output "tier_reset_function_name" {
   value = module.api.tier_reset_lambda_function_name
 }
 
+# Customer Portal
+output "customer_portal_bucket_name" {
+  value = module.customer_portal.bucket_name
+}
+
+output "customer_portal_distribution_id" {
+  value = module.customer_portal.distribution_id
+}
+
+output "customer_portal_url" {
+  value = module.customer_portal.portal_url
+}
+
 # Landing
 output "landing_bucket_name" {
   value = module.landing.bucket_name
