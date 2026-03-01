@@ -71,7 +71,8 @@ export interface MerchantResponse {
 
 export interface CustomerResponse {
   customerId: string;
-  name: string;
+  name?: string;
+  dateOfBirth?: string;
   phone: string;
   status: string;
   currentTier: string;

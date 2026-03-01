@@ -271,5 +271,19 @@
     "noExpiry": "نقاطك لا تنتهي",
     "day": "يوم",
     "days": "يوم"
+  },
+  "register": {
+    "title": "إنشاء حساب",
+    "subTitle": "انضم إلى شبكة Pointly للولاء",
+    "nameLabel": "الاسم الكامل",
+    "namePlaceholder": "مثال: محمد علي",
+    "dobLabel": "تاريخ الميلاد",
+    "dobPlaceholder": "YYYY-MM-DD",
+    "registerButton": "إنشاء حساب",
+    "haveAccount": "لديك حساب بالفعل؟",
+    "loginLink": "تسجيل الدخول",
+    "accountExists": "رقم الهاتف مسجل بالفعل. جاري تسجيل الدخول...",
+    "otpStep": "تحقق من رقم هاتفك",
+    "setupStep": "جاري إعداد حسابك..."
   }
 }

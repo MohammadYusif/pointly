@@ -32,6 +32,7 @@ export interface CustomerProps {
   customerId: string;
   phone: PhoneNumber;
   name?: string;
+  dateOfBirth?: string;
   status: CustomerStatus;
 
   // Points & Balance
@@ -60,7 +61,7 @@ export class Customer {
   private constructor(private props: CustomerProps) {}
 
   // Factory methods
-  static create(phone: PhoneNumber, name?: string): Customer {
+  static create(phone: PhoneNumber, name?: string, dateOfBirth?: string): Customer {
     const now = new Date();
     const props: CustomerProps = {
       customerId: ulid(),
@@ -86,6 +87,43 @@ export class Customer {
 
     if (name) {
       props.name = name;
+    }
+    if (dateOfBirth) {
+      props.dateOfBirth = dateOfBirth;
+    }
+
+    return new Customer(props);
+  }
+
+  static createWithId(
+    id: string,
+    phone: PhoneNumber,
+    name?: string,
+    dateOfBirth?: string,
+  ): Customer {
+    const now = new Date();
+    const props: CustomerProps = {
+      customerId: id,
+      phone,
+      status: CustomerStatus.ACTIVE,
+      globalPointsBalance: Points.zero(),
+      globalLifetimePoints: Points.zero(),
+      currentTier: CustomerTier.bronze(),
+      monthlyProgress: Points.zero(),
+      tierLastUpdatedAt: now,
+      monthlyProgressResetAt: now,
+      lastNetworkActivity: now,
+      globalPointsDecayPhase: 0,
+      enrollments: new Map(),
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    if (name) {
+      props.name = name;
+    }
+    if (dateOfBirth) {
+      props.dateOfBirth = dateOfBirth;
     }
 
     return new Customer(props);
@@ -740,6 +778,7 @@ export class Customer {
       customerId: this.props.customerId,
       phone: this.props.phone.toString(),
       name: this.props.name,
+      dateOfBirth: this.props.dateOfBirth,
       status: this.props.status,
       globalPointsBalance: this.props.globalPointsBalance.toNumber(),
       globalLifetimePoints: this.props.globalLifetimePoints.toNumber(),

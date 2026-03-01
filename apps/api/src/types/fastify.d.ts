@@ -5,5 +5,6 @@ declare module 'fastify' {
     merchantId: string;
     customerId: string;
     cognitoSub: string;
+    cognitoPhone: string;
   }
 }

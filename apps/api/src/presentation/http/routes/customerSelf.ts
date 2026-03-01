@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { Customer, PhoneNumber } from '../../../domain';
 import { ValidationError } from '../../../domain/errors/DomainError';
 import { getContainer } from '../container';
 
@@ -19,6 +20,14 @@ const enrollSchema = z.object({
 const consentSchema = z.object({
   merchantId: z.string().min(1),
   action: z.enum(['grant', 'revoke']),
+});
+
+const setupSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  dateOfBirth: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
+    .optional(),
 });
 
 export async function customerSelfRoutes(server: FastifyInstance): Promise<void> {
@@ -202,6 +211,38 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
 
     return reply.send({ success: true, data: perksView });
   });
+
+  // POST /v1/me/setup — Complete profile after first OTP login (creates DynamoDB record)
+  server.post(
+    '/setup',
+    async (
+      request: FastifyRequest<{ Body: { name?: string; dateOfBirth?: string } }>,
+      reply: FastifyReply,
+    ) => {
+      const { cognitoSub, cognitoPhone } = request;
+      if (!cognitoSub) {
+        throw new ValidationError('Not authenticated');
+      }
+      if (!cognitoPhone) {
+        throw new ValidationError('Phone number not found in token');
+      }
+
+      const body = setupSchema.parse(request.body);
+      const container = getContainer();
+
+      // Return existing profile if already set up (idempotent)
+      const existing = await container.customerRepository.findById(cognitoSub);
+      if (existing) {
+        return reply.send({ success: true, data: existing.toJSON() });
+      }
+
+      const phone = new PhoneNumber(cognitoPhone);
+      const customer = Customer.createWithId(cognitoSub, phone, body.name, body.dateOfBirth);
+      await container.customerRepository.save(customer);
+
+      return reply.status(201).send({ success: true, data: customer.toJSON() });
+    },
+  );
 
   // POST /v1/me/consent — Grant/revoke consent
   server.post(

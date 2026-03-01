@@ -1,6 +1,7 @@
 'use client';
 
-import { confirmOtp, signInWithPhone } from '@/lib/auth';
+import { completeProfile } from '@/lib/api';
+import { confirmOtp, signInWithPhone, signUpWithCognito } from '@/lib/auth';
 import { useTranslation } from '@pointly/i18n';
 import {
   Button,
@@ -17,23 +18,36 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-export default function LoginPage() {
+/** Ensures the user exists in Cognito, ignoring UsernameExistsException. */
+async function ensureRegistered(phone: string, name?: string): Promise<void> {
+  try {
+    await signUpWithCognito(phone, name);
+  } catch (err) {
+    if (err instanceof Error && err.name === 'UsernameExistsException') return;
+    throw err;
+  }
+}
+
+export default function RegisterPage() {
   const { t } = useTranslation();
   const { textStart } = useRTL();
   const router = useRouter();
 
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [step, setStep] = useState<'info' | 'otp'>('info');
   const [phone, setPhone] = useState('');
+  const [name, setName] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [cognitoUser, setCognitoUser] = useState<CognitoUser | null>(null);
 
-  const handlePhoneSubmit = async (e: React.FormEvent) => {
+  const handleInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
+      await ensureRegistered(phone, name || undefined);
       const user = await signInWithPhone(phone);
       setCognitoUser(user);
       setStep('otp');
@@ -49,8 +63,13 @@ export default function LoginPage() {
     if (!cognitoUser) return;
     setError('');
     setLoading(true);
+
     try {
       await confirmOtp(cognitoUser, otp);
+      await completeProfile({
+        name: name || undefined,
+        dateOfBirth: dateOfBirth || undefined,
+      });
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : t('errors.serverError'));
@@ -70,8 +89,9 @@ export default function LoginPage() {
       <div className="login-lang-toggle">
         <LanguageToggle variant="ghost" showLabel={false} />
       </div>
+
       <div className="login-grid" style={{ position: 'relative', zIndex: 1 }}>
-        {/* ── Hero — desktop only ── */}
+        {/* Hero — desktop only */}
         <div className={`login-hero ${textStart}`}>
           <div className="mb-8">
             <span className="text-2xl font-extrabold tracking-tight" style={{ color: '#08b0a2' }}>
@@ -108,7 +128,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* ── Form ── */}
+        {/* Form */}
         <div>
           <Card className="login-card">
             <CardHeader className="text-center pb-4">
@@ -116,16 +136,16 @@ export default function LoginPage() {
                 <span style={{ color: '#08b0a2' }}>Pointly</span>
               </div>
               <CardTitle className="text-2xl font-bold" style={{ color: '#21242d' }}>
-                {t('auth.welcomeBack')}
+                {t('register.title')}
               </CardTitle>
               <p className="text-sm mt-1" style={{ color: '#71717a' }}>
-                {t('auth.customerPortal')}
+                {step === 'info' ? t('register.subTitle') : t('register.otpStep')}
               </p>
             </CardHeader>
 
             <CardContent>
-              {step === 'phone' ? (
-                <form onSubmit={handlePhoneSubmit} className="space-y-4">
+              {step === 'info' ? (
+                <form onSubmit={handleInfoSubmit} className="space-y-4">
                   <div>
                     <label
                       htmlFor="phone-input"
@@ -145,14 +165,55 @@ export default function LoginPage() {
                       className="h-11"
                     />
                   </div>
+
+                  <div>
+                    <label
+                      htmlFor="name-input"
+                      className="text-sm font-medium mb-1.5 block"
+                      style={{ color: '#21242d' }}
+                    >
+                      {t('register.nameLabel')}{' '}
+                      <span style={{ color: '#71717a' }}>({t('common.optional')})</span>
+                    </label>
+                    <Input
+                      id="name-input"
+                      type="text"
+                      placeholder={t('register.namePlaceholder')}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="h-11"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="dob-input"
+                      className="text-sm font-medium mb-1.5 block"
+                      style={{ color: '#21242d' }}
+                    >
+                      {t('register.dobLabel')}{' '}
+                      <span style={{ color: '#71717a' }}>({t('common.optional')})</span>
+                    </label>
+                    <Input
+                      id="dob-input"
+                      type="date"
+                      value={dateOfBirth}
+                      onChange={(e) => setDateOfBirth(e.target.value)}
+                      className="h-11"
+                      dir="ltr"
+                    />
+                  </div>
+
                   {error && <p className="text-sm text-red-600">{error}</p>}
+
                   <Button type="submit" className="w-full h-11" disabled={loading || !phone}>
-                    {loading ? t('common.loading') : t('common.next')}
+                    {loading ? t('common.loading') : t('register.registerButton')}
                   </Button>
+
                   <p className="text-center text-sm" style={{ color: '#71717a' }}>
-                    {t('auth.noAccount')}{' '}
-                    <Link href="/register" className="font-medium" style={{ color: '#08b0a2' }}>
-                      {t('auth.signUp')}
+                    {t('register.haveAccount')}{' '}
+                    <Link href="/" className="font-medium" style={{ color: '#08b0a2' }}>
+                      {t('register.loginLink')}
                     </Link>
                   </p>
                 </form>
@@ -182,7 +243,9 @@ export default function LoginPage() {
                       className="text-center text-2xl tracking-widest h-14"
                     />
                   </div>
+
                   {error && <p className="text-sm text-red-600">{error}</p>}
+
                   <Button
                     type="submit"
                     className="w-full h-11"
@@ -190,12 +253,13 @@ export default function LoginPage() {
                   >
                     {loading ? t('common.loading') : t('common.confirm')}
                   </Button>
+
                   <Button
                     type="button"
                     variant="ghost"
                     className="w-full"
                     onClick={() => {
-                      setStep('phone');
+                      setStep('info');
                       setOtp('');
                       setError('');
                     }}

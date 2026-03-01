@@ -31,6 +31,7 @@ export const cognitoCustomerAuthPlugin = fp(async function cognitoCustomerAuthPl
   // on every request regardless of whether Cognito is configured.
   server.decorateRequest('customerUser', null);
   server.decorateRequest('customerId', '');
+  server.decorateRequest('cognitoPhone', '');
 
   if (!userPoolId) {
     if (env.NODE_ENV === 'production') {
@@ -100,4 +101,5 @@ export async function verifyCustomerToken(request: FastifyRequest): Promise<void
 
   request.customerId = customerId;
   request.cognitoSub = payload.sub;
+  request.cognitoPhone = payload.phone_number || '';
 }

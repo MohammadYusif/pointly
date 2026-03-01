@@ -23,6 +23,7 @@ interface CustomerItem {
   customerId: string;
   phone: string;
   name: string | undefined;
+  dateOfBirth?: string;
   status: CustomerStatus;
   globalPointsBalance: number;
   globalLifetimePoints: number;
@@ -356,6 +357,9 @@ export class CustomerRepository
     if (customerItem.name) {
       props.name = customerItem.name;
     }
+    if (customerItem.dateOfBirth) {
+      props.dateOfBirth = customerItem.dateOfBirth;
+    }
     const decayStartDate = CustomerRepository.parseDateOptional(customerItem.decayStartDate);
     if (decayStartDate) {
       props.decayStartDate = decayStartDate;
@@ -425,6 +429,10 @@ export class CustomerRepository
       GSI1PK: `PHONE#${json.phone}`,
       GSI1SK: 'CUSTOMER',
     };
+
+    if (json.dateOfBirth) {
+      item.dateOfBirth = json.dateOfBirth;
+    }
 
     return item as unknown as Record<string, unknown>;
   }

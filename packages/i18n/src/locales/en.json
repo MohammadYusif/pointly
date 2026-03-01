@@ -271,5 +271,19 @@
     "noExpiry": "Your points do not expire",
     "day": "day",
     "days": "days"
+  },
+  "register": {
+    "title": "Create Account",
+    "subTitle": "Join Pointly's loyalty network",
+    "nameLabel": "Full Name",
+    "namePlaceholder": "e.g. Mohammed Ali",
+    "dobLabel": "Date of Birth",
+    "dobPlaceholder": "YYYY-MM-DD",
+    "registerButton": "Create Account",
+    "haveAccount": "Already have an account?",
+    "loginLink": "Sign In",
+    "accountExists": "This phone number is already registered. Signing you in...",
+    "otpStep": "Verify your phone",
+    "setupStep": "Setting up your account..."
   }
 }

@@ -1,5 +1,10 @@
 import { normalizePhone } from '@pointly/shared';
-import { AuthenticationDetails, CognitoUser, CognitoUserPool } from 'amazon-cognito-identity-js';
+import {
+  AuthenticationDetails,
+  CognitoUser,
+  CognitoUserAttribute,
+  CognitoUserPool,
+} from 'amazon-cognito-identity-js';
 
 const userPoolId = process.env.NEXT_PUBLIC_CUSTOMER_USER_POOL_ID || '';
 const clientId = process.env.NEXT_PUBLIC_CUSTOMER_CLIENT_ID || '';
@@ -74,4 +79,25 @@ export function signOut(): void {
   if (!pool) return;
   const user = pool.getCurrentUser();
   if (user) user.signOut();
+}
+
+export function signUpWithCognito(rawPhone: string, name?: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const pool = getUserPool();
+    if (!pool) return reject(new Error('Cognito not configured'));
+
+    const phone = normalizePhone(rawPhone);
+    // Password is required by Cognito even for OTP-only flows; it is never used for login.
+    const password = `Tmp${Date.now()}${Math.random().toString(36).slice(2)}Aa1!`;
+
+    const attributes = [new CognitoUserAttribute({ Name: 'phone_number', Value: phone })];
+    if (name) {
+      attributes.push(new CognitoUserAttribute({ Name: 'name', Value: name }));
+    }
+
+    pool.signUp(phone, password, attributes, [], (err) => {
+      if (err) return reject(err);
+      resolve();
+    });
+  });
 }
