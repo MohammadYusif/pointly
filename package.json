@@ -38,6 +38,7 @@
     "ignoredBuiltDependencies": ["@biomejs/biome", "core-js", "esbuild", "sharp"]
   },
   "devDependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.992.0",
     "@aws-sdk/client-dynamodb": "^3.992.0",
     "@aws-sdk/lib-dynamodb": "^3.992.0",
     "@biomejs/biome": "1.9.4",
