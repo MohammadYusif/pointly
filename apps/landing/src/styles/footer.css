@@ -1,0 +1,103 @@
+@layer components {
+  .footer {
+    padding: 56px 0 32px;
+    border-top: 1px solid var(--border);
+    position: relative;
+    z-index: 1;
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr 1fr;
+    gap: 48px;
+    margin-bottom: 48px;
+  }
+
+  @media (max-width: 900px) {
+    .footer-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+    }
+  }
+  @media (max-width: 640px) {
+    .footer-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: start;
+  }
+  .footer-brand img {
+    height: 38px;
+    width: auto;
+  }
+  .footer-tagline {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+    max-width: 220px;
+  }
+
+  [dir="rtl"] .footer-tagline {
+    max-width: 100%;
+  }
+
+  .footer-col-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+  }
+  [dir="rtl"] .footer-col-title {
+    letter-spacing: 0;
+  }
+  .footer-col-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .footer-col-link {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    transition: color 0.2s;
+    cursor: pointer;
+  }
+  .footer-col-link:hover {
+    color: var(--teal);
+  }
+
+  .footer-bottom {
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .footer-copy {
+    font-size: 0.83rem;
+    color: var(--text-muted);
+  }
+  .footer-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    list-style: none;
+  }
+  .footer-link {
+    font-size: 0.83rem;
+    color: var(--text-muted);
+    transition: color 0.2s;
+    cursor: pointer;
+  }
+  .footer-link:hover {
+    color: var(--text-primary);
+  }
+}
