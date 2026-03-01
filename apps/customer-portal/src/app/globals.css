@@ -144,6 +144,7 @@
 /* Login page — full dark navy with teal dot grid */
 .login-page {
   position: relative;
+  overflow: hidden;
   min-height: 100vh;
   min-height: 100dvh;
   background: radial-gradient(ellipse 55% 65% at 18% 55%, rgba(8, 176, 162, 0.14), transparent 55%),

@@ -55,11 +55,11 @@ export function getCurrentSession(): Promise<string | null> {
         err: Error | null,
         session: {
           isValid: () => boolean;
-          getAccessToken: () => { getJwtToken: () => string };
+          getIdToken: () => { getJwtToken: () => string };
         } | null,
       ) => {
         if (err || !session?.isValid()) return resolve(null);
-        resolve(session.getAccessToken().getJwtToken());
+        resolve(session.getIdToken().getJwtToken());
       },
     );
   });
