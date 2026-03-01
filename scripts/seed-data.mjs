@@ -380,7 +380,7 @@ function createCustomers() {
       name: 'Reem Al-Otaibi',
       globalBalance: 12000,
       globalLifetime: 22000,
-      tier: 'DIAMOND',
+      tier: 'PLATINUM',
       monthlyProgress: 12000,
       enrollments: [makeEnrollment(nayomi, 90, 'GRANTED', 9500, 18000, 15)],
     }),
@@ -967,7 +967,7 @@ Customers:
   Sara Al-Tamimi      - Bronze, 3,200 pts (Shawarma - INACTIVE, decay)
   Tariq Al-Harthy     - Bronze, 2,500 pts (Nayomi)
   Hana Al-Subaie      - Bronze, 1,800 pts (Shawarma)
-  Reem Al-Otaibi      - Diamond, 12,000 pts (Nayomi - VIP)
+  Reem Al-Otaibi      - Platinum, 12,000 pts (Nayomi - VIP)
   Youssef Al-Zahrani  - Bronze, 900 pts (Shawarma - new)
   Noura Al-Shammari   - Bronze, 480 pts (Dose - regular)
   Khalid Al-Mutairi   - Bronze, 0 pts (Shawarma - PENDING consent)
