@@ -988,18 +988,18 @@ Customers:
 
 // --- Cognito User Seeding ---
 const COGNITO_CUSTOMERS = [
-  { phone: '+966501111111', name: 'Ahmed Al-Dosari',     id: CUSTOMER_IDS.ahmed },
-  { phone: '+966502222222', name: 'Fatimah Al-Harbi',    id: CUSTOMER_IDS.fatimah },
+  { phone: '+966501111111', name: 'Ahmed Al-Dosari', id: CUSTOMER_IDS.ahmed },
+  { phone: '+966502222222', name: 'Fatimah Al-Harbi', id: CUSTOMER_IDS.fatimah },
   { phone: '+966503333333', name: 'Mohammed Al-Qahtani', id: CUSTOMER_IDS.mohammed },
-  { phone: '+966504444444', name: 'Noura Al-Shammari',   id: CUSTOMER_IDS.noura },
-  { phone: '+966505555555', name: 'Khalid Al-Mutairi',   id: CUSTOMER_IDS.khalid },
-  { phone: '+966506666666', name: 'Sara Al-Tamimi',      id: CUSTOMER_IDS.sara },
-  { phone: '+966507777777', name: 'Omar Al-Ghamdi',      id: CUSTOMER_IDS.omar },
-  { phone: '+966508888888', name: 'Layla Al-Rashidi',    id: CUSTOMER_IDS.layla },
-  { phone: '+966509999999', name: 'Youssef Al-Zahrani',  id: CUSTOMER_IDS.youssef },
-  { phone: '+966510001111', name: 'Hana Al-Subaie',      id: CUSTOMER_IDS.hana },
-  { phone: '+966511112222', name: 'Reem Al-Otaibi',      id: CUSTOMER_IDS.reem },
-  { phone: '+966513334444', name: 'Tariq Al-Harthy',     id: CUSTOMER_IDS.tariq },
+  { phone: '+966504444444', name: 'Noura Al-Shammari', id: CUSTOMER_IDS.noura },
+  { phone: '+966505555555', name: 'Khalid Al-Mutairi', id: CUSTOMER_IDS.khalid },
+  { phone: '+966506666666', name: 'Sara Al-Tamimi', id: CUSTOMER_IDS.sara },
+  { phone: '+966507777777', name: 'Omar Al-Ghamdi', id: CUSTOMER_IDS.omar },
+  { phone: '+966508888888', name: 'Layla Al-Rashidi', id: CUSTOMER_IDS.layla },
+  { phone: '+966509999999', name: 'Youssef Al-Zahrani', id: CUSTOMER_IDS.youssef },
+  { phone: '+966510001111', name: 'Hana Al-Subaie', id: CUSTOMER_IDS.hana },
+  { phone: '+966511112222', name: 'Reem Al-Otaibi', id: CUSTOMER_IDS.reem },
+  { phone: '+966513334444', name: 'Tariq Al-Harthy', id: CUSTOMER_IDS.tariq },
 ];
 
 async function seedCognitoUsers() {
