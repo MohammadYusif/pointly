@@ -1,5 +1,6 @@
 'use client';
 
+import { PointlyLogo } from '@/components/PointlyLogo';
 import { useTranslation } from '@pointly/i18n';
 import { Button } from '@pointly/ui';
 import Link from 'next/link';
@@ -25,11 +26,7 @@ export default function TermsPage() {
         </Link>
       </div>
 
-      <img
-        src="/logo.svg"
-        alt="Pointly"
-        style={{ height: '28px', width: 'auto', marginBottom: '24px' }}
-      />
+      <PointlyLogo height={28} className="mb-6" />
 
       <h1 className="text-2xl font-bold mb-1" style={{ color: '#21242d' }}>
         {t('terms.title')}

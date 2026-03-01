@@ -1,5 +1,6 @@
 'use client';
 
+import { PointlyLogo } from '@/components/PointlyLogo';
 import { confirmOtp, signInWithPhone } from '@/lib/auth';
 import { useTranslation } from '@pointly/i18n';
 import {
@@ -74,7 +75,7 @@ export default function LoginPage() {
         {/* ── Hero — desktop only ── */}
         <div className={`login-hero ${textStart}`}>
           <div className="mb-8">
-            <img src="/logo.svg" alt="Pointly" style={{ height: '30px', width: 'auto' }} />
+            <PointlyLogo height={30} color="#ffffff" />
           </div>
 
           <div className="login-badge">
@@ -111,11 +112,7 @@ export default function LoginPage() {
           <Card className="login-card">
             <CardHeader className="text-center pb-4">
               <div className="login-mobile-brand">
-                <img
-                  src="/logo.svg"
-                  alt="Pointly"
-                  style={{ height: '26px', width: 'auto', margin: '0 auto' }}
-                />
+                <PointlyLogo height={26} />
               </div>
               <CardTitle className="text-2xl font-bold" style={{ color: '#21242d' }}>
                 {t('auth.welcomeBack')}

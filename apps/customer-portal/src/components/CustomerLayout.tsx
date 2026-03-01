@@ -6,6 +6,7 @@ import { Clock, Home, QrCode, Store, User } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { PointlyLogo } from './PointlyLogo';
 
 const navItems = [
   { key: 'dashboard', href: '/dashboard', icon: Home },
@@ -31,7 +32,7 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
     <div className="portal-layout">
       <header className="portal-header sticky top-0 z-20">
         <div className="max-w-lg mx-auto px-4 h-12 flex items-center justify-between">
-          <img src="/logo.svg" alt="Pointly" style={{ height: '22px', width: 'auto' }} />
+          <PointlyLogo height={22} />
           <LanguageToggle showLabel={false} />
         </div>
       </header>

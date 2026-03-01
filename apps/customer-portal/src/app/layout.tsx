@@ -16,11 +16,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
         <script
-          dangerouslySetInnerHTML={{
-            __html: `try{if(localStorage.theme==='dark'||(!('theme' in localStorage)&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}`,
-          }}
-        />
-        <script
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var l=localStorage.getItem('pointly-language');if(l!=='en'&&l!=='ar')l='ar';var d=document.documentElement;d.lang=l;d.dir=l==='ar'?'rtl':'ltr'}catch(_e){}})()`,

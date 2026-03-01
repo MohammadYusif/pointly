@@ -5,9 +5,6 @@
 @source "../../node_modules/@pointly/i18n/src/**/*.{ts,tsx}";
 @source "../../node_modules/@pointly/shared/src/**/*.{ts,tsx}";
 
-/* Dark mode via .dark class on <html> */
-@custom-variant dark (&:is(.dark *));
-
 /* ============================================================================
    Tailwind CSS v4 Theme Configuration
    ============================================================================ */
@@ -56,26 +53,6 @@
 }
 
 /* ============================================================================
-   Dark Mode Theme
-   ============================================================================ */
-
-.dark {
-  --color-background: #0a0a0a;
-  --color-foreground: #fafafa;
-  --color-card: #18181b;
-  --color-card-foreground: #fafafa;
-  --color-popover: #18181b;
-  --color-popover-foreground: #fafafa;
-  --color-muted: #27272a;
-  --color-muted-foreground: #a1a1aa;
-  --color-border: #27272a;
-  --color-input: #27272a;
-  --color-ring: #08b0a2;
-  --color-destructive: #dc2626;
-  --color-destructive-foreground: #fafafa;
-}
-
-/* ============================================================================
    Base Styles
    ============================================================================ */
 
@@ -102,16 +79,6 @@
     min-height: 100vh;
     color: var(--color-foreground);
     font-feature-settings: "rlig" 1, "calt" 1;
-  }
-
-  .dark body {
-    background: radial-gradient(
-        ellipse 80% 50% at 50% -5%,
-        rgba(8, 176, 162, 0.08),
-        transparent 65%
-      ), radial-gradient(circle, rgba(8, 176, 162, 0.09) 1px, transparent 1px),
-      linear-gradient(180deg, #0a0a0a 0%, #111113 100%);
-    background-size: 100% 100%, 20px 20px, 100% 100%;
   }
 
   :focus-visible {
@@ -257,9 +224,8 @@
   letter-spacing: 0.05em;
 }
 
-/* Login card — always light, even in dark mode, to read on dark bg */
-.login-card,
-.dark .login-card {
+/* Login card — always light */
+.login-card {
   background: rgba(255, 255, 255, 0.97) !important;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
@@ -321,13 +287,6 @@
   border-color: rgba(228, 228, 231, 0.7);
 }
 
-.dark [data-slot="card"] {
-  background: rgba(24, 24, 27, 0.84) !important;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  border-color: rgba(39, 39, 42, 0.7);
-}
-
 /* ============================================================================
    Portal Header — frosted glass strip with logo + language toggle
    ============================================================================ */
@@ -338,11 +297,6 @@
   border-bottom: 1px solid rgba(228, 228, 231, 0.65);
 }
 
-.dark .portal-header {
-  background: rgba(10, 10, 10, 0.88) !important;
-  border-bottom-color: rgba(39, 39, 42, 0.6);
-}
-
 /* ============================================================================
    Bottom Navigation — frosted glass
    ============================================================================ */
@@ -351,11 +305,6 @@
   backdrop-filter: blur(16px) saturate(1.2);
   background: rgba(255, 255, 255, 0.88) !important;
   border-top: 1px solid rgba(228, 228, 231, 0.65);
-}
-
-.dark .portal-nav {
-  background: rgba(10, 10, 10, 0.88) !important;
-  border-top-color: rgba(39, 39, 42, 0.6);
 }
 
 /* ============================================================================
