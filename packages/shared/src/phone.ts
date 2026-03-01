@@ -10,10 +10,15 @@
  * Handles: 9 digits, 05XXXXXXXX, 966XXXXXXXXX, and already-prefixed numbers.
  */
 export function normalizePhone(raw: string): string {
-  const digits = raw.replace(/\s+/g, '');
-  if (/^\d{9}$/.test(digits)) return `+966${digits}`;
-  if (/^0\d{9}$/.test(digits)) return `+966${digits.slice(1)}`;
-  if (/^966\d{9}$/.test(digits)) return `+${digits}`;
+  const digits = raw.replace(/\D/g, '');
+  // 9 digits starting with 5: subscriber number only (e.g. 512345678)
+  if (/^5\d{8}$/.test(digits)) return `+966${digits}`;
+  // 10 digits starting with 05: local format (e.g. 0512345678)
+  if (/^05\d{8}$/.test(digits)) return `+966${digits.slice(1)}`;
+  // 12 digits with country code (e.g. 966512345678)
+  if (/^9665\d{8}$/.test(digits)) return `+${digits}`;
+  // Already E.164 (+966512345678)
+  if (/^\+9665\d{8}$/.test(raw.trim())) return raw.trim();
   return digits;
 }
 

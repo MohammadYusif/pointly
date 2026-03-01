@@ -191,12 +191,14 @@ resource "aws_cognito_user_pool" "customer" {
   }
 
   lambda_config {
+    pre_sign_up                    = aws_lambda_function.pre_sign_up.arn
     define_auth_challenge          = aws_lambda_function.define_auth_challenge.arn
     create_auth_challenge          = aws_lambda_function.create_auth_challenge.arn
     verify_auth_challenge_response = aws_lambda_function.verify_auth_challenge.arn
   }
 
   depends_on = [
+    aws_lambda_function.pre_sign_up,
     aws_lambda_function.define_auth_challenge,
     aws_lambda_function.create_auth_challenge,
     aws_lambda_function.verify_auth_challenge,
@@ -388,6 +390,46 @@ resource "aws_lambda_permission" "verify_auth_challenge" {
   statement_id  = "AllowCognitoInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.verify_auth_challenge.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = aws_cognito_user_pool.customer.arn
+}
+
+# ---- PreSignUp (auto-confirm new users so CUSTOM_AUTH works immediately) ----
+
+data "archive_file" "pre_sign_up" {
+  type        = "zip"
+  output_path = "${path.module}/pre-sign-up.zip"
+  source {
+    content  = <<-EOT
+      exports.handler = async (event) => {
+        event.response.autoConfirmUser = true;
+        return event;
+      };
+    EOT
+    filename = "index.js"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "pre_sign_up" {
+  name              = "/aws/lambda/pointly-pre-sign-up-${var.environment}"
+  retention_in_days = 7
+}
+
+resource "aws_lambda_function" "pre_sign_up" {
+  function_name    = "pointly-pre-sign-up-${var.environment}"
+  role             = aws_iam_role.cognito_triggers.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  filename         = data.archive_file.pre_sign_up.output_path
+  source_code_hash = data.archive_file.pre_sign_up.output_base64sha256
+
+  depends_on = [aws_cloudwatch_log_group.pre_sign_up]
+}
+
+resource "aws_lambda_permission" "pre_sign_up" {
+  statement_id  = "AllowCognitoInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.pre_sign_up.function_name
   principal     = "cognito-idp.amazonaws.com"
   source_arn    = aws_cognito_user_pool.customer.arn
 }
