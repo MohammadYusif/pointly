@@ -32,8 +32,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [cognitoUser, setCognitoUser] = useState<CognitoUser | null>(null);
 
-  // Redirect already-authenticated users straight to the dashboard
+  // Redirect already-authenticated users to the dashboard,
+  // UNLESS we were sent here because of an expired/invalid session (?expired=1).
+  // That marker prevents the infinite loop: CustomerLayout → login → dashboard → repeat.
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('expired') === '1') return;
     getCurrentSession().then((token) => {
       if (token) router.replace('/dashboard');
     });

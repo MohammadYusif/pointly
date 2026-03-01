@@ -24,16 +24,19 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
 
-  // Guard: redirect to login if no valid session
   useEffect(() => {
     getCurrentSession().then((token) => {
       if (!token) {
-        router.replace('/');
+        // Hard navigation so the login page loads fresh (breaks any client-side loop).
+        // The ?expired=1 marker tells the login page not to auto-redirect back.
+        window.location.replace('/?expired=1');
       } else {
         setChecking(false);
       }
     });
-  }, [router]);
+    // Intentionally empty deps: run once on mount only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleLogout = () => {
     signOut();
