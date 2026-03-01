@@ -190,21 +190,77 @@ export const translations = {
     footer: {
       tagline: 'The unified loyalty network for Saudi merchants.',
       copy: '© 2026 Pointly. All rights reserved.',
-      legal: ['Privacy Policy', 'Terms of Service'],
+      legal: [
+        { label: 'Privacy Policy', href: '/privacy' },
+        { label: 'Terms of Service', href: '/terms' },
+      ],
       columns: [
         {
           title: 'Product',
-          links: ['Features', 'Pricing', 'Tiers', 'Network'],
+          links: [
+            { label: 'Features', href: '/#features' },
+            { label: 'Pricing', href: '/#pricing' },
+            { label: 'Tiers', href: '/#tiers' },
+            { label: 'Network', href: '/#network' },
+          ],
         },
         {
           title: 'Company',
-          links: ['About', 'Blog', 'Careers'],
+          links: [
+            { label: 'About', href: '/#about' },
+            { label: 'Blog', href: '/blog' },
+            { label: 'Careers', href: '/careers' },
+          ],
         },
         {
           title: 'Support',
-          links: ['Contact', 'Help Center', 'Status'],
+          links: [
+            { label: 'Contact', href: '/contact' },
+            { label: 'Help Center', href: '/help' },
+            { label: 'Status', href: '/status' },
+          ],
         },
       ],
+    },
+    pages: {
+      blog: {
+        title: 'Blog',
+        subtitle:
+          "Insights on loyalty, Saudi retail, and growing your business. We're just getting started.",
+        empty: "No posts yet — we're building the product first. Check back soon.",
+      },
+      careers: {
+        title: 'Careers',
+        subtitle: "We're building the loyalty network for Saudi Arabia. Come build it with us.",
+        body: 'No open roles at the moment, but feel free to introduce yourself at',
+        email: 'careers@pointly.sa',
+      },
+      contact: {
+        title: 'Contact Us',
+        subtitle: 'Have a question or want to learn more about Pointly?',
+        email: 'hello@pointly.sa',
+        note: 'We typically respond within one business day.',
+      },
+      help: {
+        title: 'Help Center',
+        subtitle: 'Guides and support for Pointly merchants.',
+        body: "We're building our help documentation. In the meantime, reach us at",
+        email: 'support@pointly.sa',
+      },
+      status: {
+        title: 'System Status',
+        subtitle: 'Live status of all Pointly services.',
+        operational: 'All systems operational',
+        noIncidents: 'No incidents reported.',
+      },
+      privacy: {
+        title: 'Privacy Policy',
+        updated: 'Last updated: March 2026',
+      },
+      terms: {
+        title: 'Terms of Service',
+        updated: 'Last updated: March 2026',
+      },
     },
   },
   ar: {
@@ -394,21 +450,76 @@ export const translations = {
     footer: {
       tagline: 'شبكة الولاء الموحدة للتجار السعوديين.',
       copy: '© 2026 بوينتلي. جميع الحقوق محفوظة.',
-      legal: ['سياسة الخصوصية', 'شروط الخدمة'],
+      legal: [
+        { label: 'سياسة الخصوصية', href: '/privacy' },
+        { label: 'شروط الخدمة', href: '/terms' },
+      ],
       columns: [
         {
           title: 'المنتج',
-          links: ['المميزات', 'الأسعار', 'المستويات', 'الشبكة'],
+          links: [
+            { label: 'المميزات', href: '/#features' },
+            { label: 'الأسعار', href: '/#pricing' },
+            { label: 'المستويات', href: '/#tiers' },
+            { label: 'الشبكة', href: '/#network' },
+          ],
         },
         {
           title: 'الشركة',
-          links: ['عن بوينتلي', 'المدونة', 'الوظائف'],
+          links: [
+            { label: 'عن بوينتلي', href: '/#about' },
+            { label: 'المدونة', href: '/blog' },
+            { label: 'الوظائف', href: '/careers' },
+          ],
         },
         {
           title: 'الدعم',
-          links: ['تواصل معنا', 'مركز المساعدة', 'الحالة'],
+          links: [
+            { label: 'تواصل معنا', href: '/contact' },
+            { label: 'مركز المساعدة', href: '/help' },
+            { label: 'الحالة', href: '/status' },
+          ],
         },
       ],
+    },
+    pages: {
+      blog: {
+        title: 'المدونة',
+        subtitle: 'رؤى حول الولاء والتجزئة السعودية ونمو أعمالك. نحن بدأنا للتو.',
+        empty: 'لا مقالات بعد — نحن نبني المنتج أولاً. تابعنا قريباً.',
+      },
+      careers: {
+        title: 'الوظائف',
+        subtitle: 'نحن نبني شبكة الولاء للمملكة العربية السعودية. انضم إلينا.',
+        body: 'لا توجد وظائف شاغرة حالياً، لكن يسعدنا التعرف عليك على',
+        email: 'careers@pointly.sa',
+      },
+      contact: {
+        title: 'تواصل معنا',
+        subtitle: 'هل لديك سؤال أو تريد معرفة المزيد عن بوينتلي؟',
+        email: 'hello@pointly.sa',
+        note: 'نرد عادةً خلال يوم عمل واحد.',
+      },
+      help: {
+        title: 'مركز المساعدة',
+        subtitle: 'أدلة ودعم لتجار بوينتلي.',
+        body: 'نبني توثيق المساعدة. في هذه الأثناء، تواصل معنا على',
+        email: 'support@pointly.sa',
+      },
+      status: {
+        title: 'حالة النظام',
+        subtitle: 'الحالة المباشرة لجميع خدمات بوينتلي.',
+        operational: 'جميع الأنظمة تعمل بشكل طبيعي',
+        noIncidents: 'لا توجد حوادث مُبلَّغ عنها.',
+      },
+      privacy: {
+        title: 'سياسة الخصوصية',
+        updated: 'آخر تحديث: مارس 2026',
+      },
+      terms: {
+        title: 'شروط الخدمة',
+        updated: 'آخر تحديث: مارس 2026',
+      },
     },
   },
 } as const;

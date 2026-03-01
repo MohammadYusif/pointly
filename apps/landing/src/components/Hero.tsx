@@ -79,28 +79,30 @@ export function Hero({ t, isRtl }: HeroProps) {
               </div>
 
               {/* Floating mini-cards */}
-              <div className="hero-float-card hero-float-earn">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <path
-                    d="M7 1v12M1 7h12"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                {t.hero.floatEarned}
-              </div>
-              <div className="hero-float-card hero-float-redeem">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <path
-                    d={redeemArrow}
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                {t.hero.floatRedeemed}
+              <div className="hero-float-row">
+                <div className="hero-float-card hero-float-earn">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path
+                      d="M7 1v12M1 7h12"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  {t.hero.floatEarned}
+                </div>
+                <div className="hero-float-card hero-float-redeem">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path
+                      d={redeemArrow}
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  {t.hero.floatRedeemed}
+                </div>
               </div>
             </div>
           </div>

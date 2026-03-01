@@ -1,4 +1,5 @@
 import type { TranslationKeys } from '@/i18n/translations';
+import Link from 'next/link';
 
 interface FooterProps {
   t: TranslationKeys;
@@ -12,7 +13,9 @@ export function Footer({ t }: FooterProps) {
         <div className="footer-grid">
           {/* Brand column */}
           <div className="footer-brand">
-            <img src="/logo.svg" alt="Pointly" height={32} />
+            <Link href="/">
+              <img src="/logo.svg" alt="Pointly" height={32} />
+            </Link>
             <p className="footer-tagline">{t.footer.tagline}</p>
           </div>
 
@@ -22,8 +25,10 @@ export function Footer({ t }: FooterProps) {
               <div className="footer-col-title">{col.title}</div>
               <ul className="footer-col-links">
                 {col.links.map((link) => (
-                  <li key={link}>
-                    <span className="footer-col-link">{link}</span>
+                  <li key={link.label}>
+                    <Link href={link.href} className="footer-col-link">
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -36,8 +41,10 @@ export function Footer({ t }: FooterProps) {
           <p className="footer-copy">{t.footer.copy}</p>
           <ul className="footer-links">
             {t.footer.legal.map((link) => (
-              <li key={link}>
-                <span className="footer-link">{link}</span>
+              <li key={link.label}>
+                <Link href={link.href} className="footer-link">
+                  {link.label}
+                </Link>
               </li>
             ))}
           </ul>
