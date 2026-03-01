@@ -27,6 +27,7 @@ async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise
 
   if (response.status === 401) {
     signOut();
+    if (typeof window !== 'undefined') window.location.href = '/';
     throw new Error('Session expired');
   }
 

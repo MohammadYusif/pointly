@@ -1,7 +1,8 @@
 'use client';
 
 import { PointlyLogo } from '@/components/PointlyLogo';
-import { confirmOtp, signInWithPhone } from '@/lib/auth';
+import { completeProfile } from '@/lib/api';
+import { confirmOtp, getCurrentSession, signInWithPhone } from '@/lib/auth';
 import { useTranslation } from '@pointly/i18n';
 import {
   Button,
@@ -16,7 +17,7 @@ import {
 import type { CognitoUser } from 'amazon-cognito-identity-js';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -26,16 +27,24 @@ export default function LoginPage() {
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [cognitoUser, setCognitoUser] = useState<CognitoUser | null>(null);
+
+  // Redirect already-authenticated users straight to the dashboard
+  useEffect(() => {
+    getCurrentSession().then((token) => {
+      if (token) router.replace('/dashboard');
+    });
+  }, [router]);
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const user = await signInWithPhone(phone);
+      const user = await signInWithPhone(phone, rememberMe);
       setCognitoUser(user);
       setStep('otp');
     } catch (err) {
@@ -52,6 +61,8 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await confirmOtp(cognitoUser, otp);
+      // Ensure DynamoDB customer record exists (idempotent — safe to call on every login)
+      await completeProfile({});
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : t('errors.serverError'));
@@ -144,6 +155,24 @@ export default function LoginPage() {
                       className="h-11"
                     />
                   </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="remember-me"
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="h-4 w-4 shrink-0 accent-[#08b0a2]"
+                    />
+                    <label
+                      htmlFor="remember-me"
+                      className="text-sm cursor-pointer"
+                      style={{ color: '#71717a' }}
+                    >
+                      {t('auth.rememberMe')}
+                    </label>
+                  </div>
+
                   {error && <p className="text-sm text-red-600">{error}</p>}
                   <Button type="submit" className="w-full h-11" disabled={loading || !phone}>
                     {loading ? t('common.loading') : t('common.next')}

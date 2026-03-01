@@ -2,7 +2,7 @@
 
 import { PointlyLogo } from '@/components/PointlyLogo';
 import { completeProfile } from '@/lib/api';
-import { confirmOtp, signInWithPhone, signUpWithCognito } from '@/lib/auth';
+import { confirmOtp, getCurrentSession, signInWithPhone, signUpWithCognito } from '@/lib/auth';
 import { useTranslation } from '@pointly/i18n';
 import {
   Button,
@@ -17,7 +17,7 @@ import {
 import type { CognitoUser } from 'amazon-cognito-identity-js';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 /** Ensures the user exists in Cognito, ignoring UsernameExistsException. */
 async function ensureRegistered(phone: string, name?: string): Promise<void> {
@@ -33,6 +33,13 @@ export default function RegisterPage() {
   const { t } = useTranslation();
   const { textStart } = useRTL();
   const router = useRouter();
+
+  // Redirect already-authenticated users straight to the dashboard
+  useEffect(() => {
+    getCurrentSession().then((token) => {
+      if (token) router.replace('/dashboard');
+    });
+  }, [router]);
 
   const [step, setStep] = useState<'info' | 'otp'>('info');
   const [phone, setPhone] = useState('');

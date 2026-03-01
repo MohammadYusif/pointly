@@ -9,16 +9,44 @@ import {
 const userPoolId = process.env.NEXT_PUBLIC_CUSTOMER_USER_POOL_ID || '';
 const clientId = process.env.NEXT_PUBLIC_CUSTOMER_CLIENT_ID || '';
 
-const poolData = { UserPoolId: userPoolId, ClientId: clientId };
+// Key stored in sessionStorage to remember which storage type was chosen at login.
+// sessionStorage itself is tab-scoped and survives refresh within the same tab.
+const STORAGE_TYPE_KEY = 'pointly-auth-storage';
 
-function getUserPool(): CognitoUserPool | null {
+function getUserPool(storage?: Storage): CognitoUserPool | null {
   if (!userPoolId || !clientId) return null;
-  return new CognitoUserPool(poolData);
+  const opts: { UserPoolId: string; ClientId: string; Storage?: Storage } = {
+    UserPoolId: userPoolId,
+    ClientId: clientId,
+  };
+  if (storage) opts.Storage = storage;
+  return new CognitoUserPool(opts);
 }
 
-export function signInWithPhone(rawPhone: string): Promise<CognitoUser> {
+/** Returns the storage that was chosen at login, falling back to localStorage. */
+function getTokenStorage(): Storage | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const type = window.sessionStorage.getItem(STORAGE_TYPE_KEY);
+    return type === 'session' ? window.sessionStorage : window.localStorage;
+  } catch {
+    return window.localStorage;
+  }
+}
+
+export function signInWithPhone(rawPhone: string, rememberMe = true): Promise<CognitoUser> {
   return new Promise((resolve, reject) => {
-    const pool = getUserPool();
+    if (typeof window === 'undefined') return reject(new Error('Not in browser'));
+
+    const storage = rememberMe ? window.localStorage : window.sessionStorage;
+    // Persist the choice so getCurrentSession knows where to look after a page refresh
+    try {
+      window.sessionStorage.setItem(STORAGE_TYPE_KEY, rememberMe ? 'local' : 'session');
+    } catch {
+      /* ignore */
+    }
+
+    const pool = getUserPool(storage);
     if (!pool) return reject(new Error('Cognito not configured'));
 
     // Cognito requires E.164 (+966XXXXXXXXX) — normalize any local format
@@ -49,7 +77,10 @@ export function confirmOtp(user: CognitoUser, code: string): Promise<void> {
 
 export function getCurrentSession(): Promise<string | null> {
   return new Promise((resolve) => {
-    const pool = getUserPool();
+    if (typeof window === 'undefined') return resolve(null);
+
+    const storage = getTokenStorage();
+    const pool = getUserPool(storage);
     if (!pool) return resolve(null);
 
     const user = pool.getCurrentUser();
@@ -75,10 +106,19 @@ export function getAccessToken(): Promise<string | null> {
 }
 
 export function signOut(): void {
-  const pool = getUserPool();
-  if (!pool) return;
-  const user = pool.getCurrentUser();
-  if (user) user.signOut();
+  if (typeof window === 'undefined') return;
+  // Clear tokens from both storages so there are no leftover sessions
+  for (const storage of [window.localStorage, window.sessionStorage]) {
+    const pool = getUserPool(storage);
+    if (!pool) continue;
+    const user = pool.getCurrentUser();
+    if (user) user.signOut();
+  }
+  try {
+    window.sessionStorage.removeItem(STORAGE_TYPE_KEY);
+  } catch {
+    /* ignore */
+  }
 }
 
 export function signUpWithCognito(rawPhone: string, name?: string): Promise<void> {
