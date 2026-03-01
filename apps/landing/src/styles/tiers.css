@@ -1,0 +1,91 @@
+@layer components {
+  .tiers-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 56px;
+  }
+
+  @media (max-width: 1024px) {
+    .tiers-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 640px) {
+    .tiers-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .tier-card {
+    background: rgba(255, 255, 255, 0.84);
+    backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(228, 228, 231, 0.7);
+    border-radius: 18px;
+    padding: 24px;
+    text-align: center;
+    transition: transform 0.22s, box-shadow 0.22s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tier-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 36px rgba(0, 0, 0, 0.09);
+  }
+
+  .tier-card.diamond {
+    border-color: rgba(8, 176, 162, 0.3);
+    background: linear-gradient(135deg, rgba(8, 176, 162, 0.05), rgba(255, 255, 255, 0.92));
+  }
+
+  .tier-icon {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+
+  .tier-name {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+
+  .tier-card.bronze .tier-name {
+    color: #cd7f32;
+  }
+  .tier-card.gold .tier-name {
+    color: #d97706;
+  }
+  .tier-card.platinum .tier-name {
+    color: #6366f1;
+  }
+  .tier-card.diamond .tier-name {
+    color: var(--teal);
+  }
+
+  .tier-threshold {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .tier-threshold-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .tier-multiplier {
+    display: inline-block;
+    background: rgba(8, 176, 162, 0.09);
+    color: var(--teal);
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding: 6px 16px;
+    border-radius: 8px;
+  }
+}

@@ -1,0 +1,11 @@
+@theme {
+  --color-teal: #08b0a2;
+  --color-teal-dark: #07a093;
+  --color-navy: #1e2d4a;
+  --color-navy-dark: #141e33;
+  --color-text-primary: #0f1117;
+  --color-text-secondary: #52525b;
+  --color-text-muted: #71717a;
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", system-ui, sans-serif;
+}

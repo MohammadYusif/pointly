@@ -1,0 +1,146 @@
+@layer components {
+  .network-section {
+    padding: 100px 0;
+    background: rgba(8, 176, 162, 0.015);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    z-index: 1;
+  }
+
+  .network-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  @media (max-width: 900px) {
+    .network-layout {
+      grid-template-columns: 1fr;
+      gap: 48px;
+    }
+  }
+
+  .network-graphic {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .network-hub {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--teal), #0891b2);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.82rem;
+    box-shadow: 0 8px 32px rgba(8, 176, 162, 0.35);
+    z-index: 2;
+  }
+
+  .network-hub::before {
+    content: "";
+    position: absolute;
+    inset: -14px;
+    border-radius: 28px;
+    border: 2px solid rgba(8, 176, 162, 0.2);
+    animation: hub-pulse 3s ease-in-out infinite;
+  }
+
+  .network-hub::after {
+    content: "";
+    position: absolute;
+    inset: -28px;
+    border-radius: 36px;
+    border: 1.5px solid rgba(8, 176, 162, 0.1);
+    animation: hub-pulse 3s ease-in-out infinite 0.5s;
+  }
+
+  .network-node {
+    position: absolute;
+    width: 54px;
+    height: 54px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    border: 1.5px solid rgba(228, 228, 231, 0.9);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+    animation: node-float 6s ease-in-out infinite;
+  }
+
+  .network-node:nth-child(3) {
+    top: 4%;
+    left: 50%;
+    transform: translateX(-50%);
+    animation-delay: 0s;
+    animation-name: node-float-center;
+  }
+  .network-node:nth-child(4) {
+    top: 20%;
+    right: 4%;
+    animation-delay: 1s;
+  }
+  .network-node:nth-child(5) {
+    bottom: 20%;
+    right: 4%;
+    animation-delay: 2s;
+  }
+  .network-node:nth-child(6) {
+    bottom: 4%;
+    left: 50%;
+    transform: translateX(-50%);
+    animation-delay: 3s;
+    animation-name: node-float-center;
+  }
+  .network-node:nth-child(7) {
+    bottom: 20%;
+    left: 4%;
+    animation-delay: 4s;
+  }
+  .network-node:nth-child(8) {
+    top: 20%;
+    left: 4%;
+    animation-delay: 5s;
+  }
+
+  .network-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  [dir="rtl"] .network-node:nth-child(4) {
+    right: auto;
+    left: 4%;
+  }
+  [dir="rtl"] .network-node:nth-child(5) {
+    right: auto;
+    left: 4%;
+  }
+  [dir="rtl"] .network-node:nth-child(7) {
+    left: auto;
+    right: 4%;
+  }
+  [dir="rtl"] .network-node:nth-child(8) {
+    left: auto;
+    right: 4%;
+  }
+}
