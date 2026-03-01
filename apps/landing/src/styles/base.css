@@ -29,8 +29,7 @@
         ellipse 80% 60% at 70% -5%,
         rgba(8, 176, 162, 0.07),
         transparent 60%
-      ),
-      radial-gradient(ellipse 60% 50% at 10% 100%, rgba(30, 45, 74, 0.04), transparent 55%),
+      ), radial-gradient(ellipse 60% 50% at 10% 100%, rgba(30, 45, 74, 0.04), transparent 55%),
       radial-gradient(circle, rgba(8, 176, 162, 0.055) 1px, transparent 1px),
       linear-gradient(180deg, #f9fafb 0%, #f1f3f5 100%);
     background-size: 100% 100%, 100% 100%, 26px 26px, 100% 100%;
