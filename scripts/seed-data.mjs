@@ -4,9 +4,10 @@
  * Seeds DynamoDB tables with realistic test data for the staging environment.
  *
  * Usage:
- *   node scripts/seed-data.mjs              # Seeds dev environment
- *   node scripts/seed-data.mjs --env prod   # Seeds prod environment
- *   node scripts/seed-data.mjs --clean      # Deletes seeded data first
+ *   node scripts/seed-data.mjs                               # Seeds dev environment
+ *   node scripts/seed-data.mjs --env prod                    # Seeds prod environment
+ *   node scripts/seed-data.mjs --clean                       # Deletes seeded data first
+ *   node scripts/seed-data.mjs --pool-id <id>                # Also creates Cognito users
  *
  * Prerequisites:
  *   - AWS CLI configured (or AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY env vars)
@@ -14,6 +15,11 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import {
+  AdminCreateUserCommand,
+  AdminSetUserPasswordCommand,
+  CognitoIdentityProviderClient,
+} from '@aws-sdk/client-cognito-identity-provider';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DeleteCommand, DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 
@@ -21,6 +27,7 @@ import { DeleteCommand, DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-
 const args = process.argv.slice(2);
 const env = args.includes('--env') ? args[args.indexOf('--env') + 1] : 'dev';
 const clean = args.includes('--clean');
+const poolId = args.includes('--pool-id') ? args[args.indexOf('--pool-id') + 1] : null;
 const region = 'me-south-1';
 
 const TABLES = {
@@ -33,6 +40,7 @@ const client = new DynamoDBClient({ region });
 const docClient = DynamoDBDocumentClient.from(client, {
   marshallOptions: { removeUndefinedValues: true },
 });
+const cognitoClient = poolId ? new CognitoIdentityProviderClient({ region }) : null;
 
 // --- Deterministic IDs for seed data ---
 const MERCHANT_IDS = {
@@ -941,6 +949,9 @@ async function seed() {
   }
   console.log(`  [+] ${allTxns.length} transactions written`);
 
+  // Seed Cognito users (if --pool-id provided)
+  await seedCognitoUsers();
+
   console.log('\n=== Seed Complete ===');
   console.log(`
 Summary:
@@ -973,6 +984,62 @@ Customers:
   Khalid Al-Mutairi   - Bronze, 0 pts (Shawarma - PENDING consent)
   Layla Al-Rashidi    - Bronze, 180 pts (Dose - occasional)
 `);
+}
+
+// --- Cognito User Seeding ---
+const COGNITO_CUSTOMERS = [
+  { phone: '+966501111111', name: 'Ahmed Al-Dosari',     id: CUSTOMER_IDS.ahmed },
+  { phone: '+966502222222', name: 'Fatimah Al-Harbi',    id: CUSTOMER_IDS.fatimah },
+  { phone: '+966503333333', name: 'Mohammed Al-Qahtani', id: CUSTOMER_IDS.mohammed },
+  { phone: '+966504444444', name: 'Noura Al-Shammari',   id: CUSTOMER_IDS.noura },
+  { phone: '+966505555555', name: 'Khalid Al-Mutairi',   id: CUSTOMER_IDS.khalid },
+  { phone: '+966506666666', name: 'Sara Al-Tamimi',      id: CUSTOMER_IDS.sara },
+  { phone: '+966507777777', name: 'Omar Al-Ghamdi',      id: CUSTOMER_IDS.omar },
+  { phone: '+966508888888', name: 'Layla Al-Rashidi',    id: CUSTOMER_IDS.layla },
+  { phone: '+966509999999', name: 'Youssef Al-Zahrani',  id: CUSTOMER_IDS.youssef },
+  { phone: '+966510001111', name: 'Hana Al-Subaie',      id: CUSTOMER_IDS.hana },
+  { phone: '+966511112222', name: 'Reem Al-Otaibi',      id: CUSTOMER_IDS.reem },
+  { phone: '+966513334444', name: 'Tariq Al-Harthy',     id: CUSTOMER_IDS.tariq },
+];
+
+async function seedCognitoUsers() {
+  if (!cognitoClient || !poolId) return;
+
+  console.log(`\nSeeding Cognito users in pool: ${poolId}`);
+
+  for (const { phone, name, id } of COGNITO_CUSTOMERS) {
+    try {
+      await cognitoClient.send(
+        new AdminCreateUserCommand({
+          UserPoolId: poolId,
+          Username: phone,
+          MessageAction: 'SUPPRESS',
+          UserAttributes: [
+            { Name: 'phone_number', Value: phone },
+            { Name: 'name', Value: name },
+            { Name: 'custom:customerId', Value: id },
+          ],
+        }),
+      );
+
+      await cognitoClient.send(
+        new AdminSetUserPasswordCommand({
+          UserPoolId: poolId,
+          Username: phone,
+          Password: 'Pointly1!',
+          Permanent: true,
+        }),
+      );
+
+      console.log(`  [+] ${name} (${phone})`);
+    } catch (err) {
+      if (err.name === 'UsernameExistsException') {
+        console.log(`  [=] ${name} (${phone}) — already exists, skipped`);
+      } else {
+        console.error(`  [!] ${name} (${phone}) — ${err.message}`);
+      }
+    }
+  }
 }
 
 seed().catch((err) => {

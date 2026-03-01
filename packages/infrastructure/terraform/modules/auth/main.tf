@@ -189,6 +189,18 @@ resource "aws_cognito_user_pool" "customer" {
       priority = 1
     }
   }
+
+  lambda_config {
+    define_auth_challenge          = aws_lambda_function.define_auth_challenge.arn
+    create_auth_challenge          = aws_lambda_function.create_auth_challenge.arn
+    verify_auth_challenge_response = aws_lambda_function.verify_auth_challenge.arn
+  }
+
+  depends_on = [
+    aws_lambda_function.define_auth_challenge,
+    aws_lambda_function.create_auth_challenge,
+    aws_lambda_function.verify_auth_challenge,
+  ]
 }
 
 resource "aws_cognito_user_pool_client" "customer_web" {
@@ -213,4 +225,169 @@ resource "aws_cognito_user_pool_client" "customer_web" {
     access_token  = "hours"
     id_token      = "hours"
   }
+}
+
+# ===========================================
+# OTP Lambda Triggers (Customer CUSTOM_AUTH)
+# ===========================================
+
+resource "aws_iam_role" "cognito_triggers" {
+  name = "pointly-cognito-triggers-${var.environment}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "lambda.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cognito_triggers_logs" {
+  role       = aws_iam_role.cognito_triggers.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# ---- DefineAuthChallenge ----
+
+data "archive_file" "define_auth_challenge" {
+  type        = "zip"
+  output_path = "${path.module}/define-auth-challenge.zip"
+  source {
+    content  = <<-EOT
+      exports.handler = async (event) => {
+        const session = event.request.session;
+        if (session.length === 0) {
+          event.response.issueTokens = false;
+          event.response.failAuthentication = false;
+          event.response.challengeName = 'CUSTOM_CHALLENGE';
+        } else if (
+          session.length === 1 &&
+          session[0].challengeName === 'CUSTOM_CHALLENGE' &&
+          session[0].challengeResult === true
+        ) {
+          event.response.issueTokens = true;
+          event.response.failAuthentication = false;
+        } else {
+          event.response.issueTokens = false;
+          event.response.failAuthentication = true;
+        }
+        return event;
+      };
+    EOT
+    filename = "index.js"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "define_auth_challenge" {
+  name              = "/aws/lambda/pointly-define-auth-challenge-${var.environment}"
+  retention_in_days = 7
+}
+
+resource "aws_lambda_function" "define_auth_challenge" {
+  function_name    = "pointly-define-auth-challenge-${var.environment}"
+  role             = aws_iam_role.cognito_triggers.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  filename         = data.archive_file.define_auth_challenge.output_path
+  source_code_hash = data.archive_file.define_auth_challenge.output_base64sha256
+
+  depends_on = [aws_cloudwatch_log_group.define_auth_challenge]
+}
+
+resource "aws_lambda_permission" "define_auth_challenge" {
+  statement_id  = "AllowCognitoInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.define_auth_challenge.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = aws_cognito_user_pool.customer.arn
+}
+
+# ---- CreateAuthChallenge ----
+
+data "archive_file" "create_auth_challenge" {
+  type        = "zip"
+  output_path = "${path.module}/create-auth-challenge.zip"
+  source {
+    content  = <<-EOT
+      exports.handler = async (event) => {
+        const otp = String(Math.floor(100000 + Math.random() * 900000));
+        console.log('[OTP] Phone: ' + event.request.userAttributes.phone_number + ' | Code: ' + otp);
+        event.response.publicChallengeParameters = {
+          phone: event.request.userAttributes.phone_number,
+        };
+        event.response.privateChallengeParameters = { answer: otp };
+        event.response.challengeMetadata = 'OTP_CHALLENGE';
+        return event;
+      };
+    EOT
+    filename = "index.js"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "create_auth_challenge" {
+  name              = "/aws/lambda/pointly-create-auth-challenge-${var.environment}"
+  retention_in_days = 7
+}
+
+resource "aws_lambda_function" "create_auth_challenge" {
+  function_name    = "pointly-create-auth-challenge-${var.environment}"
+  role             = aws_iam_role.cognito_triggers.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  filename         = data.archive_file.create_auth_challenge.output_path
+  source_code_hash = data.archive_file.create_auth_challenge.output_base64sha256
+
+  depends_on = [aws_cloudwatch_log_group.create_auth_challenge]
+}
+
+resource "aws_lambda_permission" "create_auth_challenge" {
+  statement_id  = "AllowCognitoInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.create_auth_challenge.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = aws_cognito_user_pool.customer.arn
+}
+
+# ---- VerifyAuthChallengeResponse ----
+
+data "archive_file" "verify_auth_challenge" {
+  type        = "zip"
+  output_path = "${path.module}/verify-auth-challenge.zip"
+  source {
+    content  = <<-EOT
+      exports.handler = async (event) => {
+        const expected = event.request.privateChallengeParameters.answer;
+        const provided = event.request.challengeAnswer;
+        event.response.answerCorrect = expected === provided;
+        return event;
+      };
+    EOT
+    filename = "index.js"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "verify_auth_challenge" {
+  name              = "/aws/lambda/pointly-verify-auth-challenge-${var.environment}"
+  retention_in_days = 7
+}
+
+resource "aws_lambda_function" "verify_auth_challenge" {
+  function_name    = "pointly-verify-auth-challenge-${var.environment}"
+  role             = aws_iam_role.cognito_triggers.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  filename         = data.archive_file.verify_auth_challenge.output_path
+  source_code_hash = data.archive_file.verify_auth_challenge.output_base64sha256
+
+  depends_on = [aws_cloudwatch_log_group.verify_auth_challenge]
+}
+
+resource "aws_lambda_permission" "verify_auth_challenge" {
+  statement_id  = "AllowCognitoInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.verify_auth_challenge.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = aws_cognito_user_pool.customer.arn
 }
