@@ -23,7 +23,7 @@ export const translations = {
       floatRedeemed: '−500 pts redeemed',
       cardMerchant: 'Al-Noor Coffee',
       globalPoints: 'global points',
-      cardToTier: 'to Platinum',
+      cardToTier: 'to Diamond',
     },
     stats: {
       merchants: 'Merchant Plans',
@@ -229,7 +229,7 @@ export const translations = {
       floatRedeemed: '−500 نقطة مستردة',
       cardMerchant: 'قهوة النور',
       globalPoints: 'نقطة عالمية',
-      cardToTier: 'إلى بلاتيني',
+      cardToTier: 'إلى ألماس',
     },
     stats: {
       merchants: 'خطط التجار',

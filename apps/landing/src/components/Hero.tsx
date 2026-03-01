@@ -56,7 +56,7 @@ export function Hero({ t, isRtl }: HeroProps) {
               <div className="hero-card">
                 <div className="hero-card-header">
                   <span className="hero-card-merchant">{t.hero.cardMerchant}</span>
-                  <div className="hero-card-tier">★ {t.tiers.items[1].name}</div>
+                  <div className="hero-card-tier">★ {t.tiers.items[2].name}</div>
                 </div>
                 <div className="hero-card-pts">12,400</div>
                 <div className="hero-card-pts-label">{t.hero.globalPoints}</div>
@@ -70,7 +70,7 @@ export function Hero({ t, isRtl }: HeroProps) {
                     marginBottom: '8px',
                   }}
                 >
-                  <span>3,800 {t.hero.cardToTier}</span>
+                  <span>2,600 {t.hero.cardToTier}</span>
                   <span>62%</span>
                 </div>
                 <div className="hero-card-progress-bar">
