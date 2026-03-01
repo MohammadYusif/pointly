@@ -25,9 +25,9 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30 pb-20">
-      <main className="max-w-lg mx-auto px-4 py-6">{children}</main>
-      <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-border">
+    <div className="portal-layout">
+      <main className="max-w-lg mx-auto px-4 py-6 animate-fade-in">{children}</main>
+      <nav className="portal-nav fixed bottom-0 inset-x-0">
         <div className="max-w-lg mx-auto flex justify-around py-2">
           {navItems.map((item) => {
             const isActive =

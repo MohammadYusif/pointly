@@ -50,10 +50,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-muted/30">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold" style={{ color: '#08b0a2' }}>
+    <div className="login-wrapper min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-sm relative z-10">
+        <CardHeader className="text-center pb-2">
+          <CardTitle className="text-3xl font-bold" style={{ color: '#08b0a2' }}>
             Pointly
           </CardTitle>
           <p className="text-muted-foreground text-sm">{t('auth.customerPortal')}</p>

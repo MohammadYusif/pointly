@@ -157,6 +157,9 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0
     devDependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4.1.18
+        version: 4.1.18
       '@types/node':
         specifier: ^22.10.1
         version: 22.10.5
@@ -166,6 +169,9 @@ importers:
       '@types/react-dom':
         specifier: ^18.3.1
         version: 18.3.7(@types/react@18.3.27)
+      tailwindcss:
+        specifier: ^4.0.0
+        version: 4.1.18
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
