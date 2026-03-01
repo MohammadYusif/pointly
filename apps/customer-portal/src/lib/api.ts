@@ -50,7 +50,10 @@ export function updateCustomer(data: { name?: string }) {
 }
 
 export function generateQRCode() {
-  return fetchApi<{ qrPayload: string; expiresAt: number }>('/v1/me/qr-code', { method: 'POST' });
+  return fetchApi<{ qrPayload: string; expiresAt: number }>('/v1/me/qr-code', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
 }
 
 export function getMyPerks() {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslation } from '@pointly/i18n';
+import { LanguageToggle } from '@pointly/ui';
 import { Clock, Home, QrCode, User } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -26,7 +27,15 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="portal-layout">
-      <main className="max-w-lg mx-auto px-4 py-6">
+      <header className="portal-header sticky top-0 z-20">
+        <div className="max-w-lg mx-auto px-4 h-12 flex items-center justify-between">
+          <span className="text-base font-extrabold tracking-tight" style={{ color: '#08b0a2' }}>
+            Pointly
+          </span>
+          <LanguageToggle showLabel={false} />
+        </div>
+      </header>
+      <main className="max-w-lg mx-auto px-4 py-4">
         <div key={pathname} className="animate-fade-in">
           {children}
         </div>

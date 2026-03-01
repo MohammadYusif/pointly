@@ -124,8 +124,26 @@
    Background System
    ============================================================================ */
 
+/* Language toggle on login page — top end corner */
+.login-lang-toggle {
+  position: absolute;
+  top: 1rem;
+  inset-inline-end: 1rem;
+}
+
+/* Override ghost button colors on dark login background */
+.login-lang-toggle button {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.login-lang-toggle button:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
 /* Login page — full dark navy with teal dot grid */
 .login-page {
+  position: relative;
   min-height: 100vh;
   min-height: 100dvh;
   background: radial-gradient(ellipse 55% 65% at 18% 55%, rgba(8, 176, 162, 0.14), transparent 55%),
@@ -294,6 +312,21 @@
   backdrop-filter: blur(10px);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   border-color: rgba(39, 39, 42, 0.7);
+}
+
+/* ============================================================================
+   Portal Header — frosted glass strip with logo + language toggle
+   ============================================================================ */
+
+.portal-header {
+  backdrop-filter: blur(16px) saturate(1.2);
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-bottom: 1px solid rgba(228, 228, 231, 0.65);
+}
+
+.dark .portal-header {
+  background: rgba(10, 10, 10, 0.88) !important;
+  border-bottom-color: rgba(39, 39, 42, 0.6);
 }
 
 /* ============================================================================

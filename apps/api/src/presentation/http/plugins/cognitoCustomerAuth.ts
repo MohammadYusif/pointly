@@ -78,9 +78,12 @@ export async function verifyCustomerToken(request: FastifyRequest): Promise<void
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: JWT payload shape varies
-  const payload = (request as any).customerUser;
+  const rawUser = (request as any).customerUser;
+  // When decode: { complete: true }, @fastify/jwt wraps the token as { header, payload, signature }
+  // biome-ignore lint/suspicious/noExplicitAny: JWT payload shape varies
+  const payload: any = rawUser?.payload ?? rawUser;
 
-  if (payload.token_use !== 'access') {
+  if (!payload || payload.token_use !== 'access') {
     throw new UnauthorizedError('Invalid token type');
   }
 

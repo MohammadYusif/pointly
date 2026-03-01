@@ -2,7 +2,16 @@
 
 import { confirmOtp, signInWithPhone } from '@/lib/auth';
 import { useTranslation } from '@pointly/i18n';
-import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Input,
+  LanguageToggle,
+  useRTL,
+} from '@pointly/ui';
 import type { CognitoUser } from 'amazon-cognito-identity-js';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -51,6 +60,9 @@ export default function LoginPage() {
 
   return (
     <div className="login-page">
+      <div className="login-lang-toggle">
+        <LanguageToggle variant="ghost" showLabel={false} />
+      </div>
       <div className="login-grid">
         {/* ── Hero — desktop only ── */}
         <div className={`login-hero ${textStart}`}>
