@@ -1330,10 +1330,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    align-items: flex-start;
-  }
-  [dir="rtl"] .footer-brand {
-    align-items: flex-end;
+    align-items: start;
   }
   .footer-brand img {
     height: 38px;
@@ -1353,6 +1350,9 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin-bottom: 16px;
+  }
+  [dir="rtl"] .footer-col-title {
+    letter-spacing: 0;
   }
   .footer-col-links {
     list-style: none;
