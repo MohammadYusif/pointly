@@ -25,11 +25,11 @@ const EN_CONTENT = [
   },
   {
     heading: '6. Your Rights',
-    body: 'You have the right to access, correct, or delete your personal data at any time. To exercise these rights, contact us at privacy@pointly.sa. We will respond within 14 business days.',
+    body: 'You have the right to access, correct, or delete your personal data at any time. To exercise these rights, contact us through our website. We will respond within 14 business days.',
   },
   {
     heading: '7. Contact',
-    body: 'For privacy-related enquiries, email privacy@pointly.sa.',
+    body: 'For privacy-related enquiries, please reach out through our website.',
   },
 ];
 
@@ -56,11 +56,11 @@ const AR_CONTENT = [
   },
   {
     heading: '6. حقوقك',
-    body: 'يحق لك الوصول إلى بياناتك الشخصية أو تصحيحها أو حذفها في أي وقت. لممارسة هذه الحقوق، تواصل معنا على privacy@pointly.sa. سنرد خلال 14 يوم عمل.',
+    body: 'يحق لك الوصول إلى بياناتك الشخصية أو تصحيحها أو حذفها في أي وقت. لممارسة هذه الحقوق، تواصل معنا عبر موقعنا. سنرد خلال 14 يوم عمل.',
   },
   {
     heading: '7. التواصل',
-    body: 'للاستفسارات المتعلقة بالخصوصية، راسلنا على privacy@pointly.sa.',
+    body: 'للاستفسارات المتعلقة بالخصوصية، تواصل معنا عبر موقعنا.',
   },
 ];
 

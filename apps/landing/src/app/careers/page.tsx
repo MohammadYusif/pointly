@@ -15,9 +15,6 @@ export default function CareersPage() {
           <div className="inner-body">
             <div className="inner-coming">
               <p className="inner-coming-note">{t.pages.careers.body}</p>
-              <a href={`mailto:${t.pages.careers.email}`} className="inner-coming-email">
-                {t.pages.careers.email}
-              </a>
             </div>
           </div>
         </div>

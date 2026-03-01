@@ -15,9 +15,6 @@ export default function HelpPage() {
           <div className="inner-body">
             <div className="inner-coming">
               <p className="inner-coming-note">{t.pages.help.body}</p>
-              <a href={`mailto:${t.pages.help.email}`} className="inner-coming-email">
-                {t.pages.help.email}
-              </a>
             </div>
           </div>
         </div>

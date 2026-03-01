@@ -217,7 +217,6 @@ export const translations = {
           links: [
             { label: 'Contact', href: '/contact' },
             { label: 'Help Center', href: '/help' },
-            { label: 'Status', href: '/status' },
           ],
         },
       ],
@@ -232,26 +231,17 @@ export const translations = {
       careers: {
         title: 'Careers',
         subtitle: "We're building the loyalty network for Saudi Arabia. Come build it with us.",
-        body: 'No open roles at the moment, but feel free to introduce yourself at',
-        email: 'careers@pointly.sa',
+        body: "No open roles at the moment. We'll announce opportunities here when they open up.",
       },
       contact: {
         title: 'Contact Us',
         subtitle: 'Have a question or want to learn more about Pointly?',
-        email: 'hello@pointly.sa',
-        note: 'We typically respond within one business day.',
+        body: "We're setting up our contact channels. Check back soon.",
       },
       help: {
         title: 'Help Center',
         subtitle: 'Guides and support for Pointly merchants.',
-        body: "We're building our help documentation. In the meantime, reach us at",
-        email: 'support@pointly.sa',
-      },
-      status: {
-        title: 'System Status',
-        subtitle: 'Live status of all Pointly services.',
-        operational: 'All systems operational',
-        noIncidents: 'No incidents reported.',
+        body: "We're building our help documentation. Check back soon.",
       },
       privacy: {
         title: 'Privacy Policy',
@@ -477,7 +467,6 @@ export const translations = {
           links: [
             { label: 'تواصل معنا', href: '/contact' },
             { label: 'مركز المساعدة', href: '/help' },
-            { label: 'الحالة', href: '/status' },
           ],
         },
       ],
@@ -491,26 +480,17 @@ export const translations = {
       careers: {
         title: 'الوظائف',
         subtitle: 'نحن نبني شبكة الولاء للمملكة العربية السعودية. انضم إلينا.',
-        body: 'لا توجد وظائف شاغرة حالياً، لكن يسعدنا التعرف عليك على',
-        email: 'careers@pointly.sa',
+        body: 'لا توجد وظائف شاغرة حالياً. سنعلن عن الفرص هنا عند توفرها.',
       },
       contact: {
         title: 'تواصل معنا',
         subtitle: 'هل لديك سؤال أو تريد معرفة المزيد عن بوينتلي؟',
-        email: 'hello@pointly.sa',
-        note: 'نرد عادةً خلال يوم عمل واحد.',
+        body: 'نحن نُجهّز قنوات التواصل. تابعنا قريباً.',
       },
       help: {
         title: 'مركز المساعدة',
         subtitle: 'أدلة ودعم لتجار بوينتلي.',
-        body: 'نبني توثيق المساعدة. في هذه الأثناء، تواصل معنا على',
-        email: 'support@pointly.sa',
-      },
-      status: {
-        title: 'حالة النظام',
-        subtitle: 'الحالة المباشرة لجميع خدمات بوينتلي.',
-        operational: 'جميع الأنظمة تعمل بشكل طبيعي',
-        noIncidents: 'لا توجد حوادث مُبلَّغ عنها.',
+        body: 'نبني توثيق المساعدة. تابعنا قريباً.',
       },
       privacy: {
         title: 'سياسة الخصوصية',
