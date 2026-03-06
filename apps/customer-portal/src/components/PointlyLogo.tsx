@@ -1,18 +1,18 @@
 interface PointlyLogoProps {
   height?: number;
-  /** Main text color. Defaults to navy (#263452) for light backgrounds.
+  /** Main text color. Defaults to navy (#1e2d4a) for light backgrounds.
    *  Pass "#ffffff" for dark backgrounds (login page hero). */
   color?: string;
   className?: string;
 }
 
-/**
- * Pointly wordmark as an inline SVG.
- * Using inline SVG lets us control the text fill color via the `color` prop
- * without relying on CSS filters that would affect the teal accent dot.
- */
-export function PointlyLogo({ height = 26, color = '#263452', className }: PointlyLogoProps) {
+export function PointlyLogo({ height = 26, color = '#1e2d4a', className }: PointlyLogoProps) {
   const width = Math.round((790 / 240) * height);
+  // Counter fills must match the background so P and o holes are visible.
+  // Light text (white) = dark bg → dark counter; dark text = light bg → near-white counter.
+  const isLightText =
+    color === '#ffffff' || color === '#fff' || color === 'white' || color === '#FFFFFF';
+  const counterFill = isLightText ? '#141e33' : '#f9fafb';
   return (
     <svg
       viewBox="340 365 790 240"
@@ -77,15 +77,15 @@ export function PointlyLogo({ height = 26, color = '#263452', className }: Point
         transform="translate(1074.921875,488.80859375)"
         d="M0 0 C7.17143698 4.11144414 12.07911525 10.06502634 14.390625 18.06640625 C14.65939699 19.43421617 14.88705361 20.81059704 15.078125 22.19140625 C15.18511719 22.95195312 15.29210938 23.7125 15.40234375 24.49609375 C16.00358393 32.86001266 12.60874157 40.06865273 7.21484375 46.3671875 C1.0916689 52.09769382 -5.37065001 55.35392179 -13.796875 55.69140625 C-23.36746837 55.30225887 -31.07709438 52.21310969 -37.97265625 45.515625 C-43.56820514 38.84357772 -45.75474058 31.77004754 -45.33984375 23.11328125 C-44.23142282 15.36469383 -41.00766486 8.24445601 -34.921875 3.19140625 C-24.3404224 -4.18453675 -11.79000145 -5.60220268 0 0 Z"
       />
-      {/* Inner counter of o — transparent so page bg shows through */}
+      {/* Inner counter of o */}
       <path
-        fill="transparent"
+        fill={counterFill}
         transform="translate(569.3125,458)"
         d="M0 0 C7.79320466 4.47827812 12.31067443 10.55568813 15.02734375 19.08203125 C17.15712283 28.49590681 15.84194917 37.32345128 11.6875 46 C7.48672475 52.50854292 2.14254992 56.41030481 -5.26953125 58.5703125 C-13.29182753 60.25760235 -19.43961972 58.81711746 -26.60546875 54.8984375 C-30.82938083 51.93621344 -33.11371751 48.61358571 -35.3125 44 C-35.64894531 43.31164062 -35.98539063 42.62328125 -36.33203125 41.9140625 C-39.65616506 33.74792556 -39.72330151 23.86866184 -36.6875 15.625 C-32.89805752 7.56912228 -28.77297331 2.1929718 -20.3125 -1 C-13.63063617 -3.22728794 -6.4071699 -2.92843041 0 0 Z"
       />
-      {/* Inner counter of P — transparent so page bg shows through */}
+      {/* Inner counter of P */}
       <path
-        fill="transparent"
+        fill={counterFill}
         transform="translate(445.5,459.0625)"
         d="M0 0 C6.33357209 3.70238368 10.70399444 8.62611147 12.96484375 15.65234375 C15.32428939 25.72734884 14.91414102 35.21967546 10.171875 44.55078125 C6.2381381 50.87581611 1.58104188 54.52953763 -5.5 56.9375 C-14.78809588 57.85322776 -21.81269778 56.97046026 -29.6875 51.875 C-35.27402748 46.8684945 -38.25887619 38.92067989 -38.703125 31.58203125 C-38.83056133 21.16411124 -38.12315324 11.77511535 -30.5 3.9375 C-21.58677383 -2.79538708 -10.45703048 -4.85448142 0 0 Z"
       />
