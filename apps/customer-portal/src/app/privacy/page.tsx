@@ -18,39 +18,41 @@ export default function PrivacyPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white px-4 py-8 max-w-2xl mx-auto">
-      <div className="mb-6">
-        <Link href="/register">
-          <Button variant="ghost" className="px-0">
-            ← {t('common.back')}
-          </Button>
-        </Link>
-      </div>
+    <div className="inner-page">
+      <div className="inner-page-card">
+        <div className="mb-6">
+          <Link href="/register">
+            <Button variant="ghost" className="px-0">
+              ← {t('common.back')}
+            </Button>
+          </Link>
+        </div>
 
-      <PointlyLogo height={28} className="mb-6" />
+        <PointlyLogo height={28} className="mb-6" />
 
-      <h1 className="text-2xl font-bold mb-1" style={{ color: '#21242d' }}>
-        {t('privacy.title')}
-      </h1>
-      <p className="text-sm mb-6" style={{ color: '#71717a' }}>
-        {t('privacy.lastUpdated')}
-      </p>
+        <h1 className="text-2xl font-bold mb-1" style={{ color: '#21242d' }}>
+          {t('privacy.title')}
+        </h1>
+        <p className="text-sm mb-6" style={{ color: '#71717a' }}>
+          {t('privacy.lastUpdated')}
+        </p>
 
-      <p className="mb-6" style={{ color: '#21242d' }}>
-        {t('privacy.intro')}
-      </p>
+        <p className="mb-6" style={{ color: '#21242d' }}>
+          {t('privacy.intro')}
+        </p>
 
-      <div className="space-y-5">
-        {sections.map((s) => (
-          <div key={s.title}>
-            <h2 className="font-semibold mb-1" style={{ color: '#21242d' }}>
-              {s.title}
-            </h2>
-            <p className="text-sm leading-relaxed" style={{ color: '#52525b' }}>
-              {s.body}
-            </p>
-          </div>
-        ))}
+        <div className="space-y-5">
+          {sections.map((s) => (
+            <div key={s.title}>
+              <h2 className="font-semibold mb-1" style={{ color: '#21242d' }}>
+                {s.title}
+              </h2>
+              <p className="text-sm leading-relaxed" style={{ color: '#52525b' }}>
+                {s.body}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

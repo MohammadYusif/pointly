@@ -2,7 +2,7 @@
 
 import { CustomerLayout } from '@/components/CustomerLayout';
 import { PerksSection } from '@/components/PerksSection';
-import { getCustomer, getCustomerTransactions } from '@/lib/api';
+import { getCustomer, getCustomerTransactions, getMyMerchants } from '@/lib/api';
 import { useTranslation } from '@pointly/i18n';
 import type { CustomerEnrollment, CustomerResponse, TransactionResponse } from '@pointly/shared';
 import { getTierColor, getTierTarget, getTypeBadge } from '@pointly/shared';
@@ -67,6 +67,7 @@ export default function CustomerDashboard() {
   const { textStart } = useRTL();
   const [customer, setCustomer] = useState<CustomerProfile | null>(null);
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
+  const [merchantNames, setMerchantNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -74,12 +75,18 @@ export default function CustomerDashboard() {
     setLoading(true);
     setError(false);
     try {
-      const [cust, txData] = await Promise.all([
+      const [cust, txData, merchants] = await Promise.all([
         getCustomer('me'),
         getCustomerTransactions({ limit: 5 }),
+        getMyMerchants(),
       ]);
       setCustomer(cust as CustomerProfile);
       setTransactions(txData.transactions || []);
+      const names: Record<string, string> = {};
+      for (const m of merchants) {
+        names[m.merchantId] = m.businessName;
+      }
+      setMerchantNames(names);
     } catch {
       setError(true);
     } finally {
@@ -189,15 +196,11 @@ export default function CustomerDashboard() {
             return (
               <Card
                 className={`stagger-item ${
-                  isUrgent
-                    ? 'border-red-300 bg-red-50 dark:bg-red-900/20'
-                    : 'border-amber-300 bg-amber-50 dark:bg-amber-900/20'
+                  isUrgent ? 'border-red-300 bg-red-50' : 'border-amber-300 bg-amber-50'
                 }`}
               >
                 <CardContent className="p-4">
-                  <p
-                    className={`text-sm ${isUrgent ? 'text-red-800 dark:text-red-200' : 'text-amber-800 dark:text-amber-200'}`}
-                  >
+                  <p className={`text-sm ${isUrgent ? 'text-red-800' : 'text-amber-800'}`}>
                     {daysToExpiry <= 0
                       ? t('expiry.pointsExpireToday')
                       : `${t('expiry.pointsExpireIn')} ${daysToExpiry} ${daysToExpiry === 1 ? t('expiry.day') : t('expiry.days')}. ${t('expiry.resetHint')}`}
@@ -249,7 +252,7 @@ export default function CustomerDashboard() {
             <CardContent className="space-y-2">
               {customer.enrollments.map((e: CustomerEnrollment) => (
                 <div key={e.merchantId} className="flex justify-between items-center">
-                  <span className="text-sm">{e.merchantId}</span>
+                  <span className="text-sm">{merchantNames[e.merchantId] || e.merchantId}</span>
                   <span className="font-medium">
                     {formatNumber(e.merchantPointsBalance)} {t('common.points')}
                   </span>

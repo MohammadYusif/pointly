@@ -10,10 +10,10 @@
    ============================================================================ */
 
 @theme {
-  /* Brand Colors */
+  /* Brand Colors — aligned with landing page */
   --color-primary: #08b0a2;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #263452;
+  --color-secondary: #1e2d4a;
   --color-secondary-foreground: #ffffff;
   --color-accent: #05a1a5;
   --color-accent-foreground: #ffffff;
@@ -35,8 +35,8 @@
   --color-destructive: #ef4444;
   --color-destructive-foreground: #ffffff;
 
-  /* Typography */
-  --font-sans: "IBM Plex Sans Arabic", "Tajawal", ui-sans-serif, system-ui, sans-serif;
+  /* Typography — Plus Jakarta Sans for English, IBM Plex Sans Arabic for Arabic */
+  --font-sans: "Plus Jakarta Sans", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
 
   /* Border Radius */
   --radius-sm: 0.125rem;
@@ -67,18 +67,53 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Teal dot grid + soft gradient — body is the base for all pages */
+  /* Arabic RTL — switch to IBM Plex Sans Arabic as primary */
+  html[dir="rtl"] {
+    font-family: "IBM Plex Sans Arabic", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* Body background — matching landing page multi-gradient system */
   body {
     background: radial-gradient(
-        ellipse 80% 50% at 50% -5%,
+        ellipse 80% 60% at 70% -5%,
         rgba(8, 176, 162, 0.07),
-        transparent 65%
-      ), radial-gradient(circle, rgba(8, 176, 162, 0.07) 1px, transparent 1px),
-      linear-gradient(180deg, #f8fafa 0%, #f2f3f4 100%);
-    background-size: 100% 100%, 20px 20px, 100% 100%;
+        transparent 60%
+      ), radial-gradient(ellipse 60% 50% at 10% 100%, rgba(30, 45, 74, 0.04), transparent 55%),
+      radial-gradient(circle, rgba(8, 176, 162, 0.055) 1px, transparent 1px),
+      linear-gradient(180deg, #f9fafb 0%, #f1f3f5 100%);
+    background-size: 100% 100%, 100% 100%, 26px 26px, 100% 100%;
+    background-attachment: fixed;
     min-height: 100vh;
     color: var(--color-foreground);
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  @supports not (background-attachment: fixed) {
+    body {
+      background-attachment: scroll;
+    }
+  }
+
+  @media (max-width: 640px) {
+    body {
+      background-size: 100% 100%, 100% 100%, 20px 20px, 100% 100%;
+    }
+  }
+
+  /* Headings — matching landing page typography */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+
+  p {
+    line-height: 1.65;
   }
 
   :focus-visible {
@@ -116,7 +151,7 @@
   min-height: 100dvh;
   background: radial-gradient(ellipse 55% 65% at 18% 55%, rgba(8, 176, 162, 0.14), transparent 55%),
     radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(135deg, #0c1524 0%, #172034 60%, #0c1524 100%);
+    linear-gradient(135deg, #141e33 0%, #1e2d4a 60%, #141e33 100%);
   background-size: 100% 100%, 24px 24px, 100% 100%;
   background-attachment: fixed;
   display: flex;
@@ -242,14 +277,14 @@
 
 /* Navy blue text in login inputs — readable on light card */
 .login-card input {
-  color: #263452;
+  color: #1e2d4a;
   background-color: rgba(248, 249, 255, 0.95);
-  -webkit-text-fill-color: #263452;
+  -webkit-text-fill-color: #1e2d4a;
 }
 
 .login-card input::placeholder {
-  color: rgba(38, 52, 82, 0.4);
-  -webkit-text-fill-color: rgba(38, 52, 82, 0.4);
+  color: rgba(30, 45, 74, 0.4);
+  -webkit-text-fill-color: rgba(30, 45, 74, 0.4);
   opacity: 1;
 }
 
@@ -271,40 +306,104 @@
 
 /* Portal layout — transparent so body bg shows through */
 .portal-layout {
+  position: relative;
   min-height: 100vh;
   min-height: 100dvh;
   padding-bottom: 5rem;
 }
 
 /* ============================================================================
-   Card Glassmorphism
+   Card Glassmorphism — matching landing page card styles
    ============================================================================ */
 
 [data-slot="card"] {
-  background: rgba(255, 255, 255, 0.84) !important;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.03);
   border-color: rgba(228, 228, 231, 0.7);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+[data-slot="card"]:hover {
+  border-color: rgba(8, 176, 162, 0.2);
 }
 
 /* ============================================================================
-   Portal Header — frosted glass strip with logo + language toggle
+   Portal Header — frosted glass matching landing navbar
    ============================================================================ */
 
 .portal-header {
-  backdrop-filter: blur(16px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
   background: rgba(255, 255, 255, 0.88) !important;
   border-bottom: 1px solid rgba(228, 228, 231, 0.65);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06), 0 4px 24px rgba(0, 0, 0, 0.03);
 }
 
 /* ============================================================================
-   Bottom Navigation — frosted glass
+   Bottom Navigation — frosted glass matching landing navbar
    ============================================================================ */
 
 .portal-nav {
-  backdrop-filter: blur(16px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
   background: rgba(255, 255, 255, 0.88) !important;
   border-top: 1px solid rgba(228, 228, 231, 0.65);
+  box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.04), 0 -4px 24px rgba(0, 0, 0, 0.02);
+}
+
+/* ============================================================================
+   Portal Glow Orbs — matching landing page ambient orbs (subtler)
+   ============================================================================ */
+
+@keyframes orbDrift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -40px) scale(1.05);
+  }
+  66% {
+    transform: translate(-20px, 25px) scale(0.95);
+  }
+}
+
+.portal-orb {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(80px);
+  opacity: 0.4;
+}
+
+.portal-orb-teal {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(8, 176, 162, 0.15), transparent 70%);
+  top: -80px;
+  right: -60px;
+  animation: orbDrift 18s ease-in-out infinite;
+}
+
+.portal-orb-navy {
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(30, 45, 74, 0.1), transparent 70%);
+  bottom: 10%;
+  left: -80px;
+  animation: orbDrift 22s ease-in-out infinite 4s;
+}
+
+.portal-orb-orange {
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, rgba(251, 146, 60, 0.06), transparent 70%);
+  top: 50%;
+  right: 10%;
+  animation: orbDrift 15s ease-in-out infinite 8s;
 }
 
 /* ============================================================================
@@ -370,7 +469,7 @@
 .login-orb-2 {
   width: 480px;
   height: 480px;
-  background: rgba(38, 52, 82, 0.55);
+  background: rgba(30, 45, 74, 0.55);
   bottom: -8%;
   right: -6%;
   animation: floatOrb2 19s ease-in-out infinite;
@@ -392,6 +491,27 @@
   top: 15%;
   right: 8%;
   animation: floatOrb1 17s ease-in-out infinite reverse;
+}
+
+/* ============================================================================
+   Inner Pages (Terms, Privacy) — glassmorphic card on body bg
+   ============================================================================ */
+
+.inner-page {
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.inner-page-card {
+  max-width: 42rem;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(228, 228, 231, 0.7);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 /* ============================================================================

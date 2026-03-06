@@ -61,6 +61,11 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="portal-layout">
+      {/* Ambient glow orbs — matching landing page */}
+      <div className="portal-orb portal-orb-teal" aria-hidden="true" />
+      <div className="portal-orb portal-orb-navy" aria-hidden="true" />
+      <div className="portal-orb portal-orb-orange" aria-hidden="true" />
+
       <header className="portal-header sticky top-0 z-20">
         <div className="max-w-lg mx-auto px-4 h-12 flex items-center justify-between">
           <PointlyLogo height={22} />
