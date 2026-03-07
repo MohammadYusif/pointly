@@ -5,6 +5,7 @@ import { PointlyLogo } from '@/components/PointlyLogo';
 import { completeProfile } from '@/lib/api';
 import { confirmOtp, getCurrentSession, signInWithPhone, signUpWithCognito } from '@/lib/auth';
 import { useTranslation } from '@pointly/i18n';
+import { isValidSaudiPhone } from '@pointly/shared';
 import {
   Button,
   Card,
@@ -52,6 +53,10 @@ export default function RegisterPage() {
 
   const handleInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isValidSaudiPhone(phone)) {
+      setError(t('errors.invalidPhone'));
+      return;
+    }
     setError('');
     setLoading(true);
     try {
