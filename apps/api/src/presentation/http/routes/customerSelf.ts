@@ -1,7 +1,12 @@
+import {
+  AdminDeleteUserCommand,
+  CognitoIdentityProviderClient,
+} from '@aws-sdk/client-cognito-identity-provider';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { Customer, PhoneNumber } from '../../../domain';
 import { ValidationError } from '../../../domain/errors/DomainError';
+import EnvironmentConfig from '../../../infrastructure/config/Environment';
 import { getContainer } from '../container';
 
 const updateProfileSchema = z.object({
@@ -318,4 +323,40 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
       });
     },
   );
+
+  // DELETE /v1/me — Permanently delete account (DynamoDB + Cognito)
+  server.delete('/', async (request: FastifyRequest, reply: FastifyReply) => {
+    const { customerId, cognitoPhone } = request;
+    if (!customerId) {
+      throw new ValidationError('Customer ID not found in token');
+    }
+
+    const container = getContainer();
+
+    // 1. Delete customer from DynamoDB (profile + merchant index items)
+    await container.customerRepository.delete(customerId);
+
+    // 2. Delete user from Cognito (if pool is configured)
+    const env = EnvironmentConfig.get();
+    const userPoolId = env.CUSTOMER_USER_POOL_ID;
+    if (userPoolId && cognitoPhone) {
+      try {
+        const cognitoClient = new CognitoIdentityProviderClient({
+          region: env.AWS_REGION || 'me-south-1',
+        });
+        await cognitoClient.send(
+          new AdminDeleteUserCommand({
+            UserPoolId: userPoolId,
+            Username: cognitoPhone,
+          }),
+        );
+      } catch (err) {
+        // Log but don't fail — DynamoDB record is already deleted
+        request.log.error({ err, customerId }, 'Failed to delete Cognito user');
+      }
+    }
+
+    request.log.info({ customerId }, 'Account permanently deleted');
+    return reply.send({ success: true });
+  });
 }
