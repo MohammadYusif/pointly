@@ -1,9 +1,8 @@
 'use client';
 
 import { CustomerLayout } from '@/components/CustomerLayout';
-import { generateQRCode, getCustomer } from '@/lib/api';
+import { useCustomer, useGenerateQR } from '@/hooks/api';
 import { useTranslation } from '@pointly/i18n';
-import type { CustomerResponse } from '@pointly/shared';
 import { formatPhone } from '@pointly/shared';
 import { Button, Card, CardContent, useRTL } from '@pointly/ui';
 import { RefreshCw } from 'lucide-react';
@@ -14,34 +13,26 @@ export default function QRCodePage() {
   const { t } = useTranslation();
   const { textStart } = useRTL();
 
+  const { data: customer } = useCustomer();
+  const generateQR = useGenerateQR();
+
   const [qrPayload, setQrPayload] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [customer, setCustomer] = useState<CustomerResponse | null>(null);
 
-  const fetchQR = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [qrData, custData] = await Promise.all([
-        generateQRCode(),
-        customer ? Promise.resolve(customer) : getCustomer('me'),
-      ]);
-      setQrPayload(qrData.qrPayload);
-      setExpiresAt(qrData.expiresAt);
-      if (!customer) setCustomer(custData);
-    } catch {
-      setError(t('qr.generateError'));
-    } finally {
-      setLoading(false);
-    }
-  }, [customer, t]);
+  const fetchQR = useCallback(() => {
+    generateQR.mutate(undefined, {
+      onSuccess: (data) => {
+        setQrPayload(data.qrPayload);
+        setExpiresAt(data.expiresAt);
+      },
+    });
+  }, [generateQR]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: initial fetch on mount
   useEffect(() => {
     fetchQR();
-  }, [fetchQR]);
+  }, []);
 
   // Countdown timer
   useEffect(() => {
@@ -66,13 +57,13 @@ export default function QRCodePage() {
 
         <Card className="stagger-item">
           <CardContent className="p-6 flex flex-col items-center space-y-4">
-            {loading ? (
+            {generateQR.isPending && !qrPayload ? (
               <div className="w-64 h-64 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#08b0a2]" />
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
               </div>
-            ) : error ? (
+            ) : generateQR.isError && !qrPayload ? (
               <div className="w-64 h-64 flex flex-col items-center justify-center text-center">
-                <p className="text-sm text-destructive mb-4">{error}</p>
+                <p className="text-sm text-destructive mb-4">{t('qr.generateError')}</p>
                 <Button onClick={fetchQR} size="sm">
                   {t('qr.retry')}
                 </Button>
