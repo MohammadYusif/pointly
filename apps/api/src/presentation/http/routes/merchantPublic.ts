@@ -48,9 +48,10 @@ export async function merchantPublicRoutes(server: FastifyInstance): Promise<voi
     return reply.send({ success: true, data: merchants });
   });
 
-  // GET /v1/merchants/:id — Get single merchant detail (PUBLIC)
+  // GET /v1/merchants/info/:id — Get single merchant detail (PUBLIC)
+  // Uses /info/:id to avoid collision with merchant-auth GET /:merchantId
   server.get(
-    '/:id',
+    '/info/:id',
     async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
       const { id } = request.params;
       const container = getContainer();

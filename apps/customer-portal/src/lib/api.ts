@@ -91,7 +91,7 @@ export function enrollMerchant(merchantId: string) {
 }
 
 export function getMerchantDetail(merchantId: string) {
-  return fetchApi<PublicMerchantDetail>(`/v1/merchants/${merchantId}`);
+  return fetchApi<PublicMerchantDetail>(`/v1/merchants/info/${merchantId}`);
 }
 
 export function updateConsent(merchantId: string, action: 'grant' | 'revoke') {
