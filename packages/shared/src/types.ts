@@ -75,11 +75,31 @@ export interface CustomerResponse {
   dateOfBirth?: string;
   phone: string;
   status: string;
-  currentTier: string;
+
+  // Points
   globalPointsBalance: number;
   globalLifetimePoints: number;
+
+  // Tier
+  currentTier: string;
+  tierDisplayName: string;
+  tierColor: string;
   monthlyProgress: number;
-  nextDecayDate?: string;
+  pointsToNextTier: number;
+  earningMultiplier: number;
+  isDecayImmune: boolean;
+  tierLastUpdatedAt: string;
+  monthlyProgressResetAt: string;
+
+  // Decay tracking
+  lastNetworkActivity: string;
+  nextDecayDate: string;
+  globalPointsDecayPhase: number;
+  decayStartDate?: string;
+  lastDecayAppliedAt?: string;
+  lastInactivityWarningSentAt?: string;
+  monthsOfInactivity: number;
+
   enrollments: CustomerEnrollment[];
   createdAt: string;
   updatedAt: string;
@@ -109,6 +129,7 @@ export interface CustomerEnrollment {
   merchantLifetimePoints: number;
   transactionCount: number;
   lastTransactionAt?: string;
+  welcomeBonusApplied: boolean;
 }
 
 export interface TransactionResponse {
@@ -167,10 +188,43 @@ export interface AnalyticsDataPoint {
   uniqueCustomers: number;
 }
 
+export interface PublicMerchantPerk {
+  title: string;
+  type: PerkType;
+  requiredTier: CustomerTierLevel;
+}
+
 export interface PublicMerchantSummary {
   merchantId: string;
   businessName: string;
   tier: string;
+  loyaltyConfig: {
+    pointsPerSAR: number;
+    welcomeBonus: number;
+    redemptionRate: number;
+  };
+  locations: Array<{ name: string; city: string }>;
+  totalCustomers: number;
+  activePerks: PublicMerchantPerk[];
+}
+
+export interface PublicMerchantDetail {
+  merchantId: string;
+  businessName: string;
+  tier: string;
+  loyaltyConfig: {
+    pointsPerSAR: number;
+    welcomeBonus: number;
+    redemptionRate: number;
+  };
+  locations: Array<{
+    locationId: string;
+    name: string;
+    address: string;
+    city: string;
+  }>;
+  totalCustomers: number;
+  activePerks: MerchantPerk[];
 }
 
 export interface CustomerMerchantView {

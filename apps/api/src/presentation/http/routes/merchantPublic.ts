@@ -31,10 +31,72 @@ export async function merchantPublicRoutes(server: FastifyInstance): Promise<voi
         merchantId: json.merchantId,
         businessName: json.businessName,
         tier: json.tier,
+        loyaltyConfig: {
+          pointsPerSAR: json.loyaltyConfig.pointsPerSAR,
+          welcomeBonus: json.loyaltyConfig.welcomeBonus,
+          redemptionRate: json.loyaltyConfig.redemptionRate,
+        },
+        locations: json.locations
+          .filter((l) => l.isActive)
+          .map((l) => ({ name: l.name, city: l.city })),
+        totalCustomers: json.totalCustomers,
+        activePerks: json.activePerks
+          .filter((p) => p.isActive)
+          .map((p) => ({ title: p.title, type: p.type, requiredTier: p.requiredTier })),
       };
     });
     return reply.send({ success: true, data: merchants });
   });
+
+  // GET /v1/merchants/:id — Get single merchant detail (PUBLIC)
+  server.get(
+    '/:id',
+    async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+      const { id } = request.params;
+      const container = getContainer();
+      const merchant = await container.merchantRepository.findById(id);
+
+      if (!merchant || merchant.toJSON().status !== 'ACTIVE') {
+        return reply.status(404).send({ success: false, error: 'Merchant not found' });
+      }
+
+      const json = merchant.toJSON();
+      return reply.send({
+        success: true,
+        data: {
+          merchantId: json.merchantId,
+          businessName: json.businessName,
+          tier: json.tier,
+          loyaltyConfig: {
+            pointsPerSAR: json.loyaltyConfig.pointsPerSAR,
+            welcomeBonus: json.loyaltyConfig.welcomeBonus,
+            redemptionRate: json.loyaltyConfig.redemptionRate,
+          },
+          locations: json.locations
+            .filter((l) => l.isActive)
+            .map((l) => ({
+              locationId: l.locationId,
+              name: l.name,
+              address: l.address,
+              city: l.city,
+            })),
+          totalCustomers: json.totalCustomers,
+          activePerks: json.activePerks
+            .filter((p) => p.isActive)
+            .map((p) => ({
+              id: p.id,
+              type: p.type,
+              title: p.title,
+              description: p.description,
+              requiredTier: p.requiredTier,
+              capacityLimit: p.capacityLimit,
+              isActive: p.isActive,
+              createdAt: p.createdAt,
+            })),
+        },
+      });
+    },
+  );
 
   // POST /v1/merchants — Create merchant account (PUBLIC)
   server.post(

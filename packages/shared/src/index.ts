@@ -45,6 +45,8 @@ export type {
   PaginatedResponse,
   AnalyticsDataPoint,
   AnalyticsData,
+  PublicMerchantPerk,
   PublicMerchantSummary,
+  PublicMerchantDetail,
   CustomerMerchantView,
 } from './types';
