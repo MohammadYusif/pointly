@@ -9,3 +9,4 @@ export {
 export { useMyPerks } from './use-perks';
 export { useGenerateQR } from './use-qr';
 export { useUpdateConsent } from './use-consent';
+export { useDeleteAccount } from './use-delete-account';

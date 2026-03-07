@@ -88,6 +88,7 @@
     "locations": "Locations",
     "pointlyPoints": "Pointly Points",
     "merchantPoints": "Merchant Points",
+    "merchantsEnrolled": "Merchants Enrolled",
     "pointsToNextTier": "points to next tier",
     "enrolledMerchants": "Enrolled Merchants"
   },
@@ -101,7 +102,13 @@
   },
   "profile": {
     "personalInfo": "Personal Information",
-    "memberSince": "Member Since"
+    "memberSince": "Member Since",
+    "dangerZone": "Danger Zone",
+    "deleteAccount": "Delete Account",
+    "deleteConfirmTitle": "Delete your account?",
+    "deleteConfirmDescription": "This will permanently delete your account, points, and all associated data. This action cannot be undone.",
+    "deleteConfirmLabel": "Type DELETE to confirm",
+    "deleteConfirmButton": "Permanently Delete Account"
   },
   "customer": {
     "title": "Customers",

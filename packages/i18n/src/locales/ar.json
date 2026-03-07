@@ -88,6 +88,7 @@
     "locations": "الفروع",
     "pointlyPoints": "نقاط Pointly",
     "merchantPoints": "نقاط التجار",
+    "merchantsEnrolled": "التجار المسجلين",
     "pointsToNextTier": "نقطة للمستوى التالي",
     "enrolledMerchants": "التجار المسجلين"
   },
@@ -101,7 +102,13 @@
   },
   "profile": {
     "personalInfo": "المعلومات الشخصية",
-    "memberSince": "عضو منذ"
+    "memberSince": "عضو منذ",
+    "dangerZone": "منطقة الخطر",
+    "deleteAccount": "حذف الحساب",
+    "deleteConfirmTitle": "حذف حسابك؟",
+    "deleteConfirmDescription": "سيتم حذف حسابك ونقاطك وجميع البيانات المرتبطة نهائياً. لا يمكن التراجع عن هذا الإجراء.",
+    "deleteConfirmLabel": "اكتب DELETE للتأكيد",
+    "deleteConfirmButton": "حذف الحساب نهائياً"
   },
   "customer": {
     "title": "العملاء",

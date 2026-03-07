@@ -2,12 +2,12 @@
 
 import { ConsentToggle } from '@/components/ConsentToggle';
 import { CustomerLayout } from '@/components/CustomerLayout';
-import { useCustomer, useMyMerchants, useUpdateCustomer } from '@/hooks/api';
+import { useCustomer, useDeleteAccount, useMyMerchants, useUpdateCustomer } from '@/hooks/api';
 import { signOut } from '@/lib/auth';
 import { useTranslation } from '@pointly/i18n';
 import { formatDate, formatPhone } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
-import { LogOut } from 'lucide-react';
+import { LogOut, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -41,9 +41,12 @@ export default function ProfilePage() {
   const { data: customer, isLoading } = useCustomer();
   const { data: merchants = [] } = useMyMerchants();
   const updateCustomer = useUpdateCustomer();
+  const deleteAccountMutation = useDeleteAccount();
 
   const [name, setName] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteInput, setDeleteInput] = useState('');
 
   const handleEdit = () => {
     setName(customer?.name || '');
@@ -68,6 +71,18 @@ export default function ProfilePage() {
   const handleSignOut = () => {
     signOut();
     router.push('/');
+  };
+
+  const handleDeleteAccount = () => {
+    deleteAccountMutation.mutate(undefined, {
+      onSuccess: () => {
+        signOut();
+        router.push('/');
+      },
+      onError: () => {
+        toast.error(t('errors.serverError'));
+      },
+    });
   };
 
   if (isLoading) {
@@ -149,6 +164,71 @@ export default function ProfilePage() {
           <LogOut className={`h-4 w-4 me-2 ${flipIcon}`} />
           {t('auth.logout')}
         </Button>
+
+        {/* Danger Zone — Delete Account */}
+        <Card className="stagger-item border-red-200">
+          <CardHeader>
+            <CardTitle className="text-base text-red-600">{t('profile.dangerZone')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {!showDeleteConfirm ? (
+              <Button
+                variant="outline"
+                className="w-full border-red-300 text-red-600 hover:bg-red-50"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 className={`h-4 w-4 me-2 ${flipIcon}`} />
+                {t('profile.deleteAccount')}
+              </Button>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-red-600">
+                  {t('profile.deleteConfirmTitle')}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {t('profile.deleteConfirmDescription')}
+                </p>
+                <div>
+                  <label
+                    htmlFor="delete-confirm"
+                    className="text-xs font-medium text-muted-foreground block mb-1"
+                  >
+                    {t('profile.deleteConfirmLabel')}
+                  </label>
+                  <Input
+                    id="delete-confirm"
+                    value={deleteInput}
+                    onChange={(e) => setDeleteInput(e.target.value)}
+                    placeholder="DELETE"
+                    dir="ltr"
+                    className="text-center"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="destructive"
+                    className="flex-1"
+                    disabled={deleteInput !== 'DELETE' || deleteAccountMutation.isPending}
+                    onClick={handleDeleteAccount}
+                  >
+                    {deleteAccountMutation.isPending
+                      ? t('common.loading')
+                      : t('profile.deleteConfirmButton')}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setDeleteInput('');
+                    }}
+                  >
+                    {t('common.cancel')}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </CustomerLayout>
   );

@@ -103,3 +103,7 @@ export function updateConsent(merchantId: string, action: 'grant' | 'revoke') {
     },
   );
 }
+
+export function deleteAccount() {
+  return fetchApi<void>('/v1/me', { method: 'DELETE' });
+}
