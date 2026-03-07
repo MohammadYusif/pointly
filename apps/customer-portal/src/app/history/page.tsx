@@ -1,118 +1,74 @@
 'use client';
 
 import { CustomerLayout } from '@/components/CustomerLayout';
-import { getCustomerTransactions } from '@/lib/api';
+import { TransactionItem } from '@/components/TransactionItem';
+import { useInfiniteTransactions, useMyMerchants } from '@/hooks/api';
 import { useTranslation } from '@pointly/i18n';
-import type { TransactionResponse } from '@pointly/shared';
-import { getTypeBadge } from '@pointly/shared';
-import { Button, Card, CardContent, useRTL } from '@pointly/ui';
-import { useCallback, useEffect, useState } from 'react';
+import { Button, useRTL } from '@pointly/ui';
+import { useMemo } from 'react';
 
 function HistorySkeleton() {
   return (
     <div className="space-y-3">
       {['a', 'b', 'c', 'd', 'e'].map((k) => (
-        <Card key={k}>
-          <CardContent className="p-3">
-            <div className="flex justify-between items-center">
-              <div className="space-y-1">
-                <div className="h-4 w-16 rounded-full bg-muted animate-pulse" />
-                <div className="h-3 w-20 rounded-md bg-muted animate-pulse" />
-              </div>
-              <div className="h-5 w-14 rounded-md bg-muted animate-pulse" />
-            </div>
-          </CardContent>
-        </Card>
+        <div key={k} className="h-16 skeleton rounded-xl" />
       ))}
     </div>
   );
 }
 
 export default function HistoryPage() {
-  const { t, formatNumber, locale } = useTranslation();
+  const { t } = useTranslation();
   const { textStart } = useRTL();
 
-  const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
-  const [nextToken, setNextToken] = useState<string | undefined>();
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteTransactions(20);
 
-  const loadTransactions = useCallback(async (token?: string) => {
-    try {
-      const result = await getCustomerTransactions({ limit: 20, nextToken: token });
-      if (token) {
-        setTransactions((prev) => [...prev, ...(result.transactions || [])]);
-      } else {
-        setTransactions(result.transactions || []);
+  const { data: merchants } = useMyMerchants();
+
+  const merchantNameMap = useMemo(() => {
+    const names: Record<string, string> = {};
+    if (merchants) {
+      for (const m of merchants) {
+        names[m.merchantId] = m.businessName;
       }
-      setNextToken(result.nextToken);
-    } catch {
-      // handle error
     }
-  }, []);
+    return names;
+  }, [merchants]);
 
-  useEffect(() => {
-    loadTransactions().finally(() => setLoading(false));
-  }, [loadTransactions]);
-
-  const handleLoadMore = async () => {
-    setLoadingMore(true);
-    await loadTransactions(nextToken);
-    setLoadingMore(false);
-  };
+  const transactions = useMemo(
+    () => data?.pages.flatMap((page) => page.transactions ?? []) ?? [],
+    [data],
+  );
 
   return (
     <CustomerLayout>
       <h1 className={`text-xl font-bold mb-4 ${textStart}`}>{t('customer.transactionHistory')}</h1>
 
-      {loading ? (
+      {isLoading ? (
         <HistorySkeleton />
+      ) : transactions.length === 0 ? (
+        <p className="text-center text-muted-foreground py-8">{t('common.noData')}</p>
       ) : (
         <div className="space-y-3">
-          {transactions.map((tx, idx) => {
-            const badge = getTypeBadge(tx.type);
-            return (
-              <Card
-                key={tx.transactionId}
-                className="stagger-item"
-                style={{ animationDelay: `${Math.min(idx, 5) * 50}ms` }}
-              >
-                <CardContent className="p-3">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${badge.className}`}>
-                        {badge.label}
-                      </span>
-                      <p className="text-xs text-muted-foreground mt-1" suppressHydrationWarning>
-                        {new Date(tx.createdAt).toLocaleDateString(locale)}
-                      </p>
-                    </div>
-                    <span
-                      className={`font-medium ${tx.type === 'EARN' ? 'text-green-600' : 'text-amber-600'}`}
-                    >
-                      {tx.type === 'EARN' ? '+' : '-'}
-                      {formatNumber(tx.points)}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {transactions.map((tx) => (
+            <TransactionItem
+              key={tx.transactionId}
+              transaction={tx}
+              merchantName={merchantNameMap[tx.merchantId]}
+            />
+          ))}
         </div>
       )}
 
-      {!loading && transactions.length === 0 && (
-        <p className="text-center text-muted-foreground py-8">{t('common.noData')}</p>
-      )}
-
-      {nextToken && (
+      {hasNextPage && (
         <Button
           variant="outline"
           className="w-full mt-4"
-          onClick={handleLoadMore}
-          disabled={loadingMore}
+          onClick={() => fetchNextPage()}
+          disabled={isFetchingNextPage}
         >
-          {loadingMore ? t('common.loading') : t('common.loadMore')}
+          {isFetchingNextPage ? t('common.loading') : t('common.loadMore')}
         </Button>
       )}
     </CustomerLayout>
