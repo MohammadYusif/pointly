@@ -1,5 +1,12 @@
 # UI Package – `packages/ui`
 
+## Commands
+
+```bash
+pnpm build        # tsc → dist/ (required before consuming apps can import)
+pnpm type-check   # tsc --noEmit
+```
+
 Shared React component library used by `merchant-dashboard`, `customer-portal`, and `landing`. Built on Radix UI primitives with Tailwind CSS. Imported as `@pointly/ui`.
 
 ## Exports

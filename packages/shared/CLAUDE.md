@@ -1,5 +1,14 @@
 # Shared Package – `packages/shared`
 
+## Commands
+
+```bash
+pnpm build        # tsc → dist/ (required before consuming apps can import)
+pnpm type-check   # tsc --noEmit
+```
+
+> Turbo handles build ordering — consuming apps depend on `@pointly/shared` being built first.
+
 Pure TypeScript utilities and types shared between `merchant-dashboard` and `customer-portal`. No React, no framework, no I/O. Imported as `@pointly/shared`.
 
 ## Files

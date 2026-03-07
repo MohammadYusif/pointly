@@ -77,7 +77,7 @@ NEXT_PUBLIC_API_URL          # e.g. https://api.pointly.sa
 ## API Layer (`lib/api.ts`)
 
 All routes are **customer-scoped** (`/v1/me/*`). Attaches ID token as `Authorization: Bearer`.
-On 401, calls `signOut()` and redirects to `/`.
+On 401, calls `signOut()` and redirects to `/?expired=1` (`window.location.replace`). The `?expired=1` param prevents the login page from auto-redirecting authenticated users back to dashboard, breaking the loop.
 
 | Function | Endpoint |
 |----------|----------|
@@ -104,9 +104,13 @@ On 401, calls `signOut()` and redirects to `/`.
 ## Styling
 
 - **Tailwind CSS v4** — no `tailwind.config.js`, theme tokens in `globals.css`
-- **IBM Plex Sans Arabic** — loaded via Google Fonts in `layout.tsx`
+- **Fonts**: `Plus Jakarta Sans` (English) + `IBM Plex Sans Arabic` (Arabic) — both loaded via Google Fonts in `layout.tsx`. RTL pages use Arabic font via `html[dir="rtl"]` override in `globals.css`
 - **Light mode forced** — no dark mode classes. `globals.css` has `color-scheme: light` and explicit light backgrounds
-- Login page uses CSS classes: `.login-page`, `.login-orb`, `.login-grid`, `.login-hero`, `.login-card` — all defined in `globals.css`
+- **Body background** — 4-layer gradient: teal glow + navy glow + 26 px dot grid + base `#f9fafb→#f1f3f5`, `background-attachment: fixed`. Matches landing page — **do not add a background wrapper div**
+- **Glow orbs** — three fixed-position blurred circles rendered by `CustomerLayout.tsx` as `.portal-orb.portal-orb-teal/navy/orange` with `orbDrift` keyframe animation. Add/adjust in `globals.css`
+- **Card glassmorphism** — `rgba(255,255,255,0.85)` + `blur(12px)` via `[data-slot="card"]` global selector in `globals.css`
+- **Frosted header** — `.portal-header` uses `blur(20px) saturate(1.5)` in `globals.css`
+- **Login page classes**: `.login-page`, `.login-orb`, `.login-grid`, `.login-hero`, `.login-card` — all in `globals.css`
 - `CustomerLayout` wraps all authenticated pages with bottom navigation bar
 
 ## Pages Quick Reference
@@ -129,5 +133,6 @@ On 401, calls `signOut()` and redirects to `/`.
 - `signUpWithCognito` uses a dummy random password — Cognito requires a password field even for OTP-only pools
 - Phone inputs need `dir="ltr"` and placeholder `05XXXXXXXX` — number is stored in E.164 after `normalizePhone()`
 - QR codes expire — `generateQRCode()` returns an `expiresAt` timestamp; the QR page should auto-refresh before expiry
-- `PointlyLogo` is an inline SVG component (not imported from `@pointly/assets`) — avoids asset pipeline issues in this app
+- `PointlyLogo` is an inline SVG — counter fills (`P` bowl, `o` hole) must **match the background**: dark text → `#f9fafb` counter (light bg); white text → `#141e33` counter (dark login bg). `fill="transparent"` is a no-op in SVG; the component uses a `counterFill` variable derived from the `color` prop
+- Dashboard `page.tsx` calls both `getCustomer()` and `getMyMerchants()` to build a `merchantId → businessName` lookup — `CustomerEnrollment` type lacks `businessName`, so the extra call is intentional
 - `CustomerLayout` handles auth guard — do not duplicate auth checks in individual pages
