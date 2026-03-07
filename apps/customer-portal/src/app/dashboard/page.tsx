@@ -11,9 +11,9 @@ import { TransactionItem } from '@/components/TransactionItem';
 import { useCustomer, useMyMerchants, useRecentTransactions } from '@/hooks/api';
 import { useBadges } from '@/hooks/use-badges';
 import { useTranslation } from '@pointly/i18n';
-import type { CustomerEnrollment } from '@pointly/shared';
 import { getTierColor, getTierTarget } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, useRTL } from '@pointly/ui';
+import { Coins, Store } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 
@@ -85,10 +85,7 @@ export default function CustomerDashboard() {
   const progress = customer.monthlyProgress || 0;
   const progressPercent = tierTarget > 0 ? Math.min(100, (progress / tierTarget) * 100) : 100;
 
-  const totalMerchantPoints = (customer.enrollments || []).reduce(
-    (sum: number, e: CustomerEnrollment) => sum + (e.merchantPointsBalance || 0),
-    0,
-  );
+  const enrolledCount = (customer.enrollments || []).length;
 
   return (
     <CustomerLayout>
@@ -101,14 +98,19 @@ export default function CustomerDashboard() {
           <TierBadge tier={customer.currentTier} label={customer.tierDisplayName} size="sm" />
         </div>
 
-        {/* Point Balances */}
+        {/* Point Balance + Merchants Enrolled */}
         <div className="grid grid-cols-2 gap-3">
           <PointsCard
             value={customer.globalPointsBalance}
             label={t('dashboard.pointlyPoints')}
             variant="primary"
+            icon={<Coins className="h-5 w-5" />}
           />
-          <PointsCard value={totalMerchantPoints} label={t('dashboard.merchantPoints')} />
+          <PointsCard
+            value={enrolledCount}
+            label={t('dashboard.merchantsEnrolled')}
+            icon={<Store className="h-5 w-5" />}
+          />
         </div>
 
         {/* Tier Progress Ring */}
