@@ -2,6 +2,7 @@ import type {
   CustomerMerchantView,
   CustomerPerkView,
   CustomerResponse,
+  PublicMerchantDetail,
   PublicMerchantSummary,
   TransactionResponse,
 } from '@pointly/shared';
@@ -87,4 +88,18 @@ export function enrollMerchant(merchantId: string) {
     method: 'POST',
     body: JSON.stringify({ merchantId }),
   });
+}
+
+export function getMerchantDetail(merchantId: string) {
+  return fetchApi<PublicMerchantDetail>(`/v1/merchants/${merchantId}`);
+}
+
+export function updateConsent(merchantId: string, action: 'grant' | 'revoke') {
+  return fetchApi<{ customerId: string; merchantId: string; consentStatus: string }>(
+    '/v1/me/consent',
+    {
+      method: 'POST',
+      body: JSON.stringify({ merchantId, action }),
+    },
+  );
 }
