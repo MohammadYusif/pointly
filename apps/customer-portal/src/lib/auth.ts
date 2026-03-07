@@ -1,4 +1,4 @@
-import { normalizePhone } from '@pointly/shared';
+import { isValidSaudiPhone, normalizePhone } from '@pointly/shared';
 import {
   AuthenticationDetails,
   CognitoUser,
@@ -38,6 +38,8 @@ export function signInWithPhone(rawPhone: string, rememberMe = true): Promise<Co
     const storage = rememberMe ? undefined : window.sessionStorage;
     const pool = getUserPool(storage);
     if (!pool) return reject(new Error('Cognito not configured'));
+
+    if (!isValidSaudiPhone(rawPhone)) return reject(new Error('Invalid phone number format'));
 
     const phone = normalizePhone(rawPhone);
     const user = new CognitoUser({ Username: phone, Pool: pool });
@@ -129,6 +131,8 @@ export function signUpWithCognito(rawPhone: string, name?: string): Promise<void
   return new Promise((resolve, reject) => {
     const pool = getUserPool();
     if (!pool) return reject(new Error('Cognito not configured'));
+
+    if (!isValidSaudiPhone(rawPhone)) return reject(new Error('Invalid phone number format'));
 
     const phone = normalizePhone(rawPhone);
     // Password required by Cognito even for OTP-only flows; never used for login.
