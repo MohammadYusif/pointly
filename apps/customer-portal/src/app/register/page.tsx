@@ -1,5 +1,6 @@
 'use client';
 
+import { LoginHero } from '@/components/LoginHero';
 import { PointlyLogo } from '@/components/PointlyLogo';
 import { completeProfile } from '@/lib/api';
 import { confirmOtp, getCurrentSession, signInWithPhone, signUpWithCognito } from '@/lib/auth';
@@ -12,7 +13,6 @@ import {
   CardTitle,
   Input,
   LanguageToggle,
-  useRTL,
 } from '@pointly/ui';
 import type { CognitoUser } from 'amazon-cognito-identity-js';
 import Link from 'next/link';
@@ -31,7 +31,6 @@ async function ensureRegistered(phone: string, name?: string): Promise<void> {
 
 export default function RegisterPage() {
   const { t } = useTranslation();
-  const { textStart } = useRTL();
   const router = useRouter();
 
   // Redirect already-authenticated users straight to the dashboard
@@ -101,39 +100,7 @@ export default function RegisterPage() {
 
       <div className="login-grid" style={{ position: 'relative', zIndex: 1 }}>
         {/* Hero — desktop only */}
-        <div className={`login-hero ${textStart}`}>
-          <div className="mb-8">
-            <PointlyLogo height={30} color="#ffffff" />
-          </div>
-
-          <div className="login-badge">
-            <span className="login-badge-dot" />
-            {t('auth.platformBadge')}
-          </div>
-
-          <h1 className="login-headline">
-            {t('auth.heroLine1')}
-            <br />
-            <span className="login-headline-accent">{t('auth.heroLine2')}</span>
-          </h1>
-
-          <p className="login-hero-sub">{t('auth.heroSubtitle')}</p>
-
-          <div className="login-stats">
-            <div>
-              <span className="login-stat-value">50+</span>
-              <span className="login-stat-label">{t('auth.stats.merchantsLabel')}</span>
-            </div>
-            <div>
-              <span className="login-stat-value">4</span>
-              <span className="login-stat-label">{t('auth.stats.tiersLabel')}</span>
-            </div>
-            <div>
-              <span className="login-stat-value">12K+</span>
-              <span className="login-stat-label">{t('auth.stats.customersLabel')}</span>
-            </div>
-          </div>
-        </div>
+        <LoginHero />
 
         {/* Form */}
         <div>
@@ -142,10 +109,10 @@ export default function RegisterPage() {
               <div className="login-mobile-brand">
                 <PointlyLogo height={26} />
               </div>
-              <CardTitle className="text-2xl font-bold" style={{ color: '#21242d' }}>
+              <CardTitle className="text-2xl font-bold text-foreground">
                 {t('register.title')}
               </CardTitle>
-              <p className="text-sm mt-1" style={{ color: '#71717a' }}>
+              <p className="text-sm mt-1 text-muted-foreground">
                 {step === 'info' ? t('register.subTitle') : t('register.otpStep')}
               </p>
             </CardHeader>
@@ -156,8 +123,7 @@ export default function RegisterPage() {
                   <div>
                     <label
                       htmlFor="phone-input"
-                      className="text-sm font-medium mb-1.5 block"
-                      style={{ color: '#21242d' }}
+                      className="text-sm font-medium mb-1.5 block text-foreground"
                     >
                       {t('customer.phone')}
                     </label>
@@ -176,11 +142,10 @@ export default function RegisterPage() {
                   <div>
                     <label
                       htmlFor="name-input"
-                      className="text-sm font-medium mb-1.5 block"
-                      style={{ color: '#21242d' }}
+                      className="text-sm font-medium mb-1.5 block text-foreground"
                     >
                       {t('register.nameLabel')}{' '}
-                      <span style={{ color: '#71717a' }}>({t('common.optional')})</span>
+                      <span className="text-muted-foreground">({t('common.optional')})</span>
                     </label>
                     <Input
                       id="name-input"
@@ -195,11 +160,10 @@ export default function RegisterPage() {
                   <div>
                     <label
                       htmlFor="dob-input"
-                      className="text-sm font-medium mb-1.5 block"
-                      style={{ color: '#21242d' }}
+                      className="text-sm font-medium mb-1.5 block text-foreground"
                     >
                       {t('register.dobLabel')}{' '}
-                      <span style={{ color: '#71717a' }}>({t('common.optional')})</span>
+                      <span className="text-muted-foreground">({t('common.optional')})</span>
                     </label>
                     <Input
                       id="dob-input"
@@ -217,19 +181,17 @@ export default function RegisterPage() {
                       type="checkbox"
                       checked={termsAccepted}
                       onChange={(e) => setTermsAccepted(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 shrink-0 accent-[#08b0a2]"
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
                     />
                     <label
                       htmlFor="terms-checkbox"
-                      className="text-xs leading-snug"
-                      style={{ color: '#71717a' }}
+                      className="text-xs leading-snug text-muted-foreground"
                     >
                       {t('register.termsPrefix')}{' '}
                       <Link
                         href="/terms"
                         target="_blank"
-                        className="font-medium underline"
-                        style={{ color: '#08b0a2' }}
+                        className="font-medium underline text-primary"
                       >
                         {t('register.termsLink')}
                       </Link>{' '}
@@ -237,8 +199,7 @@ export default function RegisterPage() {
                       <Link
                         href="/privacy"
                         target="_blank"
-                        className="font-medium underline"
-                        style={{ color: '#08b0a2' }}
+                        className="font-medium underline text-primary"
                       >
                         {t('register.privacyLink')}
                       </Link>
@@ -255,9 +216,9 @@ export default function RegisterPage() {
                     {loading ? t('common.loading') : t('register.registerButton')}
                   </Button>
 
-                  <p className="text-center text-sm" style={{ color: '#71717a' }}>
+                  <p className="text-center text-sm text-muted-foreground">
                     {t('register.haveAccount')}{' '}
-                    <Link href="/" className="font-medium" style={{ color: '#08b0a2' }}>
+                    <Link href="/" className="font-medium text-primary">
                       {t('register.loginLink')}
                     </Link>
                   </p>
@@ -267,12 +228,11 @@ export default function RegisterPage() {
                   <div>
                     <label
                       htmlFor="otp-input"
-                      className="text-sm font-medium mb-1.5 block"
-                      style={{ color: '#21242d' }}
+                      className="text-sm font-medium mb-1.5 block text-foreground"
                     >
                       {t('auth.verificationCode')}
                     </label>
-                    <p className="text-xs mb-3" style={{ color: '#71717a' }}>
+                    <p className="text-xs mb-3 text-muted-foreground">
                       {t('auth.otpSentTo')} <span dir="ltr">{phone}</span>
                     </p>
                     <Input

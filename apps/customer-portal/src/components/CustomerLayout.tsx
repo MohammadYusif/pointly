@@ -3,7 +3,8 @@
 import { getCurrentSession, signOut } from '@/lib/auth';
 import { useTranslation } from '@pointly/i18n';
 import { LanguageToggle } from '@pointly/ui';
-import { Clock, Home, LogOut, QrCode, Store, User } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Home, LogOut, QrCode, Store, User, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -13,8 +14,8 @@ import { PointlyLogo } from './PointlyLogo';
 const navItems = [
   { key: 'dashboard', href: '/dashboard', icon: Home },
   { key: 'qr', href: '/qr', icon: QrCode },
-  { key: 'merchants', href: '/enroll', icon: Store },
-  { key: 'history', href: '/history', icon: Clock },
+  { key: 'merchants', href: '/merchants', icon: Store },
+  { key: 'wallet', href: '/wallet', icon: Wallet },
   { key: 'profile', href: '/profile', icon: User },
 ];
 
@@ -22,6 +23,7 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
@@ -39,6 +41,7 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
   }, []);
 
   const handleLogout = () => {
+    queryClient.clear();
     signOut();
     router.push('/');
   };
@@ -47,14 +50,14 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
     dashboard: t('navigation.dashboard'),
     qr: t('navigation.qr'),
     merchants: t('navigation.merchants'),
-    history: t('navigation.transactions'),
+    wallet: t('navigation.wallet'),
     profile: t('navigation.profile'),
   };
 
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[#08b0a2] border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -100,12 +103,13 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
                 href={item.href}
                 className={`flex flex-col items-center gap-1 px-4 py-1 text-xs transition-colors ${
                   isActive
-                    ? 'text-[#08b0a2] font-medium'
+                    ? 'text-primary font-medium'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Icon className="h-5 w-5" />
                 {labels[item.key]}
+                {isActive && <span className="nav-active-dot" />}
               </Link>
             );
           })}

@@ -35,6 +35,12 @@
   --color-destructive: #ef4444;
   --color-destructive-foreground: #ffffff;
 
+  /* Tier Colors */
+  --color-tier-bronze: #cd7f32;
+  --color-tier-gold: #ffd700;
+  --color-tier-platinum: #e5e4e2;
+  --color-tier-diamond: #b9f2ff;
+
   /* Typography — Plus Jakarta Sans for English, IBM Plex Sans Arabic for Arabic */
   --font-sans: "Plus Jakarta Sans", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
 
@@ -494,6 +500,83 @@
 }
 
 /* ============================================================================
+   Component Classes
+   ============================================================================ */
+
+/* Tier badge */
+.tier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: 1.5px solid;
+}
+
+/* Points card */
+.points-card {
+  padding: 1.25rem;
+  border-radius: var(--radius-xl);
+  text-align: center;
+}
+
+/* Merchant card */
+.merchant-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.merchant-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Progress ring */
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.6s ease;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.06) 25%,
+    rgba(0, 0, 0, 0.03) 50%,
+    rgba(0, 0, 0, 0.06) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+/* Active nav indicator */
+.nav-active-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background-color: var(--color-primary);
+  margin-top: 2px;
+}
+
+/* Consent toggle */
+.consent-toggle {
+  position: relative;
+  width: 2.75rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+.consent-toggle[data-state="granted"] {
+  background-color: var(--color-primary);
+}
+.consent-toggle[data-state="revoked"],
+.consent-toggle[data-state="pending"] {
+  background-color: #d1d5db;
+}
+
+/* ============================================================================
    Inner Pages (Terms, Privacy) — glassmorphic card on body bg
    ============================================================================ */
 
@@ -566,6 +649,15 @@
 }
 .stagger-item:nth-child(n + 6) {
   animation-delay: 250ms;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* ============================================================================
