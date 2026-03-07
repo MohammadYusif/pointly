@@ -14,7 +14,7 @@ export {
 export type { CustomerTierLevel } from './tier-config';
 
 // Phone Utilities
-export { normalizePhone, formatPhone } from './phone';
+export { normalizePhone, formatPhone, isValidSaudiPhone } from './phone';
 
 // Badge Configuration
 export { getTypeBadge, getStatusBadge } from './badges';

@@ -23,6 +23,23 @@ export function normalizePhone(raw: string): string {
 }
 
 /**
+ * Check whether a raw input can be normalized to a valid Saudi mobile E.164 number.
+ * Does NOT throw — returns `true` / `false`.
+ */
+export function isValidSaudiPhone(raw: string): boolean {
+  const digits = raw.replace(/\D/g, '');
+  // 9 digits starting with 5
+  if (/^5\d{8}$/.test(digits)) return true;
+  // 10 digits starting with 05
+  if (/^05\d{8}$/.test(digits)) return true;
+  // 12 digits with country code 9665
+  if (/^9665\d{8}$/.test(digits)) return true;
+  // Already E.164
+  if (/^\+9665\d{8}$/.test(raw.trim())) return true;
+  return false;
+}
+
+/**
  * Format phone for display: 966501111111 → +966 50 111 1111
  */
 export function formatPhone(phone: string): string {
