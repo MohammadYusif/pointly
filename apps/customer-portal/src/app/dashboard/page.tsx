@@ -2,11 +2,14 @@
 
 import { CustomerLayout } from '@/components/CustomerLayout';
 import { DecayWarning } from '@/components/DecayWarning';
+import { MilestoneBadge } from '@/components/MilestoneBadge';
 import { PerksSection } from '@/components/PerksSection';
 import { PointsCard } from '@/components/PointsCard';
 import { ProgressRing } from '@/components/ProgressRing';
+import { TierBadge } from '@/components/TierBadge';
 import { TransactionItem } from '@/components/TransactionItem';
 import { useCustomer, useMyMerchants, useRecentTransactions } from '@/hooks/api';
+import { useBadges } from '@/hooks/use-badges';
 import { useTranslation } from '@pointly/i18n';
 import type { CustomerEnrollment } from '@pointly/shared';
 import { getTierColor, getTierTarget } from '@pointly/shared';
@@ -42,6 +45,8 @@ export default function CustomerDashboard() {
   const { data: customer, isLoading: customerLoading, refetch } = useCustomer();
   const { data: txData, isLoading: txLoading } = useRecentTransactions(5);
   const { data: merchants } = useMyMerchants();
+  const badges = useBadges(customer);
+  const earnedBadges = badges.filter((b) => b.isEarned).slice(0, 3);
 
   const merchantNameMap = useMemo(() => {
     const names: Record<string, string> = {};
@@ -93,9 +98,7 @@ export default function CustomerDashboard() {
           <h1 className="text-xl font-bold">
             {t('dashboard.welcome')} {customer.name || ''}
           </h1>
-          <span className={`text-sm font-medium ${getTierColor(customer.currentTier)}`}>
-            {customer.tierDisplayName}
-          </span>
+          <TierBadge tier={customer.currentTier} label={customer.tierDisplayName} size="sm" />
         </div>
 
         {/* Point Balances */}
@@ -137,6 +140,25 @@ export default function CustomerDashboard() {
             isDecayImmune={customer.isDecayImmune}
             decayPhase={customer.globalPointsDecayPhase}
           />
+        )}
+
+        {/* Badges Summary */}
+        {earnedBadges.length > 0 && (
+          <Card className="stagger-item">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base">{t('badges.title')}</CardTitle>
+              <Link href="/badges" className="text-xs text-primary hover:underline">
+                {t('common.viewAll')}
+              </Link>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-2">
+                {earnedBadges.map((badge) => (
+                  <MilestoneBadge key={badge.id} badge={badge} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Recent Transactions */}
