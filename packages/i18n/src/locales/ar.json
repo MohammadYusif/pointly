@@ -100,7 +100,8 @@
     "showToMerchant": "أظهر هذا الرمز للتاجر عند الدفع"
   },
   "profile": {
-    "personalInfo": "المعلومات الشخصية"
+    "personalInfo": "المعلومات الشخصية",
+    "memberSince": "عضو منذ"
   },
   "customer": {
     "title": "العملاء",

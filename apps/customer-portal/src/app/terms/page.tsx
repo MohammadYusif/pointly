@@ -29,26 +29,16 @@ export default function TermsPage() {
 
         <PointlyLogo height={28} className="mb-6" />
 
-        <h1 className="text-2xl font-bold mb-1" style={{ color: '#21242d' }}>
-          {t('terms.title')}
-        </h1>
-        <p className="text-sm mb-6" style={{ color: '#71717a' }}>
-          {t('terms.lastUpdated')}
-        </p>
+        <h1 className="text-2xl font-bold mb-1 text-foreground">{t('terms.title')}</h1>
+        <p className="text-sm mb-6 text-muted-foreground">{t('terms.lastUpdated')}</p>
 
-        <p className="mb-6" style={{ color: '#21242d' }}>
-          {t('terms.intro')}
-        </p>
+        <p className="mb-6 text-foreground">{t('terms.intro')}</p>
 
         <div className="space-y-5">
           {sections.map((s) => (
             <div key={s.title}>
-              <h2 className="font-semibold mb-1" style={{ color: '#21242d' }}>
-                {s.title}
-              </h2>
-              <p className="text-sm leading-relaxed" style={{ color: '#52525b' }}>
-                {s.body}
-              </p>
+              <h2 className="font-semibold mb-1 text-foreground">{s.title}</h2>
+              <p className="text-sm leading-relaxed text-muted-foreground">{s.body}</p>
             </div>
           ))}
         </div>

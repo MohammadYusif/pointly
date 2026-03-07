@@ -100,7 +100,8 @@
     "showToMerchant": "Show this code to the merchant at checkout"
   },
   "profile": {
-    "personalInfo": "Personal Information"
+    "personalInfo": "Personal Information",
+    "memberSince": "Member Since"
   },
   "customer": {
     "title": "Customers",
