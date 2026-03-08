@@ -319,8 +319,12 @@ export class Customer {
     }
 
     // Apply tier earning multiplier (e.g., Diamond gets 1.2x points)
+    // Use integer-percentage math to avoid IEEE 754 precision loss
+    // (e.g., Math.floor(100 * 1.15) = 114 due to 1.15 → 1.14999... in double)
     const earningMultiplier = this.props.currentTier.getEarningMultiplier();
-    const boostedPoints = Points.from(Math.floor(globalPoints.toNumber() * earningMultiplier));
+    const boostedPoints = Points.from(
+      Math.floor((globalPoints.toNumber() * Math.round(earningMultiplier * 100)) / 100),
+    );
 
     // Add boosted global points to balance (reward)
     this.props.globalPointsBalance = this.props.globalPointsBalance.add(boostedPoints);

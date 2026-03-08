@@ -637,6 +637,36 @@ describe('Point System - Real World Scenarios', () => {
 
         expect(customer.getGlobalPointsBalance().toNumber()).toBe(108);
       });
+
+      it('should apply 1.15x multiplier for Platinum without floating-point error', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setCustomerTier(customer, CustomerTier.platinum());
+
+        // 100 * 1.15 = 115 (NOT 114 from IEEE 754 Math.floor bug)
+        customer.addPointsFromPurchase('merchant_123', Points.from(100), Points.from(50));
+
+        expect(customer.getGlobalPointsBalance().toNumber()).toBe(115);
+      });
+
+      it('should apply 1.2x multiplier for Diamond without floating-point error', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setCustomerTier(customer, CustomerTier.diamond());
+
+        // 100 * 1.2 = 120 (NOT 119 from IEEE 754 Math.floor bug)
+        customer.addPointsFromPurchase('merchant_123', Points.from(100), Points.from(50));
+
+        expect(customer.getGlobalPointsBalance().toNumber()).toBe(120);
+      });
+
+      it('should floor fractional Platinum points correctly', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
+        setCustomerTier(customer, CustomerTier.platinum());
+
+        // 99 * 1.15 = 113.85 → 113
+        customer.addPointsFromPurchase('merchant_123', Points.from(99), Points.from(50));
+
+        expect(customer.getGlobalPointsBalance().toNumber()).toBe(113);
+      });
     });
 
     describe('Decay Immunity', () => {
