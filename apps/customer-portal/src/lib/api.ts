@@ -94,16 +94,6 @@ export function getMerchantDetail(merchantId: string) {
   return fetchApi<PublicMerchantDetail>(`/v1/merchants/info/${merchantId}`);
 }
 
-export function updateConsent(merchantId: string, action: 'grant' | 'revoke') {
-  return fetchApi<{ customerId: string; merchantId: string; consentStatus: string }>(
-    '/v1/me/consent',
-    {
-      method: 'POST',
-      body: JSON.stringify({ merchantId, action }),
-    },
-  );
-}
-
 export function deleteAccount() {
   return fetchApi<void>('/v1/me', { method: 'DELETE' });
 }

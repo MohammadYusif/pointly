@@ -1,8 +1,7 @@
 'use client';
 
-import { ConsentToggle } from '@/components/ConsentToggle';
 import { CustomerLayout } from '@/components/CustomerLayout';
-import { useCustomer, useDeleteAccount, useMyMerchants, useUpdateCustomer } from '@/hooks/api';
+import { useCustomer, useDeleteAccount, useUpdateCustomer } from '@/hooks/api';
 import { signOut } from '@/lib/auth';
 import { useTranslation } from '@pointly/i18n';
 import { formatDate, formatPhone } from '@pointly/shared';
@@ -39,7 +38,6 @@ export default function ProfilePage() {
   const router = useRouter();
 
   const { data: customer, isLoading } = useCustomer();
-  const { data: merchants = [] } = useMyMerchants();
   const updateCustomer = useUpdateCustomer();
   const deleteAccountMutation = useDeleteAccount();
 
@@ -144,21 +142,6 @@ export default function ProfilePage() {
             )}
           </CardContent>
         </Card>
-
-        {/* Data Consent */}
-        {merchants.length > 0 && (
-          <Card className="stagger-item">
-            <CardHeader>
-              <CardTitle className="text-base">{t('consent.title')}</CardTitle>
-              <p className="text-xs text-muted-foreground">{t('consent.description')}</p>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {merchants.map((m) => (
-                <ConsentToggle key={m.merchantId} merchant={m} />
-              ))}
-            </CardContent>
-          </Card>
-        )}
 
         <Button variant="destructive" className="w-full stagger-item" onClick={handleSignOut}>
           <LogOut className={`h-4 w-4 me-2 ${flipIcon}`} />
