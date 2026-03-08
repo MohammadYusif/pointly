@@ -70,8 +70,7 @@
     "merchants": "Merchants",
     "wallet": "Wallet",
     "badges": "Badges",
-    "history": "History",
-    "consents": "Consents"
+    "history": "History"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -372,24 +371,6 @@
     "diamondLegendDesc": "Reach Diamond tier",
     "bigSpender": "Big Spender",
     "bigSpenderDesc": "Earn 10,000 lifetime points"
-  },
-  "consent": {
-    "title": "Data Consent",
-    "description": "Control how merchants can use your data",
-    "granted": "Granted",
-    "pending": "Pending",
-    "revoked": "Revoked",
-    "grant": "Grant Consent",
-    "revoke": "Revoke Consent",
-    "grantSuccess": "Consent granted",
-    "revokeSuccess": "Consent revoked",
-    "pendingTitle": "Pending Consent Requests",
-    "pendingDescription": "Customers who have enrolled but haven't been approved yet",
-    "approve": "Approve",
-    "deny": "Deny",
-    "approveSuccess": "Consent approved",
-    "denySuccess": "Consent denied",
-    "noPending": "No pending consent requests"
   },
   "terms": {
     "title": "Terms of Use",

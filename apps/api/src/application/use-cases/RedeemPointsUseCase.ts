@@ -212,10 +212,6 @@ export class RedeemPointsUseCase {
       throw new ValidationError('Customer is not enrolled with this merchant');
     }
 
-    if (enrollment.consentStatus !== 'GRANTED') {
-      throw new UnauthorizedError('Customer consent required to redeem points');
-    }
-
     return customer;
   }
 

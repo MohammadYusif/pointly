@@ -11,7 +11,6 @@ import { getContainer } from '../container';
 interface CustomerEnrollmentJSON {
   merchantId: string;
   enrolledAt: string;
-  consentStatus: string;
   merchantPointsBalance: number;
   merchantLifetimePoints: number;
   transactionCount: number;

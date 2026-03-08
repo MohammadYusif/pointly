@@ -265,7 +265,6 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
           businessName: merchant?.toJSON().businessName ?? e.merchantId,
           merchantPointsBalance: e.merchantPointsBalance as number,
           merchantLifetimePoints: e.merchantLifetimePoints as number,
-          consentStatus: e.consentStatus as string,
           enrolledAt: e.enrolledAt as string,
           transactionCount: e.transactionCount as number,
           lastTransactionAt: e.lastTransactionAt as string | undefined,

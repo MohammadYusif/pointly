@@ -123,8 +123,6 @@ export interface MerchantScopedCustomerResponse {
 export interface CustomerEnrollment {
   merchantId: string;
   enrolledAt: string;
-  consentStatus: string;
-  consentGrantedAt?: string;
   merchantPointsBalance: number;
   merchantLifetimePoints: number;
   transactionCount: number;
@@ -232,7 +230,6 @@ export interface CustomerMerchantView {
   businessName: string;
   merchantPointsBalance: number;
   merchantLifetimePoints: number;
-  consentStatus: string;
   enrolledAt: string;
   transactionCount: number;
   lastTransactionAt?: string;

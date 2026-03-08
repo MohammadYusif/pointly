@@ -232,10 +232,6 @@ export class RecordPurchaseUseCase {
       throw new ValidationError('Customer is not enrolled with this merchant');
     }
 
-    if (enrollment.consentStatus !== 'GRANTED') {
-      throw new UnauthorizedError('Customer consent required to earn points');
-    }
-
     return customer;
   }
 
