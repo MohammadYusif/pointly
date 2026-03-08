@@ -7,7 +7,7 @@ import { formatPhone } from '@pointly/shared';
 import { Button, Card, CardContent, useRTL } from '@pointly/ui';
 import { RefreshCw } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function QRCodePage() {
   const { t } = useTranslation();
@@ -20,32 +20,37 @@ export default function QRCodePage() {
   const [expiresAt, setExpiresAt] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
-  const fetchQR = useCallback(() => {
+  // Stable ref for fetch function — avoids re-creating the countdown interval
+  const fetchQRRef = useRef<() => void>();
+  fetchQRRef.current = () => {
+    if (generateQR.isPending) return;
     generateQR.mutate(undefined, {
       onSuccess: (data) => {
         setQrPayload(data.qrPayload);
         setExpiresAt(data.expiresAt);
       },
     });
-  }, [generateQR]);
+  };
+
+  const fetchQR = () => fetchQRRef.current?.();
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: initial fetch on mount
   useEffect(() => {
     fetchQR();
   }, []);
 
-  // Countdown timer
+  // Countdown timer — only depends on expiresAt (not fetchQR)
   useEffect(() => {
     if (!expiresAt) return;
     const interval = setInterval(() => {
       const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
       setTimeLeft(remaining);
       if (remaining <= 0) {
-        fetchQR();
+        fetchQRRef.current?.();
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [expiresAt, fetchQR]);
+  }, [expiresAt]);
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
