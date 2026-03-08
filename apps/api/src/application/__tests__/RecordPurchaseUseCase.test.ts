@@ -55,7 +55,7 @@ describe('RecordPurchaseUseCase', () => {
       exists: vi.fn(),
       findByPhone: vi.fn(),
       findByMerchant: vi.fn(),
-      findPendingConsents: vi.fn(),
+
       isEnrolled: vi.fn(),
       // biome-ignore lint/suspicious/noExplicitAny: test mock returns empty persistence items
       toPersistenceItem: vi.fn().mockReturnValue([]) as any,
@@ -322,28 +322,6 @@ describe('RecordPurchaseUseCase', () => {
           idempotencyKey: 'test_key',
         }),
       ).rejects.toThrow(ValidationError);
-    });
-
-    it('should throw UnauthorizedError if customer has not granted consent', async () => {
-      const noConsentCustomer = Customer.create(
-        new PhoneNumber('0505555555'),
-        'No Consent Customer',
-      );
-      noConsentCustomer.enrollWithMerchant('merchant_123');
-      // Don't grant consent
-
-      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
-      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
-      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(noConsentCustomer);
-
-      await expect(
-        useCase.execute({
-          merchantId: 'merchant_123',
-          customerId: noConsentCustomer.getCustomerId(),
-          amountSAR: 100,
-          idempotencyKey: 'test_key',
-        }),
-      ).rejects.toThrow(UnauthorizedError);
     });
 
     it('should throw ValidationError if purchase below minimum', async () => {

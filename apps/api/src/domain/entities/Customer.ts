@@ -248,14 +248,16 @@ export class Customer {
     this.props.updatedAt = new Date();
   }
 
+  /** @deprecated Consent is now auto-granted on enrollment. Kept for backward compat (idempotent no-op). */
   grantConsent(merchantId: string): void {
     const enrollment = this.props.enrollments.get(merchantId);
     if (!enrollment) {
       throw new ValidationError('Customer not enrolled with this merchant');
     }
 
+    // Already granted on enrollment — idempotent no-op
     if (enrollment.consentStatus === ConsentStatus.GRANTED) {
-      throw new ValidationError('Consent already granted');
+      return;
     }
 
     enrollment.consentStatus = ConsentStatus.GRANTED;

@@ -7,7 +7,6 @@ import type { PersistenceItem } from '../shared/interfaces/BaseRepository';
 export interface EnrollCustomerRequest {
   customerId: string;
   merchantId: string;
-  grantConsent?: boolean;
 }
 
 export interface EnrollCustomerResponse {
@@ -23,11 +22,10 @@ export interface EnrollCustomerResponse {
  * Flow:
  * 1. Validate customer exists
  * 2. Validate merchant exists and is verified
- * 3. Enroll customer with merchant
- * 4. Optionally grant consent
- * 5. Apply welcome bonus if configured
- * 6. Increment merchant customer count
- * 7. Save everything atomically
+ * 3. Enroll customer with merchant (consent auto-granted)
+ * 4. Apply welcome bonus if configured
+ * 5. Increment merchant customer count
+ * 6. Save everything atomically
  */
 export class EnrollCustomerUseCase {
   constructor(
@@ -53,10 +51,6 @@ export class EnrollCustomerUseCase {
 
     customer.enrollWithMerchant(request.merchantId);
 
-    if (request.grantConsent) {
-      customer.grantConsent(request.merchantId);
-    }
-
     const loyaltyConfig = merchant.getLoyaltyConfig();
     let welcomeBonusApplied = false;
 
@@ -68,13 +62,8 @@ export class EnrollCustomerUseCase {
 
     merchant.incrementCustomerCount();
 
-    // toEnrollmentItems returns [profile, merchantIndex] when consent is granted,
-    // or [profile] only when consent is still pending — the repository owns that logic.
-    // Purchase / redemption / decay flows use toPersistenceItem (profile only) to
-    // stay within DynamoDB's 25-item TransactWriteItems limit.
-    const customerItems = request.grantConsent
-      ? this.customerRepository.toEnrollmentItems(customer, request.merchantId)
-      : this.customerRepository.toPersistenceItem(customer);
+    // Consent is auto-granted on enrollment, so always write profile + GSI2 index
+    const customerItems = this.customerRepository.toEnrollmentItems(customer, request.merchantId);
 
     await this.atomicWrite([
       ...customerItems,

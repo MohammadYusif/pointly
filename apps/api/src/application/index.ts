@@ -1,10 +1,5 @@
 // Use Cases
 export {
-  ApproveConsentUseCase,
-  type ApproveConsentRequest,
-  type ApproveConsentResponse,
-} from './use-cases/ApproveConsentUseCase';
-export {
   EnrollCustomerUseCase,
   type EnrollCustomerRequest,
   type EnrollCustomerResponse,

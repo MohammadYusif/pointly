@@ -55,7 +55,7 @@ describe('RedeemPointsUseCase', () => {
       exists: vi.fn(),
       findByPhone: vi.fn(),
       findByMerchant: vi.fn(),
-      findPendingConsents: vi.fn(),
+
       isEnrolled: vi.fn(),
       // biome-ignore lint/suspicious/noExplicitAny: test mock returns empty persistence items
       toPersistenceItem: vi.fn().mockReturnValue([]) as any,

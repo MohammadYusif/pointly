@@ -466,15 +466,14 @@ describe('Domain Entities', () => {
       expect(enrollment?.consentStatus).toBe(ConsentStatus.GRANTED);
     });
 
-    it('should throw when granting consent that is already GRANTED', () => {
+    it('should be idempotent when granting consent that is already GRANTED', () => {
       const phone = new PhoneNumber('0501234567');
       const customer = Customer.create(phone);
       const merchantId = 'merchant_123';
 
       customer.enrollWithMerchant(merchantId);
-      customer.grantConsent(merchantId);
-
-      expect(() => customer.grantConsent(merchantId)).toThrow('Consent already granted');
+      // Consent is auto-granted on enrollment; calling again should be a no-op
+      expect(() => customer.grantConsent(merchantId)).not.toThrow();
     });
 
     it('should throw when enrolling with merchant already enrolled', () => {
@@ -535,16 +534,15 @@ describe('Domain Entities', () => {
       expect(() => customer.redeemGlobalPoints(Points.from(200))).toThrow();
     });
 
-    it('should throw when redeeming merchant points without GRANTED consent', () => {
+    it('should throw when redeeming merchant points with zero balance', () => {
       const phone = new PhoneNumber('0501234567');
       const customer = Customer.create(phone);
       const merchantId = 'merchant_123';
 
       customer.enrollWithMerchant(merchantId);
-      // consent is still PENDING
 
       expect(() => customer.redeemMerchantPoints(merchantId, Points.from(10))).toThrow(
-        'Consent required',
+        'Insufficient merchant points balance',
       );
     });
 

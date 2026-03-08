@@ -111,39 +111,12 @@ export class CustomerRepository
       indexResult.items.map((idx) => this.findById(idx.customerId)),
     );
 
-    // Filter out nulls and stale index items (customer revoked consent)
-    const validCustomers = customers.filter((c): c is Customer => {
-      if (!c) return false;
-      const enrollment = c.getEnrollment(merchantId);
-      return enrollment?.consentStatus === ConsentStatus.GRANTED;
-    });
+    const validCustomers = customers.filter((c): c is Customer => c !== null);
 
     return {
       items: validCustomers,
       count: validCustomers.length,
       nextToken: indexResult.nextToken,
-    };
-  }
-
-  async findPendingConsents(
-    merchantId: string,
-    options?: QueryOptions,
-  ): Promise<QueryResult<Customer>> {
-    const result = await this.query<CustomerItem>(
-      {
-        IndexName: 'PendingConsentsIndex',
-        KeyConditionExpression: 'GSI3PK = :pk',
-        ExpressionAttributeValues: {
-          ':pk': `MERCHANT#${merchantId}#PENDING_CONSENT`,
-        },
-      },
-      options,
-    );
-
-    return {
-      items: result.items.map((item) => this.itemToEntity(item)),
-      count: result.count,
-      nextToken: result.nextToken,
     };
   }
 
@@ -185,26 +158,6 @@ export class CustomerRepository
     for (const persistenceItem of items) {
       await this.putItem(persistenceItem.item);
     }
-    await this.deleteStaleIndexItems(entity);
-  }
-
-  /**
-   * Delete per-merchant GSI2 index items for any enrollment with REVOKED consent.
-   * Called automatically by save() to keep the MerchantCustomersIndex clean.
-   */
-  private async deleteStaleIndexItems(entity: Customer): Promise<void> {
-    const customerId = entity.getCustomerId();
-    const deletePromises: Promise<void>[] = [];
-
-    for (const [merchantId, enrollment] of entity.getEnrollments()) {
-      if (enrollment.consentStatus === ConsentStatus.REVOKED) {
-        deletePromises.push(
-          this.deleteItem(`CUSTOMER#${customerId}`, `MERCHANT_INDEX#${merchantId}`),
-        );
-      }
-    }
-
-    await Promise.all(deletePromises);
   }
 
   toPersistenceItem(entity: Customer) {
@@ -235,14 +188,14 @@ export class CustomerRepository
 
   /**
    * Build the GSI2 adjacency-list index item for one merchant enrollment.
-   * Returns null when the enrollment is missing or consent is not GRANTED.
+   * Returns null when the enrollment is missing.
    * Private — call toEnrollmentItems() from outside this class.
    */
   private buildMerchantIndexItem(entity: Customer, merchantId: string) {
     const json = entity.toJSON();
     // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
     const enrollment = json.enrollments.find((e: any) => e.merchantId === merchantId);
-    if (!enrollment || enrollment.consentStatus !== ConsentStatus.GRANTED) {
+    if (!enrollment) {
       return null;
     }
     return {
@@ -307,7 +260,7 @@ export class CustomerRepository
       const enrollmentData: CustomerEnrollment = {
         merchantId: enrollment.merchantId,
         enrolledAt: CustomerRepository.parseDate(enrollment.enrolledAt, createdAt),
-        consentStatus: enrollment.consentStatus || ConsentStatus.PENDING,
+        consentStatus: enrollment.consentStatus || ConsentStatus.GRANTED,
         merchantPointsBalance: Points.from(enrollment.merchantPointsBalance ?? 0),
         merchantLifetimePoints: Points.from(enrollment.merchantLifetimePoints ?? 0),
         transactionCount: enrollment.transactionCount ?? 0,

@@ -200,33 +200,15 @@ describe('Point System - Real World Scenarios', () => {
         }).toThrow('Customer must be active to redeem points');
       });
 
-      it('should provide clear error when consent blocks merchant points', () => {
-        const phone = new PhoneNumber('0501234567');
-        const customer = Customer.create(phone);
-        customer.enrollWithMerchant('merchant_123');
-        // Consent is PENDING, not GRANTED
-        setMerchantPointsBalance(customer, 'merchant_123', 500);
-        setGlobalPointsBalance(customer, 100);
-
-        // Trying to redeem more than global alone can cover
-        expect(() => {
-          customer.redeemSmart('merchant_123', Points.from(300));
-        }).toThrow(/Merchant points.*unavailable due to consent status: PENDING/);
-      });
-
-      it('should allow global-only redemption even with pending consent', () => {
-        const phone = new PhoneNumber('0501234567');
-        const customer = Customer.create(phone);
-        customer.enrollWithMerchant('merchant_123');
-        // Consent is PENDING
+      it('should use merchant points first in smart redemption', () => {
+        const customer = createCustomerWithEnrollment('merchant_123');
         setMerchantPointsBalance(customer, 'merchant_123', 500);
         setGlobalPointsBalance(customer, 1000);
 
-        // Can still redeem from global points
         const result = customer.redeemSmart('merchant_123', Points.from(300));
 
-        expect(result.merchantPointsUsed.toNumber()).toBe(0);
-        expect(result.globalPointsUsed.toNumber()).toBe(300);
+        expect(result.merchantPointsUsed.toNumber()).toBe(300);
+        expect(result.globalPointsUsed.toNumber()).toBe(0);
       });
     });
   });
@@ -993,58 +975,26 @@ describe('Point System - Real World Scenarios', () => {
    * CONSENT MECHANICS
    * ============================================
    */
-  describe('Consent Mechanics', () => {
-    it('should prevent earning merchant points with PENDING consent', () => {
+  describe('Enrollment — auto-granted consent', () => {
+    it('should auto-grant consent on enrollment and allow earning immediately', () => {
       const phone = new PhoneNumber('0501234567');
       const customer = Customer.create(phone, 'Test Customer');
       customer.enrollWithMerchant('merchant_123');
-      // Consent is PENDING by default
 
-      expect(() => {
-        customer.addPointsFromPurchase('merchant_123', Points.from(100), Points.from(100));
-      }).toThrow('Consent required to add points');
-    });
-
-    it('should prevent earning merchant points with REVOKED consent', () => {
-      const customer = createCustomerWithEnrollment('merchant_123');
-      // Revoke consent
-      customer.revokeConsent('merchant_123');
-
-      expect(() => {
-        customer.addPointsFromPurchase('merchant_123', Points.from(100), Points.from(100));
-      }).toThrow('Consent required to add points');
-    });
-
-    it('should allow earning again after re-granting consent', () => {
-      const customer = createCustomerWithEnrollment('merchant_123');
-      // Revoke
-      customer.revokeConsent('merchant_123');
-
-      // Re-grant
-      customer.grantConsent('merchant_123');
-
-      // Should now work
+      // Should work immediately — consent is auto-granted
       customer.addPointsFromPurchase('merchant_123', Points.from(100), Points.from(100));
       expect(customer.getGlobalPointsBalance().toNumber()).toBe(100);
       expect(customer.getMerchantPointsBalance('merchant_123').toNumber()).toBe(100);
     });
 
-    it('should not affect one merchant consent when another merchant consent changes', () => {
+    it('should allow earning at multiple merchants independently', () => {
       const customer = createCustomerWithEnrollment('merchant_a');
       customer.enrollWithMerchant('merchant_b');
-      customer.grantConsent('merchant_b');
 
-      // Revoke consent at merchant_a
-      customer.revokeConsent('merchant_a');
-
-      // Should still be able to earn at merchant_b
+      customer.addPointsFromPurchase('merchant_a', Points.from(100), Points.from(100));
       customer.addPointsFromPurchase('merchant_b', Points.from(200), Points.from(200));
+      expect(customer.getMerchantPointsBalance('merchant_a').toNumber()).toBe(100);
       expect(customer.getMerchantPointsBalance('merchant_b').toNumber()).toBe(200);
-
-      // But not at merchant_a
-      expect(() => {
-        customer.addPointsFromPurchase('merchant_a', Points.from(100), Points.from(100));
-      }).toThrow('Consent required to add points');
     });
   });
 

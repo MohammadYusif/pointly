@@ -192,39 +192,6 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
     },
   );
 
-  // Get pending consents for merchant
-  server.get(
-    '/:merchantId/pending-consents',
-    async (
-      request: FastifyRequest<{
-        Params: { merchantId: string };
-        Querystring: { limit?: string; nextToken?: string };
-      }>,
-      reply: FastifyReply,
-    ) => {
-      enforceMerchantAccess(request);
-      const { merchantId } = request.params;
-      const query = getMerchantCustomersQuerySchema.parse(request.query);
-
-      const container = getContainer();
-      const customerRepository = container.customerRepository;
-
-      const result = await customerRepository.findPendingConsents(merchantId, {
-        limit: query.limit,
-        ...(query.nextToken && { nextToken: query.nextToken }),
-      });
-
-      return reply.send({
-        success: true,
-        data: {
-          customers: result.items.map((c) => c.toJSON()),
-          count: result.count,
-          nextToken: result.nextToken,
-        },
-      });
-    },
-  );
-
   // Get merchant analytics
   server.get(
     '/:merchantId/analytics',
@@ -358,35 +325,6 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       await merchantRepository.save(merchant);
 
       return reply.status(201).send({ success: true, data: location });
-    },
-  );
-
-  // PATCH /:merchantId/pending-consents/:customerId — Approve/deny consent
-  server.patch(
-    '/:merchantId/pending-consents/:customerId',
-    async (
-      request: FastifyRequest<{
-        Params: { merchantId: string; customerId: string };
-        Body: { action: string };
-      }>,
-      reply: FastifyReply,
-    ) => {
-      enforceMerchantAccess(request);
-      const { merchantId, customerId } = request.params;
-
-      const actionSchema = z.object({
-        action: z.enum(['approve', 'deny']),
-      });
-      const body = actionSchema.parse(request.body);
-
-      const container = getContainer();
-      const result = await container.approveConsentUseCase.execute({
-        merchantId,
-        customerId,
-        action: body.action,
-      });
-
-      return reply.send({ success: true, data: result });
     },
   );
 
@@ -588,7 +526,7 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
     async (
       request: FastifyRequest<{
         Params: { merchantId: string };
-        Body: { customerId: string; grantConsent?: boolean };
+        Body: { customerId: string };
       }>,
       reply: FastifyReply,
     ) => {
@@ -597,7 +535,6 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
 
       const enrollSchema = z.object({
         customerId: z.string().min(1),
-        grantConsent: z.boolean().optional().default(false),
       });
       const body = enrollSchema.parse(request.body);
 
@@ -605,7 +542,6 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       const result = await container.enrollCustomerUseCase.execute({
         customerId: body.customerId,
         merchantId,
-        grantConsent: body.grantConsent,
       });
 
       return reply.status(201).send({

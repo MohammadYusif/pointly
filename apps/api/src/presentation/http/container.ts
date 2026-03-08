@@ -5,7 +5,6 @@ import type { ITransactionRepository } from '../../application/repositories/ITra
 import type { IDecayCalculatorService } from '../../application/services/IDecayCalculatorService';
 import type { IIdempotencyService } from '../../application/services/IIdempotencyService';
 import type { ISmsPublisherService } from '../../application/services/ISmsPublisherService';
-import { ApproveConsentUseCase } from '../../application/use-cases/ApproveConsentUseCase';
 import { EnrollCustomerUseCase } from '../../application/use-cases/EnrollCustomerUseCase';
 import { GenerateQRCodeUseCase } from '../../application/use-cases/GenerateQRCodeUseCase';
 import { GetAnalyticsUseCase } from '../../application/use-cases/GetAnalyticsUseCase';
@@ -41,7 +40,6 @@ export interface Container {
   transactionalWriter: TransactionalWriter;
 
   // Use Cases
-  approveConsentUseCase: ApproveConsentUseCase;
   enrollCustomerUseCase: EnrollCustomerUseCase;
   managePerkUseCase: ManagePerkUseCase;
   recordPurchaseUseCase: RecordPurchaseUseCase;
@@ -71,12 +69,6 @@ export function createContainer(): Container {
   const transactionalWriter = new TransactionalWriter(dbClient);
 
   // Create use cases
-  const approveConsentUseCase = new ApproveConsentUseCase(
-    customerRepository,
-    merchantRepository,
-    (items) => transactionalWriter.writeAll(items),
-  );
-
   const enrollCustomerUseCase = new EnrollCustomerUseCase(
     customerRepository,
     merchantRepository,
@@ -132,7 +124,6 @@ export function createContainer(): Container {
     decayCalculatorService,
     smsPublisherService,
     transactionalWriter,
-    approveConsentUseCase,
     enrollCustomerUseCase,
     managePerkUseCase,
     recordPurchaseUseCase,
