@@ -453,7 +453,6 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
         Body: { phone: string; name?: string };
       }>,
       reply: FastifyReply,
-      // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: composite find-or-create + enroll + consent flow
     ) => {
       enforceMerchantAccess(request);
       const { merchantId } = request.params;
@@ -494,23 +493,19 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
         newlyCreated = true;
       }
 
-      // Enroll and grant consent if needed
+      // Enroll if not already enrolled (consent is auto-granted)
       const enrollment = customer.getEnrollment(merchantId);
       let customerChanged = newlyCreated;
 
       if (!enrollment) {
         customer.enrollWithMerchant(merchantId);
-        customer.grantConsent(merchantId);
         merchant.incrementCustomerCount();
-        customerChanged = true;
-      } else if (enrollment.consentStatus !== 'GRANTED') {
-        customer.grantConsent(merchantId);
         customerChanged = true;
       }
 
       if (customerChanged) {
         await container.transactionalWriter.writeAll([
-          ...customerRepository.toPersistenceItem(customer),
+          ...customerRepository.toEnrollmentItems(customer, merchantId),
           ...merchantRepository.toPersistenceItem(merchant),
         ]);
       }

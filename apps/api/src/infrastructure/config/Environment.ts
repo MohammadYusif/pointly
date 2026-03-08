@@ -13,7 +13,7 @@ const envSchema = z.object({
   TRANSACTION_TABLE: z.string(),
   IDEMPOTENCY_TABLE: z.string(),
   QR_NONCE_TABLE: z.string(),
-  PENDING_CONSENTS_TABLE: z.string(),
+  PENDING_CONSENTS_TABLE: z.string().optional(),
   SMS_QUOTA_TABLE: z.string(),
   WALLET_PASSES_TABLE: z.string().optional(),
 

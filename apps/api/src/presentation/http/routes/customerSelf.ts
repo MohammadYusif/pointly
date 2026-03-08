@@ -22,11 +22,6 @@ const enrollSchema = z.object({
   merchantId: z.string().min(1),
 });
 
-const consentSchema = z.object({
-  merchantId: z.string().min(1),
-  action: z.enum(['grant', 'revoke']),
-});
-
 const setupSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   dateOfBirth: z
@@ -173,13 +168,11 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
     const customerTierLevel = customer.getCurrentTier().getLevel();
     const customerTierRank = tierOrder[customerTierLevel] ?? 0;
 
-    // Collect all enrolled merchants with granted consent
+    // Collect all enrolled merchants
     const enrolledMerchantIds = customer
       .toJSON()
       // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
-      .enrollments.filter((e: any) => e.consentStatus === 'GRANTED')
-      // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
-      .map((e: any) => e.merchantId as string);
+      .enrollments.map((e: any) => e.merchantId as string);
 
     const perksView: Array<{
       perkId: string;
@@ -283,51 +276,6 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
     return reply.send({ success: true, data: results });
   });
 
-  // POST /v1/me/consent — Grant/revoke consent
-  server.post(
-    '/consent',
-    async (
-      request: FastifyRequest<{ Body: { merchantId: string; action: string } }>,
-      reply: FastifyReply,
-    ) => {
-      const { customerId } = request;
-      if (!customerId) {
-        throw new ValidationError('Customer ID not found in token');
-      }
-
-      const body = consentSchema.parse(request.body);
-
-      const container = getContainer();
-      const { customerRepository, transactionalWriter } = container;
-
-      const customer = await customerRepository.findById(customerId);
-      if (!customer) {
-        return reply.status(404).send({ success: false, error: 'Customer not found' });
-      }
-
-      if (body.action === 'grant') {
-        customer.grantConsent(body.merchantId);
-        // Atomic write: profile + GSI2 merchant index (so merchant queries see the change)
-        await transactionalWriter.writeAll(
-          customerRepository.toEnrollmentItems(customer, body.merchantId),
-        );
-      } else {
-        customer.revokeConsent(body.merchantId);
-        // Profile-only write: revoked consent removes customer from merchant queries
-        await transactionalWriter.writeAll(customerRepository.toPersistenceItem(customer));
-      }
-
-      return reply.send({
-        success: true,
-        data: {
-          customerId,
-          merchantId: body.merchantId,
-          consentStatus: customer.getEnrollment(body.merchantId)?.consentStatus,
-        },
-      });
-    },
-  );
-
   // DELETE /v1/me — Permanently delete account (DynamoDB + Cognito)
   server.delete('/', async (request: FastifyRequest, reply: FastifyReply) => {
     const { customerId, cognitoPhone } = request;
@@ -338,7 +286,12 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
     const container = getContainer();
 
     // 1. Delete customer from DynamoDB (profile + merchant index items)
-    await container.customerRepository.delete(customerId);
+    try {
+      await container.customerRepository.delete(customerId);
+    } catch (err) {
+      request.log.error({ err, customerId }, 'Failed to delete customer from DynamoDB');
+      return reply.status(500).send({ success: false, error: 'Failed to delete account' });
+    }
 
     // 2. Delete user from Cognito (if pool is configured)
     const env = EnvironmentConfig.get();
