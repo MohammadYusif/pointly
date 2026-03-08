@@ -70,7 +70,8 @@
     "merchants": "التجار",
     "wallet": "المحفظة",
     "badges": "الشارات",
-    "history": "السجل"
+    "history": "السجل",
+    "consents": "الموافقات"
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -381,7 +382,14 @@
     "grant": "منح الموافقة",
     "revoke": "إلغاء الموافقة",
     "grantSuccess": "تم منح الموافقة",
-    "revokeSuccess": "تم إلغاء الموافقة"
+    "revokeSuccess": "تم إلغاء الموافقة",
+    "pendingTitle": "طلبات الموافقة المعلقة",
+    "pendingDescription": "العملاء الذين سجلوا ولم تتم الموافقة عليهم بعد",
+    "approve": "موافقة",
+    "deny": "رفض",
+    "approveSuccess": "تمت الموافقة",
+    "denySuccess": "تم الرفض",
+    "noPending": "لا توجد طلبات موافقة معلقة"
   },
   "terms": {
     "title": "شروط الاستخدام",

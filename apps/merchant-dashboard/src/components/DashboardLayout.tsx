@@ -47,6 +47,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       active: isActive('/redeem'),
     },
     {
+      key: 'consents',
+      label: t('navigation.consents'),
+      href: '/consents',
+      active: isActive('/consents'),
+    },
+    {
       key: 'settings',
       label: t('navigation.settings'),
       href: '/settings',

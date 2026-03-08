@@ -1,5 +1,6 @@
 import { merchantApi, perkApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import type { CustomerResponse } from '@pointly/shared';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useMerchant() {
@@ -129,5 +130,34 @@ export function useInfiniteTransactions(
     enabled: !!merchant?.merchantId,
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextToken,
+  });
+}
+
+export function usePendingConsents() {
+  const { merchant } = useAuth();
+  return useQuery({
+    queryKey: ['merchant', merchant?.merchantId, 'pending-consents'],
+    // biome-ignore lint/style/noNonNullAssertion: enabled guard ensures merchantId exists
+    queryFn: () => merchantApi.getPendingConsents(merchant!.merchantId),
+    enabled: !!merchant?.merchantId,
+    select: (data) => (data.customers || []) as CustomerResponse[],
+  });
+}
+
+export function useApproveConsent() {
+  const { merchant } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ customerId, action }: { customerId: string; action: 'approve' | 'deny' }) =>
+      // biome-ignore lint/style/noNonNullAssertion: merchantId is required
+      merchantApi.approveConsent(merchant!.merchantId, customerId, action),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['merchant', merchant?.merchantId, 'pending-consents'],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['merchant', merchant?.merchantId, 'customers'],
+      });
+    },
   });
 }

@@ -70,7 +70,8 @@
     "merchants": "Merchants",
     "wallet": "Wallet",
     "badges": "Badges",
-    "history": "History"
+    "history": "History",
+    "consents": "Consents"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -381,7 +382,14 @@
     "grant": "Grant Consent",
     "revoke": "Revoke Consent",
     "grantSuccess": "Consent granted",
-    "revokeSuccess": "Consent revoked"
+    "revokeSuccess": "Consent revoked",
+    "pendingTitle": "Pending Consent Requests",
+    "pendingDescription": "Customers who have enrolled but haven't been approved yet",
+    "approve": "Approve",
+    "deny": "Deny",
+    "approveSuccess": "Consent approved",
+    "denySuccess": "Consent denied",
+    "noPending": "No pending consent requests"
   },
   "terms": {
     "title": "Terms of Use",

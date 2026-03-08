@@ -87,6 +87,12 @@ export const merchantApi = {
   getPendingConsents: (merchantId: string) =>
     fetchApi<PaginatedResponse<CustomerResponse>>(`/v1/merchants/${merchantId}/pending-consents`),
 
+  approveConsent: (merchantId: string, customerId: string, action: 'approve' | 'deny') =>
+    fetchApi<{ customerId: string; merchantId: string; consentStatus: string }>(
+      `/v1/merchants/${merchantId}/pending-consents/${customerId}`,
+      { method: 'PATCH', body: JSON.stringify({ action }) },
+    ),
+
   getAnalytics: (
     merchantId: string,
     params?: { startDate?: string; endDate?: string; groupBy?: string },

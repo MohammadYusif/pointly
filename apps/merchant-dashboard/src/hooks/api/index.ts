@@ -8,6 +8,8 @@ export {
   usePerks,
   useCreatePerk,
   useDeletePerk,
+  usePendingConsents,
+  useApproveConsent,
 } from './use-merchant';
 export {
   useCustomerByPhone,
