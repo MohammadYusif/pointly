@@ -83,10 +83,10 @@ export default function RegisterPage() {
         name: name || undefined,
         dateOfBirth: dateOfBirth || undefined,
       });
-      router.push('/dashboard');
+      // Hard navigation ensures dashboard loads with fresh auth state
+      window.location.href = '/dashboard';
     } catch (err) {
       setError(err instanceof Error ? err.message : t('errors.serverError'));
-    } finally {
       setLoading(false);
     }
   };

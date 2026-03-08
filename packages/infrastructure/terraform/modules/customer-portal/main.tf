@@ -128,7 +128,7 @@ resource "aws_cloudfront_function" "url_rewrite" {
       if (uri.endsWith('/')) {
         request.uri += 'index.html';
       } else if (!uri.includes('.')) {
-        request.uri += '/index.html';
+        request.uri += '.html';
       }
       return request;
     }

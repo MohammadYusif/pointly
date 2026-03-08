@@ -70,11 +70,15 @@ export default function LoginPage() {
     try {
       await confirmOtp(cognitoUser, otp);
       // Ensure DynamoDB customer record exists (idempotent — safe to call on every login)
-      await completeProfile({});
-      router.push('/dashboard');
+      try {
+        await completeProfile({});
+      } catch {
+        // Non-critical on subsequent logins; customer record already exists
+      }
+      // Hard navigation ensures dashboard loads with fresh auth state
+      window.location.href = '/dashboard';
     } catch (err) {
       setError(err instanceof Error ? err.message : t('errors.serverError'));
-    } finally {
       setLoading(false);
     }
   };
