@@ -390,7 +390,7 @@
   height: 400px;
   background: radial-gradient(circle, rgba(8, 176, 162, 0.15), transparent 70%);
   top: -80px;
-  right: -60px;
+  inset-inline-end: -60px;
   animation: orbDrift 18s ease-in-out infinite;
 }
 
@@ -399,7 +399,7 @@
   height: 320px;
   background: radial-gradient(circle, rgba(30, 45, 74, 0.1), transparent 70%);
   bottom: 10%;
-  left: -80px;
+  inset-inline-start: -80px;
   animation: orbDrift 22s ease-in-out infinite 4s;
 }
 
@@ -408,7 +408,7 @@
   height: 240px;
   background: radial-gradient(circle, rgba(251, 146, 60, 0.06), transparent 70%);
   top: 50%;
-  right: 10%;
+  inset-inline-end: 10%;
   animation: orbDrift 15s ease-in-out infinite 8s;
 }
 
@@ -468,7 +468,7 @@
   height: 560px;
   background: rgba(8, 176, 162, 0.2);
   top: -12%;
-  left: -8%;
+  inset-inline-start: -8%;
   animation: floatOrb1 14s ease-in-out infinite;
 }
 
@@ -477,7 +477,7 @@
   height: 480px;
   background: rgba(30, 45, 74, 0.55);
   bottom: -8%;
-  right: -6%;
+  inset-inline-end: -6%;
   animation: floatOrb2 19s ease-in-out infinite;
 }
 
@@ -486,7 +486,7 @@
   height: 320px;
   background: rgba(8, 176, 162, 0.12);
   top: 38%;
-  left: 42%;
+  inset-inline-start: 42%;
   animation: floatOrb3 11s ease-in-out infinite;
 }
 
@@ -495,7 +495,7 @@
   height: 260px;
   background: rgba(5, 161, 165, 0.15);
   top: 15%;
-  right: 8%;
+  inset-inline-end: 8%;
   animation: floatOrb1 17s ease-in-out infinite reverse;
 }
 
