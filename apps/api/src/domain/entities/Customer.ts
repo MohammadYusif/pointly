@@ -232,10 +232,12 @@ export class Customer {
       throw new ValidationError('Customer already enrolled with this merchant');
     }
 
+    const now = new Date();
     const enrollment: CustomerEnrollment = {
       merchantId,
-      enrolledAt: new Date(),
-      consentStatus: ConsentStatus.PENDING,
+      enrolledAt: now,
+      consentStatus: ConsentStatus.GRANTED,
+      consentGrantedAt: now,
       merchantPointsBalance: Points.zero(),
       merchantLifetimePoints: Points.zero(),
       transactionCount: 0,
@@ -307,10 +309,6 @@ export class Customer {
     const enrollment = this.props.enrollments.get(merchantId);
     if (!enrollment) {
       throw new ValidationError('Customer not enrolled with this merchant');
-    }
-
-    if (enrollment.consentStatus !== ConsentStatus.GRANTED) {
-      throw new ValidationError('Consent required to add points');
     }
 
     // Lazy reset: if we're in a new month and cron job missed us, reset progress now
@@ -389,10 +387,6 @@ export class Customer {
       throw new ValidationError('Customer not enrolled with this merchant');
     }
 
-    if (enrollment.consentStatus !== ConsentStatus.GRANTED) {
-      throw new ValidationError('Consent required to redeem points');
-    }
-
     if (enrollment.merchantPointsBalance.isLessThan(points)) {
       throw new ValidationError('Insufficient merchant points balance');
     }
@@ -429,24 +423,12 @@ export class Customer {
     }
 
     const enrollment = this.getEnrollment(merchantId);
-
-    // Merchant points are only usable if enrolled AND consent is granted
-    // If consent is pending/revoked, treat merchant balance as 0 (use global only)
-    const canUseMerchantPoints =
-      enrollment !== undefined && enrollment.consentStatus === ConsentStatus.GRANTED;
-    const merchantBalance = canUseMerchantPoints ? enrollment.merchantPointsBalance : Points.zero();
+    const merchantBalance = enrollment ? enrollment.merchantPointsBalance : Points.zero();
     const globalBalance = this.props.globalPointsBalance;
 
     // Validate total available points
     const totalAvailable = merchantBalance.add(globalBalance);
     if (totalAvailable.isLessThan(totalPointsNeeded)) {
-      // Provide specific error message based on context
-      if (enrollment && enrollment.consentStatus !== ConsentStatus.GRANTED) {
-        throw new ValidationError(
-          `Insufficient points: ${globalBalance.toNumber()} global points available. ` +
-            `Merchant points (${enrollment.merchantPointsBalance.toNumber()}) unavailable due to consent status: ${enrollment.consentStatus}`,
-        );
-      }
       throw new ValidationError('Insufficient total points balance');
     }
 
