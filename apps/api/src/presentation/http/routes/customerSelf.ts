@@ -298,7 +298,7 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
       const body = consentSchema.parse(request.body);
 
       const container = getContainer();
-      const { customerRepository } = container;
+      const { customerRepository, transactionalWriter } = container;
 
       const customer = await customerRepository.findById(customerId);
       if (!customer) {
@@ -307,11 +307,15 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
 
       if (body.action === 'grant') {
         customer.grantConsent(body.merchantId);
+        // Atomic write: profile + GSI2 merchant index (so merchant queries see the change)
+        await transactionalWriter.writeAll(
+          customerRepository.toEnrollmentItems(customer, body.merchantId),
+        );
       } else {
         customer.revokeConsent(body.merchantId);
+        // Profile-only write: revoked consent removes customer from merchant queries
+        await transactionalWriter.writeAll(customerRepository.toPersistenceItem(customer));
       }
-
-      await customerRepository.save(customer);
 
       return reply.send({
         success: true,
