@@ -133,7 +133,7 @@ export default function CustomersPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className={textStart}>
-                    <p className="font-medium">{customer.name || customer.customerId}</p>
+                    <p className="font-medium">{customer.name || formatPhone(customer.phone)}</p>
                     <p className="text-sm text-muted-foreground" dir="ltr">
                       {formatPhone(customer.phone)}
                     </p>

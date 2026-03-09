@@ -20,7 +20,7 @@ export function CustomerSummaryCard({ customer, enrollment }: CustomerSummaryCar
       <CardContent className="p-5">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className={textStart}>
-            <p className="text-lg font-semibold">{customer.name || customer.customerId}</p>
+            <p className="text-lg font-semibold">{customer.name || formatPhone(customer.phone)}</p>
             <p className="text-sm text-muted-foreground" dir="ltr">
               {formatPhone(customer.phone)}
             </p>

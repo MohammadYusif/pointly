@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { useInfiniteTransactions, useMerchant, useMerchantCustomers } from '@/hooks/api';
 import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
-import { getStatusBadge, getTypeBadge } from '@pointly/shared';
+import { formatPhone, getStatusBadge, getTypeBadge } from '@pointly/shared';
 import { Button, Card, CardContent, useRTL } from '@pointly/ui';
 import { ArrowDownUp, Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -81,9 +81,11 @@ export default function TransactionsPage() {
     locationNames[loc.locationId] = loc.name;
   }
   const customerNames: Record<string, string> = {};
+  const customerPhones: Record<string, string> = {};
   // biome-ignore lint/suspicious/noExplicitAny: API response shape varies
   for (const c of (customersData?.customers || []) as any[]) {
     if (c.customerId && c.name) customerNames[c.customerId] = c.name;
+    if (c.customerId && c.phone) customerPhones[c.customerId] = formatPhone(c.phone);
   }
 
   useEffect(() => {
@@ -130,7 +132,7 @@ export default function TransactionsPage() {
               const rows = transactions.map((tx) => [
                 new Date(tx.createdAt).toISOString(),
                 tx.transactionId,
-                customerNames[tx.customerId] || tx.customerId,
+                customerNames[tx.customerId] || customerPhones[tx.customerId] || tx.customerId,
                 tx.type,
                 tx.points,
                 getAmount(tx.amount),
@@ -168,7 +170,9 @@ export default function TransactionsPage() {
                   <div className="flex items-center justify-between">
                     <div className={textStart}>
                       <p className="font-medium text-sm">
-                        {customerNames[tx.customerId] || tx.customerId}
+                        {customerNames[tx.customerId] ||
+                          customerPhones[tx.customerId] ||
+                          tx.customerId}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         <ClientDate date={tx.createdAt} format="datetime" locale={locale} />
