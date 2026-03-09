@@ -57,13 +57,13 @@
     }
   },
   "navigation": {
-    "dashboard": "لوحة التحكم",
+    "dashboard": "الرئيسية",
     "customers": "العملاء",
     "transactions": "المعاملات",
     "settings": "الإعدادات",
     "reports": "التقارير",
     "loyalty": "برنامج الولاء",
-    "profile": "الملف الشخصي",
+    "profile": "حسابي",
     "help": "المساعدة",
     "billing": "الفوترة",
     "qr": "رمز QR",

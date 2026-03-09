@@ -101,14 +101,16 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
               <Link
                 key={item.key}
                 href={item.href}
-                className={`flex flex-col items-center gap-1 px-4 py-1 text-xs transition-colors ${
+                className={`flex flex-col items-center gap-0.5 px-1 py-1 text-[11px] leading-tight transition-colors ${
                   isActive
                     ? 'text-primary font-medium'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Icon className="h-5 w-5" />
-                {labels[item.key]}
+                <span className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[4.5rem] text-center">
+                  {labels[item.key]}
+                </span>
                 {isActive && <span className="nav-active-dot" />}
               </Link>
             );
