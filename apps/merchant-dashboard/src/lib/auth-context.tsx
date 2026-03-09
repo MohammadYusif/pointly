@@ -48,9 +48,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Client-side auth guard (replaces server middleware — not available with output: export)
   useEffect(() => {
     if (isLoading) return;
-    const isLoginPage = pathname === '/login';
+    const isLoginPage = pathname === '/login' || pathname === '/login/';
     if (!merchant && !isLoginPage) {
-      router.replace('/login');
+      router.replace('/login/');
     } else if (merchant && isLoginPage) {
       router.replace('/');
     }
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(() => {
     cognitoSignOut();
     setMerchant(null);
-    window.location.href = '/login';
+    window.location.href = '/login/';
   }, []);
 
   const value = useMemo(
