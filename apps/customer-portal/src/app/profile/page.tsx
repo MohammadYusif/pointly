@@ -77,8 +77,10 @@ export default function ProfilePage() {
         signOut();
         router.push('/');
       },
-      onError: () => {
-        toast.error(t('errors.serverError'));
+      onError: (err: unknown) => {
+        const message = err instanceof Error ? err.message : t('errors.serverError');
+        console.error('Delete account failed:', err);
+        toast.error(message);
       },
     });
   };

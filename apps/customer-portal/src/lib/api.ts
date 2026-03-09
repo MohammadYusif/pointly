@@ -94,6 +94,24 @@ export function getMerchantDetail(merchantId: string) {
   return fetchApi<PublicMerchantDetail>(`/v1/merchants/info/${merchantId}`);
 }
 
-export function deleteAccount() {
-  return fetchApi<void>('/v1/me', { method: 'DELETE' });
+export async function deleteAccount(): Promise<void> {
+  const url = `${API_BASE_URL}/v1/me`;
+  const token = await getAccessToken();
+  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', ...authHeaders },
+  });
+
+  if (response.status === 401) {
+    signOut();
+    if (typeof window !== 'undefined') window.location.replace('/?expired=1');
+    throw new Error('Session expired');
+  }
+
+  const result: { success: boolean; error?: string } = await response.json();
+  if (!response.ok || !result.success) {
+    throw new Error(result.error || 'Failed to delete account');
+  }
 }
