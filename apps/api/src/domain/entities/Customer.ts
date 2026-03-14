@@ -52,6 +52,10 @@ export interface CustomerProps {
   lastDecayAppliedAt?: Date | undefined;
   lastInactivityWarningSentAt?: Date; // dedup for 3/6/9-month engagement SMS
 
+  // Streak tracking (gamification)
+  weeklyVisitDates: string[]; // ISO date strings of visits this week (deduped by day)
+  lastStreakResetAt: Date; // When weekly streak was last reset
+
   enrollments: Map<string, CustomerEnrollment>;
   createdAt: Date;
   updatedAt: Date;
@@ -79,6 +83,10 @@ export class Customer {
       // Decay tracking
       lastNetworkActivity: now,
       globalPointsDecayPhase: 0,
+
+      // Streak tracking
+      weeklyVisitDates: [],
+      lastStreakResetAt: now,
 
       enrollments: new Map(),
       createdAt: now,
@@ -114,6 +122,8 @@ export class Customer {
       monthlyProgressResetAt: now,
       lastNetworkActivity: now,
       globalPointsDecayPhase: 0,
+      weeklyVisitDates: [],
+      lastStreakResetAt: now,
       enrollments: new Map(),
       createdAt: now,
       updatedAt: now,
@@ -708,6 +718,65 @@ export class Customer {
     return newTier;
   }
 
+  // ── Streak / Gamification ──
+
+  /**
+   * Record a visit for the weekly streak challenge.
+   * Deduplicates by calendar day (ISO date string). Lazy-resets if a new week has started.
+   */
+  recordVisitForStreak(date: Date): void {
+    // Lazy reset: if more than 7 days since last reset, start a new week
+    const daysSinceReset = Math.floor(
+      (date.getTime() - this.props.lastStreakResetAt.getTime()) / (1000 * 60 * 60 * 24),
+    );
+    if (daysSinceReset >= 7) {
+      this.resetWeeklyStreak(date);
+    }
+
+    const dateStr = date.toISOString().slice(0, 10); // YYYY-MM-DD
+    if (!this.props.weeklyVisitDates.includes(dateStr)) {
+      this.props.weeklyVisitDates.push(dateStr);
+      this.props.updatedAt = new Date();
+    }
+  }
+
+  /**
+   * Get the number of unique visit days this week.
+   */
+  getWeeklyVisitCount(): number {
+    return this.props.weeklyVisitDates.length;
+  }
+
+  /**
+   * Get the raw weekly visit dates array.
+   */
+  getWeeklyVisitDates(): string[] {
+    return [...this.props.weeklyVisitDates];
+  }
+
+  getLastStreakResetAt(): Date {
+    return this.props.lastStreakResetAt;
+  }
+
+  /**
+   * Reset the weekly streak (start a new week).
+   */
+  resetWeeklyStreak(now: Date = new Date()): void {
+    this.props.weeklyVisitDates = [];
+    this.props.lastStreakResetAt = now;
+    this.props.updatedAt = new Date();
+  }
+
+  /**
+   * Award streak bonus points to the global balance.
+   * Called by CheckChallengeEligibilityUseCase when the weekly target is met.
+   */
+  awardStreakBonus(bonusPoints: Points): void {
+    this.props.globalPointsBalance = this.props.globalPointsBalance.add(bonusPoints);
+    this.props.globalLifetimePoints = this.props.globalLifetimePoints.add(bonusPoints);
+    this.props.updatedAt = new Date();
+  }
+
   /**
    * Manually set tier (admin override)
    */
@@ -790,6 +859,10 @@ export class Customer {
       lastDecayAppliedAt: this.props.lastDecayAppliedAt?.toISOString(),
       lastInactivityWarningSentAt: this.props.lastInactivityWarningSentAt?.toISOString(),
       monthsOfInactivity: this.getMonthsOfInactivity(),
+
+      // Streak tracking
+      weeklyVisitDates: this.props.weeklyVisitDates,
+      lastStreakResetAt: this.props.lastStreakResetAt.toISOString(),
 
       enrollments: Array.from(this.props.enrollments.entries()).map(([, enrollment]) => ({
         merchantId: enrollment.merchantId,
