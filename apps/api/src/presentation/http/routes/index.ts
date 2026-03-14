@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { verifyMerchantToken } from '../plugins/cognitoAuth';
 import { verifyCustomerToken } from '../plugins/cognitoCustomerAuth';
+import { campaignRoutes } from './campaigns';
 import { customerPublicRoutes } from './customerPublic';
 import { customerSelfRoutes } from './customerSelf';
 import { customerRoutes } from './customers';
@@ -8,6 +9,7 @@ import { healthRoutes } from './health';
 import { merchantPublicRoutes } from './merchantPublic';
 import { merchantRoutes } from './merchants';
 import { purchaseRoutes } from './purchases';
+import { webhookRoutes } from './webhooks';
 
 export async function registerRoutes(server: FastifyInstance): Promise<void> {
   // Health check (no prefix, public)
@@ -33,6 +35,8 @@ export async function registerRoutes(server: FastifyInstance): Promise<void> {
         await protectedApp.register(purchaseRoutes, { prefix: '/purchases' });
         await protectedApp.register(customerRoutes, { prefix: '/customers' });
         await protectedApp.register(merchantRoutes, { prefix: '/merchants' });
+        await protectedApp.register(campaignRoutes, { prefix: '/merchants' });
+        await protectedApp.register(webhookRoutes, { prefix: '/merchants' });
       });
     },
     { prefix: '/v1' },

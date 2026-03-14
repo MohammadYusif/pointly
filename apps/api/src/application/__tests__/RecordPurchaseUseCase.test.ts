@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  Campaign,
   Customer,
   Email,
   Merchant,
@@ -10,6 +11,7 @@ import {
   UnauthorizedError,
   ValidationError,
 } from '../../domain';
+import type { ICampaignRepository } from '../repositories/ICampaignRepository';
 import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
 import type { ITransactionRepository } from '../repositories/ITransactionRepository';
@@ -461,6 +463,96 @@ describe('RecordPurchaseUseCase', () => {
       // Math.floor(99.99 * 1) = 99
       expect(result.merchantPoints).toBe(99);
       expect(result.globalPoints).toBe(99);
+    });
+  });
+
+  describe('Campaign Multiplier', () => {
+    it('should multiply points by active campaign multiplier', async () => {
+      const mockCampaignRepo: ICampaignRepository = {
+        findById: vi.fn(),
+        save: vi.fn(),
+        delete: vi.fn(),
+        exists: vi.fn(),
+        findByMerchant: vi.fn(),
+        findActiveCampaignsForMerchant: vi.fn(),
+        // biome-ignore lint/suspicious/noExplicitAny: test mock returns empty persistence items
+        toPersistenceItem: vi.fn().mockReturnValue([]) as any,
+      };
+
+      const campaign = Campaign.create(
+        'merchant_123',
+        'Double Points',
+        'Earn 2x this week',
+        new Date(Date.now() - 1000),
+        new Date(Date.now() + 86400000),
+        2.0,
+      );
+      vi.mocked(mockCampaignRepo.findActiveCampaignsForMerchant).mockResolvedValue([campaign]);
+
+      const useCaseWithCampaign = new RecordPurchaseUseCase(
+        mockCustomerRepo,
+        mockMerchantRepo,
+        mockTransactionRepo,
+        mockIdempotencyService,
+        mockAtomicWrite,
+        undefined,
+        mockCampaignRepo,
+      );
+
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      const result = await useCaseWithCampaign.execute({
+        merchantId: 'merchant_123',
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 100,
+        idempotencyKey: 'campaign_multiplier_key',
+      });
+
+      expect(result.merchantPoints).toBe(200); // 100 * 2x
+      expect(result.campaignMultiplier).toBe(2.0);
+      expect(result.campaignName).toBe('Double Points');
+    });
+
+    it('should not apply campaign multiplier if no active campaigns', async () => {
+      const mockCampaignRepo: ICampaignRepository = {
+        findById: vi.fn(),
+        save: vi.fn(),
+        delete: vi.fn(),
+        exists: vi.fn(),
+        findByMerchant: vi.fn(),
+        findActiveCampaignsForMerchant: vi.fn(),
+        // biome-ignore lint/suspicious/noExplicitAny: test mock returns empty persistence items
+        toPersistenceItem: vi.fn().mockReturnValue([]) as any,
+      };
+
+      vi.mocked(mockCampaignRepo.findActiveCampaignsForMerchant).mockResolvedValue([]);
+
+      const useCaseWithCampaign = new RecordPurchaseUseCase(
+        mockCustomerRepo,
+        mockMerchantRepo,
+        mockTransactionRepo,
+        mockIdempotencyService,
+        mockAtomicWrite,
+        undefined,
+        mockCampaignRepo,
+      );
+
+      vi.mocked(mockIdempotencyService.getResult).mockResolvedValue(null);
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      const result = await useCaseWithCampaign.execute({
+        merchantId: 'merchant_123',
+        customerId: testCustomer.getCustomerId(),
+        amountSAR: 100,
+        idempotencyKey: 'no_campaign_key',
+      });
+
+      expect(result.merchantPoints).toBe(100);
+      expect(result.campaignMultiplier).toBeUndefined();
+      expect(result.campaignName).toBeUndefined();
     });
   });
 

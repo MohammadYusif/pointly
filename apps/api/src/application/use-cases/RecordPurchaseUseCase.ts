@@ -9,12 +9,14 @@ import {
   ValidationError,
 } from '../../domain';
 import type { TransactionMetadata } from '../../domain';
+import type { ICampaignRepository } from '../repositories/ICampaignRepository';
 import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
 import type { ITransactionRepository } from '../repositories/ITransactionRepository';
 import type { IIdempotencyService } from '../services/IIdempotencyService';
 import type { ISmsPublisherService } from '../services/ISmsPublisherService';
 import type { PersistenceItem } from '../shared/interfaces/BaseRepository';
+import type { CheckChallengeEligibilityUseCase } from './CheckChallengeEligibilityUseCase';
 
 const IDEMPOTENCY_TTL_SECONDS = 3600;
 
@@ -46,6 +48,9 @@ export interface RecordPurchaseResponse {
   isDecayImmune: boolean;
   pointsToNextTier: number;
 
+  campaignMultiplier?: number;
+  campaignName?: string;
+
   message: string;
 }
 
@@ -70,6 +75,8 @@ export class RecordPurchaseUseCase {
     private idempotencyService: IIdempotencyService,
     private atomicWrite: (items: PersistenceItem[]) => Promise<void>,
     private smsPublisher?: ISmsPublisherService,
+    private campaignRepository?: ICampaignRepository,
+    private checkChallengeEligibility?: CheckChallengeEligibilityUseCase,
   ) {}
 
   async execute(request: RecordPurchaseRequest): Promise<RecordPurchaseResponse> {
@@ -100,8 +107,26 @@ export class RecordPurchaseUseCase {
       );
     }
 
-    const merchantPoints = Points.from(pointsCalculation.merchantPoints);
-    const globalPoints = Points.from(pointsCalculation.globalPoints);
+    let merchantPoints = Points.from(pointsCalculation.merchantPoints);
+    let globalPoints = Points.from(pointsCalculation.globalPoints);
+
+    // 4b. Apply active campaign multiplier if available
+    let activeCampaignMultiplier: number | undefined;
+    let activeCampaignName: string | undefined;
+    if (this.campaignRepository) {
+      const activeCampaigns = await this.campaignRepository.findActiveCampaignsForMerchant(
+        request.merchantId,
+      );
+      if (activeCampaigns.length > 0 && activeCampaigns[0]) {
+        const campaign = activeCampaigns[0];
+        activeCampaignMultiplier = campaign.getMultiplier();
+        activeCampaignName = campaign.getName();
+        merchantPoints = Points.from(
+          Math.floor(merchantPoints.toNumber() * activeCampaignMultiplier),
+        );
+        globalPoints = Points.from(Math.floor(globalPoints.toNumber() * activeCampaignMultiplier));
+      }
+    }
 
     // 5. Get current balances before transaction
     const merchantBalanceBefore = customer.getMerchantPointsBalance(request.merchantId);
@@ -171,6 +196,11 @@ export class RecordPurchaseUseCase {
       isDecayImmune: customer.isDecayImmune(),
       pointsToNextTier: customer.getPointsToNextTier(),
 
+      ...(activeCampaignMultiplier !== undefined && {
+        campaignMultiplier: activeCampaignMultiplier,
+      }),
+      ...(activeCampaignName !== undefined && { campaignName: activeCampaignName }),
+
       message: `Purchase recorded! Earned ${merchantPoints.toNumber()} merchant points and ${boostedGlobalPoints.toNumber()} Pointly Network points`,
     };
 
@@ -189,6 +219,13 @@ export class RecordPurchaseUseCase {
         merchantId: request.merchantId,
         type: 'POINTS_EARNED',
       });
+    }
+
+    // 12. Fire-and-forget challenge eligibility check
+    if (this.checkChallengeEligibility) {
+      this.checkChallengeEligibility
+        .execute({ customerId: request.customerId, merchantId: request.merchantId })
+        .catch(() => {});
     }
 
     return response;
