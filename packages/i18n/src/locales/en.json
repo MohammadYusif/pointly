@@ -71,7 +71,8 @@
     "merchants": "Merchants",
     "wallet": "Wallet",
     "badges": "Badges",
-    "history": "History"
+    "history": "History",
+    "marketing": "Marketing"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -387,6 +388,75 @@
     "section4Body": "We may update these terms at any time. Continued use of the platform constitutes acceptance of the revised terms.",
     "section5Title": "5. Contact",
     "section5Body": "For questions, contact support@pointly.sa."
+  },
+  "campaigns": {
+    "title": "Campaigns",
+    "createCampaign": "Create Campaign",
+    "activeCampaigns": "Active Campaigns",
+    "noCampaigns": "No campaigns yet",
+    "name": "Campaign Name",
+    "namePlaceholder": "e.g. Weekend Double Points",
+    "description": "Description",
+    "descriptionPlaceholder": "Describe the campaign...",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "multiplier": "Points Multiplier",
+    "multiplierSuffix": "x Points",
+    "active": "Active",
+    "expired": "Expired",
+    "scheduled": "Scheduled",
+    "deactivate": "Deactivate",
+    "createSuccess": "Campaign created successfully",
+    "deactivateSuccess": "Campaign deactivated",
+    "deleteSuccess": "Campaign deleted",
+    "dateError": "End date must be after start date",
+    "multiplierError": "Multiplier must be between 1.0 and 5.0"
+  },
+  "challenges": {
+    "title": "Challenges",
+    "activeChallenges": "Active Challenges",
+    "noChallenges": "No active challenges",
+    "weeklyStreak": "Weekly Visit Streak",
+    "weeklyStreakDesc": "Visit {{count}} times this week to earn bonus points",
+    "progress": "{{current}} of {{target}} visits",
+    "bonusReward": "+{{points}} bonus points",
+    "completed": "Completed!",
+    "timeRemaining": "{{days}} days left",
+    "streakComplete": "Streak complete! Bonus points awarded."
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "createWebhook": "Add Webhook",
+    "noWebhooks": "No webhooks configured",
+    "url": "Webhook URL",
+    "urlPlaceholder": "https://your-system.com/webhook",
+    "events": "Events",
+    "redemption": "Redemption",
+    "secretKey": "Secret Key",
+    "secretKeyHint": "Used to sign webhook payloads (HMAC-SHA256)",
+    "createSuccess": "Webhook registered successfully",
+    "deleteSuccess": "Webhook removed",
+    "active": "Active",
+    "testWebhook": "Test"
+  },
+  "gift": {
+    "title": "Gift Points",
+    "recipientPhone": "Recipient Phone Number",
+    "recipientPhonePlaceholder": "+966 5XX XXX XXXX",
+    "pointsToGift": "Points to Gift",
+    "message": "Message (optional)",
+    "messagePlaceholder": "e.g. Happy birthday!",
+    "send": "Send Points",
+    "confirmTitle": "Confirm Gift",
+    "confirmMessage": "Send {{points}} points to {{phone}}?",
+    "success": "Points sent successfully!",
+    "insufficientPoints": "You don't have enough points",
+    "invalidPhone": "Please enter a valid phone number",
+    "minPoints": "Minimum 1 point required"
+  },
+  "marketing": {
+    "title": "Marketing",
+    "subtitle": "Manage campaigns and integrations"
   },
   "privacy": {
     "title": "Privacy Policy",

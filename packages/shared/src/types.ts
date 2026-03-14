@@ -258,3 +258,54 @@ export interface AnalyticsData {
   };
   trends: AnalyticsDataPoint[];
 }
+
+// --- Campaigns ---
+
+export interface CampaignResponse {
+  campaignId: string;
+  merchantId: string;
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  multiplier: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+// --- Challenges ---
+
+export type ChallengeType = 'WEEKLY_VISIT_STREAK';
+
+export interface ChallengeProgressResponse {
+  challengeType: ChallengeType;
+  name: string;
+  description: string;
+  currentCount: number;
+  targetCount: number;
+  bonusPoints: number;
+  completed: boolean;
+  periodStartDate: string;
+  periodEndDate: string;
+}
+
+// --- Webhooks ---
+
+export type WebhookEventType = 'REDEMPTION';
+
+export interface WebhookConfigResponse {
+  webhookId: string;
+  merchantId: string;
+  url: string;
+  events: WebhookEventType[];
+  isActive: boolean;
+  createdAt: string;
+}
+
+// --- Gift Points ---
+
+export interface GiftPointsRequest {
+  recipientPhone: string;
+  points: number;
+  message?: string;
+}

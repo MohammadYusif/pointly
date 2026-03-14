@@ -50,4 +50,10 @@ export type {
   PublicMerchantSummary,
   PublicMerchantDetail,
   CustomerMerchantView,
+  CampaignResponse,
+  ChallengeType,
+  ChallengeProgressResponse,
+  WebhookEventType,
+  WebhookConfigResponse,
+  GiftPointsRequest,
 } from './types';
