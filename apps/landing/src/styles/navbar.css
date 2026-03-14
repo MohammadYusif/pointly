@@ -69,6 +69,12 @@
     gap: 10px;
   }
 
+  @media (max-width: 768px) {
+    .nav-actions {
+      display: none;
+    }
+  }
+
   .lang-toggle {
     font-size: 0.8rem;
     font-weight: 600;
@@ -91,14 +97,117 @@
     text-decoration: none;
   }
 
-  @media (max-width: 768px) {
-    .portal-link {
-      display: none;
-    }
-  }
-
   .nav-cta {
     font-size: 0.85rem;
     padding: 8px 18px;
+  }
+
+  /* Hamburger button — mobile only */
+  .nav-hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 36px;
+    height: 36px;
+    padding: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 101;
+  }
+
+  .nav-hamburger span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: var(--text-primary);
+    border-radius: 2px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+
+  .nav-hamburger.open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .nav-hamburger.open span:nth-child(2) {
+    opacity: 0;
+  }
+  .nav-hamburger.open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  @media (max-width: 768px) {
+    .nav-hamburger {
+      display: flex;
+    }
+  }
+
+  /* Mobile slide-down menu */
+  .mobile-menu {
+    display: none;
+    flex-direction: column;
+    padding: 16px 24px 24px;
+    background: rgba(249, 250, 251, 0.96);
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 768px) {
+    .mobile-menu {
+      display: flex;
+    }
+  }
+
+  .mobile-menu-links {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mobile-menu-link {
+    display: block;
+    width: 100%;
+    text-align: start;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.2s, background 0.2s;
+  }
+
+  .mobile-menu-link:hover {
+    color: var(--text-primary);
+    background: rgba(8, 176, 162, 0.07);
+  }
+
+  .mobile-menu-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0;
+  }
+
+  .mobile-menu-portals {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mobile-menu-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 4px;
+  }
+
+  .mobile-menu-actions .btn-primary {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
   }
 }
