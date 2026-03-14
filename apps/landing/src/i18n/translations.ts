@@ -10,6 +10,7 @@ export const translations = {
       about: 'About',
       getStarted: 'Get Started',
       login: 'Merchant Login',
+      customerPortal: 'Customer Portal',
     },
     hero: {
       badge: 'Coming soon to Saudi Arabia',
@@ -262,6 +263,7 @@ export const translations = {
       about: 'عن بوينتلي',
       getStarted: 'ابدأ الآن',
       login: 'دخول التاجر',
+      customerPortal: 'بوابة العميل',
     },
     hero: {
       badge: 'قادم قريباً إلى المملكة العربية السعودية',

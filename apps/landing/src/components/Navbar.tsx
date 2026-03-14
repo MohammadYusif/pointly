@@ -60,6 +60,22 @@ export function Navbar({ t, locale, onLocaleChange }: NavbarProps) {
 
           {/* Actions */}
           <div className="nav-actions">
+            <a
+              href={process.env.NEXT_PUBLIC_CUSTOMER_URL ?? 'https://d3p5cjqkvcaltp.cloudfront.net'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="nav-link portal-link"
+            >
+              {t.nav.customerPortal}
+            </a>
+            <a
+              href={process.env.NEXT_PUBLIC_MERCHANT_URL ?? 'https://d861ap8kkp4f6.cloudfront.net'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="nav-link portal-link"
+            >
+              {t.nav.login}
+            </a>
             <button
               type="button"
               className="lang-toggle"

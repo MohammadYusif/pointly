@@ -87,6 +87,16 @@
     background: rgba(8, 176, 162, 0.05);
   }
 
+  .portal-link {
+    text-decoration: none;
+  }
+
+  @media (max-width: 768px) {
+    .portal-link {
+      display: none;
+    }
+  }
+
   .nav-cta {
     font-size: 0.85rem;
     padding: 8px 18px;

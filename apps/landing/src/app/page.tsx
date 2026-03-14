@@ -14,12 +14,17 @@ import { type Locale, translations } from '@/i18n/translations';
 import { useEffect, useState } from 'react';
 
 export default function LandingPage() {
-  const [locale, setLocale] = useState<Locale>('en');
+  const [locale, setLocale] = useState<Locale>(() => {
+    if (typeof window === 'undefined') return 'ar';
+    const stored = localStorage.getItem('pointly-language');
+    return stored === 'en' || stored === 'ar' ? stored : 'ar';
+  });
   const t = translations[locale];
   const isRtl = locale === 'ar';
 
   const handleLocaleChange = (newLocale: Locale) => {
     setLocale(newLocale);
+    localStorage.setItem('pointly-language', newLocale);
     document.documentElement.lang = newLocale;
     document.documentElement.dir = newLocale === 'ar' ? 'rtl' : 'ltr';
   };

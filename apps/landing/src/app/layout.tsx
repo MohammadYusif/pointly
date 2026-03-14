@@ -49,14 +49,19 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
-      lang="en"
-      dir="ltr"
+      lang="ar"
+      dir="rtl"
       suppressHydrationWarning
       className={`${plusJakarta.variable} ${ibmPlexArabic.variable}`}
     >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var l=localStorage.getItem('pointly-language');if(l!=='en'&&l!=='ar')l='ar';var d=document.documentElement;d.lang=l;d.dir=l==='ar'?'rtl':'ltr'}catch(_e){}})()`,
+          }}
+        />
       </head>
       <body>{children}</body>
     </html>
