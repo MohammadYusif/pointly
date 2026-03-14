@@ -82,20 +82,8 @@ export default function LoginPage() {
       // Hard navigation ensures dashboard loads with fresh auth state
       window.location.href = '/dashboard';
     } catch (err) {
-      const message = err instanceof Error ? err.message : t('errors.serverError');
       setOtp('');
-
-      // Wrong OTP causes Cognito to issue a new challenge, invalidating the
-      // previous code.  Re-initiate auth so the user gets a fresh OTP.
-      try {
-        const freshUser = await signInWithPhone(phone, rememberMe);
-        setCognitoUser(freshUser);
-        setError(t('auth.wrongOtpNewCodeSent'));
-      } catch {
-        // Re-initiation failed — show original error, let user go back
-        setError(message);
-      }
-
+      setError(err instanceof Error ? err.message : t('errors.serverError'));
       setLoading(false);
     }
   };

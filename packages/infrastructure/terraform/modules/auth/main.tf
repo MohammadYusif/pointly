@@ -260,18 +260,27 @@ data "archive_file" "define_auth_challenge" {
     content  = <<-EOT
       exports.handler = async (event) => {
         const session = event.request.session;
+        const last = session.length > 0 ? session[session.length - 1] : null;
         if (session.length === 0) {
+          // First attempt — issue a challenge
           event.response.issueTokens = false;
           event.response.failAuthentication = false;
           event.response.challengeName = 'CUSTOM_CHALLENGE';
         } else if (
-          session.length === 1 &&
-          session[0].challengeName === 'CUSTOM_CHALLENGE' &&
-          session[0].challengeResult === true
+          last &&
+          last.challengeName === 'CUSTOM_CHALLENGE' &&
+          last.challengeResult === true
         ) {
+          // Correct answer — issue tokens
           event.response.issueTokens = true;
           event.response.failAuthentication = false;
+        } else if (session.length < 4) {
+          // Wrong answer but retries remaining (up to 3 attempts)
+          event.response.issueTokens = false;
+          event.response.failAuthentication = false;
+          event.response.challengeName = 'CUSTOM_CHALLENGE';
         } else {
+          // Too many failed attempts
           event.response.issueTokens = false;
           event.response.failAuthentication = true;
         }
@@ -314,13 +323,23 @@ data "archive_file" "create_auth_challenge" {
   source {
     content  = <<-EOT
       exports.handler = async (event) => {
-        const otp = String(Math.floor(100000 + Math.random() * 900000));
-        console.log('[OTP] Phone: ' + event.request.userAttributes.phone_number + ' | Code: ' + otp);
+        const session = event.request.session;
+        // On retry, reuse the OTP from the previous challenge metadata
+        let otp;
+        const prev = session.find(function(s) {
+          return s.challengeMetadata && s.challengeMetadata.startsWith('OTP_');
+        });
+        if (prev) {
+          otp = prev.challengeMetadata.substring(4);
+        } else {
+          otp = String(Math.floor(100000 + Math.random() * 900000));
+          console.log('[OTP] Phone: ' + event.request.userAttributes.phone_number + ' | Code: ' + otp);
+        }
         event.response.publicChallengeParameters = {
           phone: event.request.userAttributes.phone_number,
         };
         event.response.privateChallengeParameters = { answer: otp };
-        event.response.challengeMetadata = 'OTP_CHALLENGE';
+        event.response.challengeMetadata = 'OTP_' + otp;
         return event;
       };
     EOT

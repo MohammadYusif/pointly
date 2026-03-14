@@ -42,7 +42,7 @@
     "verificationCode": "رمز التحقق",
     "welcomeBack": "مرحباً بك",
     "otpSentTo": "تم إرسال رمز التحقق إلى",
-    "wrongOtpNewCodeSent": "رمز خاطئ. تم إرسال رمز جديد.",
+    "wrongOtp": "رمز خاطئ. حاول مرة أخرى.",
     "platformBadge": "برنامج الولاء الذكي",
     "heroLine1": "نقاطك.",
     "heroLine2": "مكافآتك.",

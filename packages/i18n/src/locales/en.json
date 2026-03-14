@@ -42,7 +42,7 @@
     "verificationCode": "Verification Code",
     "welcomeBack": "Welcome back",
     "otpSentTo": "OTP sent to",
-    "wrongOtpNewCodeSent": "Wrong code. A new code has been sent.",
+    "wrongOtp": "Wrong code. Please try again.",
     "platformBadge": "Smart Loyalty Platform",
     "heroLine1": "Your Points.",
     "heroLine2": "Your Rewards.",
