@@ -16,9 +16,12 @@ import {
   LanguageToggle,
 } from '@pointly/ui';
 import type { CognitoUser } from 'amazon-cognito-identity-js';
+import { AnimatePresence, type BezierDefinition, motion, useReducedMotion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+
+const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -31,6 +34,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [cognitoUser, setCognitoUser] = useState<CognitoUser | null>(null);
+  const prefersReducedMotion = useReducedMotion();
 
   // Redirect already-authenticated users to the dashboard,
   // UNLESS we were sent here because of an expired/invalid session (?expired=1).
@@ -99,7 +103,11 @@ export default function LoginPage() {
         <LoginHero />
 
         {/* ── Form ── */}
-        <div>
+        <motion.div
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 24, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.7, delay: 0.3, ease: EASE }}
+        >
           <Card className="login-card">
             <CardHeader className="text-center pb-4">
               <div className="login-mobile-brand">
@@ -112,104 +120,122 @@ export default function LoginPage() {
             </CardHeader>
 
             <CardContent>
-              {step === 'phone' ? (
-                <form onSubmit={handlePhoneSubmit} className="space-y-4">
-                  <div>
-                    <label
-                      htmlFor="phone-input"
-                      className="text-sm font-medium mb-1.5 block text-foreground"
-                    >
-                      {t('customer.phone')}
-                    </label>
-                    <Input
-                      id="phone-input"
-                      type="tel"
-                      placeholder="05XXXXXXXX"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      required
-                      dir="ltr"
-                      className="h-11"
-                    />
-                  </div>
+              <AnimatePresence mode="wait">
+                {step === 'phone' ? (
+                  <motion.form
+                    key="phone-step"
+                    onSubmit={handlePhoneSubmit}
+                    className="space-y-4"
+                    initial={prefersReducedMotion ? false : { opacity: 0, x: -16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 16 }}
+                    transition={{ duration: 0.3, ease: EASE }}
+                  >
+                    <div>
+                      <label
+                        htmlFor="phone-input"
+                        className="text-sm font-medium mb-1.5 block text-foreground"
+                      >
+                        {t('customer.phone')}
+                      </label>
+                      <Input
+                        id="phone-input"
+                        type="tel"
+                        placeholder="05XXXXXXXX"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        required
+                        dir="ltr"
+                        className="h-11"
+                      />
+                    </div>
 
-                  <div className="flex items-center gap-2">
-                    <input
-                      id="remember-me"
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="h-4 w-4 shrink-0 accent-primary"
-                    />
-                    <label
-                      htmlFor="remember-me"
-                      className="text-sm cursor-pointer text-muted-foreground"
-                    >
-                      {t('auth.rememberMe')}
-                    </label>
-                  </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        id="remember-me"
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="h-4 w-4 shrink-0 accent-primary"
+                      />
+                      <label
+                        htmlFor="remember-me"
+                        className="text-sm cursor-pointer text-muted-foreground"
+                      >
+                        {t('auth.rememberMe')}
+                      </label>
+                    </div>
 
-                  {error && <p className="text-sm text-red-600">{error}</p>}
-                  <Button type="submit" className="w-full h-11" disabled={loading || !phone}>
-                    {loading ? t('common.loading') : t('common.next')}
-                  </Button>
-                  <p className="text-center text-sm text-muted-foreground">
-                    {t('auth.noAccount')}{' '}
-                    <Link href="/register" className="font-medium text-primary">
-                      {t('auth.signUp')}
-                    </Link>
-                  </p>
-                </form>
-              ) : (
-                <form onSubmit={handleOtpSubmit} className="space-y-4">
-                  <div>
-                    <label
-                      htmlFor="otp-input"
-                      className="text-sm font-medium mb-1.5 block text-foreground"
-                    >
-                      {t('auth.verificationCode')}
-                    </label>
-                    <p className="text-xs mb-3 text-muted-foreground">
-                      {t('auth.otpSentTo')} <span dir="ltr">{phone}</span>
+                    {error && <p className="text-sm text-red-600">{error}</p>}
+                    <Button type="submit" className="w-full h-11" disabled={loading || !phone}>
+                      {loading ? t('common.loading') : t('common.next')}
+                    </Button>
+                    <p className="text-center text-sm text-muted-foreground">
+                      {t('auth.noAccount')}{' '}
+                      <Link href="/register" className="font-medium text-primary">
+                        {t('auth.signUp')}
+                      </Link>
                     </p>
-                    <Input
-                      id="otp-input"
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="000000"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                      required
-                      maxLength={6}
-                      dir="ltr"
-                      className="text-center text-2xl tracking-widest h-14"
-                    />
-                  </div>
-                  {error && <p className="text-sm text-red-600">{error}</p>}
-                  <Button
-                    type="submit"
-                    className="w-full h-11"
-                    disabled={loading || otp.length < 6}
+                  </motion.form>
+                ) : (
+                  <motion.form
+                    key="otp-step"
+                    onSubmit={handleOtpSubmit}
+                    className="space-y-4"
+                    initial={prefersReducedMotion ? false : { opacity: 0, x: 16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -16 }}
+                    transition={{ duration: 0.3, ease: EASE }}
                   >
-                    {loading ? t('common.loading') : t('common.confirm')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full"
-                    onClick={() => {
-                      setStep('phone');
-                      setOtp('');
-                      setError('');
-                    }}
-                  >
-                    {t('common.back')}
-                  </Button>
-                </form>
-              )}
+                    <div>
+                      <label
+                        htmlFor="otp-input"
+                        className="text-sm font-medium mb-1.5 block text-foreground"
+                      >
+                        {t('auth.verificationCode')}
+                      </label>
+                      <p className="text-xs mb-3 text-muted-foreground">
+                        {t('auth.otpSentTo')} <span dir="ltr">{phone}</span>
+                      </p>
+                      <Input
+                        id="otp-input"
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="000000"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        required
+                        maxLength={6}
+                        dir="ltr"
+                        className="text-center text-2xl tracking-widest h-14"
+                      />
+                    </div>
+                    {error && <p className="text-sm text-red-600">{error}</p>}
+                    <Button
+                      type="submit"
+                      className="w-full h-11"
+                      disabled={loading || otp.length < 6}
+                    >
+                      {loading ? t('common.loading') : t('common.confirm')}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => {
+                        setStep('phone');
+                        setOtp('');
+                        setError('');
+                      }}
+                    >
+                      {t('common.back')}
+                    </Button>
+                  </motion.form>
+                )}
+              </AnimatePresence>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

@@ -8,4 +8,28 @@
   --color-text-muted: #71717a;
   --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-arabic: "IBM Plex Sans Arabic", system-ui, sans-serif;
+
+  /* Refined shadow scale — layered for realistic depth */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.04);
+
+  /* Teal glow shadow for interactive elements */
+  --shadow-teal-sm: 0 4px 14px rgba(8, 176, 162, 0.2);
+  --shadow-teal-md: 0 8px 24px rgba(8, 176, 162, 0.28);
+  --shadow-teal-lg: 0 12px 36px rgba(8, 176, 162, 0.35);
+
+  /* Transition presets */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Border radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
 }

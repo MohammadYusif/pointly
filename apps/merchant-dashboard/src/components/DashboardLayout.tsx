@@ -5,15 +5,18 @@ import { PageTransition } from '@/components/PageTransition';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslation } from '@pointly/i18n';
 import { Button, Container, type NavItem, Navbar } from '@pointly/ui';
+import { type BezierDefinition, motion, useReducedMotion } from 'framer-motion';
 import { LogOut } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
-import type { ReactNode } from 'react';
 
-export function DashboardLayout({ children }: { children: ReactNode }) {
+const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
+
+export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const { signOut } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const prefersReducedMotion = useReducedMotion();
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
@@ -85,11 +88,16 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           </Button>
         }
       />
-      <main className="py-4 md:py-8">
+      <motion.main
+        className="py-4 md:py-8"
+        initial={prefersReducedMotion ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, ease: EASE }}
+      >
         <Container>
           <PageTransition>{children}</PageTransition>
         </Container>
-      </main>
+      </motion.main>
     </div>
   );
 }

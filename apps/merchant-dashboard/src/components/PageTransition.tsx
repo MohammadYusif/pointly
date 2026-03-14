@@ -1,14 +1,25 @@
 'use client';
 
+import { AnimatePresence, type BezierDefinition, motion, useReducedMotion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
-import type { ReactNode } from 'react';
 
-export function PageTransition({ children }: { children: ReactNode }) {
+const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
+
+export function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const prefersReducedMotion = useReducedMotion();
 
   return (
-    <div key={pathname} className="animate-page-enter">
-      {children}
-    </div>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={pathname}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.35, ease: EASE }}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
   );
 }

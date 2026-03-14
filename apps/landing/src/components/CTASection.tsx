@@ -1,3 +1,5 @@
+'use client';
+
 import type { TranslationKeys } from '@/i18n/translations';
 import { ScrollReveal } from './ScrollReveal';
 
@@ -7,7 +9,6 @@ interface CTASectionProps {
 }
 
 export function CTASection({ t, isRtl }: CTASectionProps) {
-  // Direction-aware arrow — proper mirrored path, not CSS transform
   const arrowPath = isRtl ? 'M13 8H3M7 4l-4 4 4 4' : 'M3 8h10M9 4l4 4-4 4';
 
   return (

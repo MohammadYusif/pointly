@@ -17,24 +17,31 @@
   }
 
   .pricing-card {
-    background: rgba(255, 255, 255, 0.84);
-    backdrop-filter: blur(10px);
-    border: 1.5px solid rgba(228, 228, 231, 0.7);
-    border-radius: 22px;
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1.5px solid var(--card-border);
+    border-radius: var(--radius-2xl);
     padding: 32px;
     position: relative;
-    transition: transform 0.22s, box-shadow 0.22s;
+    transition: transform 0.25s var(--ease-out-expo), box-shadow 0.25s var(--ease-out-expo),
+      border-color 0.25s var(--ease-out-expo);
   }
 
   .pricing-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 14px 44px rgba(0, 0, 0, 0.09);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+    border-color: rgba(8, 176, 162, 0.2);
   }
 
   .pricing-card.popular {
     border-color: var(--teal);
     background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 8px 36px rgba(8, 176, 162, 0.13);
+    box-shadow: var(--shadow-teal-sm);
+  }
+
+  .pricing-card.popular:hover {
+    box-shadow: var(--shadow-teal-lg);
   }
 
   .popular-badge {
@@ -42,14 +49,15 @@
     top: -13px;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--teal);
+    background: linear-gradient(135deg, var(--teal), #0891b2);
     color: #fff;
     font-size: 0.69rem;
     font-weight: 700;
-    padding: 4px 14px;
+    padding: 5px 16px;
     border-radius: 100px;
     letter-spacing: 0.1em;
     white-space: nowrap;
+    box-shadow: var(--shadow-teal-sm);
   }
 
   .pricing-plan {
@@ -108,12 +116,21 @@
     width: 100%;
     text-align: center;
     padding: 12px 20px;
-    border-radius: 11px;
+    border-radius: var(--radius-md);
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     border: 1.5px solid;
-    transition: all 0.2s;
+    transition:
+      background 0.2s var(--ease-out-quart),
+      color 0.2s var(--ease-out-quart),
+      border-color 0.2s var(--ease-out-quart),
+      box-shadow 0.25s var(--ease-out-quart),
+      transform 0.15s var(--ease-out-quart);
+  }
+
+  .pricing-cta:active {
+    transform: scale(0.98);
   }
 
   .pricing-card:not(.popular) .pricing-cta {
@@ -124,6 +141,7 @@
   .pricing-card:not(.popular) .pricing-cta:hover {
     border-color: var(--teal);
     color: var(--teal);
+    background: rgba(8, 176, 162, 0.04);
   }
   .pricing-card.popular .pricing-cta {
     background: var(--teal);
@@ -132,6 +150,6 @@
   }
   .pricing-card.popular .pricing-cta:hover {
     background: var(--teal-dark);
-    box-shadow: 0 6px 20px rgba(8, 176, 162, 0.3);
+    box-shadow: var(--shadow-teal-md);
   }
 }

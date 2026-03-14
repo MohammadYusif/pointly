@@ -1,14 +1,16 @@
 'use client';
 
 import { CUSTOMER_TIERS } from '@pointly/shared';
-import type { ReactNode } from 'react';
+import { type BezierDefinition, motion, useReducedMotion } from 'framer-motion';
+
+const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
 
 interface ProgressRingProps {
   progress: number;
   size?: number;
   strokeWidth?: number;
   tier: string;
-  children?: ReactNode;
+  children?: React.ReactNode;
 }
 
 function getTierHexColor(tier: string): string {
@@ -33,11 +35,15 @@ export function ProgressRing({
   const clampedProgress = Math.min(100, Math.max(0, progress));
   const offset = circumference - (clampedProgress / 100) * circumference;
   const strokeColor = getTierHexColor(tier);
+  const prefersReducedMotion = useReducedMotion();
 
   return (
-    <div
+    <motion.div
       className="relative inline-flex items-center justify-center"
       style={{ width: size, height: size }}
+      initial={prefersReducedMotion ? false : { scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.5, ease: EASE }}
     >
       <svg
         width={size}
@@ -54,8 +60,7 @@ export function ProgressRing({
           stroke="#e4e4e7"
           strokeWidth={strokeWidth}
         />
-        <circle
-          className="progress-ring-circle"
+        <motion.circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
@@ -64,12 +69,15 @@ export function ProgressRing({
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
-          strokeDashoffset={offset}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 1.2, ease: EASE, delay: 0.3 }}
+          style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }}
         />
       </svg>
       {children && (
         <div className="absolute inset-0 flex items-center justify-center">{children}</div>
       )}
-    </div>
+    </motion.div>
   );
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import type { TranslationKeys } from '@/i18n/translations';
 import { ScrollReveal } from './ScrollReveal';
 
@@ -19,7 +21,7 @@ export function Features({ t }: FeaturesProps) {
 
         <div className="features-grid">
           {t.features.items.map((item, i) => (
-            <ScrollReveal key={item.title} delay={((i % 3) + 1) as 1 | 2 | 3}>
+            <ScrollReveal key={item.title} delay={i + 1}>
               <div className="feature-card">
                 <div className="feature-icon">{ICONS[i]}</div>
                 <div className="feature-title">{item.title}</div>

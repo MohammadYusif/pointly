@@ -1,6 +1,10 @@
 'use client';
 
 import type { Locale, TranslationKeys } from '@/i18n/translations';
+import type { BezierDefinition } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
+
+const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
 import { useEffect, useState } from 'react';
 
 interface NavbarProps {
@@ -11,6 +15,7 @@ interface NavbarProps {
 
 export function Navbar({ t, locale, onLocaleChange }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -23,7 +28,12 @@ export function Navbar({ t, locale, onLocaleChange }: NavbarProps) {
   };
 
   return (
-    <nav className={`nav${scrolled ? ' scrolled' : ''}`}>
+    <motion.nav
+      className={`nav${scrolled ? ' scrolled' : ''}`}
+      initial={prefersReducedMotion ? false : { y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: EASE }}
+    >
       <div className="container">
         <div className="nav-inner">
           {/* Logo */}
@@ -59,8 +69,7 @@ export function Navbar({ t, locale, onLocaleChange }: NavbarProps) {
             </button>
             <button
               type="button"
-              className="btn-primary"
-              style={{ fontSize: '0.85rem', padding: '8px 18px' }}
+              className="btn-primary nav-cta"
               onClick={() => scrollTo('pricing')}
             >
               {t.nav.getStarted}
@@ -68,6 +77,6 @@ export function Navbar({ t, locale, onLocaleChange }: NavbarProps) {
           </div>
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }

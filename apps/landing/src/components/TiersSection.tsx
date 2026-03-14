@@ -1,3 +1,5 @@
+'use client';
+
 import type { TranslationKeys } from '@/i18n/translations';
 import { ScrollReveal } from './ScrollReveal';
 
@@ -73,7 +75,7 @@ export function TiersSection({ t }: TiersSectionProps) {
 
         <div className="tiers-grid">
           {t.tiers.items.map((tier, i) => (
-            <ScrollReveal key={tier.name} delay={(i + 1) as 1 | 2 | 3 | 4}>
+            <ScrollReveal key={tier.name} delay={i + 1}>
               <div className={`tier-card ${tier.color}`}>
                 <div className="tier-icon">
                   <TierIcon color={tier.color} />

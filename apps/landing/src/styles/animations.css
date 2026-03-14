@@ -3,11 +3,14 @@
   100% {
     transform: translate(0, 0) scale(1);
   }
-  33% {
-    transform: translate(-30px, 40px) scale(1.05);
+  25% {
+    transform: translate(-20px, 30px) scale(1.03);
   }
-  66% {
-    transform: translate(20px, -20px) scale(0.95);
+  50% {
+    transform: translate(15px, -15px) scale(0.97);
+  }
+  75% {
+    transform: translate(-10px, -20px) scale(1.02);
   }
 }
 
@@ -18,8 +21,8 @@
     transform: scale(1);
   }
   50% {
-    opacity: 0.5;
-    transform: scale(0.75);
+    opacity: 0.4;
+    transform: scale(0.7);
   }
 }
 
@@ -35,10 +38,10 @@
 @keyframes float-up {
   0%,
   100% {
-    transform: translateY(0px);
+    transform: translateY(0);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-8px);
   }
 }
 
@@ -46,11 +49,11 @@
   0%,
   100% {
     transform: scale(1);
-    opacity: 0.7;
+    opacity: 0.6;
   }
   50% {
-    transform: scale(1.1);
-    opacity: 0.3;
+    transform: scale(1.12);
+    opacity: 0.2;
   }
 }
 
@@ -60,7 +63,7 @@
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-7px);
+    transform: translateY(-6px);
   }
 }
 
@@ -70,7 +73,7 @@
     transform: translateX(-50%) translateY(0);
   }
   50% {
-    transform: translateX(-50%) translateY(-7px);
+    transform: translateX(-50%) translateY(-6px);
   }
 }
 
@@ -81,5 +84,27 @@
   }
   50% {
     opacity: 0.4;
+  }
+}
+
+/* Subtle gradient shift for backgrounds */
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Gentle scale pulse for emphasis */
+@keyframes gentle-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
   }
 }

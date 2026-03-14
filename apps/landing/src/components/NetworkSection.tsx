@@ -1,3 +1,5 @@
+'use client';
+
 import type { TranslationKeys } from '@/i18n/translations';
 import { ScrollReveal } from './ScrollReveal';
 
@@ -18,7 +20,6 @@ function MerchantIcon({ index }: { index: number }) {
   };
 
   if (index === 0) {
-    // Café — coffee cup
     return (
       <svg {...common} aria-hidden="true">
         <path d="M17 8h1a4 4 0 0 1 0 8h-1" />
@@ -31,7 +32,6 @@ function MerchantIcon({ index }: { index: number }) {
   }
 
   if (index === 1) {
-    // Restaurant — utensils (fork + knife)
     return (
       <svg {...common} aria-hidden="true">
         <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
@@ -42,7 +42,6 @@ function MerchantIcon({ index }: { index: number }) {
   }
 
   if (index === 2) {
-    // Salon — scissors
     return (
       <svg {...common} aria-hidden="true">
         <circle cx="6" cy="6" r="3" />
@@ -55,7 +54,6 @@ function MerchantIcon({ index }: { index: number }) {
   }
 
   if (index === 3) {
-    // Grocery — shopping bag
     return (
       <svg {...common} aria-hidden="true">
         <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
@@ -66,7 +64,6 @@ function MerchantIcon({ index }: { index: number }) {
   }
 
   if (index === 4) {
-    // Gym — dumbbell
     return (
       <svg {...common} aria-hidden="true">
         <line x1="6.5" x2="17.5" y1="12" y2="12" />
@@ -78,7 +75,6 @@ function MerchantIcon({ index }: { index: number }) {
     );
   }
 
-  // index === 5: Bookstore — book
   return (
     <svg {...common} aria-hidden="true">
       <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
@@ -94,7 +90,7 @@ export function NetworkSection({ t }: NetworkSectionProps) {
       <div className="container">
         <div className="network-layout">
           {/* Graphic */}
-          <ScrollReveal>
+          <ScrollReveal direction="left">
             <div className="network-graphic">
               {/* Connecting lines */}
               <svg className="network-lines" viewBox="0 0 420 420" fill="none" aria-hidden="true">
@@ -167,7 +163,7 @@ export function NetworkSection({ t }: NetworkSectionProps) {
           </ScrollReveal>
 
           {/* Text */}
-          <ScrollReveal delay={1}>
+          <ScrollReveal delay={2} direction="right">
             <div className="section-label">{t.network.label}</div>
             <h2 className="section-title">{t.network.title}</h2>
             <p className="section-sub mb-8">{t.network.subtitle}</p>

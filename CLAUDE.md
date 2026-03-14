@@ -13,6 +13,13 @@
 - **Linter**: Biome 1.9.4 — no ESLint, no Prettier
 - **Tests**: Vitest (API only)
 
+## Prerequisites
+
+- **Node.js** ≥ 20 (`engines` enforced in `package.json`)
+- **pnpm** ≥ 10 (`packageManager: pnpm@10.28.2`)
+- **Docker** — required for local DynamoDB (`pnpm docker:up`)
+- **Terraform** — only for infra changes (`packages/infrastructure`)
+
 ## Monorepo — Always Read the Sub-CLAUDE.md First
 
 ```
@@ -105,7 +112,23 @@ pnpm --filter @pointly/api test    # Vitest
 pnpm docker:up                     # Local DynamoDB
 pnpm seed                          # Seed test data
 pnpm --filter @pointly/api build:lambda:all  # Rebuild before terraform apply
+pnpm format                        # Biome format only (auto-fix)
+pnpm clean                         # Remove all build artifacts + node_modules
+pnpm docker:down                   # Stop local DynamoDB
+pnpm infra:deploy                  # Terraform deploy (infra package)
 ```
+
+## Dev Ports
+
+| App | Port | Start command |
+|-----|------|---------------|
+| API | 3000 | `pnpm --filter @pointly/api dev` |
+| Customer Portal | 3001 | `pnpm --filter @pointly/customer-portal dev` |
+| Landing | 3002 | `pnpm --filter @pointly/landing dev` |
+| Merchant Dashboard | 3000 | `pnpm --filter @pointly/merchant-dashboard dev` |
+| Local DynamoDB | 8000 | `pnpm docker:up` |
+
+> API and Merchant Dashboard both default to port 3000 — run them separately or change one.
 
 ## Tier Config (Single Source of Truth)
 
@@ -120,3 +143,28 @@ pnpm --filter @pointly/api build:lambda:all  # Rebuild before terraform apply
 | Diamond | 15,000 | 1.2× | Yes |
 
 Redemption rate: **0.01 SAR/point** (all tiers, all merchants).
+
+## Context Hub (Up-to-date API Docs)
+
+This project uses [Context Hub](https://github.com/andrewyng/context-hub) to provide
+agents with curated, versioned API documentation — reducing hallucinations for external
+service calls.
+
+### Setup
+
+```bash
+npm install -g @aisuite/chub
+```
+
+### Usage
+
+```bash
+chub search <service>              # Find available docs (e.g. "aws dynamodb")
+chub get <id> --lang js            # Fetch JS-specific docs for a service
+chub annotate <id> "<note>"        # Save local notes for future sessions
+chub feedback <id> up|down         # Rate doc quality
+```
+
+**When to use**: Before writing code that calls external APIs (AWS SDK, Cognito, etc.),
+search Context Hub first to get accurate, up-to-date reference material instead of
+relying on training data.

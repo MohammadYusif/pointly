@@ -1,3 +1,5 @@
+'use client';
+
 import type { TranslationKeys } from '@/i18n/translations';
 import { ScrollReveal } from './ScrollReveal';
 
@@ -17,7 +19,7 @@ export function PricingSection({ t }: PricingSectionProps) {
 
         <div className="pricing-grid">
           {t.pricing.plans.map((plan, i) => (
-            <ScrollReveal key={plan.name} delay={(i + 1) as 1 | 2 | 3}>
+            <ScrollReveal key={plan.name} delay={i + 1}>
               <div className={`pricing-card${plan.popular ? ' popular' : ''}`}>
                 {plan.popular && <div className="popular-badge">{t.pricing.mostPopular}</div>}
                 <div className="pricing-plan">{plan.name}</div>

@@ -1,3 +1,5 @@
+'use client';
+
 import type { TranslationKeys } from '@/i18n/translations';
 import { ScrollReveal } from './ScrollReveal';
 
@@ -18,9 +20,11 @@ export function StatsBar({ t }: StatsBarProps) {
       <div className="container">
         <div className="stats-grid">
           {STATS.map((stat, i) => (
-            <ScrollReveal key={stat.key} delay={(i % 4) as 0 | 1 | 2 | 3 | 4}>
-              <div className="stat-value">{stat.value}</div>
-              <div className="stat-label">{t.stats[stat.key]}</div>
+            <ScrollReveal key={stat.key} delay={i + 1}>
+              <div className="stat-item">
+                <div className="stat-value">{stat.value}</div>
+                <div className="stat-label">{t.stats[stat.key]}</div>
+              </div>
             </ScrollReveal>
           ))}
         </div>

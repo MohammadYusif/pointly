@@ -18,25 +18,27 @@
   }
 
   .feature-card {
-    background: rgba(255, 255, 255, 0.82);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(228, 228, 231, 0.7);
-    border-radius: 18px;
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-xl);
     padding: 28px;
-    transition: transform 0.22s, box-shadow 0.22s, border-color 0.22s;
+    transition: transform 0.25s var(--ease-out-expo), box-shadow 0.25s var(--ease-out-expo),
+      border-color 0.25s var(--ease-out-expo);
   }
 
   .feature-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 36px rgba(0, 0, 0, 0.08);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
     border-color: rgba(8, 176, 162, 0.25);
   }
 
   .feature-icon {
     width: 48px;
     height: 48px;
-    background: linear-gradient(135deg, rgba(8, 176, 162, 0.12), rgba(8, 176, 162, 0.06));
-    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(8, 176, 162, 0.12), rgba(8, 176, 162, 0.04));
+    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;

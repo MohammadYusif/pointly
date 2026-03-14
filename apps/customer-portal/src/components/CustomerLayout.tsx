@@ -4,12 +4,14 @@ import { getCurrentSession, signOut } from '@/lib/auth';
 import { useTranslation } from '@pointly/i18n';
 import { LanguageToggle } from '@pointly/ui';
 import { useQueryClient } from '@tanstack/react-query';
+import { AnimatePresence, type BezierDefinition, motion, useReducedMotion } from 'framer-motion';
 import { Home, LogOut, QrCode, Store, User, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { PointlyLogo } from './PointlyLogo';
+
+const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
 
 const navItems = [
   { key: 'dashboard', href: '/dashboard', icon: Home },
@@ -19,12 +21,13 @@ const navItems = [
   { key: 'profile', href: '/profile', icon: User },
 ];
 
-export function CustomerLayout({ children }: { children: ReactNode }) {
+export function CustomerLayout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [checking, setChecking] = useState(true);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     getCurrentSession().then((token) => {
@@ -57,19 +60,28 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <motion.div
+          className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
+        />
       </div>
     );
   }
 
   return (
     <div className="portal-layout">
-      {/* Ambient glow orbs — matching landing page */}
+      {/* Ambient glow orbs */}
       <div className="portal-orb portal-orb-teal" aria-hidden="true" />
       <div className="portal-orb portal-orb-navy" aria-hidden="true" />
       <div className="portal-orb portal-orb-orange" aria-hidden="true" />
 
-      <header className="portal-header sticky top-0 z-20">
+      <motion.header
+        className="portal-header sticky top-0 z-20"
+        initial={prefersReducedMotion ? false : { y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
         <div className="max-w-lg mx-auto px-4 h-12 flex items-center justify-between">
           <PointlyLogo height={22} />
           <div className="flex items-center gap-1">
@@ -84,13 +96,26 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
             </button>
           </div>
         </div>
-      </header>
+      </motion.header>
       <main className="max-w-lg mx-auto px-4 py-4">
-        <div key={pathname} className="animate-fade-in">
-          {children}
-        </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={pathname}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35, ease: EASE }}
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
       </main>
-      <nav className="portal-nav fixed bottom-0 inset-x-0">
+      <motion.nav
+        className="portal-nav fixed bottom-0 inset-x-0"
+        initial={prefersReducedMotion ? false : { y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.15, ease: EASE }}
+      >
         <div className="max-w-lg mx-auto flex justify-around py-2">
           {navItems.map((item) => {
             const isActive =
@@ -111,12 +136,18 @@ export function CustomerLayout({ children }: { children: ReactNode }) {
                 <span className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[4.5rem] text-center">
                   {labels[item.key]}
                 </span>
-                {isActive && <span className="nav-active-dot" />}
+                {isActive && (
+                  <motion.span
+                    className="nav-active-dot"
+                    layoutId="nav-active-dot"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
               </Link>
             );
           })}
         </div>
-      </nav>
+      </motion.nav>
     </div>
   );
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import type { TranslationKeys } from '@/i18n/translations';
 import { ScrollReveal } from './ScrollReveal';
 
@@ -32,7 +34,7 @@ export function AboutSection({ t }: AboutSectionProps) {
           </ScrollReveal>
 
           {/* 2x2 stat cards */}
-          <ScrollReveal delay={1}>
+          <ScrollReveal delay={2}>
             <div className="about-stats">
               {t.about.stats.map((stat) => (
                 <div key={stat.label} className="about-stat-card">
