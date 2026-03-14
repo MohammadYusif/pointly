@@ -5,7 +5,14 @@ import { useTranslation } from '@pointly/i18n';
 import { LanguageToggle } from '@pointly/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, type BezierDefinition, motion, useReducedMotion } from 'framer-motion';
-import { Home, LogOut, QrCode, Store, User, Wallet } from 'lucide-react';
+import {
+  CircleUserRound,
+  LayoutDashboard,
+  LogOut,
+  ScanLine,
+  ShoppingBag,
+  WalletCards,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -14,11 +21,11 @@ import { PointlyLogo } from './PointlyLogo';
 const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
 
 const navItems = [
-  { key: 'dashboard', href: '/dashboard', icon: Home },
-  { key: 'qr', href: '/qr', icon: QrCode },
-  { key: 'merchants', href: '/merchants', icon: Store },
-  { key: 'wallet', href: '/wallet', icon: Wallet },
-  { key: 'profile', href: '/profile', icon: User },
+  { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { key: 'qr', href: '/qr', icon: ScanLine },
+  { key: 'merchants', href: '/merchants', icon: ShoppingBag },
+  { key: 'wallet', href: '/wallet', icon: WalletCards },
+  { key: 'profile', href: '/profile', icon: CircleUserRound },
 ];
 
 export function CustomerLayout({ children }: { children: React.ReactNode }) {

@@ -1,13 +1,14 @@
 'use client';
 
 import type { TranslationKeys } from '@/i18n/translations';
+import { ArrowLeftRight, BadgeCheck, BarChart3, Layers, PenLine, Zap } from 'lucide-react';
 import { ScrollReveal } from './ScrollReveal';
 
 interface FeaturesProps {
   t: TranslationKeys;
 }
 
-const ICONS = ['⚡', '🔗', '🏆', '✏️', '📊', '💳'];
+const ICONS = [Zap, Layers, ArrowLeftRight, PenLine, BarChart3, BadgeCheck];
 
 export function Features({ t }: FeaturesProps) {
   return (
@@ -20,15 +21,20 @@ export function Features({ t }: FeaturesProps) {
         </ScrollReveal>
 
         <div className="features-grid">
-          {t.features.items.map((item, i) => (
-            <ScrollReveal key={item.title} delay={i + 1}>
-              <div className="feature-card">
-                <div className="feature-icon">{ICONS[i]}</div>
-                <div className="feature-title">{item.title}</div>
-                <div className="feature-desc">{item.desc}</div>
-              </div>
-            </ScrollReveal>
-          ))}
+          {t.features.items.map((item, i) => {
+            const Icon = ICONS[i];
+            return (
+              <ScrollReveal key={item.title} delay={i + 1}>
+                <div className="feature-card">
+                  <div className="feature-icon">
+                    <Icon className="h-6 w-6" aria-hidden="true" />
+                  </div>
+                  <div className="feature-title">{item.title}</div>
+                  <div className="feature-desc">{item.desc}</div>
+                </div>
+              </ScrollReveal>
+            );
+          })}
         </div>
       </div>
     </section>

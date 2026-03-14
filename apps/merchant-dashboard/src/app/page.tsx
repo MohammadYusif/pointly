@@ -19,7 +19,7 @@ import { useMerchant, useMerchantAnalytics } from '@/hooks/api';
 import { useAuth } from '@/lib/auth-context';
 import { useTranslation } from '@pointly/i18n';
 import { useRTL } from '@pointly/ui';
-import { ArrowUpRight, CreditCard, DollarSign, Users } from 'lucide-react';
+import { Banknote, Receipt, TrendingUp, UsersRound } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -95,7 +95,7 @@ export default function DashboardPage() {
           value={formatCurrency(summary?.totalRevenue ?? 0)}
           rawValue={summary?.totalRevenue ?? 0}
           format={formatCurrency}
-          icon={<DollarSign className="h-4 w-4" />}
+          icon={<Banknote className="h-4 w-4" />}
           loading={isLoading}
           className="stagger-item"
         />
@@ -104,7 +104,7 @@ export default function DashboardPage() {
           value={formatNumber(summary?.totalTransactions ?? 0)}
           rawValue={summary?.totalTransactions ?? 0}
           format={formatNumber}
-          icon={<CreditCard className="h-4 w-4" />}
+          icon={<Receipt className="h-4 w-4" />}
           loading={isLoading}
           className="stagger-item"
         />
@@ -113,7 +113,7 @@ export default function DashboardPage() {
           value={formatNumber(summary?.totalPointsEarned ?? 0)}
           rawValue={summary?.totalPointsEarned ?? 0}
           format={formatNumber}
-          icon={<ArrowUpRight className={`h-4 w-4 ${flipIcon}`} />}
+          icon={<TrendingUp className={`h-4 w-4 ${flipIcon}`} />}
           loading={isLoading}
           className="stagger-item"
         />
@@ -122,7 +122,7 @@ export default function DashboardPage() {
           value={formatNumber(summary?.uniqueCustomers ?? 0)}
           rawValue={summary?.uniqueCustomers ?? 0}
           format={formatNumber}
-          icon={<Users className="h-4 w-4" />}
+          icon={<UsersRound className="h-4 w-4" />}
           loading={isLoading}
           className="stagger-item"
         />

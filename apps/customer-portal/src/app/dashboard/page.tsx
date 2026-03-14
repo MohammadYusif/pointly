@@ -13,7 +13,7 @@ import { useBadges } from '@/hooks/use-badges';
 import { useTranslation } from '@pointly/i18n';
 import { getTierColor, getTierTarget } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, useRTL } from '@pointly/ui';
-import { Coins, Store } from 'lucide-react';
+import { Gem, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 
@@ -104,12 +104,12 @@ export default function CustomerDashboard() {
             value={customer.globalPointsBalance}
             label={t('dashboard.pointlyPoints')}
             variant="primary"
-            icon={<Coins className="h-5 w-5" />}
+            icon={<Gem className="h-5 w-5" />}
           />
           <PointsCard
             value={enrolledCount}
             label={t('dashboard.merchantsEnrolled')}
-            icon={<Store className="h-5 w-5" />}
+            icon={<ShoppingBag className="h-5 w-5" />}
           />
         </div>
 
