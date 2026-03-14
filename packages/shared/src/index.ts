@@ -42,6 +42,7 @@ export type {
   TransactionResponse,
   MerchantStatsResponse,
   RecordPurchaseResponse,
+  RedeemPointsResponse,
   PaginatedResponse,
   AnalyticsDataPoint,
   AnalyticsData,

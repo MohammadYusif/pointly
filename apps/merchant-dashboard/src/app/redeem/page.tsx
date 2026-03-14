@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { useMerchant, useRedeemPoints } from '@/hooks/api';
 import { customerApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-import type { MerchantScopedCustomerResponse } from '@/types/api';
+import type { MerchantScopedCustomerResponse, RedeemPointsResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { formatPhone } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
@@ -13,18 +13,6 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 type Step = 'input' | 'confirming' | 'processing' | 'receipt';
-
-interface RedeemResult {
-  transactionIds: string[];
-  merchantPointsRedeemed: number;
-  globalPointsRedeemed: number;
-  totalPointsRedeemed: number;
-  sarValue: number;
-  newMerchantBalance: number;
-  newGlobalBalance: number;
-  currentTier: string;
-  message: string;
-}
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: multi-step form with 4 states requires conditional rendering
 export default function RedeemPage() {
@@ -40,7 +28,7 @@ export default function RedeemPage() {
   const [error, setError] = useState('');
   const [validationError, setValidationError] = useState('');
   const [customer, setCustomer] = useState<MerchantScopedCustomerResponse | null>(null);
-  const [result, setResult] = useState<RedeemResult | null>(null);
+  const [result, setResult] = useState<RedeemPointsResponse | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
 
   const redeemMutation = useRedeemPoints();

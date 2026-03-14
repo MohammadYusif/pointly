@@ -167,6 +167,18 @@ export interface RecordPurchaseResponse {
   message: string;
 }
 
+export interface RedeemPointsResponse {
+  transactionIds: string[];
+  merchantPointsRedeemed: number;
+  globalPointsRedeemed: number;
+  totalPointsRedeemed: number;
+  sarValue: number;
+  newMerchantBalance: number;
+  newGlobalBalance: number;
+  currentTier: string;
+  message: string;
+}
+
 export interface PaginatedResponse<T> {
   customers?: T[];
   transactions?: T[];

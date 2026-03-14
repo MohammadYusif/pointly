@@ -7,6 +7,7 @@ import type {
   MerchantStatsResponse,
   PaginatedResponse,
   RecordPurchaseResponse,
+  RedeemPointsResponse,
   TransactionResponse,
 } from '@/types/api';
 import { normalizePhone } from '@pointly/shared';
@@ -174,17 +175,7 @@ export const purchaseApi = {
     locationId?: string;
     metadata?: Record<string, unknown>;
   }) =>
-    fetchApi<{
-      transactionIds: string[];
-      merchantPointsRedeemed: number;
-      globalPointsRedeemed: number;
-      totalPointsRedeemed: number;
-      sarValue: number;
-      newMerchantBalance: number;
-      newGlobalBalance: number;
-      currentTier: string;
-      message: string;
-    }>('/v1/purchases/redeem', {
+    fetchApi<RedeemPointsResponse>('/v1/purchases/redeem', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
