@@ -98,6 +98,15 @@ export default function RedeemPage() {
         idempotencyKey: crypto.randomUUID(),
       });
       setResult(redeemResult);
+      if (customer.enrollment) {
+        setCustomer({
+          ...customer,
+          enrollment: {
+            ...customer.enrollment,
+            merchantPointsBalance: redeemResult.newMerchantBalance,
+          },
+        });
+      }
       setStep('receipt');
     } catch (err) {
       setError(err instanceof Error ? err.message : t('errors.serverError'));
