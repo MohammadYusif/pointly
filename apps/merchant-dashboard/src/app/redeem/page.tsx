@@ -326,10 +326,6 @@ export default function RedeemPage() {
                   <span className="font-medium">{formatNumber(result.newMerchantBalance)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('redeem.globalBalance')}</span>
-                  <span className="font-medium">{formatNumber(result.newGlobalBalance)}</span>
-                </div>
-                <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('customer.tier')}</span>
                   <span className="font-medium">{result.currentTier}</span>
                 </div>
