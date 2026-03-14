@@ -287,6 +287,28 @@ export default function RedeemPage() {
 
             <Card>
               <CardHeader>
+                <CardTitle>{t('redeem.redemptionBreakdown')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t('redeem.merchantPointsUsed')}</span>
+                  <span className="font-medium">{formatNumber(result.merchantPointsRedeemed)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t('redeem.globalPointsUsed')}</span>
+                  <span className="font-medium">{formatNumber(result.globalPointsRedeemed)}</span>
+                </div>
+                <div className="flex justify-between border-t pt-2">
+                  <span className="text-muted-foreground font-medium">{t('redeem.sarValue')}</span>
+                  <span className="font-bold text-green-600">
+                    {formatCurrency(result.sarValue)}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
                 <CardTitle>{t('redeem.newBalances')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
