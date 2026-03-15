@@ -1,5 +1,6 @@
 import type {
   AnalyticsData,
+  CampaignResponse,
   CustomerResponse,
   MerchantPerk,
   MerchantResponse,
@@ -9,6 +10,7 @@ import type {
   RecordPurchaseResponse,
   RedeemPointsResponse,
   TransactionResponse,
+  WebhookConfigResponse,
 } from '@/types/api';
 import { normalizePhone } from '@pointly/shared';
 import { getAccessToken, signOut } from './auth';
@@ -218,6 +220,56 @@ export const perkApi = {
 
   deletePerk: (merchantId: string, perkId: string) =>
     fetchApi<void>(`/v1/merchants/${merchantId}/perks/${perkId}`, { method: 'DELETE' }),
+};
+
+// Campaign API
+export const campaignApi = {
+  list: (merchantId: string) =>
+    fetchApi<CampaignResponse[]>(`/v1/merchants/${merchantId}/campaigns`),
+
+  create: (
+    merchantId: string,
+    data: {
+      name: string;
+      description: string;
+      startDate: string;
+      endDate: string;
+      multiplier: number;
+    },
+  ) =>
+    fetchApi<CampaignResponse>(`/v1/merchants/${merchantId}/campaigns`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  deactivate: (merchantId: string, campaignId: string) =>
+    fetchApi<void>(`/v1/merchants/${merchantId}/campaigns/${campaignId}`, {
+      method: 'DELETE',
+    }),
+};
+
+// Webhook API
+export const webhookApi = {
+  list: (merchantId: string) =>
+    fetchApi<WebhookConfigResponse[]>(`/v1/merchants/${merchantId}/webhooks`),
+
+  create: (
+    merchantId: string,
+    data: {
+      url: string;
+      secretKey: string;
+      events: string[];
+    },
+  ) =>
+    fetchApi<WebhookConfigResponse>(`/v1/merchants/${merchantId}/webhooks`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  delete: (merchantId: string, webhookId: string) =>
+    fetchApi<void>(`/v1/merchants/${merchantId}/webhooks/${webhookId}`, {
+      method: 'DELETE',
+    }),
 };
 
 // Merchant update API

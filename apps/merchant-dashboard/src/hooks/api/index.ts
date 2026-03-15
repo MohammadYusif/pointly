@@ -22,3 +22,5 @@ export {
   useAddLocation,
 } from './use-purchases';
 export { useMerchantAnalytics } from './use-analytics';
+export { useCampaigns, useCreateCampaign, useDeactivateCampaign } from './use-campaigns';
+export { useWebhooks, useCreateWebhook, useDeleteWebhook } from './use-webhooks';

@@ -15,4 +15,6 @@ export type {
   PaginatedResponse,
   AnalyticsDataPoint,
   AnalyticsData,
+  CampaignResponse,
+  WebhookConfigResponse,
 } from '@pointly/shared';
