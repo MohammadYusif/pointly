@@ -21,9 +21,13 @@ async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise
   const token = await getAccessToken();
   const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
+  const contentHeaders: Record<string, string> = options.body
+    ? { 'Content-Type': 'application/json' }
+    : {};
+
   const response = await fetch(url, {
     ...options,
-    headers: { 'Content-Type': 'application/json', ...authHeaders, ...options.headers },
+    headers: { ...contentHeaders, ...authHeaders, ...options.headers },
   });
 
   if (response.status === 401) {
@@ -37,7 +41,7 @@ async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise
   return result.data as T;
 }
 
-export function getCustomer(_customerId: string) {
+export function getCustomer() {
   return fetchApi<CustomerResponse>('/v1/me');
 }
 
@@ -120,24 +124,6 @@ export function giftPoints(data: {
   });
 }
 
-export async function deleteAccount(): Promise<void> {
-  const url = `${API_BASE_URL}/v1/me`;
-  const token = await getAccessToken();
-  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-
-  const response = await fetch(url, {
-    method: 'DELETE',
-    headers: { ...authHeaders },
-  });
-
-  if (response.status === 401) {
-    signOut();
-    if (typeof window !== 'undefined') window.location.replace('/?expired=1');
-    throw new Error('Session expired');
-  }
-
-  const result: { success: boolean; error?: string } = await response.json();
-  if (!response.ok || !result.success) {
-    throw new Error(result.error || 'Failed to delete account');
-  }
+export function deleteAccount(): Promise<void> {
+  return fetchApi('/v1/me', { method: 'DELETE' });
 }

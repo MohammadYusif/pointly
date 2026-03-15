@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 export function useCustomer() {
   return useQuery({
     queryKey: ['customer', 'me'],
-    queryFn: () => getCustomer('me'),
+    queryFn: () => getCustomer(),
   });
 }
 
