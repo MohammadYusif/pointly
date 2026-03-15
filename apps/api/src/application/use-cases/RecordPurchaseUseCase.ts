@@ -115,38 +115,18 @@ export class RecordPurchaseUseCase {
     let activeCampaignMultiplier: number | undefined;
     let activeCampaignName: string | undefined;
     let activeCampaignId: string | undefined;
-    if (this.campaignRepository) {
-      const activeCampaigns = await this.campaignRepository.findActiveCampaignsForMerchant(
-        request.merchantId,
-      );
-      if (activeCampaigns.length > 0) {
-        const enrollment = customer.getEnrollment(request.merchantId);
-        if (enrollment) {
-          const ctx: CampaignEligibilityContext = {
-            enrolledAt: enrollment.enrolledAt,
-            customerTier: customer.getCurrentTier().getLevel(),
-          };
-          const dob = customer.toJSON().dateOfBirth;
-          if (dob) ctx.dateOfBirth = dob;
-          if (enrollment.lastTransactionAt) {
-            ctx.lastTransactionAt = enrollment.lastTransactionAt;
-          }
-          const eligible = activeCampaigns.filter((c) => c.isEligibleForCustomer(ctx));
-          eligible.sort((a, b) => b.getMultiplier() - a.getMultiplier());
-          const campaign = eligible[0];
-          if (campaign) {
-            activeCampaignId = campaign.getCampaignId();
-            activeCampaignMultiplier = campaign.getMultiplier();
-            activeCampaignName = campaign.getName();
-            merchantPoints = Points.from(
-              Math.floor(merchantPoints.toNumber() * activeCampaignMultiplier),
-            );
-            globalPoints = Points.from(
-              Math.floor(globalPoints.toNumber() * activeCampaignMultiplier),
-            );
-          }
-        }
-      }
+    const campaignResult = await this.resolveBestCampaign(
+      request,
+      customer,
+      merchantPoints,
+      globalPoints,
+    );
+    if (campaignResult) {
+      activeCampaignId = campaignResult.id;
+      activeCampaignMultiplier = campaignResult.multiplier;
+      activeCampaignName = campaignResult.name;
+      merchantPoints = campaignResult.merchantPoints;
+      globalPoints = campaignResult.globalPoints;
     }
 
     // 5. Get current balances before transaction
@@ -260,6 +240,91 @@ export class RecordPurchaseUseCase {
     }
 
     return response;
+  }
+
+  private async resolveBestCampaign(
+    request: RecordPurchaseRequest,
+    customer: Customer,
+    baseMerchantPoints: Points,
+    baseGlobalPoints: Points,
+  ): Promise<{
+    id: string;
+    multiplier: number;
+    name: string;
+    merchantPoints: Points;
+    globalPoints: Points;
+  } | null> {
+    if (!this.campaignRepository) return null;
+    const activeCampaigns = await this.campaignRepository.findActiveCampaignsForMerchant(
+      request.merchantId,
+    );
+    if (activeCampaigns.length === 0) return null;
+
+    const enrollment = customer.getEnrollment(request.merchantId);
+    if (!enrollment) return null;
+
+    const ctx: CampaignEligibilityContext = {
+      enrolledAt: enrollment.enrolledAt,
+      customerTier: customer.getCurrentTier().getLevel(),
+    };
+    const dob = customer.toJSON().dateOfBirth;
+    if (dob) ctx.dateOfBirth = dob;
+    if (enrollment.lastTransactionAt) ctx.lastTransactionAt = enrollment.lastTransactionAt;
+
+    const useCounts = await this.getCampaignUseCounts(request.customerId, request.merchantId);
+
+    const eligible = activeCampaigns.filter(
+      (c) =>
+        c.isEligibleForCustomer(ctx) &&
+        c.meetsMinPurchase(request.amountSAR) &&
+        c.isWithinUsageLimit(useCounts.get(c.getCampaignId()) ?? 0),
+    );
+    eligible.sort((a, b) => b.getMultiplier() - a.getMultiplier());
+    const campaign = eligible[0];
+    if (!campaign) return null;
+
+    const mult = campaign.getMultiplier();
+    const baseMerchant = baseMerchantPoints.toNumber();
+    const baseGlobal = baseGlobalPoints.toNumber();
+    let campaignMerchant = Math.floor(baseMerchant * mult);
+    let campaignGlobal = Math.floor(baseGlobal * mult);
+
+    const totalBonus = campaignMerchant - baseMerchant + (campaignGlobal - baseGlobal);
+    const cappedBonus = campaign.capBonusPoints(totalBonus);
+    if (cappedBonus < totalBonus && totalBonus > 0) {
+      const ratio = cappedBonus / totalBonus;
+      campaignMerchant = baseMerchant + Math.floor((campaignMerchant - baseMerchant) * ratio);
+      campaignGlobal = baseGlobal + Math.floor((campaignGlobal - baseGlobal) * ratio);
+    }
+
+    return {
+      id: campaign.getCampaignId(),
+      multiplier: mult,
+      name: campaign.getName(),
+      merchantPoints: Points.from(campaignMerchant),
+      globalPoints: Points.from(campaignGlobal),
+    };
+  }
+
+  private async getCampaignUseCounts(
+    customerId: string,
+    merchantId: string,
+  ): Promise<Map<string, number>> {
+    const result = await this.transactionRepository.findByCustomerAndMerchant(
+      customerId,
+      merchantId,
+      { limit: 200 },
+    );
+    const counts = new Map<string, number>();
+    for (const tx of result.items) {
+      const meta = tx.getMetadata();
+      // biome-ignore lint/complexity/useLiteralKeys: TS noPropertyAccessFromIndexSignature requires bracket notation
+      const cId = meta['campaignId'];
+      if (typeof cId === 'string') {
+        counts.set(cId, (counts.get(cId) ?? 0) + 1);
+      }
+    }
+    return counts;
   }
 
   private async validateMerchant(

@@ -85,7 +85,7 @@ describe('RecordPurchaseUseCase', () => {
       findByIdempotencyKey: vi.fn(),
       findByCustomer: vi.fn(),
       findByMerchant: vi.fn(),
-      findByCustomerAndMerchant: vi.fn(),
+      findByCustomerAndMerchant: vi.fn().mockResolvedValue({ items: [], count: 0 }),
       getMerchantStats: vi.fn(),
       getCustomerStats: vi.fn(),
       // biome-ignore lint/suspicious/noExplicitAny: test mock returns empty persistence items

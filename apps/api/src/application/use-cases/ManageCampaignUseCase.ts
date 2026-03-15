@@ -19,6 +19,9 @@ export interface ManageCampaignRequest {
   message?: string;
   campaignId?: string;
   targetTiers?: string[];
+  maxUsesPerCustomer?: number;
+  minPurchaseAmount?: number;
+  maxPointsPerTransaction?: number;
 }
 
 export class ManageCampaignUseCase {
@@ -43,17 +46,7 @@ export class ManageCampaignUseCase {
     }
   }
 
-  private async create(request: ManageCampaignRequest): Promise<Campaign> {
-    const merchant = await this.merchantRepository.findById(request.merchantId);
-    if (!merchant) {
-      throw new NotFoundError('Merchant', request.merchantId);
-    }
-    if (!merchant.isVerified()) {
-      throw new UnauthorizedError('Merchant is not verified');
-    }
-
-    const type = request.type ?? 'CUSTOM';
-
+  private static buildOverrides(request: ManageCampaignRequest) {
     const overrides: {
       name?: string;
       description?: string;
@@ -62,6 +55,9 @@ export class ManageCampaignUseCase {
       multiplier?: number;
       message?: string;
       targetTiers?: string[];
+      maxUsesPerCustomer?: number;
+      minPurchaseAmount?: number;
+      maxPointsPerTransaction?: number;
     } = {};
     if (request.name) overrides.name = request.name;
     if (request.description) overrides.description = request.description;
@@ -72,7 +68,29 @@ export class ManageCampaignUseCase {
     if (request.targetTiers && request.targetTiers.length > 0) {
       overrides.targetTiers = request.targetTiers;
     }
+    if (request.maxUsesPerCustomer !== undefined) {
+      overrides.maxUsesPerCustomer = request.maxUsesPerCustomer;
+    }
+    if (request.minPurchaseAmount !== undefined) {
+      overrides.minPurchaseAmount = request.minPurchaseAmount;
+    }
+    if (request.maxPointsPerTransaction !== undefined) {
+      overrides.maxPointsPerTransaction = request.maxPointsPerTransaction;
+    }
+    return overrides;
+  }
 
+  private async create(request: ManageCampaignRequest): Promise<Campaign> {
+    const merchant = await this.merchantRepository.findById(request.merchantId);
+    if (!merchant) {
+      throw new NotFoundError('Merchant', request.merchantId);
+    }
+    if (!merchant.isVerified()) {
+      throw new UnauthorizedError('Merchant is not verified');
+    }
+
+    const type = request.type ?? 'CUSTOM';
+    const overrides = ManageCampaignUseCase.buildOverrides(request);
     const campaign = Campaign.create(request.merchantId, type, overrides);
 
     // Auto-create a linked perk on the merchant so the customer portal shows it

@@ -84,6 +84,9 @@ export interface CampaignProps {
   message?: string;
   linkedPerkId?: string;
   targetTiers?: string[];
+  maxUsesPerCustomer?: number;
+  minPurchaseAmount?: number;
+  maxPointsPerTransaction?: number;
   createdAt: Date;
 }
 
@@ -100,6 +103,9 @@ export interface CampaignJSON {
   message?: string;
   linkedPerkId?: string;
   targetTiers?: string[];
+  maxUsesPerCustomer?: number;
+  minPurchaseAmount?: number;
+  maxPointsPerTransaction?: number;
   createdAt: string;
 }
 
@@ -111,6 +117,9 @@ interface CampaignOverrides {
   multiplier?: number;
   message?: string;
   targetTiers?: string[];
+  maxUsesPerCustomer?: number;
+  minPurchaseAmount?: number;
+  maxPointsPerTransaction?: number;
 }
 
 export class Campaign {
@@ -139,6 +148,15 @@ export class Campaign {
     }
     if (overrides?.targetTiers && overrides.targetTiers.length > 0) {
       props.targetTiers = overrides.targetTiers;
+    }
+    if (overrides?.maxUsesPerCustomer && overrides.maxUsesPerCustomer > 0) {
+      props.maxUsesPerCustomer = overrides.maxUsesPerCustomer;
+    }
+    if (overrides?.minPurchaseAmount && overrides.minPurchaseAmount > 0) {
+      props.minPurchaseAmount = overrides.minPurchaseAmount;
+    }
+    if (overrides?.maxPointsPerTransaction && overrides.maxPointsPerTransaction > 0) {
+      props.maxPointsPerTransaction = overrides.maxPointsPerTransaction;
     }
     return new Campaign(props);
   }
@@ -244,6 +262,37 @@ export class Campaign {
     return this.props.targetTiers;
   }
 
+  getMaxUsesPerCustomer(): number | undefined {
+    return this.props.maxUsesPerCustomer;
+  }
+
+  getMinPurchaseAmount(): number | undefined {
+    return this.props.minPurchaseAmount;
+  }
+
+  getMaxPointsPerTransaction(): number | undefined {
+    return this.props.maxPointsPerTransaction;
+  }
+
+  // Campaign limit checks
+  isWithinUsageLimit(usageCount: number): boolean {
+    const max = this.props.maxUsesPerCustomer;
+    if (!max || max <= 0) return true;
+    return usageCount < max;
+  }
+
+  meetsMinPurchase(amountSAR: number): boolean {
+    const min = this.props.minPurchaseAmount;
+    if (!min || min <= 0) return true;
+    return amountSAR >= min;
+  }
+
+  capBonusPoints(bonusPoints: number): number {
+    const max = this.props.maxPointsPerTransaction;
+    if (!max || max <= 0) return bonusPoints;
+    return Math.min(bonusPoints, max);
+  }
+
   // Eligibility
   isEligibleForCustomer(ctx: CampaignEligibilityContext): boolean {
     if (!this.passesTierCheck(ctx.customerTier)) return false;
@@ -329,6 +378,15 @@ export class Campaign {
     if (this.props.linkedPerkId) result.linkedPerkId = this.props.linkedPerkId;
     if (this.props.targetTiers && this.props.targetTiers.length > 0) {
       result.targetTiers = this.props.targetTiers;
+    }
+    if (this.props.maxUsesPerCustomer && this.props.maxUsesPerCustomer > 0) {
+      result.maxUsesPerCustomer = this.props.maxUsesPerCustomer;
+    }
+    if (this.props.minPurchaseAmount && this.props.minPurchaseAmount > 0) {
+      result.minPurchaseAmount = this.props.minPurchaseAmount;
+    }
+    if (this.props.maxPointsPerTransaction && this.props.maxPointsPerTransaction > 0) {
+      result.maxPointsPerTransaction = this.props.maxPointsPerTransaction;
     }
     return result;
   }

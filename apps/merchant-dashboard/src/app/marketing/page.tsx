@@ -65,6 +65,21 @@ function formatDateInput(date: Date): string {
   return date.toISOString().split('T')[0] ?? '';
 }
 
+function buildLimitsPayload(
+  maxUses: string,
+  minPurchase: string,
+  maxPoints: string,
+): Record<string, number> {
+  const result: Record<string, number> = {};
+  const parsedMaxUses = Number.parseInt(maxUses, 10);
+  const parsedMinPurchase = Number.parseFloat(minPurchase);
+  const parsedMaxPoints = Number.parseInt(maxPoints, 10);
+  if (parsedMaxUses > 0) result.maxUsesPerCustomer = parsedMaxUses;
+  if (parsedMinPurchase > 0) result.minPurchaseAmount = parsedMinPurchase;
+  if (parsedMaxPoints > 0) result.maxPointsPerTransaction = parsedMaxPoints;
+  return result;
+}
+
 function getDefaultDates(durationDays: number): { start: string; end: string } {
   const now = new Date();
   const end = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
@@ -149,6 +164,9 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
   const [endDate, setEndDate] = useState('');
   const [multiplier, setMultiplier] = useState('2');
   const [selectedTiers, setSelectedTiers] = useState<string[]>([...ALL_TIERS]);
+  const [maxUses, setMaxUses] = useState('');
+  const [minPurchase, setMinPurchase] = useState('');
+  const [maxPoints, setMaxPoints] = useState('');
 
   const isCustom = selectedType === 'CUSTOM';
 
@@ -178,17 +196,17 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
   };
 
   const buildPayload = (type: CampaignType): Record<string, unknown> => {
-    const payload: Record<string, unknown> = { type };
+    const payload: Record<string, unknown> = {
+      type,
+      startDate: new Date(startDate).toISOString(),
+      endDate: new Date(endDate).toISOString(),
+      multiplier: Number.parseFloat(multiplier),
+    };
     if (message.trim()) payload.message = message.trim();
     if (isCustom && customName.trim()) payload.name = customName.trim();
     if (isCustom && customDesc.trim()) payload.description = customDesc.trim();
-    payload.startDate = new Date(startDate).toISOString();
-    payload.endDate = new Date(endDate).toISOString();
-    payload.multiplier = Number.parseFloat(multiplier);
-    if (selectedTiers.length < ALL_TIERS.length) {
-      payload.targetTiers = selectedTiers;
-    }
-    return payload;
+    if (selectedTiers.length < ALL_TIERS.length) payload.targetTiers = selectedTiers;
+    return { ...payload, ...buildLimitsPayload(maxUses, minPurchase, maxPoints) };
   };
 
   const handleCreate = async () => {
@@ -314,6 +332,56 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
                   {t(`tier.${tier.toLowerCase()}`)}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Campaign Limits */}
+          <div className="space-y-3 p-4 border rounded-md bg-background">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+              {t('campaigns.campaignLimits')}
+            </p>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label htmlFor="max-uses" className="text-sm text-muted-foreground block mb-1">
+                  {t('campaigns.maxUses')}
+                </label>
+                <Input
+                  id="max-uses"
+                  type="number"
+                  min="0"
+                  max="1000"
+                  placeholder={t('campaigns.maxUsesHint')}
+                  value={maxUses}
+                  onChange={(e) => setMaxUses(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="min-purchase" className="text-sm text-muted-foreground block mb-1">
+                  {t('campaigns.minPurchase')}
+                </label>
+                <Input
+                  id="min-purchase"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder={t('campaigns.minPurchaseHint')}
+                  value={minPurchase}
+                  onChange={(e) => setMinPurchase(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="max-points" className="text-sm text-muted-foreground block mb-1">
+                  {t('campaigns.maxPoints')}
+                </label>
+                <Input
+                  id="max-points"
+                  type="number"
+                  min="0"
+                  placeholder={t('campaigns.maxPointsHint')}
+                  value={maxPoints}
+                  onChange={(e) => setMaxPoints(e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
@@ -490,6 +558,21 @@ export default function MarketingPage() {
                         {t('campaigns.multiplierSuffix')}
                       </span>
                       <TierBadges tiers={campaign.targetTiers} />
+                      {campaign.maxUsesPerCustomer && campaign.maxUsesPerCustomer > 0 && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">
+                          {campaign.maxUsesPerCustomer}x {t('campaigns.maxUses')}
+                        </span>
+                      )}
+                      {campaign.minPurchaseAmount && campaign.minPurchaseAmount > 0 && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-800">
+                          {t('campaigns.minSpend', { amount: campaign.minPurchaseAmount })}
+                        </span>
+                      )}
+                      {campaign.maxPointsPerTransaction && campaign.maxPointsPerTransaction > 0 && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800">
+                          {t('campaigns.maxPoints')}: {campaign.maxPointsPerTransaction}
+                        </span>
+                      )}
                     </div>
                     {campaign.description && (
                       <p className="text-sm text-muted-foreground">{campaign.description}</p>

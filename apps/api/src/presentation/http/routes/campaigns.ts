@@ -11,6 +11,25 @@ function enforceMerchantAccess(request: FastifyRequest<{ Params: { id: string } 
   }
 }
 
+function buildCampaignRequest(
+  merchantId: string,
+  body: z.infer<typeof createCampaignSchema>,
+): ManageCampaignRequest {
+  const req: ManageCampaignRequest = { action: 'create', merchantId, type: body.type };
+  if (body.name) req.name = body.name;
+  if (body.description) req.description = body.description;
+  if (body.startDate) req.startDate = body.startDate;
+  if (body.endDate) req.endDate = body.endDate;
+  if (body.multiplier !== undefined) req.multiplier = body.multiplier;
+  if (body.message) req.message = body.message;
+  if (body.targetTiers && body.targetTiers.length > 0) req.targetTiers = body.targetTiers;
+  if (body.maxUsesPerCustomer !== undefined) req.maxUsesPerCustomer = body.maxUsesPerCustomer;
+  if (body.minPurchaseAmount !== undefined) req.minPurchaseAmount = body.minPurchaseAmount;
+  if (body.maxPointsPerTransaction !== undefined)
+    req.maxPointsPerTransaction = body.maxPointsPerTransaction;
+  return req;
+}
+
 const campaignTypeEnum = z.enum([
   'DOUBLE_POINTS',
   'TRIPLE_POINTS',
@@ -30,6 +49,9 @@ const createCampaignSchema = z.object({
   multiplier: z.number().min(1.0).max(5.0).optional(),
   message: z.string().max(500).optional(),
   targetTiers: z.array(z.enum(['BRONZE', 'GOLD', 'PLATINUM', 'DIAMOND'])).optional(),
+  maxUsesPerCustomer: z.number().int().min(0).max(1000).optional(),
+  minPurchaseAmount: z.number().min(0).max(100000).optional(),
+  maxPointsPerTransaction: z.number().int().min(0).max(100000).optional(),
 });
 
 export async function campaignRoutes(server: FastifyInstance): Promise<void> {
@@ -47,6 +69,9 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
           multiplier?: number;
           message?: string;
           targetTiers?: string[];
+          maxUsesPerCustomer?: number;
+          minPurchaseAmount?: number;
+          maxPointsPerTransaction?: number;
         };
       }>,
       reply: FastifyReply,
@@ -56,19 +81,7 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
       const body = createCampaignSchema.parse(request.body);
 
       const container = getContainer();
-      const req: ManageCampaignRequest = {
-        action: 'create',
-        merchantId,
-        type: body.type,
-      };
-      if (body.name) req.name = body.name;
-      if (body.description) req.description = body.description;
-      if (body.startDate) req.startDate = body.startDate;
-      if (body.endDate) req.endDate = body.endDate;
-      if (body.multiplier !== undefined) req.multiplier = body.multiplier;
-      if (body.message) req.message = body.message;
-      if (body.targetTiers && body.targetTiers.length > 0) req.targetTiers = body.targetTiers;
-
+      const req = buildCampaignRequest(merchantId, body);
       const result = await container.manageCampaignUseCase.execute(req);
 
       const campaign = result as Campaign | undefined;

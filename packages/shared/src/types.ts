@@ -311,6 +311,9 @@ export interface CampaignResponse {
   message?: string;
   linkedPerkId?: string;
   targetTiers?: string[];
+  maxUsesPerCustomer?: number;
+  minPurchaseAmount?: number;
+  maxPointsPerTransaction?: number;
   createdAt: string;
 }
 

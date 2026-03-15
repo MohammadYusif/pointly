@@ -213,6 +213,9 @@ export const campaignApi = {
       multiplier?: number;
       message?: string;
       targetTiers?: string[];
+      maxUsesPerCustomer?: number;
+      minPurchaseAmount?: number;
+      maxPointsPerTransaction?: number;
     },
   ) =>
     fetchApi<CampaignResponse>(`/v1/merchants/${merchantId}/campaigns`, {

@@ -20,6 +20,9 @@ interface CampaignItem {
   message?: string;
   linkedPerkId?: string;
   targetTiers?: string[];
+  maxUsesPerCustomer?: number;
+  minPurchaseAmount?: number;
+  maxPointsPerTransaction?: number;
   createdAt: string;
 }
 
@@ -100,6 +103,9 @@ export class CampaignRepository
     if (item.message) props.message = item.message;
     if (item.linkedPerkId) props.linkedPerkId = item.linkedPerkId;
     if (item.targetTiers) props.targetTiers = item.targetTiers;
+    if (item.maxUsesPerCustomer) props.maxUsesPerCustomer = item.maxUsesPerCustomer;
+    if (item.minPurchaseAmount) props.minPurchaseAmount = item.minPurchaseAmount;
+    if (item.maxPointsPerTransaction) props.maxPointsPerTransaction = item.maxPointsPerTransaction;
     return Campaign.reconstitute(props);
   }
 
@@ -125,6 +131,12 @@ export class CampaignRepository
     if (message) item.message = message;
     if (linkedPerkId) item.linkedPerkId = linkedPerkId;
     if (targetTiers && targetTiers.length > 0) item.targetTiers = targetTiers;
+    const maxUses = entity.getMaxUsesPerCustomer();
+    const minPurchase = entity.getMinPurchaseAmount();
+    const maxPoints = entity.getMaxPointsPerTransaction();
+    if (maxUses && maxUses > 0) item.maxUsesPerCustomer = maxUses;
+    if (minPurchase && minPurchase > 0) item.minPurchaseAmount = minPurchase;
+    if (maxPoints && maxPoints > 0) item.maxPointsPerTransaction = maxPoints;
     return item as unknown as Record<string, unknown>;
   }
 

@@ -26,6 +26,9 @@ export function useCreateCampaign() {
       multiplier?: number;
       message?: string;
       targetTiers?: string[];
+      maxUsesPerCustomer?: number;
+      minPurchaseAmount?: number;
+      maxPointsPerTransaction?: number;
     }) =>
       // biome-ignore lint/style/noNonNullAssertion: merchantId required
       campaignApi.create(merchant!.merchantId, data),

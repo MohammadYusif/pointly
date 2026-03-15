@@ -445,7 +445,16 @@
       "welcome": "Welcome",
       "happyHour": "Happy Hour",
       "custom": "Custom"
-    }
+    },
+    "campaignLimits": "Campaign Limits",
+    "maxUses": "Max Uses Per Customer",
+    "maxUsesHint": "0 or empty = unlimited",
+    "minPurchase": "Minimum Purchase (SAR)",
+    "minPurchaseHint": "Min spend for campaign to apply",
+    "maxPoints": "Max Bonus Points",
+    "maxPointsHint": "Max bonus points per transaction",
+    "unlimited": "Unlimited",
+    "minSpend": "Min {{amount}} SAR"
   },
   "challenges": {
     "title": "Challenges",
