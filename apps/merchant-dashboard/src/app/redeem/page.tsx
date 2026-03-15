@@ -58,8 +58,14 @@ export default function RedeemPage() {
       return;
     }
 
+    const merchantBalance = customer?.enrollment?.merchantPointsBalance ?? 0;
+    if (customer && points > merchantBalance) {
+      setValidationError(t('redeem.errorInsufficient'));
+      return;
+    }
+
     setValidationError('');
-  }, [pointsToRedeem, minimumRedemption, t]);
+  }, [pointsToRedeem, minimumRedemption, t, customer]);
 
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,14 +81,6 @@ export default function RedeemPage() {
     } finally {
       setIsLookingUp(false);
     }
-  };
-
-  const getRedemptionBreakdown = () => {
-    const points = Number(pointsToRedeem);
-    const merchantBal = getCustomerMerchantBalance();
-    const merchantUsed = Math.min(points, merchantBal);
-    const globalUsed = points - merchantUsed;
-    return { merchantUsed, globalUsed };
   };
 
   const handleConfirm = async () => {
@@ -124,7 +122,6 @@ export default function RedeemPage() {
   };
 
   const sarValue = Number(pointsToRedeem) * redemptionRate;
-  const { merchantUsed, globalUsed } = getRedemptionBreakdown();
 
   return (
     <DashboardLayout>
@@ -233,22 +230,13 @@ export default function RedeemPage() {
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('redeem.merchantPointsUsed')}</span>
-                  <span className="font-medium">{formatNumber(merchantUsed)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('redeem.globalPointsUsed')}</span>
-                  <span className="font-medium">{formatNumber(globalUsed)}</span>
+                  <span className="text-muted-foreground">{t('redeem.pointsToRedeem')}</span>
+                  <span className="font-medium">{formatNumber(Number(pointsToRedeem))}</span>
                 </div>
                 <div className="flex justify-between border-t pt-2">
                   <span className="text-muted-foreground font-medium">{t('redeem.sarValue')}</span>
                   <span className="font-bold text-green-600">{formatCurrency(sarValue)}</span>
                 </div>
-                {globalUsed > 0 && (
-                  <p className="text-xs text-muted-foreground pt-1">
-                    {t('redeem.globalPointsNote', { points: formatNumber(globalUsed) })}
-                  </p>
-                )}
               </CardContent>
             </Card>
 
@@ -290,28 +278,6 @@ export default function RedeemPage() {
                       value: formatCurrency(result.sarValue),
                     })}
                   </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('redeem.redemptionBreakdown')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('redeem.merchantPointsUsed')}</span>
-                  <span className="font-medium">{formatNumber(result.merchantPointsRedeemed)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('redeem.globalPointsUsed')}</span>
-                  <span className="font-medium">{formatNumber(result.globalPointsRedeemed)}</span>
-                </div>
-                <div className="flex justify-between border-t pt-2">
-                  <span className="text-muted-foreground font-medium">{t('redeem.sarValue')}</span>
-                  <span className="font-bold text-green-600">
-                    {formatCurrency(result.sarValue)}
-                  </span>
                 </div>
               </CardContent>
             </Card>

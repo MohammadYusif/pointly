@@ -142,21 +142,35 @@ describe('RedeemPointsUseCase', () => {
       expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
     });
 
-    it('should use merchant points first then global (smart redeem)', async () => {
+    it('should reject redemption exceeding merchant balance (global points not spendable)', async () => {
+      giveCustomerPoints(500, 200);
+      setupMocks();
+
+      await expect(
+        useCase.execute({
+          merchantId,
+          customerId: testCustomer.getCustomerId(),
+          pointsToRedeem: 300,
+          idempotencyKey: 'redeem_2',
+        }),
+      ).rejects.toThrow('Insufficient merchant points');
+    });
+
+    it('should redeem exact merchant balance successfully', async () => {
       giveCustomerPoints(500, 200);
       setupMocks();
 
       const result = await useCase.execute({
         merchantId,
         customerId: testCustomer.getCustomerId(),
-        pointsToRedeem: 300,
-        idempotencyKey: 'redeem_2',
+        pointsToRedeem: 200,
+        idempotencyKey: 'redeem_2b',
       });
 
       expect(result.merchantPointsRedeemed).toBe(200);
-      expect(result.globalPointsRedeemed).toBe(100);
-      expect(result.totalPointsRedeemed).toBe(300);
-      expect(result.transactionIds).toHaveLength(2);
+      expect(result.globalPointsRedeemed).toBe(0);
+      expect(result.totalPointsRedeemed).toBe(200);
+      expect(result.transactionIds).toHaveLength(1);
       expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
     });
 

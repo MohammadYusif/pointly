@@ -54,10 +54,11 @@ export interface RedeemPointsResponse {
  * 3. Validate customer (exists, enrolled, has consent)
  * 4. Validate redemption amount (>= minimum, partial rules)
  * 5. Calculate SAR value
- * 6. Smart redeem: merchant points first, then global
- * 7. Create transaction record(s)
- * 8. Save everything
- * 9. Store idempotency result
+ * 6. Validate sufficient merchant points (global points are NOT spendable)
+ * 7. Redeem from merchant wallet only
+ * 8. Create transaction record
+ * 9. Save everything
+ * 10. Store idempotency result
  */
 export class RedeemPointsUseCase {
   constructor(
@@ -98,66 +99,49 @@ export class RedeemPointsUseCase {
     // 5. Calculate SAR value
     const sarValue = request.pointsToRedeem * loyaltyConfig.redemptionRate;
 
-    // 6. Smart redeem: merchant points first, then global
-    const { merchantPointsUsed, globalPointsUsed } = customer.redeemSmart(
-      request.merchantId,
-      Points.from(request.pointsToRedeem),
-    );
+    // 6. Validate sufficient merchant points (global points are for tier maintenance only)
+    const pointsToRedeem = Points.from(request.pointsToRedeem);
+    const merchantBalance = customer.getMerchantPointsBalance(request.merchantId);
+    if (merchantBalance.isLessThan(pointsToRedeem)) {
+      throw new ValidationError(
+        `Insufficient merchant points. Available: ${merchantBalance.toNumber()}, Requested: ${request.pointsToRedeem}`,
+      );
+    }
 
-    // 7. Create transaction record(s)
-    const transactionIds: string[] = [];
-    const transactions: Transaction[] = [];
+    // 7. Redeem from merchant wallet only
+    customer.redeemMerchantPoints(request.merchantId, pointsToRedeem);
+
+    // 8. Create transaction record
     const metadata = request.metadata || {};
+    const tx = Transaction.createRedeem(
+      request.merchantId,
+      request.customerId,
+      pointsToRedeem,
+      Money.fromSAR(request.pointsToRedeem * loyaltyConfig.redemptionRate),
+      merchantBalance,
+      request.idempotencyKey,
+      { ...metadata, walletType: 'MERCHANT' },
+      loyaltyConfig.redemptionRate,
+      resolvedLocationId,
+    );
+    tx.complete();
 
-    if (merchantPointsUsed.toNumber() > 0) {
-      const merchantTx = Transaction.createRedeem(
-        request.merchantId,
-        request.customerId,
-        merchantPointsUsed,
-        Money.fromSAR(merchantPointsUsed.toNumber() * loyaltyConfig.redemptionRate),
-        customer.getMerchantPointsBalance(request.merchantId).add(merchantPointsUsed),
-        `${request.idempotencyKey}_MERCHANT`,
-        { ...metadata, walletType: 'MERCHANT' },
-        loyaltyConfig.redemptionRate,
-        resolvedLocationId,
-      );
-      merchantTx.complete();
-      transactions.push(merchantTx);
-      transactionIds.push(merchantTx.getTransactionId());
-    }
-
-    if (globalPointsUsed.toNumber() > 0) {
-      const globalTx = Transaction.createRedeem(
-        request.merchantId,
-        request.customerId,
-        globalPointsUsed,
-        Money.fromSAR(globalPointsUsed.toNumber() * loyaltyConfig.redemptionRate),
-        customer.getGlobalPointsBalance().add(globalPointsUsed),
-        `${request.idempotencyKey}_GLOBAL`,
-        { ...metadata, walletType: 'GLOBAL' },
-        loyaltyConfig.redemptionRate,
-        resolvedLocationId,
-      );
-      globalTx.complete();
-      transactions.push(globalTx);
-      transactionIds.push(globalTx.getTransactionId());
-    }
-
-    // 8. Save everything atomically
+    // 9. Save everything atomically
     merchant.incrementTransactionCount();
 
     const items: PersistenceItem[] = [
-      ...transactions.flatMap((tx) => this.transactionRepository.toPersistenceItem(tx)),
+      ...this.transactionRepository.toPersistenceItem(tx),
       ...this.customerRepository.toPersistenceItem(customer),
       ...this.merchantRepository.toPersistenceItem(merchant),
     ];
     await this.atomicWrite(items);
 
-    // 9. Store idempotency result and return
+    // 10. Store idempotency result and return
+    const transactionIds = [tx.getTransactionId()];
     const response: RedeemPointsResponse = {
       transactionIds,
-      merchantPointsRedeemed: merchantPointsUsed.toNumber(),
-      globalPointsRedeemed: globalPointsUsed.toNumber(),
+      merchantPointsRedeemed: request.pointsToRedeem,
+      globalPointsRedeemed: 0,
       totalPointsRedeemed: request.pointsToRedeem,
       sarValue,
       newMerchantBalance: customer.getMerchantPointsBalance(request.merchantId).toNumber(),

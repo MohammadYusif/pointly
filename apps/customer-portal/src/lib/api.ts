@@ -41,10 +41,17 @@ export function getCustomer(_customerId: string) {
   return fetchApi<CustomerResponse>('/v1/me');
 }
 
-export function getCustomerTransactions(params?: { limit?: number; nextToken?: string }) {
+export function getCustomerTransactions(params?: {
+  limit?: number;
+  nextToken?: string;
+  sortOrder?: 'ASC' | 'DESC';
+  type?: string;
+}) {
   const query = new URLSearchParams();
   if (params?.limit) query.set('limit', String(params.limit));
   if (params?.nextToken) query.set('nextToken', params.nextToken);
+  if (params?.sortOrder) query.set('sortOrder', params.sortOrder);
+  if (params?.type) query.set('type', params.type);
   return fetchApi<{ transactions: TransactionResponse[]; count: number; nextToken?: string }>(
     `/v1/me/transactions?${query}`,
   );

@@ -16,6 +16,8 @@ const updateProfileSchema = z.object({
 const transactionsQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(100).optional().default(20),
   nextToken: z.string().optional(),
+  sortOrder: z.enum(['ASC', 'DESC']).optional().default('DESC'),
+  type: z.enum(['EARN', 'REDEEM', 'ADJUSTMENT', 'EXPIRATION', 'REVERSAL']).optional(),
 });
 
 const enrollSchema = z.object({
@@ -29,6 +31,43 @@ const setupSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
     .optional(),
 });
+
+/** Check if a perk type is eligible for a specific customer based on campaign-style rules */
+function isPerkEligibleForCustomer(
+  perkType: string,
+  // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
+  customerJSON: any,
+  merchantId: string,
+): boolean {
+  const now = new Date();
+
+  if (perkType === 'BIRTHDAY_REWARD') {
+    const dob = customerJSON.dateOfBirth;
+    if (!dob) return false;
+    return new Date(dob).getMonth() === now.getMonth();
+  }
+
+  if (perkType === 'WIN_BACK') {
+    // biome-ignore lint/suspicious/noExplicitAny: enrollment objects are untyped
+    const enrollment = customerJSON.enrollments.find((e: any) => e.merchantId === merchantId);
+    const lastTx = enrollment?.lastTransactionAt;
+    if (!lastTx) return true; // never transacted → eligible for win-back
+    const daysSince = (now.getTime() - new Date(lastTx).getTime()) / (1000 * 60 * 60 * 24);
+    return daysSince >= 60;
+  }
+
+  if (perkType === 'WELCOME_OFFER') {
+    // biome-ignore lint/suspicious/noExplicitAny: enrollment objects are untyped
+    const enrollment = customerJSON.enrollments.find((e: any) => e.merchantId === merchantId);
+    const enrolledAt = enrollment?.enrolledAt;
+    if (!enrolledAt) return false;
+    const daysSince = (now.getTime() - new Date(enrolledAt).getTime()) / (1000 * 60 * 60 * 24);
+    return daysSince <= 30;
+  }
+
+  // All other perk types (EARLY_ACCESS, EXCLUSIVE_PRODUCT, EVENT, HAPPY_HOUR, SPEND_BONUS, etc.)
+  return true;
+}
 
 export async function customerSelfRoutes(server: FastifyInstance): Promise<void> {
   // GET /v1/me — Get own customer profile
@@ -81,7 +120,7 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
     '/transactions',
     async (
       request: FastifyRequest<{
-        Querystring: { limit?: string; nextToken?: string };
+        Querystring: { limit?: string; nextToken?: string; sortOrder?: string; type?: string };
       }>,
       reply: FastifyReply,
     ) => {
@@ -95,14 +134,19 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
       const container = getContainer();
       const result = await container.transactionRepository.findByCustomer(customerId, {
         limit: query.limit,
+        sortOrder: query.sortOrder,
         ...(query.nextToken && { nextToken: query.nextToken }),
       });
+
+      const filtered = query.type
+        ? result.items.filter((t) => t.getType() === query.type)
+        : result.items;
 
       return reply.send({
         success: true,
         data: {
-          transactions: result.items.map((t) => t.toJSON()),
-          count: result.count,
+          transactions: filtered.map((t) => t.toJSON()),
+          count: filtered.length,
           nextToken: result.nextToken,
         },
       });
@@ -190,8 +234,12 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
       const merchant = await container.merchantRepository.findById(merchantId);
       if (!merchant) continue;
 
+      const customerJSON = customer.toJSON();
       const activePerks = merchant.getPerks().filter((p) => p.isActive);
       for (const perk of activePerks) {
+        // Skip perks the customer isn't eligible for based on campaign-style rules
+        if (!isPerkEligibleForCustomer(perk.type, customerJSON, merchantId)) continue;
+
         const requiredRank = tierOrder[perk.requiredTier] ?? 0;
         perksView.push({
           perkId: perk.id,
