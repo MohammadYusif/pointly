@@ -1,5 +1,6 @@
 'use client';
 
+import { ChallengeCard } from '@/components/ChallengeCard';
 import { CustomerLayout } from '@/components/CustomerLayout';
 import { DecayWarning } from '@/components/DecayWarning';
 import { MilestoneBadge } from '@/components/MilestoneBadge';
@@ -8,7 +9,7 @@ import { PointsCard } from '@/components/PointsCard';
 import { ProgressRing } from '@/components/ProgressRing';
 import { TierBadge } from '@/components/TierBadge';
 import { TransactionItem } from '@/components/TransactionItem';
-import { useCustomer, useMyMerchants, useRecentTransactions } from '@/hooks/api';
+import { useCustomer, useMyChallenges, useMyMerchants, useRecentTransactions } from '@/hooks/api';
 import { useBadges } from '@/hooks/use-badges';
 import { useTranslation } from '@pointly/i18n';
 import { getTierColor, getTierTarget } from '@pointly/shared';
@@ -45,6 +46,7 @@ export default function CustomerDashboard() {
   const { data: customer, isLoading: customerLoading, refetch } = useCustomer();
   const { data: txData, isLoading: txLoading } = useRecentTransactions(5);
   const { data: merchants } = useMyMerchants();
+  const { data: challengeData } = useMyChallenges();
   const badges = useBadges(customer);
   const earnedBadges = badges.filter((b) => b.isEarned).slice(0, 3);
 
@@ -86,6 +88,12 @@ export default function CustomerDashboard() {
   const progressPercent = tierTarget > 0 ? Math.min(100, (progress / tierTarget) * 100) : 100;
 
   const enrolledCount = (customer.enrollments || []).length;
+
+  const getDaysRemainingInWeek = () => {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0=Sunday
+    return dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+  };
 
   return (
     <CustomerLayout>
@@ -142,6 +150,25 @@ export default function CustomerDashboard() {
             isDecayImmune={customer.isDecayImmune}
             decayPhase={customer.globalPointsDecayPhase}
           />
+        )}
+
+        {/* Active Challenges */}
+        {challengeData && (
+          <Card className="stagger-item">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base">{t('challenges.activeChallenges')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChallengeCard
+                title={t('challenges.weeklyStreak')}
+                description={t('challenges.weeklyStreakDesc', { count: 3 })}
+                current={challengeData.weeklyVisitCount}
+                target={3}
+                bonusPoints={500}
+                daysRemaining={getDaysRemainingInWeek()}
+              />
+            </CardContent>
+          </Card>
         )}
 
         {/* Badges Summary */}
