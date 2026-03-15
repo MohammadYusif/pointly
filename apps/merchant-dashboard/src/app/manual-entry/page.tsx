@@ -2,8 +2,7 @@
 
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { ThermalReceipt } from '@/components/receipt/ThermalReceipt';
-import { useMerchant, useRecordPurchase } from '@/hooks/api';
-import { merchantApi } from '@/lib/api';
+import { useMerchant, useRecordPurchase, useRegisterCustomer } from '@/hooks/api';
 import { useAuth } from '@/lib/auth-context';
 import { generateReceiptPDF } from '@/lib/receipt-pdf';
 import type { MerchantScopedCustomerResponse, RecordPurchaseResponse } from '@/types/api';
@@ -35,24 +34,23 @@ export default function ManualEntryPage() {
   const isMultiLocation = locations.length > 1;
   const [customer, setCustomer] = useState<MerchantScopedCustomerResponse | null>(null);
   const [result, setResult] = useState<RecordPurchaseResponse | null>(null);
-  const [isLookingUp, setIsLookingUp] = useState(false);
-
   const purchaseMutation = useRecordPurchase();
+  const registerMutation = useRegisterCustomer();
 
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setIsLookingUp(true);
 
     try {
       if (!merchant) throw new Error('No merchant context');
-      const result = await merchantApi.registerCustomer(merchant.merchantId, phone);
+      const result = await registerMutation.mutateAsync({
+        merchantId: merchant.merchantId,
+        phone,
+      });
       setCustomer(result);
       setStep('confirming');
     } catch (err) {
       setError(err instanceof Error ? err.message : t('errors.serverError'));
-    } finally {
-      setIsLookingUp(false);
     }
   };
 
@@ -199,10 +197,13 @@ export default function ManualEntryPage() {
                   type="submit"
                   className="w-full"
                   disabled={
-                    isLookingUp || !phone || !amount || (isMultiLocation && !selectedLocationId)
+                    registerMutation.isPending ||
+                    !phone ||
+                    !amount ||
+                    (isMultiLocation && !selectedLocationId)
                   }
                 >
-                  {isLookingUp ? t('common.loading') : t('common.next')}
+                  {registerMutation.isPending ? t('common.loading') : t('common.next')}
                 </Button>
               </form>
             </CardContent>

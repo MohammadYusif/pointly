@@ -1,8 +1,7 @@
 'use client';
 
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { useMerchant, useRedeemPoints } from '@/hooks/api';
-import { customerApi } from '@/lib/api';
+import { useCustomerByPhoneLookup, useMerchant, useRedeemPoints } from '@/hooks/api';
 import { useAuth } from '@/lib/auth-context';
 import type { MerchantScopedCustomerResponse, RedeemPointsResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
@@ -29,9 +28,9 @@ export default function RedeemPage() {
   const [validationError, setValidationError] = useState('');
   const [customer, setCustomer] = useState<MerchantScopedCustomerResponse | null>(null);
   const [result, setResult] = useState<RedeemPointsResponse | null>(null);
-  const [isLookingUp, setIsLookingUp] = useState(false);
 
   const redeemMutation = useRedeemPoints();
+  const lookupMutation = useCustomerByPhoneLookup();
   const loyaltyConfig = merchantData?.loyaltyConfig;
   const minimumRedemption = loyaltyConfig?.minimumRedemption ?? 100;
   const redemptionRate = loyaltyConfig?.redemptionRate ?? 0.01;
@@ -70,16 +69,13 @@ export default function RedeemPage() {
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setIsLookingUp(true);
 
     try {
-      const foundCustomer = await customerApi.getByPhone(phone);
+      const foundCustomer = await lookupMutation.mutateAsync(phone);
       setCustomer(foundCustomer);
       setStep('confirming');
     } catch {
       setError(t('errors.notFound'));
-    } finally {
-      setIsLookingUp(false);
     }
   };
 
@@ -182,9 +178,11 @@ export default function RedeemPage() {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={isLookingUp || !phone || !pointsToRedeem || !!validationError}
+                  disabled={
+                    lookupMutation.isPending || !phone || !pointsToRedeem || !!validationError
+                  }
                 >
-                  {isLookingUp ? t('common.loading') : t('common.next')}
+                  {lookupMutation.isPending ? t('common.loading') : t('common.next')}
                 </Button>
               </form>
             </CardContent>

@@ -1,5 +1,5 @@
-import { customerApi } from '@/lib/api';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { customerApi, merchantApi } from '@/lib/api';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useCustomerByPhone(phone: string) {
   return useQuery({
@@ -44,5 +44,28 @@ export function useCustomerById(customerId: string) {
     queryKey: ['customer', customerId],
     queryFn: () => customerApi.getById(customerId),
     enabled: !!customerId,
+  });
+}
+
+export function useRegisterCustomer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ merchantId, phone }: { merchantId: string; phone: string }) =>
+      merchantApi.registerCustomer(merchantId, phone),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customer'] });
+    },
+  });
+}
+
+export function useCustomerByPhoneLookup() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (phone: string) => customerApi.getByPhone(phone),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customer'] });
+    },
   });
 }

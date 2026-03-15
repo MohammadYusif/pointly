@@ -81,9 +81,6 @@ export function useCustomerInsights() {
   });
 }
 
-/** @deprecated Use useCustomerInsights instead */
-export const usePerkInsights = useCustomerInsights;
-
 export function useInfiniteTransactions(
   limit = 50,
   locationId?: string,

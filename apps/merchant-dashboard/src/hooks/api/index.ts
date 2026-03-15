@@ -7,13 +7,14 @@ export {
   useInfiniteTransactions,
   usePerks,
   useCustomerInsights,
-  usePerkInsights,
 } from './use-merchant';
 export {
   useCustomerByPhone,
   useCustomerById,
   useCustomerTransactions,
   useInfiniteCustomerTransactions,
+  useRegisterCustomer,
+  useCustomerByPhoneLookup,
 } from './use-customers';
 export {
   useRecordPurchase,

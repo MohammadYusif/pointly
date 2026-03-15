@@ -125,9 +125,6 @@ export const merchantApi = {
     }),
 };
 
-// Re-export so existing imports from '@/lib/api' continue to work
-export { normalizePhone };
-
 // Customer API
 export const customerApi = {
   getById: (id: string) => fetchApi<MerchantScopedCustomerResponse>(`/v1/customers/${id}`),
