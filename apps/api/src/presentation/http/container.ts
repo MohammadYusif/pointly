@@ -101,6 +101,8 @@ export function createContainer(): Container {
     merchantRepository,
     campaignRepository,
     (items) => transactionalWriter.writeAll(items),
+    customerRepository,
+    smsPublisherService,
   );
 
   const recordPurchaseUseCase = new RecordPurchaseUseCase(

@@ -2,7 +2,13 @@ export interface SmsMessage {
   phone: string;
   body: string;
   merchantId: string;
-  type: 'POINTS_EARNED' | 'POINTS_REDEEMED' | 'DECAY_WARNING' | 'TIER_CHANGE' | 'WELCOME';
+  type:
+    | 'POINTS_EARNED'
+    | 'POINTS_REDEEMED'
+    | 'DECAY_WARNING'
+    | 'TIER_CHANGE'
+    | 'WELCOME'
+    | 'CAMPAIGN_NOTIFICATION';
 }
 
 export interface ISmsPublisherService {

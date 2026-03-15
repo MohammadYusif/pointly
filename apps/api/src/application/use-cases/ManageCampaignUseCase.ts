@@ -1,6 +1,8 @@
 import { Campaign, NotFoundError, UnauthorizedError } from '../../domain';
 import type { ICampaignRepository } from '../repositories/ICampaignRepository';
+import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
+import type { ISmsPublisherService, SmsMessage } from '../services/ISmsPublisherService';
 import type { PersistenceItem, QueryResult } from '../shared/interfaces/BaseRepository';
 
 export interface ManageCampaignRequest {
@@ -19,6 +21,8 @@ export class ManageCampaignUseCase {
     private merchantRepository: IMerchantRepository,
     private campaignRepository: ICampaignRepository,
     private atomicWrite: (items: PersistenceItem[]) => Promise<void>,
+    private customerRepository?: ICustomerRepository,
+    private smsPublisherService?: ISmsPublisherService,
   ) {}
 
   async execute(
@@ -63,7 +67,39 @@ export class ManageCampaignUseCase {
     );
 
     await this.atomicWrite(this.campaignRepository.toPersistenceItem(campaign));
+
+    // Fire-and-forget: notify all merchant customers about the new campaign
+    try {
+      await this.notifyCustomers(merchant.getBusinessName(), campaign);
+    } catch {
+      // SMS fan-out is best-effort — campaign creation must not fail
+    }
+
     return campaign;
+  }
+
+  private async notifyCustomers(businessName: string, campaign: Campaign): Promise<void> {
+    if (!this.customerRepository || !this.smsPublisherService) {
+      return;
+    }
+
+    const result = await this.customerRepository.findByMerchant(campaign.getMerchantId(), {
+      limit: 200,
+    });
+
+    if (result.items.length === 0) {
+      return;
+    }
+
+    const endDate = campaign.getEndDate().toLocaleDateString('en-SA');
+    const messages: SmsMessage[] = result.items.map((customer) => ({
+      phone: customer.getPhone().toE164(),
+      body: `${businessName}: ${campaign.getName()} — earn ${campaign.getMultiplier()}x points! Valid until ${endDate}`,
+      merchantId: campaign.getMerchantId(),
+      type: 'CAMPAIGN_NOTIFICATION' as const,
+    }));
+
+    await this.smsPublisherService.publishBatch(messages);
   }
 
   private async list(merchantId: string): Promise<QueryResult<Campaign>> {

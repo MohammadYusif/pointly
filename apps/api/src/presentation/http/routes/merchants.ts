@@ -344,6 +344,70 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
     },
   );
 
+  // GET /:merchantId/perk-insights — Perk targeting insights
+  server.get(
+    '/:merchantId/perk-insights',
+    async (request: FastifyRequest<{ Params: { merchantId: string } }>, reply: FastifyReply) => {
+      enforceMerchantAccess(request);
+      const { merchantId } = request.params;
+
+      const container = getContainer();
+      const { customerRepository } = container;
+
+      const result = await customerRepository.findByMerchant(merchantId, { limit: 500 });
+      const customers = result.items;
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      let birthdayCount = 0;
+      let winBackCount = 0;
+      let welcomeOfferCount = 0;
+
+      for (const customer of customers) {
+        const json = customer.toJSON();
+
+        // Birthday reward: customers with birthday this month
+        if (json.dateOfBirth) {
+          const birthMonth = new Date(json.dateOfBirth).getMonth();
+          if (birthMonth === currentMonth) {
+            birthdayCount++;
+          }
+        }
+
+        // Win-back: customers inactive for 60+ days at this merchant
+        const enrollment = json.enrollments?.find(
+          (e: { merchantId: string }) => e.merchantId === merchantId,
+        );
+        if (enrollment) {
+          const lastTx = enrollment.lastTransactionAt
+            ? new Date(enrollment.lastTransactionAt)
+            : null;
+          if (!lastTx || lastTx < sixtyDaysAgo) {
+            winBackCount++;
+          }
+
+          // Welcome offer: enrolled in last 30 days
+          const enrolledAt = new Date(enrollment.enrolledAt);
+          if (enrolledAt > thirtyDaysAgo) {
+            welcomeOfferCount++;
+          }
+        }
+      }
+
+      return reply.send({
+        success: true,
+        data: {
+          birthdayReward: { count: birthdayCount },
+          winBack: { count: winBackCount },
+          welcomeOffer: { count: welcomeOfferCount },
+          totalCustomers: customers.length,
+        },
+      });
+    },
+  );
+
   // POST /:merchantId/perks — Create perk
   server.post(
     '/:merchantId/perks',
@@ -364,7 +428,17 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       const { merchantId } = request.params;
 
       const perkSchema = z.object({
-        type: z.enum(['EARLY_ACCESS', 'EXCLUSIVE_PRODUCT', 'EVENT']),
+        type: z.enum([
+          'EARLY_ACCESS',
+          'EXCLUSIVE_PRODUCT',
+          'EVENT',
+          'BIRTHDAY_REWARD',
+          'SPEND_BONUS',
+          'REFERRAL_BONUS',
+          'HAPPY_HOUR',
+          'WIN_BACK',
+          'WELCOME_OFFER',
+        ]),
         title: z.string().min(1).max(100),
         description: z.string().min(1).max(500),
         requiredTier: z.enum(['BRONZE', 'GOLD', 'PLATINUM', 'DIAMOND']),

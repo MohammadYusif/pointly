@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   Campaign,
+  Customer,
   Email,
   Merchant,
   MerchantTier,
@@ -9,13 +10,17 @@ import {
   UnauthorizedError,
 } from '../../domain';
 import type { ICampaignRepository } from '../repositories/ICampaignRepository';
+import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
+import type { ISmsPublisherService } from '../services/ISmsPublisherService';
 import { ManageCampaignUseCase } from '../use-cases/ManageCampaignUseCase';
 
 describe('ManageCampaignUseCase', () => {
   let useCase: ManageCampaignUseCase;
   let mockMerchantRepo: IMerchantRepository;
   let mockCampaignRepo: ICampaignRepository;
+  let mockCustomerRepo: ICustomerRepository;
+  let mockSmsPublisher: ISmsPublisherService;
   let mockAtomicWrite: ReturnType<typeof vi.fn>;
 
   let testMerchant: Merchant;
@@ -55,7 +60,33 @@ describe('ManageCampaignUseCase', () => {
       toPersistenceItem: vi.fn().mockReturnValue([]) as any,
     };
 
-    useCase = new ManageCampaignUseCase(mockMerchantRepo, mockCampaignRepo, mockAtomicWrite);
+    mockCustomerRepo = {
+      findById: vi.fn(),
+      findByPhone: vi.fn(),
+      save: vi.fn(),
+      delete: vi.fn(),
+      exists: vi.fn(),
+      findByMerchant: vi.fn().mockResolvedValue({ items: [], count: 0, nextToken: undefined }),
+      findAll: vi.fn(),
+      isEnrolled: vi.fn(),
+      // biome-ignore lint/suspicious/noExplicitAny: test mock returns empty persistence items
+      toPersistenceItem: vi.fn().mockReturnValue([]) as any,
+      // biome-ignore lint/suspicious/noExplicitAny: test mock returns empty persistence items
+      toEnrollmentItems: vi.fn().mockReturnValue([]) as any,
+    };
+
+    mockSmsPublisher = {
+      publish: vi.fn().mockResolvedValue(undefined),
+      publishBatch: vi.fn().mockResolvedValue(undefined),
+    };
+
+    useCase = new ManageCampaignUseCase(
+      mockMerchantRepo,
+      mockCampaignRepo,
+      mockAtomicWrite,
+      mockCustomerRepo,
+      mockSmsPublisher,
+    );
   });
 
   describe('create', () => {
@@ -78,6 +109,77 @@ describe('ManageCampaignUseCase', () => {
       expect(campaign.getMultiplier()).toBe(2.0);
       expect(campaign.getMerchantId()).toBe(merchantId);
       expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
+    });
+
+    it('should send SMS notifications to customers on campaign create', async () => {
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+
+      const customer1 = Customer.create(new PhoneNumber('0501111111'), 'Customer 1');
+      const customer2 = Customer.create(new PhoneNumber('0502222222'), 'Customer 2');
+      vi.mocked(mockCustomerRepo.findByMerchant).mockResolvedValue({
+        items: [customer1, customer2],
+        count: 2,
+        nextToken: undefined,
+      });
+
+      await useCase.execute({
+        action: 'create',
+        merchantId,
+        name: 'Summer Sale',
+        description: 'Double points',
+        startDate: '2026-06-01T00:00:00.000Z',
+        endDate: '2026-08-31T23:59:59.000Z',
+        multiplier: 2.0,
+      });
+
+      expect(mockSmsPublisher.publishBatch).toHaveBeenCalledTimes(1);
+      const messages = vi.mocked(mockSmsPublisher.publishBatch).mock.calls[0]?.[0];
+      expect(messages).toHaveLength(2);
+      expect(messages?.[0]?.type).toBe('CAMPAIGN_NOTIFICATION');
+      expect(messages?.[0]?.body).toContain('Test Store');
+      expect(messages?.[0]?.body).toContain('Summer Sale');
+    });
+
+    it('should not fail campaign creation if SMS publish fails', async () => {
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockCustomerRepo.findByMerchant).mockResolvedValue({
+        items: [Customer.create(new PhoneNumber('0501111111'))],
+        count: 1,
+        nextToken: undefined,
+      });
+      vi.mocked(mockSmsPublisher.publishBatch).mockRejectedValue(new Error('SQS down'));
+
+      const result = await useCase.execute({
+        action: 'create',
+        merchantId,
+        name: 'Sale',
+        startDate: '2026-06-01T00:00:00.000Z',
+        endDate: '2026-08-31T23:59:59.000Z',
+        multiplier: 1.5,
+      });
+
+      expect(result).toBeInstanceOf(Campaign);
+      expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
+    });
+
+    it('should send no SMS when merchant has no customers', async () => {
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockCustomerRepo.findByMerchant).mockResolvedValue({
+        items: [],
+        count: 0,
+        nextToken: undefined,
+      });
+
+      await useCase.execute({
+        action: 'create',
+        merchantId,
+        name: 'Sale',
+        startDate: '2026-06-01T00:00:00.000Z',
+        endDate: '2026-08-31T23:59:59.000Z',
+        multiplier: 1.5,
+      });
+
+      expect(mockSmsPublisher.publishBatch).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundError if merchant does not exist', async () => {

@@ -16,5 +16,6 @@ export type {
   AnalyticsDataPoint,
   AnalyticsData,
   CampaignResponse,
+  PerkInsights,
   WebhookConfigResponse,
 } from '@pointly/shared';

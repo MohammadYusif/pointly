@@ -2,7 +2,16 @@
  * Shared API response types used by both merchant-dashboard and customer-portal.
  */
 
-export type PerkType = 'EARLY_ACCESS' | 'EXCLUSIVE_PRODUCT' | 'EVENT';
+export type PerkType =
+  | 'EARLY_ACCESS'
+  | 'EXCLUSIVE_PRODUCT'
+  | 'EVENT'
+  | 'BIRTHDAY_REWARD'
+  | 'SPEND_BONUS'
+  | 'REFERRAL_BONUS'
+  | 'HAPPY_HOUR'
+  | 'WIN_BACK'
+  | 'WELCOME_OFFER';
 type CustomerTierLevel = 'BRONZE' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
 
 export interface MerchantPerk {
@@ -257,6 +266,15 @@ export interface AnalyticsData {
     averageTransactionValue: number;
   };
   trends: AnalyticsDataPoint[];
+}
+
+// --- Perk Insights ---
+
+export interface PerkInsights {
+  birthdayReward: { count: number };
+  winBack: { count: number };
+  welcomeOffer: { count: number };
+  totalCustomers: number;
 }
 
 // --- Campaigns ---

@@ -50,6 +50,7 @@ export type {
   PublicMerchantSummary,
   PublicMerchantDetail,
   CustomerMerchantView,
+  PerkInsights,
   CampaignResponse,
   ChallengeType,
   ChallengeProgressResponse,

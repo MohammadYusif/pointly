@@ -47,7 +47,16 @@ export interface PointsCalculation {
   globalPoints: number;
 }
 
-export type PerkType = 'EARLY_ACCESS' | 'EXCLUSIVE_PRODUCT' | 'EVENT';
+export type PerkType =
+  | 'EARLY_ACCESS'
+  | 'EXCLUSIVE_PRODUCT'
+  | 'EVENT'
+  | 'BIRTHDAY_REWARD'
+  | 'SPEND_BONUS'
+  | 'REFERRAL_BONUS'
+  | 'HAPPY_HOUR'
+  | 'WIN_BACK'
+  | 'WELCOME_OFFER';
 
 export interface MerchantPerk {
   id: string;
