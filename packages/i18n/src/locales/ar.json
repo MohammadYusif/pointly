@@ -433,6 +433,10 @@
     "multiplierError": "يجب أن يكون المضاعف بين 1.0 و 5.0",
     "selectType": "اختر نوع الحملة",
     "filterAll": "الكل",
+    "overrideDefaults": "تعديل الإعدادات الافتراضية",
+    "targetTiers": "المستويات المستهدفة",
+    "allTiers": "جميع المستويات",
+    "tierRequired": "يجب تحديد مستوى واحد على الأقل",
     "types": {
       "doublePoints": "نقاط مضاعفة",
       "triplePoints": "نقاط ثلاثية",

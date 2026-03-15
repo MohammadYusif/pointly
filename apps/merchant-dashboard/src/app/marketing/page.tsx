@@ -14,7 +14,7 @@ import {
   Textarea,
   useRTL,
 } from '@pointly/ui';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 /* ------------------------------------------------------------------ */
@@ -30,6 +30,18 @@ const CAMPAIGN_TYPES: { type: CampaignType; icon: string; labelKey: string }[] =
   { type: 'HAPPY_HOUR', icon: '⚡', labelKey: 'campaigns.types.happyHour' },
   { type: 'CUSTOM', icon: '🛠️', labelKey: 'campaigns.types.custom' },
 ];
+
+/** Frontend mirror of CAMPAIGN_DEFAULTS from the API domain */
+const CAMPAIGN_DEFAULTS: Record<string, { durationDays: number; multiplier: number }> = {
+  DOUBLE_POINTS: { durationDays: 7, multiplier: 2 },
+  TRIPLE_POINTS: { durationDays: 3, multiplier: 3 },
+  BIRTHDAY_REWARD: { durationDays: 30, multiplier: 2 },
+  WIN_BACK: { durationDays: 14, multiplier: 3 },
+  WELCOME: { durationDays: 7, multiplier: 2 },
+  HAPPY_HOUR: { durationDays: 1, multiplier: 2 },
+};
+
+const ALL_TIERS = ['BRONZE', 'GOLD', 'PLATINUM', 'DIAMOND'] as const;
 
 type FilterTab = 'all' | 'active' | 'scheduled' | 'expired';
 
@@ -47,6 +59,16 @@ function getCampaignStatus(
   if (now < start) return 'scheduled';
   if (now > end) return 'expired';
   return 'active';
+}
+
+function formatDateInput(date: Date): string {
+  return date.toISOString().split('T')[0] ?? '';
+}
+
+function getDefaultDates(durationDays: number): { start: string; end: string } {
+  const now = new Date();
+  const end = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
+  return { start: formatDateInput(now), end: formatDateInput(end) };
 }
 
 /* ------------------------------------------------------------------ */
@@ -88,6 +110,29 @@ function CampaignTypeBadge({ type }: { type: CampaignType | undefined }) {
   );
 }
 
+function TierBadges({ tiers }: { tiers: string[] | undefined }) {
+  const { t } = useTranslation();
+  if (!tiers || tiers.length === 0 || tiers.length === ALL_TIERS.length) {
+    return (
+      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+        {t('campaigns.allTiers')}
+      </span>
+    );
+  }
+  return (
+    <>
+      {tiers.map((tier) => (
+        <span
+          key={tier}
+          className="text-xs px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-800"
+        >
+          {t(`tier.${tier.toLowerCase()}`)}
+        </span>
+      ))}
+    </>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Create Form                                                        */
 /* ------------------------------------------------------------------ */
@@ -98,46 +143,61 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
 
   const [selectedType, setSelectedType] = useState<CampaignType | null>(null);
   const [message, setMessage] = useState('');
-
-  // Custom type fields
   const [customName, setCustomName] = useState('');
   const [customDesc, setCustomDesc] = useState('');
-  const [customStart, setCustomStart] = useState('');
-  const [customEnd, setCustomEnd] = useState('');
-  const [customMultiplier, setCustomMultiplier] = useState('2');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [multiplier, setMultiplier] = useState('2');
+  const [selectedTiers, setSelectedTiers] = useState<string[]>([...ALL_TIERS]);
 
   const isCustom = selectedType === 'CUSTOM';
 
-  const validateCustomFields = (): string | null => {
-    const multiplier = Number.parseFloat(customMultiplier);
-    if (multiplier < 1 || multiplier > 5) return t('campaigns.multiplierError');
-    if (!customStart || !customEnd || customEnd <= customStart) return t('campaigns.dateError');
+  // Pre-populate fields when type changes
+  useEffect(() => {
+    if (!selectedType || selectedType === 'CUSTOM') return;
+    const defaults = CAMPAIGN_DEFAULTS[selectedType];
+    if (!defaults) return;
+    const dates = getDefaultDates(defaults.durationDays);
+    setStartDate(dates.start);
+    setEndDate(dates.end);
+    setMultiplier(String(defaults.multiplier));
+  }, [selectedType]);
+
+  const toggleTier = (tier: string) => {
+    setSelectedTiers((prev) =>
+      prev.includes(tier) ? prev.filter((t) => t !== tier) : [...prev, tier],
+    );
+  };
+
+  const validateFields = (): string | null => {
+    const mult = Number.parseFloat(multiplier);
+    if (mult < 1 || mult > 5) return t('campaigns.multiplierError');
+    if (!startDate || !endDate || endDate <= startDate) return t('campaigns.dateError');
+    if (selectedTiers.length === 0) return t('campaigns.tierRequired');
     return null;
   };
 
   const buildPayload = (type: CampaignType): Record<string, unknown> => {
     const payload: Record<string, unknown> = { type };
     if (message.trim()) payload.message = message.trim();
-    if (!isCustom) return payload;
-    if (customName.trim()) payload.name = customName.trim();
-    if (customDesc.trim()) payload.description = customDesc.trim();
-    payload.startDate = new Date(customStart).toISOString();
-    payload.endDate = new Date(customEnd).toISOString();
-    payload.multiplier = Number.parseFloat(customMultiplier);
+    if (isCustom && customName.trim()) payload.name = customName.trim();
+    if (isCustom && customDesc.trim()) payload.description = customDesc.trim();
+    payload.startDate = new Date(startDate).toISOString();
+    payload.endDate = new Date(endDate).toISOString();
+    payload.multiplier = Number.parseFloat(multiplier);
+    if (selectedTiers.length < ALL_TIERS.length) {
+      payload.targetTiers = selectedTiers;
+    }
     return payload;
   };
 
   const handleCreate = async () => {
     if (!selectedType) return;
-
-    if (isCustom) {
-      const error = validateCustomFields();
-      if (error) {
-        toast.error(error);
-        return;
-      }
+    const error = validateFields();
+    if (error) {
+      toast.error(error);
+      return;
     }
-
     try {
       const payload = buildPayload(selectedType);
       await createCampaign.mutateAsync(payload as Parameters<typeof createCampaign.mutateAsync>[0]);
@@ -172,74 +232,105 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
         </div>
       </div>
 
-      {/* Optional message — always visible once type selected */}
+      {/* Fields — visible once type is selected */}
       {selectedType && (
-        <div>
-          <label htmlFor="campaign-message" className="text-sm text-muted-foreground block mb-1">
-            {t('campaigns.messagePlaceholder')} ({t('common.optional')})
-          </label>
-          <Textarea
-            id="campaign-message"
-            placeholder={t('campaigns.messagePlaceholder')}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            rows={2}
-          />
-        </div>
-      )}
-
-      {/* Custom type fields */}
-      {isCustom && (
-        <div className="space-y-3 p-4 border rounded-md bg-background">
-          <Input
-            placeholder={t('campaigns.namePlaceholder')}
-            value={customName}
-            onChange={(e) => setCustomName(e.target.value)}
-          />
-          <Input
-            placeholder={t('campaigns.descriptionPlaceholder')}
-            value={customDesc}
-            onChange={(e) => setCustomDesc(e.target.value)}
-          />
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="custom-start" className="text-sm text-muted-foreground block mb-1">
-                {t('campaigns.startDate')}
-              </label>
+        <>
+          {/* Custom-only: name + description */}
+          {isCustom && (
+            <div className="space-y-3">
               <Input
-                id="custom-start"
-                type="date"
-                value={customStart}
-                onChange={(e) => setCustomStart(e.target.value)}
+                placeholder={t('campaigns.namePlaceholder')}
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+              />
+              <Input
+                placeholder={t('campaigns.descriptionPlaceholder')}
+                value={customDesc}
+                onChange={(e) => setCustomDesc(e.target.value)}
               />
             </div>
+          )}
+
+          {/* Dates + multiplier — all types */}
+          <div className="space-y-3 p-4 border rounded-md bg-background">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+              {t('campaigns.overrideDefaults')}
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="start-date" className="text-sm text-muted-foreground block mb-1">
+                  {t('campaigns.startDate')}
+                </label>
+                <Input
+                  id="start-date"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="end-date" className="text-sm text-muted-foreground block mb-1">
+                  {t('campaigns.endDate')}
+                </label>
+                <Input
+                  id="end-date"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+            </div>
             <div>
-              <label htmlFor="custom-end" className="text-sm text-muted-foreground block mb-1">
-                {t('campaigns.endDate')}
+              <label htmlFor="multiplier" className="text-sm text-muted-foreground block mb-1">
+                {t('campaigns.multiplier')}
               </label>
               <Input
-                id="custom-end"
-                type="date"
-                value={customEnd}
-                onChange={(e) => setCustomEnd(e.target.value)}
+                id="multiplier"
+                type="number"
+                min="1"
+                max="5"
+                step="0.5"
+                value={multiplier}
+                onChange={(e) => setMultiplier(e.target.value)}
               />
             </div>
           </div>
+
+          {/* Tier targeting */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium">{t('campaigns.targetTiers')}</p>
+            <div className="flex flex-wrap gap-2">
+              {ALL_TIERS.map((tier) => (
+                <button
+                  key={tier}
+                  type="button"
+                  onClick={() => toggleTier(tier)}
+                  className={`px-3 py-1.5 text-sm border rounded-lg transition-colors ${
+                    selectedTiers.includes(tier)
+                      ? 'border-primary bg-primary/10 text-primary font-medium'
+                      : 'border-border text-muted-foreground'
+                  }`}
+                >
+                  {t(`tier.${tier.toLowerCase()}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Optional message */}
           <div>
-            <label htmlFor="custom-multiplier" className="text-sm text-muted-foreground block mb-1">
-              {t('campaigns.multiplier')}
+            <label htmlFor="campaign-message" className="text-sm text-muted-foreground block mb-1">
+              {t('campaigns.messagePlaceholder')} ({t('common.optional')})
             </label>
-            <Input
-              id="custom-multiplier"
-              type="number"
-              min="1"
-              max="5"
-              step="0.5"
-              value={customMultiplier}
-              onChange={(e) => setCustomMultiplier(e.target.value)}
+            <Textarea
+              id="campaign-message"
+              placeholder={t('campaigns.messagePlaceholder')}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={2}
             />
           </div>
-        </div>
+        </>
       )}
 
       {/* Actions */}
@@ -250,7 +341,11 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
         <Button
           onClick={handleCreate}
           disabled={
-            createCampaign.isPending || !selectedType || (isCustom && (!customStart || !customEnd))
+            createCampaign.isPending ||
+            !selectedType ||
+            !startDate ||
+            !endDate ||
+            (isCustom && !customName.trim())
           }
         >
           {createCampaign.isPending ? t('common.loading') : t('campaigns.createCampaign')}
@@ -394,6 +489,7 @@ export default function MarketingPage() {
                         {campaign.multiplier}
                         {t('campaigns.multiplierSuffix')}
                       </span>
+                      <TierBadges tiers={campaign.targetTiers} />
                     </div>
                     {campaign.description && (
                       <p className="text-sm text-muted-foreground">{campaign.description}</p>

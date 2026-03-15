@@ -433,6 +433,10 @@
     "multiplierError": "Multiplier must be between 1.0 and 5.0",
     "selectType": "Select campaign type",
     "filterAll": "All",
+    "overrideDefaults": "Override Defaults",
+    "targetTiers": "Target Tiers",
+    "allTiers": "All Tiers",
+    "tierRequired": "At least one tier must be selected",
     "types": {
       "doublePoints": "Double Points",
       "triplePoints": "Triple Points",

@@ -191,6 +191,12 @@ export default function TransactionsPage() {
                             {locationNames[tx.locationId]}
                           </span>
                         )}
+                        {tx.campaignName && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">
+                            {tx.campaignName}{' '}
+                            {tx.campaignMultiplier ? `${tx.campaignMultiplier}x` : ''}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className={textEnd}>

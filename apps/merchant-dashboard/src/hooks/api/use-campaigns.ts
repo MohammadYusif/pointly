@@ -25,6 +25,7 @@ export function useCreateCampaign() {
       endDate?: string;
       multiplier?: number;
       message?: string;
+      targetTiers?: string[];
     }) =>
       // biome-ignore lint/style/noNonNullAssertion: merchantId required
       campaignApi.create(merchant!.merchantId, data),

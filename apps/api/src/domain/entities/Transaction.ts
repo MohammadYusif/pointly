@@ -26,6 +26,25 @@ export interface TransactionMetadata {
   [key: string]: string | number | boolean | undefined;
 }
 
+interface SurfacedMetadata {
+  vatAmount: number | undefined;
+  merchantVatId: string | undefined;
+  campaignId: string | undefined;
+  campaignName: string | undefined;
+  campaignMultiplier: number | undefined;
+}
+
+function extractSurfacedMetadata(metadata: TransactionMetadata): SurfacedMetadata {
+  const m = metadata as unknown as SurfacedMetadata;
+  return {
+    vatAmount: typeof m.vatAmount === 'number' ? m.vatAmount : undefined,
+    merchantVatId: typeof m.merchantVatId === 'string' ? m.merchantVatId : undefined,
+    campaignId: typeof m.campaignId === 'string' ? m.campaignId : undefined,
+    campaignName: typeof m.campaignName === 'string' ? m.campaignName : undefined,
+    campaignMultiplier: typeof m.campaignMultiplier === 'number' ? m.campaignMultiplier : undefined,
+  };
+}
+
 export interface TransactionProps {
   transactionId: string;
   merchantId: string;
@@ -349,14 +368,8 @@ export class Transaction {
       balanceBefore: this.props.balanceBefore.toNumber(),
       balanceAfter: this.props.balanceAfter.toNumber(),
       metadata: this.props.metadata,
-      // ZATCA fields (stored in metadata, surfaced at top level for API consumers)
-      ...(() => {
-        const m = this.props.metadata as { vatAmount?: unknown; merchantVatId?: unknown };
-        return {
-          vatAmount: typeof m.vatAmount === 'number' ? m.vatAmount : undefined,
-          merchantVatId: typeof m.merchantVatId === 'string' ? m.merchantVatId : undefined,
-        };
-      })(),
+      // Metadata fields surfaced at top level for API consumers
+      ...extractSurfacedMetadata(this.props.metadata),
       idempotencyKey: this.props.idempotencyKey,
       reversedTransactionId: this.props.reversedTransactionId,
       createdAt: this.props.createdAt.toISOString(),

@@ -31,10 +31,14 @@ async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise
   const token = await getAccessToken();
   const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
+  const contentHeaders: Record<string, string> = options.body
+    ? { 'Content-Type': 'application/json' }
+    : {};
+
   const response = await fetch(url, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      ...contentHeaders,
       ...authHeaders,
       ...options.headers,
     },
@@ -208,6 +212,7 @@ export const campaignApi = {
       endDate?: string;
       multiplier?: number;
       message?: string;
+      targetTiers?: string[];
     },
   ) =>
     fetchApi<CampaignResponse>(`/v1/merchants/${merchantId}/campaigns`, {
