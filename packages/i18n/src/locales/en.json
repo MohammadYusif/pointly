@@ -411,11 +411,13 @@
     "title": "Campaigns",
     "createCampaign": "Create Campaign",
     "activeCampaigns": "Active Campaigns",
+    "totalCampaigns": "Total Campaigns",
     "noCampaigns": "No campaigns yet",
     "name": "Campaign Name",
     "namePlaceholder": "e.g. Weekend Double Points",
     "description": "Description",
     "descriptionPlaceholder": "Describe the campaign...",
+    "messagePlaceholder": "Custom message for customers",
     "startDate": "Start Date",
     "endDate": "End Date",
     "multiplier": "Points Multiplier",
@@ -428,7 +430,18 @@
     "deactivateSuccess": "Campaign deactivated",
     "deleteSuccess": "Campaign deleted",
     "dateError": "End date must be after start date",
-    "multiplierError": "Multiplier must be between 1.0 and 5.0"
+    "multiplierError": "Multiplier must be between 1.0 and 5.0",
+    "selectType": "Select campaign type",
+    "filterAll": "All",
+    "types": {
+      "doublePoints": "Double Points",
+      "triplePoints": "Triple Points",
+      "birthdayReward": "Birthday Reward",
+      "winBack": "Win Back",
+      "welcome": "Welcome",
+      "happyHour": "Happy Hour",
+      "custom": "Custom"
+    }
   },
   "challenges": {
     "title": "Challenges",

@@ -1,6 +1,6 @@
 import { merchantApi, perkApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 export function useMerchant() {
   const { merchant } = useAuth();
@@ -71,47 +71,18 @@ export function usePerks() {
   });
 }
 
-export function useCreatePerk() {
-  const { merchant } = useAuth();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: {
-      type: string;
-      title: string;
-      description: string;
-      requiredTier: string;
-      capacityLimit?: number;
-    }) =>
-      // biome-ignore lint/style/noNonNullAssertion: merchantId is required for perk creation
-      perkApi.createPerk(merchant!.merchantId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['merchant', merchant?.merchantId, 'perks'] });
-    },
-  });
-}
-
-export function useDeletePerk() {
-  const { merchant } = useAuth();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (perkId: string) =>
-      // biome-ignore lint/style/noNonNullAssertion: merchantId is required for perk deletion
-      perkApi.deletePerk(merchant!.merchantId, perkId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['merchant', merchant?.merchantId, 'perks'] });
-    },
-  });
-}
-
-export function usePerkInsights() {
+export function useCustomerInsights() {
   const { merchant } = useAuth();
   return useQuery({
-    queryKey: ['merchant', merchant?.merchantId, 'perk-insights'],
+    queryKey: ['merchant', merchant?.merchantId, 'customer-insights'],
     // biome-ignore lint/style/noNonNullAssertion: enabled guard ensures merchantId exists
     queryFn: () => perkApi.getInsights(merchant!.merchantId),
     enabled: !!merchant?.merchantId,
   });
 }
+
+/** @deprecated Use useCustomerInsights instead */
+export const usePerkInsights = useCustomerInsights;
 
 export function useInfiniteTransactions(
   limit = 50,

@@ -6,8 +6,7 @@ export {
   useInfiniteCustomers,
   useInfiniteTransactions,
   usePerks,
-  useCreatePerk,
-  useDeletePerk,
+  useCustomerInsights,
   usePerkInsights,
 } from './use-merchant';
 export {

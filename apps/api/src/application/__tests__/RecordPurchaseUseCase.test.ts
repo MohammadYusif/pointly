@@ -479,14 +479,10 @@ describe('RecordPurchaseUseCase', () => {
         toPersistenceItem: vi.fn().mockReturnValue([]) as any,
       };
 
-      const campaign = Campaign.create(
-        'merchant_123',
-        'Double Points',
-        'Earn 2x this week',
-        new Date(Date.now() - 1000),
-        new Date(Date.now() + 86400000),
-        2.0,
-      );
+      const campaign = Campaign.create('merchant_123', 'DOUBLE_POINTS', {
+        startDate: new Date(Date.now() - 1000),
+        endDate: new Date(Date.now() + 86400000),
+      });
       vi.mocked(mockCampaignRepo.findActiveCampaignsForMerchant).mockResolvedValue([campaign]);
 
       const useCaseWithCampaign = new RecordPurchaseUseCase(

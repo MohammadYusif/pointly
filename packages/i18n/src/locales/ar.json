@@ -411,11 +411,13 @@
     "title": "الحملات",
     "createCampaign": "إنشاء حملة",
     "activeCampaigns": "الحملات النشطة",
+    "totalCampaigns": "إجمالي الحملات",
     "noCampaigns": "لا توجد حملات بعد",
     "name": "اسم الحملة",
     "namePlaceholder": "مثال: نقاط مضاعفة في عطلة نهاية الأسبوع",
     "description": "الوصف",
     "descriptionPlaceholder": "صف الحملة...",
+    "messagePlaceholder": "رسالة مخصصة للعملاء",
     "startDate": "تاريخ البدء",
     "endDate": "تاريخ الانتهاء",
     "multiplier": "مضاعف النقاط",
@@ -428,7 +430,18 @@
     "deactivateSuccess": "تم إلغاء تنشيط الحملة",
     "deleteSuccess": "تم حذف الحملة",
     "dateError": "يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء",
-    "multiplierError": "يجب أن يكون المضاعف بين 1.0 و 5.0"
+    "multiplierError": "يجب أن يكون المضاعف بين 1.0 و 5.0",
+    "selectType": "اختر نوع الحملة",
+    "filterAll": "الكل",
+    "types": {
+      "doublePoints": "نقاط مضاعفة",
+      "triplePoints": "نقاط ثلاثية",
+      "birthdayReward": "مكافأة عيد الميلاد",
+      "winBack": "استرجاع العملاء",
+      "welcome": "ترحيب",
+      "happyHour": "الساعة السعيدة",
+      "custom": "مخصص"
+    }
   },
   "challenges": {
     "title": "التحديات",

@@ -1,6 +1,7 @@
 import type { ICampaignRepository } from '../../application/repositories/ICampaignRepository';
 import type { QueryResult } from '../../application/shared/interfaces/BaseRepository';
 import { Campaign, type CampaignProps } from '../../domain';
+import type { CampaignType } from '../../domain/entities/Campaign';
 import { BaseDynamoDBRepository } from './BaseRepository';
 
 interface CampaignItem {
@@ -9,12 +10,15 @@ interface CampaignItem {
   EntityType: 'CAMPAIGN';
   campaignId: string;
   merchantId: string;
+  type?: string;
   name: string;
   description: string;
   startDate: string;
   endDate: string;
   multiplier: number;
   isActive: boolean;
+  message?: string;
+  linkedPerkId?: string;
   createdAt: string;
 }
 
@@ -83,6 +87,7 @@ export class CampaignRepository
     const props: CampaignProps = {
       campaignId: item.campaignId,
       merchantId: item.merchantId,
+      type: (item.type as CampaignType) ?? 'CUSTOM',
       name: item.name,
       description: item.description,
       startDate: new Date(item.startDate),
@@ -91,25 +96,31 @@ export class CampaignRepository
       isActive: item.isActive,
       createdAt: new Date(item.createdAt),
     };
+    if (item.message) props.message = item.message;
+    if (item.linkedPerkId) props.linkedPerkId = item.linkedPerkId;
     return Campaign.reconstitute(props);
   }
 
   protected toItem(entity: Campaign): Record<string, unknown> {
-    const json = entity.toJSON();
     const item: CampaignItem = {
-      PK: `MERCHANT#${json.merchantId}`,
-      SK: `CAMPAIGN#${json.campaignId}`,
+      PK: `MERCHANT#${entity.getMerchantId()}`,
+      SK: `CAMPAIGN#${entity.getCampaignId()}`,
       EntityType: 'CAMPAIGN',
-      campaignId: json.campaignId,
-      merchantId: json.merchantId,
-      name: json.name,
-      description: json.description,
-      startDate: json.startDate,
-      endDate: json.endDate,
-      multiplier: json.multiplier,
-      isActive: json.isActive,
-      createdAt: json.createdAt,
+      campaignId: entity.getCampaignId(),
+      merchantId: entity.getMerchantId(),
+      type: entity.getType(),
+      name: entity.getName(),
+      description: entity.getDescription(),
+      startDate: entity.getStartDate().toISOString(),
+      endDate: entity.getEndDate().toISOString(),
+      multiplier: entity.getMultiplier(),
+      isActive: entity.getIsActive(),
+      createdAt: entity.getCreatedAt().toISOString(),
     };
+    const message = entity.getMessage();
+    const linkedPerkId = entity.getLinkedPerkId();
+    if (message) item.message = message;
+    if (linkedPerkId) item.linkedPerkId = linkedPerkId;
     return item as unknown as Record<string, unknown>;
   }
 

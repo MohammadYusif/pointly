@@ -268,26 +268,41 @@ export interface AnalyticsData {
   trends: AnalyticsDataPoint[];
 }
 
-// --- Perk Insights ---
+// --- Customer Insights ---
 
-export interface PerkInsights {
+export interface CustomerInsights {
   birthdayReward: { count: number };
   winBack: { count: number };
   welcomeOffer: { count: number };
   totalCustomers: number;
 }
 
+/** @deprecated Use CustomerInsights instead */
+export type PerkInsights = CustomerInsights;
+
 // --- Campaigns ---
+
+export type CampaignType =
+  | 'DOUBLE_POINTS'
+  | 'TRIPLE_POINTS'
+  | 'BIRTHDAY_REWARD'
+  | 'WIN_BACK'
+  | 'WELCOME'
+  | 'HAPPY_HOUR'
+  | 'CUSTOM';
 
 export interface CampaignResponse {
   campaignId: string;
   merchantId: string;
+  type: CampaignType;
   name: string;
   description: string;
   startDate: string;
   endDate: string;
   multiplier: number;
   isActive: boolean;
+  message?: string;
+  linkedPerkId?: string;
   createdAt: string;
 }
 

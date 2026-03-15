@@ -1,5 +1,6 @@
 import { campaignApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import type { CampaignType } from '@/types/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useCampaigns() {
@@ -17,16 +18,19 @@ export function useCreateCampaign() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: {
-      name: string;
-      description: string;
-      startDate: string;
-      endDate: string;
-      multiplier: number;
+      type: CampaignType;
+      name?: string;
+      description?: string;
+      startDate?: string;
+      endDate?: string;
+      multiplier?: number;
+      message?: string;
     }) =>
       // biome-ignore lint/style/noNonNullAssertion: merchantId required
       campaignApi.create(merchant!.merchantId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['merchant', merchant?.merchantId, 'campaigns'] });
+      queryClient.invalidateQueries({ queryKey: ['merchant', merchant?.merchantId, 'perks'] });
     },
   });
 }
@@ -40,6 +44,7 @@ export function useDeactivateCampaign() {
       campaignApi.deactivate(merchant!.merchantId, campaignId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['merchant', merchant?.merchantId, 'campaigns'] });
+      queryClient.invalidateQueries({ queryKey: ['merchant', merchant?.merchantId, 'perks'] });
     },
   });
 }

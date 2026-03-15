@@ -2,7 +2,7 @@
 
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { useCustomerByPhone, useInfiniteCustomers } from '@/hooks/api';
+import { useCustomerByPhone, useCustomerInsights, useInfiniteCustomers } from '@/hooks/api';
 import { useTranslation } from '@pointly/i18n';
 import { formatPhone } from '@pointly/shared';
 import { Button, Card, CardContent, Input, useRTL } from '@pointly/ui';
@@ -57,6 +57,8 @@ export default function CustomersPage() {
   const { t, formatNumber, language } = useTranslation();
   const { textStart } = useRTL();
 
+  const { data: insights } = useCustomerInsights();
+
   const [searchPhone, setSearchPhone] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -91,6 +93,42 @@ export default function CustomersPage() {
           {t('customer.title')}
         </h1>
       </div>
+
+      {/* Customer Insights */}
+      {insights && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <Card>
+            <CardContent className="p-3 text-center">
+              <p className="text-2xl font-bold text-primary">{insights.birthdayReward.count}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t('perkInsights.birthdayThisMonth')}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-3 text-center">
+              <p className="text-2xl font-bold text-amber-600">{insights.winBack.count}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t('perkInsights.inactiveCustomers')}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-3 text-center">
+              <p className="text-2xl font-bold text-green-600">{insights.welcomeOffer.count}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('perkInsights.newCustomers')}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-3 text-center">
+              <p className="text-2xl font-bold text-foreground">{insights.totalCustomers}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t('perkInsights.totalCustomers')}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Search */}
       <form onSubmit={handleSearch} className="mb-6 flex gap-2">

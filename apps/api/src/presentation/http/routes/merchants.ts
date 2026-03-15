@@ -1,10 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import type {
-  CreatePerkRequest,
-  UpdatePerkRequest,
-} from '../../../application/use-cases/ManagePerkUseCase';
-import { Customer, type CustomerTierLevel, PhoneNumber, ValidationError } from '../../../domain';
+import { Customer, PhoneNumber, ValidationError } from '../../../domain';
 import { ForbiddenError } from '../../../domain/errors/DomainError';
 import { getContainer } from '../container';
 
@@ -68,6 +64,60 @@ const analyticsQuerySchema = z.object({
   endDate: z.string().optional(),
   groupBy: z.enum(['day', 'week', 'month']).optional(),
 });
+
+function isBirthdayThisMonth(dateOfBirth: string | undefined, currentMonth: number): boolean {
+  if (!dateOfBirth) return false;
+  return new Date(dateOfBirth).getMonth() === currentMonth;
+}
+
+function computeInsightCounts(customers: Customer[], merchantId: string) {
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  let birthdayCount = 0;
+  let winBackCount = 0;
+  let welcomeOfferCount = 0;
+
+  for (const customer of customers) {
+    const json = customer.toJSON();
+    if (isBirthdayThisMonth(json.dateOfBirth, currentMonth)) birthdayCount++;
+
+    const enrollment = json.enrollments?.find((e) => e.merchantId === merchantId);
+    if (!enrollment) continue;
+
+    const lastTx = enrollment.lastTransactionAt ? new Date(enrollment.lastTransactionAt) : null;
+    if (!lastTx || lastTx < sixtyDaysAgo) winBackCount++;
+
+    if (new Date(enrollment.enrolledAt) > thirtyDaysAgo) welcomeOfferCount++;
+  }
+
+  return { birthdayCount, winBackCount, welcomeOfferCount };
+}
+
+/** Shared handler for customer insights (used by both /perk-insights and /customer-insights) */
+async function handleCustomerInsights(
+  request: FastifyRequest<{ Params: { merchantId: string } }>,
+  reply: FastifyReply,
+) {
+  enforceMerchantAccess(request);
+  const { merchantId } = request.params;
+
+  const container = getContainer();
+  const result = await container.customerRepository.findByMerchant(merchantId, { limit: 500 });
+  const counts = computeInsightCounts(result.items, merchantId);
+
+  return reply.send({
+    success: true,
+    data: {
+      birthdayReward: { count: counts.birthdayCount },
+      winBack: { count: counts.winBackCount },
+      welcomeOffer: { count: counts.welcomeOfferCount },
+      totalCustomers: result.items.length,
+    },
+  });
+}
 
 export async function merchantRoutes(server: FastifyInstance): Promise<void> {
   // Get merchant by ID
@@ -327,7 +377,7 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
     },
   );
 
-  // GET /:merchantId/perks — List active perks
+  // GET /:merchantId/perks — List active perks (kept for customer portal)
   server.get(
     '/:merchantId/perks',
     async (request: FastifyRequest<{ Params: { merchantId: string } }>, reply: FastifyReply) => {
@@ -344,178 +394,11 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
     },
   );
 
-  // GET /:merchantId/perk-insights — Perk targeting insights
-  server.get(
-    '/:merchantId/perk-insights',
-    async (request: FastifyRequest<{ Params: { merchantId: string } }>, reply: FastifyReply) => {
-      enforceMerchantAccess(request);
-      const { merchantId } = request.params;
+  // GET /:merchantId/customer-insights — Customer targeting insights
+  server.get('/:merchantId/customer-insights', handleCustomerInsights);
 
-      const container = getContainer();
-      const { customerRepository } = container;
-
-      const result = await customerRepository.findByMerchant(merchantId, { limit: 500 });
-      const customers = result.items;
-      const now = new Date();
-      const currentMonth = now.getMonth();
-      const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-      let birthdayCount = 0;
-      let winBackCount = 0;
-      let welcomeOfferCount = 0;
-
-      for (const customer of customers) {
-        const json = customer.toJSON();
-
-        // Birthday reward: customers with birthday this month
-        if (json.dateOfBirth) {
-          const birthMonth = new Date(json.dateOfBirth).getMonth();
-          if (birthMonth === currentMonth) {
-            birthdayCount++;
-          }
-        }
-
-        // Win-back: customers inactive for 60+ days at this merchant
-        const enrollment = json.enrollments?.find(
-          (e: { merchantId: string }) => e.merchantId === merchantId,
-        );
-        if (enrollment) {
-          const lastTx = enrollment.lastTransactionAt
-            ? new Date(enrollment.lastTransactionAt)
-            : null;
-          if (!lastTx || lastTx < sixtyDaysAgo) {
-            winBackCount++;
-          }
-
-          // Welcome offer: enrolled in last 30 days
-          const enrolledAt = new Date(enrollment.enrolledAt);
-          if (enrolledAt > thirtyDaysAgo) {
-            welcomeOfferCount++;
-          }
-        }
-      }
-
-      return reply.send({
-        success: true,
-        data: {
-          birthdayReward: { count: birthdayCount },
-          winBack: { count: winBackCount },
-          welcomeOffer: { count: welcomeOfferCount },
-          totalCustomers: customers.length,
-        },
-      });
-    },
-  );
-
-  // POST /:merchantId/perks — Create perk
-  server.post(
-    '/:merchantId/perks',
-    async (
-      request: FastifyRequest<{
-        Params: { merchantId: string };
-        Body: {
-          type: string;
-          title: string;
-          description: string;
-          requiredTier: string;
-          capacityLimit?: number;
-        };
-      }>,
-      reply: FastifyReply,
-    ) => {
-      enforceMerchantAccess(request);
-      const { merchantId } = request.params;
-
-      const perkSchema = z.object({
-        type: z.enum([
-          'EARLY_ACCESS',
-          'EXCLUSIVE_PRODUCT',
-          'EVENT',
-          'BIRTHDAY_REWARD',
-          'SPEND_BONUS',
-          'REFERRAL_BONUS',
-          'HAPPY_HOUR',
-          'WIN_BACK',
-          'WELCOME_OFFER',
-        ]),
-        title: z.string().min(1).max(100),
-        description: z.string().min(1).max(500),
-        requiredTier: z.enum(['BRONZE', 'GOLD', 'PLATINUM', 'DIAMOND']),
-        capacityLimit: z.number().int().positive().optional(),
-      });
-      const body = perkSchema.parse(request.body);
-
-      const data: CreatePerkRequest = {
-        type: body.type as CreatePerkRequest['type'],
-        title: body.title,
-        description: body.description,
-        requiredTier: body.requiredTier as CustomerTierLevel,
-        ...(body.capacityLimit !== undefined && { capacityLimit: body.capacityLimit }),
-      };
-
-      const perk = await getContainer().managePerkUseCase.createPerk(merchantId, data);
-      return reply.status(201).send({ success: true, data: perk });
-    },
-  );
-
-  // PATCH /:merchantId/perks/:perkId — Update perk
-  server.patch(
-    '/:merchantId/perks/:perkId',
-    async (
-      request: FastifyRequest<{
-        Params: { merchantId: string; perkId: string };
-        Body: {
-          title?: string;
-          description?: string;
-          requiredTier?: string;
-          capacityLimit?: number;
-          isActive?: boolean;
-        };
-      }>,
-      reply: FastifyReply,
-    ) => {
-      enforceMerchantAccess(request);
-      const { merchantId, perkId } = request.params;
-
-      const updateSchema = z.object({
-        title: z.string().min(1).max(100).optional(),
-        description: z.string().min(1).max(500).optional(),
-        requiredTier: z.enum(['BRONZE', 'GOLD', 'PLATINUM', 'DIAMOND']).optional(),
-        capacityLimit: z.number().int().positive().optional(),
-        isActive: z.boolean().optional(),
-      });
-      const body = updateSchema.parse(request.body);
-
-      const data: UpdatePerkRequest = {
-        ...(body.title !== undefined && { title: body.title }),
-        ...(body.description !== undefined && { description: body.description }),
-        ...(body.requiredTier !== undefined && {
-          requiredTier: body.requiredTier as CustomerTierLevel,
-        }),
-        ...(body.capacityLimit !== undefined && { capacityLimit: body.capacityLimit }),
-        ...(body.isActive !== undefined && { isActive: body.isActive }),
-      };
-
-      const updated = await getContainer().managePerkUseCase.updatePerk(merchantId, perkId, data);
-      return reply.send({ success: true, data: updated });
-    },
-  );
-
-  // DELETE /:merchantId/perks/:perkId — Soft-delete perk
-  server.delete(
-    '/:merchantId/perks/:perkId',
-    async (
-      request: FastifyRequest<{ Params: { merchantId: string; perkId: string } }>,
-      reply: FastifyReply,
-    ) => {
-      enforceMerchantAccess(request);
-      const { merchantId, perkId } = request.params;
-
-      await getContainer().managePerkUseCase.deletePerk(merchantId, perkId);
-      return reply.send({ success: true });
-    },
-  );
+  // GET /:merchantId/perk-insights — Backward compat alias for customer-insights
+  server.get('/:merchantId/perk-insights', handleCustomerInsights);
 
   // POST /:merchantId/register-customer — Find-or-create customer + enroll + grant consent atomically
   server.post(

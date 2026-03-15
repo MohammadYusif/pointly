@@ -96,6 +96,7 @@ describe('ManageCampaignUseCase', () => {
       const result = await useCase.execute({
         action: 'create',
         merchantId,
+        type: 'CUSTOM',
         name: 'Summer Sale',
         description: 'Double points all summer',
         startDate: '2026-06-01T00:00:00.000Z',
@@ -109,6 +110,23 @@ describe('ManageCampaignUseCase', () => {
       expect(campaign.getMultiplier()).toBe(2.0);
       expect(campaign.getMerchantId()).toBe(merchantId);
       expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
+    });
+
+    it('should create a typed campaign with auto-defaults', async () => {
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+
+      const result = await useCase.execute({
+        action: 'create',
+        merchantId,
+        type: 'DOUBLE_POINTS',
+      });
+
+      expect(result).toBeInstanceOf(Campaign);
+      const campaign = result as Campaign;
+      expect(campaign.getType()).toBe('DOUBLE_POINTS');
+      expect(campaign.getName()).toBe('Double Points');
+      expect(campaign.getMultiplier()).toBe(2);
+      expect(campaign.getLinkedPerkId()).toBeTruthy();
     });
 
     it('should send SMS notifications to customers on campaign create', async () => {
@@ -125,6 +143,7 @@ describe('ManageCampaignUseCase', () => {
       await useCase.execute({
         action: 'create',
         merchantId,
+        type: 'CUSTOM',
         name: 'Summer Sale',
         description: 'Double points',
         startDate: '2026-06-01T00:00:00.000Z',
@@ -152,6 +171,7 @@ describe('ManageCampaignUseCase', () => {
       const result = await useCase.execute({
         action: 'create',
         merchantId,
+        type: 'CUSTOM',
         name: 'Sale',
         startDate: '2026-06-01T00:00:00.000Z',
         endDate: '2026-08-31T23:59:59.000Z',
@@ -173,6 +193,7 @@ describe('ManageCampaignUseCase', () => {
       await useCase.execute({
         action: 'create',
         merchantId,
+        type: 'CUSTOM',
         name: 'Sale',
         startDate: '2026-06-01T00:00:00.000Z',
         endDate: '2026-08-31T23:59:59.000Z',
@@ -189,10 +210,7 @@ describe('ManageCampaignUseCase', () => {
         useCase.execute({
           action: 'create',
           merchantId: 'nonexistent',
-          name: 'Sale',
-          startDate: '2026-06-01T00:00:00.000Z',
-          endDate: '2026-08-31T23:59:59.000Z',
-          multiplier: 2.0,
+          type: 'DOUBLE_POINTS',
         }),
       ).rejects.toThrow(NotFoundError);
     });
@@ -211,10 +229,7 @@ describe('ManageCampaignUseCase', () => {
         useCase.execute({
           action: 'create',
           merchantId,
-          name: 'Sale',
-          startDate: '2026-06-01T00:00:00.000Z',
-          endDate: '2026-08-31T23:59:59.000Z',
-          multiplier: 2.0,
+          type: 'DOUBLE_POINTS',
         }),
       ).rejects.toThrow(UnauthorizedError);
     });
@@ -222,14 +237,13 @@ describe('ManageCampaignUseCase', () => {
 
   describe('list', () => {
     it('should return campaigns for a merchant', async () => {
-      const campaign = Campaign.create(
-        merchantId,
-        'Test Campaign',
-        'Desc',
-        new Date('2026-06-01'),
-        new Date('2026-08-31'),
-        1.5,
-      );
+      const campaign = Campaign.create(merchantId, 'CUSTOM', {
+        name: 'Test Campaign',
+        description: 'Desc',
+        startDate: new Date('2026-06-01'),
+        endDate: new Date('2026-08-31'),
+        multiplier: 1.5,
+      });
       vi.mocked(mockCampaignRepo.findByMerchant).mockResolvedValue({
         items: [campaign],
         count: 1,
@@ -260,14 +274,13 @@ describe('ManageCampaignUseCase', () => {
 
   describe('deactivate', () => {
     it('should deactivate an existing campaign', async () => {
-      const campaign = Campaign.create(
-        merchantId,
-        'Summer Sale',
-        'Desc',
-        new Date('2026-06-01'),
-        new Date('2026-08-31'),
-        2.0,
-      );
+      const campaign = Campaign.create(merchantId, 'CUSTOM', {
+        name: 'Summer Sale',
+        description: 'Desc',
+        startDate: new Date('2026-06-01'),
+        endDate: new Date('2026-08-31'),
+        multiplier: 2.0,
+      });
       vi.mocked(mockCampaignRepo.findByMerchant).mockResolvedValue({
         items: [campaign],
         count: 1,

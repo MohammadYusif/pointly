@@ -1,4 +1,6 @@
 import { Campaign, NotFoundError, UnauthorizedError } from '../../domain';
+import type { CustomerTierLevel } from '../../domain/config/TierConfig';
+import { CAMPAIGN_DEFAULTS, type CampaignType } from '../../domain/entities/Campaign';
 import type { ICampaignRepository } from '../repositories/ICampaignRepository';
 import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
@@ -8,11 +10,13 @@ import type { PersistenceItem, QueryResult } from '../shared/interfaces/BaseRepo
 export interface ManageCampaignRequest {
   action: 'create' | 'list' | 'deactivate';
   merchantId: string;
+  type?: CampaignType;
   name?: string;
   description?: string;
   startDate?: string;
   endDate?: string;
   multiplier?: number;
+  message?: string;
   campaignId?: string;
 }
 
@@ -47,26 +51,40 @@ export class ManageCampaignUseCase {
       throw new UnauthorizedError('Merchant is not verified');
     }
 
-    if (!request.name) {
-      throw new NotFoundError('Campaign', 'name is required');
-    }
-    if (!request.startDate || !request.endDate) {
-      throw new NotFoundError('Campaign', 'startDate and endDate are required');
-    }
-    if (request.multiplier === undefined) {
-      throw new NotFoundError('Campaign', 'multiplier is required');
-    }
+    const type = request.type ?? 'CUSTOM';
 
-    const campaign = Campaign.create(
-      request.merchantId,
-      request.name,
-      request.description ?? '',
-      new Date(request.startDate),
-      new Date(request.endDate),
-      request.multiplier,
-    );
+    const overrides: {
+      name?: string;
+      description?: string;
+      startDate?: Date;
+      endDate?: Date;
+      multiplier?: number;
+      message?: string;
+    } = {};
+    if (request.name) overrides.name = request.name;
+    if (request.description) overrides.description = request.description;
+    if (request.startDate) overrides.startDate = new Date(request.startDate);
+    if (request.endDate) overrides.endDate = new Date(request.endDate);
+    if (request.multiplier !== undefined) overrides.multiplier = request.multiplier;
+    if (request.message) overrides.message = request.message;
 
-    await this.atomicWrite(this.campaignRepository.toPersistenceItem(campaign));
+    const campaign = Campaign.create(request.merchantId, type, overrides);
+
+    // Auto-create a linked perk on the merchant so the customer portal shows it
+    const perkType = type !== 'CUSTOM' ? CAMPAIGN_DEFAULTS[type].perkType : 'SPEND_BONUS';
+
+    const perk = merchant.addPerk({
+      type: perkType,
+      title: campaign.getName(),
+      description: campaign.getDescription(),
+      requiredTier: 'BRONZE' as CustomerTierLevel,
+    });
+    campaign.setLinkedPerkId(perk.id);
+
+    // Atomically write both campaign + merchant (with new perk)
+    const campaignItems = this.campaignRepository.toPersistenceItem(campaign);
+    const merchantItems = this.merchantRepository.toPersistenceItem(merchant);
+    await this.atomicWrite([...campaignItems, ...merchantItems]);
 
     // Fire-and-forget: notify all merchant customers about the new campaign
     try {
@@ -92,9 +110,12 @@ export class ManageCampaignUseCase {
     }
 
     const endDate = campaign.getEndDate().toLocaleDateString('en-SA');
+    const customMessage = campaign.getMessage();
+    const defaultBody = `${businessName}: ${campaign.getName()} — earn ${campaign.getMultiplier()}x points! Valid until ${endDate}`;
+
     const messages: SmsMessage[] = result.items.map((customer) => ({
       phone: customer.getPhone().toE164(),
-      body: `${businessName}: ${campaign.getName()} — earn ${campaign.getMultiplier()}x points! Valid until ${endDate}`,
+      body: customMessage ? `${businessName}: ${customMessage}` : defaultBody,
       merchantId: campaign.getMerchantId(),
       type: 'CAMPAIGN_NOTIFICATION' as const,
     }));
@@ -118,6 +139,24 @@ export class ManageCampaignUseCase {
     }
 
     campaign.deactivate();
+
+    // Also deactivate the linked perk on the merchant
+    const linkedPerkId = campaign.getLinkedPerkId();
+    if (linkedPerkId) {
+      const merchant = await this.merchantRepository.findById(request.merchantId);
+      if (merchant) {
+        try {
+          merchant.removePerk(linkedPerkId);
+          const campaignItems = this.campaignRepository.toPersistenceItem(campaign);
+          const merchantItems = this.merchantRepository.toPersistenceItem(merchant);
+          await this.atomicWrite([...campaignItems, ...merchantItems]);
+          return undefined;
+        } catch {
+          // If perk already removed, just save the campaign
+        }
+      }
+    }
+
     await this.atomicWrite(this.campaignRepository.toPersistenceItem(campaign));
     return undefined;
   }

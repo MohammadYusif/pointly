@@ -51,6 +51,8 @@ export type {
   PublicMerchantDetail,
   CustomerMerchantView,
   PerkInsights,
+  CustomerInsights,
+  CampaignType,
   CampaignResponse,
   ChallengeType,
   ChallengeProgressResponse,

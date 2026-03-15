@@ -1,13 +1,14 @@
 import type {
   AnalyticsData,
   CampaignResponse,
+  CampaignType,
+  CustomerInsights,
   CustomerResponse,
   MerchantPerk,
   MerchantResponse,
   MerchantScopedCustomerResponse,
   MerchantStatsResponse,
   PaginatedResponse,
-  PerkInsights,
   RecordPurchaseResponse,
   RedeemPointsResponse,
   TransactionResponse,
@@ -184,46 +185,12 @@ export const purchaseApi = {
     }),
 };
 
-// Perk API
+// Perk API (read-only — perks are now auto-managed by campaigns)
 export const perkApi = {
   getPerks: (merchantId: string) => fetchApi<MerchantPerk[]>(`/v1/merchants/${merchantId}/perks`),
 
-  createPerk: (
-    merchantId: string,
-    data: {
-      type: string;
-      title: string;
-      description: string;
-      requiredTier: string;
-      capacityLimit?: number;
-    },
-  ) =>
-    fetchApi<MerchantPerk>(`/v1/merchants/${merchantId}/perks`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
-  updatePerk: (
-    merchantId: string,
-    perkId: string,
-    data: {
-      title?: string;
-      description?: string;
-      requiredTier?: string;
-      capacityLimit?: number;
-      isActive?: boolean;
-    },
-  ) =>
-    fetchApi<MerchantPerk>(`/v1/merchants/${merchantId}/perks/${perkId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    }),
-
-  deletePerk: (merchantId: string, perkId: string) =>
-    fetchApi<void>(`/v1/merchants/${merchantId}/perks/${perkId}`, { method: 'DELETE' }),
-
   getInsights: (merchantId: string) =>
-    fetchApi<PerkInsights>(`/v1/merchants/${merchantId}/perk-insights`),
+    fetchApi<CustomerInsights>(`/v1/merchants/${merchantId}/customer-insights`),
 };
 
 // Campaign API
@@ -234,11 +201,13 @@ export const campaignApi = {
   create: (
     merchantId: string,
     data: {
-      name: string;
-      description: string;
-      startDate: string;
-      endDate: string;
-      multiplier: number;
+      type: CampaignType;
+      name?: string;
+      description?: string;
+      startDate?: string;
+      endDate?: string;
+      multiplier?: number;
+      message?: string;
     },
   ) =>
     fetchApi<CampaignResponse>(`/v1/merchants/${merchantId}/campaigns`, {
