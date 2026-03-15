@@ -10,7 +10,7 @@ interface CampaignItem {
   EntityType: 'CAMPAIGN';
   campaignId: string;
   merchantId: string;
-  type?: string;
+  type: string;
   name: string;
   description: string;
   startDate: string;
@@ -91,7 +91,7 @@ export class CampaignRepository
     const props: CampaignProps = {
       campaignId: item.campaignId,
       merchantId: item.merchantId,
-      type: (item.type as CampaignType) ?? 'CUSTOM',
+      type: item.type as CampaignType,
       name: item.name,
       description: item.description,
       startDate: new Date(item.startDate),
