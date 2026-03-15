@@ -71,7 +71,8 @@
     "merchants": "التجار",
     "wallet": "المحفظة",
     "badges": "الشارات",
-    "history": "السجل"
+    "history": "السجل",
+    "marketing": "التسويق"
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -387,6 +388,75 @@
     "section4Body": "قد نحدّث هذه الشروط في أي وقت. استمرارك في استخدام المنصة يُعدّ قبولاً للشروط المحدّثة.",
     "section5Title": "5. التواصل",
     "section5Body": "للاستفسارات، تواصل معنا على support@pointly.sa."
+  },
+  "campaigns": {
+    "title": "الحملات",
+    "createCampaign": "إنشاء حملة",
+    "activeCampaigns": "الحملات النشطة",
+    "noCampaigns": "لا توجد حملات بعد",
+    "name": "اسم الحملة",
+    "namePlaceholder": "مثال: نقاط مضاعفة في عطلة نهاية الأسبوع",
+    "description": "الوصف",
+    "descriptionPlaceholder": "صف الحملة...",
+    "startDate": "تاريخ البدء",
+    "endDate": "تاريخ الانتهاء",
+    "multiplier": "مضاعف النقاط",
+    "multiplierSuffix": "x نقاط",
+    "active": "نشطة",
+    "expired": "منتهية",
+    "scheduled": "مجدولة",
+    "deactivate": "إلغاء التنشيط",
+    "createSuccess": "تم إنشاء الحملة بنجاح",
+    "deactivateSuccess": "تم إلغاء تنشيط الحملة",
+    "deleteSuccess": "تم حذف الحملة",
+    "dateError": "يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء",
+    "multiplierError": "يجب أن يكون المضاعف بين 1.0 و 5.0"
+  },
+  "challenges": {
+    "title": "التحديات",
+    "activeChallenges": "التحديات النشطة",
+    "noChallenges": "لا توجد تحديات نشطة",
+    "weeklyStreak": "سلسلة الزيارات الأسبوعية",
+    "weeklyStreakDesc": "قم بزيارة {{count}} مرات هذا الأسبوع لكسب نقاط إضافية",
+    "progress": "{{current}} من {{target}} زيارات",
+    "bonusReward": "+{{points}} نقاط إضافية",
+    "completed": "مكتمل!",
+    "timeRemaining": "{{days}} أيام متبقية",
+    "streakComplete": "اكتملت السلسلة! تم منح النقاط الإضافية."
+  },
+  "webhooks": {
+    "title": "الويب هوك",
+    "createWebhook": "إضافة ويب هوك",
+    "noWebhooks": "لم يتم تكوين ويب هوك",
+    "url": "رابط الويب هوك",
+    "urlPlaceholder": "https://your-system.com/webhook",
+    "events": "الأحداث",
+    "redemption": "الاستبدال",
+    "secretKey": "المفتاح السري",
+    "secretKeyHint": "يُستخدم لتوقيع حمولات الويب هوك (HMAC-SHA256)",
+    "createSuccess": "تم تسجيل الويب هوك بنجاح",
+    "deleteSuccess": "تمت إزالة الويب هوك",
+    "active": "نشط",
+    "testWebhook": "اختبار"
+  },
+  "gift": {
+    "title": "إهداء النقاط",
+    "recipientPhone": "رقم هاتف المستلم",
+    "recipientPhonePlaceholder": "+966 5XX XXX XXXX",
+    "pointsToGift": "النقاط المراد إهداؤها",
+    "message": "رسالة (اختياري)",
+    "messagePlaceholder": "مثال: عيد ميلاد سعيد!",
+    "send": "إرسال النقاط",
+    "confirmTitle": "تأكيد الإهداء",
+    "confirmMessage": "إرسال {{points}} نقطة إلى {{phone}}؟",
+    "success": "تم إرسال النقاط بنجاح!",
+    "insufficientPoints": "ليس لديك نقاط كافية",
+    "invalidPhone": "يرجى إدخال رقم هاتف صحيح",
+    "minPoints": "مطلوب نقطة واحدة على الأقل"
+  },
+  "marketing": {
+    "title": "التسويق",
+    "subtitle": "إدارة الحملات والتكاملات"
   },
   "privacy": {
     "title": "سياسة الخصوصية",

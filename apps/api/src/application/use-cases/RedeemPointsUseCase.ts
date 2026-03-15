@@ -12,7 +12,9 @@ import type { LoyaltyConfiguration } from '../../domain';
 import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
 import type { ITransactionRepository } from '../repositories/ITransactionRepository';
+import type { IWebhookConfigRepository } from '../repositories/IWebhookConfigRepository';
 import type { IIdempotencyService } from '../services/IIdempotencyService';
+import type { IOutgoingWebhookService } from '../services/IOutgoingWebhookService';
 import type { PersistenceItem } from '../shared/interfaces/BaseRepository';
 
 const IDEMPOTENCY_TTL_SECONDS = 3600;
@@ -64,6 +66,8 @@ export class RedeemPointsUseCase {
     private transactionRepository: ITransactionRepository,
     private idempotencyService: IIdempotencyService,
     private atomicWrite: (items: PersistenceItem[]) => Promise<void>,
+    private webhookConfigRepository?: IWebhookConfigRepository,
+    private outgoingWebhookService?: IOutgoingWebhookService,
   ) {}
 
   async execute(request: RedeemPointsRequest): Promise<RedeemPointsResponse> {
@@ -167,6 +171,28 @@ export class RedeemPointsUseCase {
       response,
       IDEMPOTENCY_TTL_SECONDS,
     );
+
+    if (this.webhookConfigRepository && this.outgoingWebhookService) {
+      const webhookConfigRepo = this.webhookConfigRepository;
+      const webhookService = this.outgoingWebhookService;
+      webhookConfigRepo
+        .findByMerchant(request.merchantId)
+        .then((configs) => {
+          for (const config of configs) {
+            if (config.supportsEvent('REDEMPTION')) {
+              webhookService.send(config, 'REDEMPTION', {
+                customerId: request.customerId,
+                merchantId: request.merchantId,
+                pointsRedeemed: request.pointsToRedeem,
+                sarValue,
+                transactionIds,
+                timestamp: new Date().toISOString(),
+              });
+            }
+          }
+        })
+        .catch(() => {});
+    }
 
     return response;
   }

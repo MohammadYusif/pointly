@@ -275,6 +275,32 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
     return reply.send({ success: true, data: results });
   });
 
+  // GET /v1/me/challenges — Weekly streak progress
+  server.get('/challenges', async (request: FastifyRequest, reply: FastifyReply) => {
+    const { customerId } = request;
+    if (!customerId) {
+      throw new ValidationError('Customer ID not found in token');
+    }
+
+    const container = getContainer();
+    const customer = await container.customerRepository.findById(customerId);
+    if (!customer) {
+      return reply.status(404).send({ success: false, error: 'Customer not found' });
+    }
+
+    return reply.send({
+      success: true,
+      data: {
+        weeklyStreakChallenge: {
+          target: 3,
+          current: customer.getWeeklyVisitCount(),
+          lastResetAt: customer.getLastStreakResetAt().toISOString(),
+          visitDates: customer.getWeeklyVisitDates(),
+        },
+      },
+    });
+  });
+
   // DELETE /v1/me — Permanently delete account (DynamoDB + Cognito)
   server.delete('/', async (request: FastifyRequest, reply: FastifyReply) => {
     const { customerId, cognitoPhone } = request;

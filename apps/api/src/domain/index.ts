@@ -40,6 +40,12 @@ export type {
   TransactionMetadata,
 } from './entities/Transaction';
 
+export { Campaign } from './entities/Campaign';
+export type { CampaignProps } from './entities/Campaign';
+
+export { WebhookConfig, SUPPORTED_WEBHOOK_EVENTS } from './entities/WebhookConfig';
+export type { WebhookConfigProps, WebhookEventType } from './entities/WebhookConfig';
+
 // Errors
 export {
   DomainError,

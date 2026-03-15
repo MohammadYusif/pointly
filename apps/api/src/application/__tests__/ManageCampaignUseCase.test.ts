@@ -1,0 +1,201 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  Campaign,
+  Email,
+  Merchant,
+  MerchantTier,
+  NotFoundError,
+  PhoneNumber,
+  UnauthorizedError,
+} from '../../domain';
+import type { ICampaignRepository } from '../repositories/ICampaignRepository';
+import type { IMerchantRepository } from '../repositories/IMerchantRepository';
+import { ManageCampaignUseCase } from '../use-cases/ManageCampaignUseCase';
+
+describe('ManageCampaignUseCase', () => {
+  let useCase: ManageCampaignUseCase;
+  let mockMerchantRepo: IMerchantRepository;
+  let mockCampaignRepo: ICampaignRepository;
+  let mockAtomicWrite: ReturnType<typeof vi.fn>;
+
+  let testMerchant: Merchant;
+
+  const merchantId = 'merchant_123';
+
+  beforeEach(() => {
+    const email = new Email('merchant@example.com');
+    const phone = new PhoneNumber('0509876543');
+    testMerchant = Merchant.create('Test Store', email, phone, 'Owner', MerchantTier.PROFESSIONAL);
+    testMerchant.verify();
+
+    mockAtomicWrite = vi.fn().mockResolvedValue(undefined);
+
+    mockMerchantRepo = {
+      findById: vi.fn(),
+      save: vi.fn(),
+      delete: vi.fn(),
+      exists: vi.fn(),
+      findByEmail: vi.fn(),
+      findByPhone: vi.fn(),
+      findVerified: vi.fn(),
+      findPendingVerification: vi.fn(),
+      findByTier: vi.fn(),
+      // biome-ignore lint/suspicious/noExplicitAny: test mock returns empty persistence items
+      toPersistenceItem: vi.fn().mockReturnValue([]) as any,
+    };
+
+    mockCampaignRepo = {
+      findById: vi.fn(),
+      save: vi.fn(),
+      delete: vi.fn(),
+      exists: vi.fn(),
+      findByMerchant: vi.fn(),
+      findActiveCampaignsForMerchant: vi.fn(),
+      // biome-ignore lint/suspicious/noExplicitAny: test mock returns empty persistence items
+      toPersistenceItem: vi.fn().mockReturnValue([]) as any,
+    };
+
+    useCase = new ManageCampaignUseCase(mockMerchantRepo, mockCampaignRepo, mockAtomicWrite);
+  });
+
+  describe('create', () => {
+    it('should create a campaign for a verified merchant', async () => {
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+
+      const result = await useCase.execute({
+        action: 'create',
+        merchantId,
+        name: 'Summer Sale',
+        description: 'Double points all summer',
+        startDate: '2026-06-01T00:00:00.000Z',
+        endDate: '2026-08-31T23:59:59.000Z',
+        multiplier: 2.0,
+      });
+
+      expect(result).toBeInstanceOf(Campaign);
+      const campaign = result as Campaign;
+      expect(campaign.getName()).toBe('Summer Sale');
+      expect(campaign.getMultiplier()).toBe(2.0);
+      expect(campaign.getMerchantId()).toBe(merchantId);
+      expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw NotFoundError if merchant does not exist', async () => {
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(null);
+
+      await expect(
+        useCase.execute({
+          action: 'create',
+          merchantId: 'nonexistent',
+          name: 'Sale',
+          startDate: '2026-06-01T00:00:00.000Z',
+          endDate: '2026-08-31T23:59:59.000Z',
+          multiplier: 2.0,
+        }),
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw UnauthorizedError if merchant is not verified', async () => {
+      const unverifiedMerchant = Merchant.create(
+        'Unverified',
+        new Email('unverified@example.com'),
+        new PhoneNumber('0503333333'),
+        'Owner',
+        MerchantTier.BASIC,
+      );
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(unverifiedMerchant);
+
+      await expect(
+        useCase.execute({
+          action: 'create',
+          merchantId,
+          name: 'Sale',
+          startDate: '2026-06-01T00:00:00.000Z',
+          endDate: '2026-08-31T23:59:59.000Z',
+          multiplier: 2.0,
+        }),
+      ).rejects.toThrow(UnauthorizedError);
+    });
+  });
+
+  describe('list', () => {
+    it('should return campaigns for a merchant', async () => {
+      const campaign = Campaign.create(
+        merchantId,
+        'Test Campaign',
+        'Desc',
+        new Date('2026-06-01'),
+        new Date('2026-08-31'),
+        1.5,
+      );
+      vi.mocked(mockCampaignRepo.findByMerchant).mockResolvedValue({
+        items: [campaign],
+        count: 1,
+        nextToken: undefined,
+      });
+
+      const result = await useCase.execute({ action: 'list', merchantId });
+
+      expect(result).toBeDefined();
+      const queryResult = result as { items: Campaign[]; count: number };
+      expect(queryResult.items).toHaveLength(1);
+      expect(queryResult.items[0]?.getName()).toBe('Test Campaign');
+    });
+
+    it('should return empty list when no campaigns exist', async () => {
+      vi.mocked(mockCampaignRepo.findByMerchant).mockResolvedValue({
+        items: [],
+        count: 0,
+        nextToken: undefined,
+      });
+
+      const result = await useCase.execute({ action: 'list', merchantId });
+
+      const queryResult = result as { items: Campaign[]; count: number };
+      expect(queryResult.items).toHaveLength(0);
+    });
+  });
+
+  describe('deactivate', () => {
+    it('should deactivate an existing campaign', async () => {
+      const campaign = Campaign.create(
+        merchantId,
+        'Summer Sale',
+        'Desc',
+        new Date('2026-06-01'),
+        new Date('2026-08-31'),
+        2.0,
+      );
+      vi.mocked(mockCampaignRepo.findByMerchant).mockResolvedValue({
+        items: [campaign],
+        count: 1,
+        nextToken: undefined,
+      });
+
+      await useCase.execute({
+        action: 'deactivate',
+        merchantId,
+        campaignId: campaign.getCampaignId(),
+      });
+
+      expect(campaign.getIsActive()).toBe(false);
+      expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw NotFoundError if campaign does not exist', async () => {
+      vi.mocked(mockCampaignRepo.findByMerchant).mockResolvedValue({
+        items: [],
+        count: 0,
+        nextToken: undefined,
+      });
+
+      await expect(
+        useCase.execute({
+          action: 'deactivate',
+          merchantId,
+          campaignId: 'nonexistent_campaign',
+        }),
+      ).rejects.toThrow(NotFoundError);
+    });
+  });
+});

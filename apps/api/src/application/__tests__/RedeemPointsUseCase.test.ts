@@ -9,11 +9,14 @@ import {
   Points,
   UnauthorizedError,
   ValidationError,
+  WebhookConfig,
 } from '../../domain';
 import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
 import type { ITransactionRepository } from '../repositories/ITransactionRepository';
+import type { IWebhookConfigRepository } from '../repositories/IWebhookConfigRepository';
 import type { IIdempotencyService } from '../services/IIdempotencyService';
+import type { IOutgoingWebhookService } from '../services/IOutgoingWebhookService';
 import { RedeemPointsUseCase } from '../use-cases/RedeemPointsUseCase';
 
 describe('RedeemPointsUseCase', () => {
@@ -342,6 +345,102 @@ describe('RedeemPointsUseCase', () => {
 
       expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
       expect(vi.mocked(mockIdempotencyService.storeResult)).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Webhook Integration', () => {
+    it('should fire webhook for REDEMPTION event when configured', async () => {
+      const mockWebhookRepo: IWebhookConfigRepository = {
+        findByMerchant: vi.fn(),
+        save: vi.fn(),
+        delete: vi.fn(),
+        // biome-ignore lint/suspicious/noExplicitAny: test mock returns empty persistence items
+        toPersistenceItem: vi.fn().mockReturnValue([]) as any,
+      };
+
+      const mockWebhookService: IOutgoingWebhookService = {
+        send: vi.fn().mockResolvedValue(undefined),
+      };
+
+      const webhookConfig = WebhookConfig.create(
+        merchantId,
+        'https://example.com/webhook',
+        'supersecretkey1234567890',
+        ['REDEMPTION'],
+      );
+      vi.mocked(mockWebhookRepo.findByMerchant).mockResolvedValue([webhookConfig]);
+
+      const useCaseWithWebhook = new RedeemPointsUseCase(
+        mockCustomerRepo,
+        mockMerchantRepo,
+        mockTransactionRepo,
+        mockIdempotencyService,
+        mockAtomicWrite,
+        mockWebhookRepo,
+        mockWebhookService,
+      );
+
+      giveCustomerPoints(500, 200);
+      setupMocks();
+
+      await useCaseWithWebhook.execute({
+        merchantId,
+        customerId: testCustomer.getCustomerId(),
+        pointsToRedeem: 100,
+        idempotencyKey: 'webhook_test_key',
+      });
+
+      // Give the fire-and-forget a tick to run
+      await Promise.resolve();
+
+      expect(vi.mocked(mockWebhookRepo.findByMerchant)).toHaveBeenCalledWith(merchantId);
+      expect(vi.mocked(mockWebhookService.send)).toHaveBeenCalledWith(
+        webhookConfig,
+        'REDEMPTION',
+        expect.objectContaining({
+          customerId: testCustomer.getCustomerId(),
+          merchantId,
+          pointsRedeemed: 100,
+        }),
+      );
+    });
+
+    it('should not fire webhook when no webhook config exists', async () => {
+      const mockWebhookRepo: IWebhookConfigRepository = {
+        findByMerchant: vi.fn().mockResolvedValue([]),
+        save: vi.fn(),
+        delete: vi.fn(),
+        // biome-ignore lint/suspicious/noExplicitAny: test mock returns empty persistence items
+        toPersistenceItem: vi.fn().mockReturnValue([]) as any,
+      };
+
+      const mockWebhookService: IOutgoingWebhookService = {
+        send: vi.fn().mockResolvedValue(undefined),
+      };
+
+      const useCaseWithWebhook = new RedeemPointsUseCase(
+        mockCustomerRepo,
+        mockMerchantRepo,
+        mockTransactionRepo,
+        mockIdempotencyService,
+        mockAtomicWrite,
+        mockWebhookRepo,
+        mockWebhookService,
+      );
+
+      giveCustomerPoints(500, 200);
+      setupMocks();
+
+      await useCaseWithWebhook.execute({
+        merchantId,
+        customerId: testCustomer.getCustomerId(),
+        pointsToRedeem: 100,
+        idempotencyKey: 'no_webhook_key',
+      });
+
+      await Promise.resolve();
+
+      expect(vi.mocked(mockWebhookService.send)).not.toHaveBeenCalled();
     });
   });
 });

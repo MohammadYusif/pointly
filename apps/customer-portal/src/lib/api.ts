@@ -94,6 +94,25 @@ export function getMerchantDetail(merchantId: string) {
   return fetchApi<PublicMerchantDetail>(`/v1/merchants/info/${merchantId}`);
 }
 
+export function getMyChallenges() {
+  return fetchApi<{
+    weeklyVisitCount: number;
+    weeklyVisitDates: string[];
+    lastStreakResetAt: string;
+  }>('/v1/me/challenges');
+}
+
+export function giftPoints(data: {
+  recipientPhone: string;
+  points: number;
+  idempotencyKey: string;
+}) {
+  return fetchApi<{ success: boolean }>('/v1/me/gift', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
 export async function deleteAccount(): Promise<void> {
   const url = `${API_BASE_URL}/v1/me`;
   const token = await getAccessToken();

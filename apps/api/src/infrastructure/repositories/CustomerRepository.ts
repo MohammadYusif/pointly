@@ -36,6 +36,8 @@ interface CustomerItem {
   decayStartDate: string | undefined;
   lastDecayAppliedAt: string | undefined;
   lastInactivityWarningSentAt: string | undefined;
+  weeklyVisitDates?: string[];
+  lastStreakResetAt?: string;
   enrollments: EnrollmentItem[];
   createdAt: string;
   updatedAt: string;
@@ -302,6 +304,8 @@ export class CustomerRepository
         createdAt,
       ),
       globalPointsDecayPhase: customerItem.globalPointsDecayPhase ?? 0,
+      weeklyVisitDates: customerItem.weeklyVisitDates || [],
+      lastStreakResetAt: CustomerRepository.parseDate(customerItem.lastStreakResetAt, createdAt),
       enrollments,
       createdAt,
       updatedAt: new Date(customerItem.updatedAt),
@@ -376,6 +380,8 @@ export class CustomerRepository
       decayStartDate: json.decayStartDate,
       lastDecayAppliedAt: json.lastDecayAppliedAt,
       lastInactivityWarningSentAt: json.lastInactivityWarningSentAt,
+      weeklyVisitDates: json.weeklyVisitDates,
+      lastStreakResetAt: json.lastStreakResetAt,
       enrollments,
       createdAt: json.createdAt,
       updatedAt: json.updatedAt,

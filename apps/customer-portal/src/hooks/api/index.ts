@@ -9,3 +9,5 @@ export {
 export { useMyPerks } from './use-perks';
 export { useGenerateQR } from './use-qr';
 export { useDeleteAccount } from './use-delete-account';
+export { useMyChallenges } from './use-challenges';
+export { useGiftPoints } from './use-gift';

@@ -4,12 +4,19 @@ import { CustomerLayout } from '@/components/CustomerLayout';
 import { DecayWarning } from '@/components/DecayWarning';
 import { PointsCard } from '@/components/PointsCard';
 import { ProgressRing } from '@/components/ProgressRing';
-import { useCustomer, useMyMerchants } from '@/hooks/api';
+import { useCustomer, useGiftPoints, useMyMerchants } from '@/hooks/api';
 import { useTranslation } from '@pointly/i18n';
 import type { CustomerEnrollment } from '@pointly/shared';
-import { DEFAULT_REDEMPTION_RATE, getTierColor, getTierTarget } from '@pointly/shared';
-import { Button, Card, CardContent, CardHeader, CardTitle, useRTL } from '@pointly/ui';
-import { useMemo } from 'react';
+import {
+  DEFAULT_REDEMPTION_RATE,
+  getTierColor,
+  getTierTarget,
+  isValidSaudiPhone,
+  normalizePhone,
+} from '@pointly/shared';
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
+import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 function WalletSkeleton() {
   return (
@@ -24,6 +31,98 @@ function WalletSkeleton() {
       <div className="h-40 skeleton rounded-xl" />
       <div className="h-32 skeleton rounded-xl" />
     </div>
+  );
+}
+
+interface GiftCardProps {
+  maxPoints: number;
+}
+
+function GiftCard({ maxPoints }: GiftCardProps) {
+  const { t } = useTranslation();
+  const giftMutation = useGiftPoints();
+  const [showGift, setShowGift] = useState(false);
+  const [giftPhone, setGiftPhone] = useState('');
+  const [giftPoints, setGiftPoints] = useState('');
+
+  const handleGiftPoints = async () => {
+    const points = Number.parseInt(giftPoints, 10);
+    if (!points || points < 1) {
+      toast.error(t('gift.minPoints'));
+      return;
+    }
+    if (points > maxPoints) {
+      toast.error(t('gift.insufficientPoints'));
+      return;
+    }
+    if (!isValidSaudiPhone(giftPhone)) {
+      toast.error(t('gift.invalidPhone'));
+      return;
+    }
+    try {
+      await giftMutation.mutateAsync({
+        recipientPhone: normalizePhone(giftPhone),
+        points,
+        idempotencyKey: crypto.randomUUID(),
+      });
+      toast.success(t('gift.success'));
+      setGiftPhone('');
+      setGiftPoints('');
+      setShowGift(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.error'));
+    }
+  };
+
+  return (
+    <Card className="stagger-item">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-base">{t('gift.title')}</CardTitle>
+        <Button variant="outline" size="sm" onClick={() => setShowGift(!showGift)}>
+          {t('gift.send')}
+        </Button>
+      </CardHeader>
+      {showGift && (
+        <CardContent className="space-y-3">
+          <div>
+            <label htmlFor="gift-phone" className="text-sm text-muted-foreground block mb-1">
+              {t('gift.recipientPhone')}
+            </label>
+            <Input
+              id="gift-phone"
+              placeholder={t('gift.recipientPhonePlaceholder')}
+              value={giftPhone}
+              onChange={(e) => setGiftPhone(e.target.value)}
+              dir="ltr"
+            />
+          </div>
+          <div>
+            <label htmlFor="gift-points" className="text-sm text-muted-foreground block mb-1">
+              {t('gift.pointsToGift')}
+            </label>
+            <Input
+              id="gift-points"
+              type="number"
+              min="1"
+              max={maxPoints}
+              value={giftPoints}
+              onChange={(e) => setGiftPoints(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => setShowGift(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              onClick={handleGiftPoints}
+              disabled={giftMutation.isPending || !giftPhone || !giftPoints}
+            >
+              {giftMutation.isPending ? t('common.loading') : t('gift.send')}
+            </Button>
+          </div>
+        </CardContent>
+      )}
+    </Card>
   );
 }
 
@@ -74,6 +173,13 @@ export default function WalletPage() {
     (sum: number, e: CustomerEnrollment) => sum + (e.merchantPointsBalance || 0),
     0,
   );
+
+  const decayPhaseLabel =
+    customer.globalPointsDecayPhase === 0
+      ? t('wallet.phase0')
+      : customer.globalPointsDecayPhase === 1
+        ? t('wallet.phase1')
+        : t('wallet.phase2');
 
   return (
     <CustomerLayout>
@@ -168,13 +274,7 @@ export default function WalletPage() {
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t('wallet.decayPhase')}</span>
-              <span className="font-medium">
-                {customer.globalPointsDecayPhase === 0
-                  ? t('wallet.phase0')
-                  : customer.globalPointsDecayPhase === 1
-                    ? t('wallet.phase1')
-                    : t('wallet.phase2')}
-              </span>
+              <span className="font-medium">{decayPhaseLabel}</span>
             </div>
           </CardContent>
         </Card>
@@ -188,6 +288,9 @@ export default function WalletPage() {
             decayPhase={customer.globalPointsDecayPhase}
           />
         )}
+
+        {/* Gift Points */}
+        <GiftCard maxPoints={customer.globalPointsBalance} />
       </div>
     </CustomerLayout>
   );
