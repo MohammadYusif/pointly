@@ -7,6 +7,7 @@ import type {
   MerchantScopedCustomerResponse,
   MerchantStatsResponse,
   PaginatedResponse,
+  PerkInsights,
   RecordPurchaseResponse,
   RedeemPointsResponse,
   TransactionResponse,
@@ -220,6 +221,9 @@ export const perkApi = {
 
   deletePerk: (merchantId: string, perkId: string) =>
     fetchApi<void>(`/v1/merchants/${merchantId}/perks/${perkId}`, { method: 'DELETE' }),
+
+  getInsights: (merchantId: string) =>
+    fetchApi<PerkInsights>(`/v1/merchants/${merchantId}/perk-insights`),
 };
 
 // Campaign API

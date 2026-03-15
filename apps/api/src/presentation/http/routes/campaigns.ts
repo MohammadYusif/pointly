@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import type { Campaign } from '../../../domain/entities/Campaign';
 import { ForbiddenError } from '../../../domain/errors/DomainError';
 import { getContainer } from '../container';
 
@@ -48,7 +49,8 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
         multiplier: body.multiplier,
       });
 
-      return reply.status(201).send({ success: true, data: result?.toJSON() });
+      const campaign = result as Campaign | undefined;
+      return reply.status(201).send({ success: true, data: campaign?.toJSON() });
     },
   );
 

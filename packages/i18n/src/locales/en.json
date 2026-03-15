@@ -273,10 +273,28 @@
     "earlyAccess": "Early Access",
     "exclusiveProduct": "Exclusive Product",
     "event": "Event",
+    "birthdayReward": "Birthday Reward",
+    "birthdayRewardHint": "Double points on customer's birthday month",
+    "spendBonus": "Spend Bonus",
+    "spendBonusHint": "Bonus points when customers spend above a threshold",
+    "referralBonus": "Referral Bonus",
+    "referralBonusHint": "Reward customers for referring friends",
+    "happyHour": "Happy Hour",
+    "happyHourHint": "Time-limited point multiplier during specific hours",
+    "winBack": "Win-Back",
+    "winBackHint": "Re-engage customers who haven't visited recently",
+    "welcomeOffer": "Welcome Offer",
+    "welcomeOfferHint": "Bonus points for newly enrolled customers",
     "perkType": "Perk Type",
     "requiredTier": "Required Tier",
     "description": "Description",
     "title_field": "Title"
+  },
+  "perkInsights": {
+    "birthdayThisMonth": "birthdays this month",
+    "inactiveCustomers": "inactive 60+ days",
+    "newCustomers": "new this month",
+    "totalCustomers": "total customers"
   },
   "expiry": {
     "pointsExpireIn": "Your points expire in",
@@ -456,7 +474,7 @@
   },
   "marketing": {
     "title": "Marketing",
-    "subtitle": "Manage campaigns and integrations"
+    "subtitle": "Manage campaigns and promotions"
   },
   "privacy": {
     "title": "Privacy Policy",

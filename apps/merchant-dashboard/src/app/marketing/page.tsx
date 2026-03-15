@@ -4,12 +4,13 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import {
   useCampaigns,
   useCreateCampaign,
-  useCreateWebhook,
+  useCreatePerk,
   useDeactivateCampaign,
-  useDeleteWebhook,
-  useWebhooks,
+  useDeletePerk,
+  usePerkInsights,
+  usePerks,
 } from '@/hooks/api';
-import type { CampaignResponse } from '@/types/api';
+import type { CampaignResponse, MerchantPerk } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
 import { useState } from 'react';
@@ -57,9 +58,12 @@ export default function MarketingPage() {
   const createCampaign = useCreateCampaign();
   const deactivateCampaign = useDeactivateCampaign();
 
-  const { data: webhooks, isLoading: webhooksLoading } = useWebhooks();
-  const createWebhook = useCreateWebhook();
-  const deleteWebhook = useDeleteWebhook();
+  const { data: perksData, isLoading: perksLoading } = usePerks();
+  const perks = (perksData as MerchantPerk[] | undefined) || [];
+  const createPerk = useCreatePerk();
+  const deletePerk = useDeletePerk();
+
+  const { data: insights } = usePerkInsights();
 
   // Campaign form state
   const [showCreateCampaign, setShowCreateCampaign] = useState(false);
@@ -69,10 +73,12 @@ export default function MarketingPage() {
   const [campaignEnd, setCampaignEnd] = useState('');
   const [campaignMultiplier, setCampaignMultiplier] = useState('2');
 
-  // Webhook form state
-  const [showCreateWebhook, setShowCreateWebhook] = useState(false);
-  const [webhookUrl, setWebhookUrl] = useState('');
-  const [webhookSecret, setWebhookSecret] = useState('');
+  // Perk form state
+  const [showAddPerk, setShowAddPerk] = useState(false);
+  const [perkType, setPerkType] = useState('EARLY_ACCESS');
+  const [perkTitle, setPerkTitle] = useState('');
+  const [perkDescription, setPerkDescription] = useState('');
+  const [perkTier, setPerkTier] = useState('GOLD');
 
   const resetCampaignForm = () => {
     setCampaignName('');
@@ -117,30 +123,28 @@ export default function MarketingPage() {
     }
   };
 
-  const resetWebhookForm = () => {
-    setWebhookUrl('');
-    setWebhookSecret('');
-    setShowCreateWebhook(false);
-  };
-
-  const handleCreateWebhook = async () => {
+  const handleAddPerk = async () => {
+    if (!perkTitle || !perkDescription) return;
     try {
-      await createWebhook.mutateAsync({
-        url: webhookUrl,
-        secretKey: webhookSecret,
-        events: ['REDEMPTION'],
+      await createPerk.mutateAsync({
+        type: perkType,
+        title: perkTitle,
+        description: perkDescription,
+        requiredTier: perkTier,
       });
-      toast.success(t('webhooks.createSuccess'));
-      resetWebhookForm();
+      toast.success(t('success.created'));
+      setShowAddPerk(false);
+      setPerkTitle('');
+      setPerkDescription('');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('common.error'));
     }
   };
 
-  const handleDeleteWebhook = async (webhookId: string) => {
+  const handleDeletePerk = async (perkId: string) => {
     try {
-      await deleteWebhook.mutateAsync(webhookId);
-      toast.success(t('webhooks.deleteSuccess'));
+      await deletePerk.mutateAsync(perkId);
+      toast.success(t('success.deleted'));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('common.error'));
     }
@@ -292,106 +296,129 @@ export default function MarketingPage() {
           </CardContent>
         </Card>
 
-        {/* Webhooks Section */}
+        {/* Perks Manager Section */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>{t('webhooks.title')}</CardTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCreateWebhook(!showCreateWebhook)}
-            >
-              {t('webhooks.createWebhook')}
+            <CardTitle>{t('perks.managedPerks')}</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => setShowAddPerk(!showAddPerk)}>
+              {t('perks.addPerk')}
             </Button>
           </CardHeader>
           <CardContent>
-            {showCreateWebhook && (
-              <div className="mb-4 p-4 border rounded-md space-y-3">
-                <div>
-                  <label htmlFor="webhook-url" className="text-sm text-muted-foreground block mb-1">
-                    {t('webhooks.url')}
-                  </label>
-                  <Input
-                    id="webhook-url"
-                    placeholder={t('webhooks.urlPlaceholder')}
-                    value={webhookUrl}
-                    onChange={(e) => setWebhookUrl(e.target.value)}
-                    dir="ltr"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="webhook-secret"
-                    className="text-sm text-muted-foreground block mb-1"
-                  >
-                    {t('webhooks.secretKey')}
-                  </label>
-                  <Input
-                    id="webhook-secret"
-                    type="password"
-                    value={webhookSecret}
-                    onChange={(e) => setWebhookSecret(e.target.value)}
-                    dir="ltr"
-                  />
+            {/* Perk Insights */}
+            {insights && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                <div className="p-3 border rounded-md text-center">
+                  <p className="text-2xl font-bold text-primary">{insights.birthdayReward.count}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {t('webhooks.secretKeyHint')}
+                    {t('perkInsights.birthdayThisMonth')}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">{t('webhooks.events')}</p>
-                  <label className="flex items-center gap-2 cursor-not-allowed">
-                    <input type="checkbox" checked disabled className="rounded" />
-                    <span className="text-sm">{t('webhooks.redemption')}</span>
-                  </label>
+                <div className="p-3 border rounded-md text-center">
+                  <p className="text-2xl font-bold text-amber-600">{insights.winBack.count}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('perkInsights.inactiveCustomers')}
+                  </p>
                 </div>
+                <div className="p-3 border rounded-md text-center">
+                  <p className="text-2xl font-bold text-green-600">{insights.welcomeOffer.count}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('perkInsights.newCustomers')}
+                  </p>
+                </div>
+                <div className="p-3 border rounded-md text-center">
+                  <p className="text-2xl font-bold text-foreground">{insights.totalCustomers}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('perkInsights.totalCustomers')}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {showAddPerk && (
+              <div className="mb-4 p-4 border rounded-md space-y-3">
+                <select
+                  className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                  value={perkType}
+                  onChange={(e) => setPerkType(e.target.value)}
+                >
+                  <option value="EARLY_ACCESS">{t('perks.earlyAccess')}</option>
+                  <option value="EXCLUSIVE_PRODUCT">{t('perks.exclusiveProduct')}</option>
+                  <option value="EVENT">{t('perks.event')}</option>
+                  <option value="BIRTHDAY_REWARD">{t('perks.birthdayReward')}</option>
+                  <option value="SPEND_BONUS">{t('perks.spendBonus')}</option>
+                  <option value="REFERRAL_BONUS">{t('perks.referralBonus')}</option>
+                  <option value="HAPPY_HOUR">{t('perks.happyHour')}</option>
+                  <option value="WIN_BACK">{t('perks.winBack')}</option>
+                  <option value="WELCOME_OFFER">{t('perks.welcomeOffer')}</option>
+                </select>
+                <select
+                  className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                  value={perkTier}
+                  onChange={(e) => setPerkTier(e.target.value)}
+                >
+                  <option value="BRONZE">{t('tier.bronze')}</option>
+                  <option value="GOLD">{t('tier.gold')}</option>
+                  <option value="PLATINUM">{t('tier.platinum')}</option>
+                  <option value="DIAMOND">{t('tier.diamond')}</option>
+                </select>
+                <Input
+                  placeholder={t('perks.title_field')}
+                  value={perkTitle}
+                  onChange={(e) => setPerkTitle(e.target.value)}
+                />
+                <Input
+                  placeholder={t('perks.description')}
+                  value={perkDescription}
+                  onChange={(e) => setPerkDescription(e.target.value)}
+                />
                 <div className="flex gap-3">
-                  <Button variant="outline" onClick={resetWebhookForm}>
+                  <Button variant="outline" onClick={() => setShowAddPerk(false)}>
                     {t('common.cancel')}
                   </Button>
                   <Button
-                    onClick={handleCreateWebhook}
-                    disabled={createWebhook.isPending || !webhookUrl || !webhookSecret}
+                    onClick={handleAddPerk}
+                    disabled={createPerk.isPending || !perkTitle || !perkDescription}
                   >
-                    {createWebhook.isPending ? t('common.loading') : t('common.save')}
+                    {createPerk.isPending ? t('common.loading') : t('common.save')}
                   </Button>
                 </div>
               </div>
             )}
 
-            {webhooksLoading ? (
+            {perksLoading ? (
               <p className="text-center text-muted-foreground py-4">{t('common.loading')}</p>
-            ) : !webhooks || webhooks.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                {t('webhooks.noWebhooks')}
-              </p>
             ) : (
               <div className="space-y-2">
-                {webhooks.map((webhook) => (
-                  <div
-                    key={webhook.webhookId}
-                    className="flex items-center justify-between p-3 border rounded-md"
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm" dir="ltr">
-                          {webhook.url}
-                        </p>
-                        <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
-                          {t('webhooks.active')}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{webhook.events.join(', ')}</p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteWebhook(webhook.webhookId)}
-                      disabled={deleteWebhook.isPending}
+                {perks
+                  .filter((p) => p.isActive)
+                  .map((perk) => (
+                    <div
+                      key={perk.id}
+                      className="flex items-center justify-between p-3 border rounded-md"
                     >
-                      {t('common.delete')}
-                    </Button>
-                  </div>
-                ))}
+                      <div>
+                        <p className="font-medium">{perk.title}</p>
+                        <p className="text-sm text-muted-foreground">{perk.description}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {perk.type} · {perk.requiredTier}+
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeletePerk(perk.id)}
+                        disabled={deletePerk.isPending}
+                      >
+                        {t('common.delete')}
+                      </Button>
+                    </div>
+                  ))}
+                {perks.filter((p) => p.isActive).length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    {t('common.noData')}
+                  </p>
+                )}
               </div>
             )}
           </CardContent>

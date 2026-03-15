@@ -103,6 +103,16 @@ export function useDeletePerk() {
   });
 }
 
+export function usePerkInsights() {
+  const { merchant } = useAuth();
+  return useQuery({
+    queryKey: ['merchant', merchant?.merchantId, 'perk-insights'],
+    // biome-ignore lint/style/noNonNullAssertion: enabled guard ensures merchantId exists
+    queryFn: () => perkApi.getInsights(merchant!.merchantId),
+    enabled: !!merchant?.merchantId,
+  });
+}
+
 export function useInfiniteTransactions(
   limit = 50,
   locationId?: string,

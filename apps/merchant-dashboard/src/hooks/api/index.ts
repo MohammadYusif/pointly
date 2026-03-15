@@ -8,6 +8,7 @@ export {
   usePerks,
   useCreatePerk,
   useDeletePerk,
+  usePerkInsights,
 } from './use-merchant';
 export {
   useCustomerByPhone,

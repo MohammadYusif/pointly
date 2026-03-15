@@ -1,16 +1,9 @@
 'use client';
 
 import { DashboardLayout } from '@/components/DashboardLayout';
-import {
-  useAddLocation,
-  useCreatePerk,
-  useDeletePerk,
-  useMerchant,
-  usePerks,
-  useUpdateMerchant,
-} from '@/hooks/api';
+import { useAddLocation, useMerchant, useUpdateMerchant } from '@/hooks/api';
 import { useAuth } from '@/lib/auth-context';
-import type { MerchantPerk, MerchantResponse } from '@/types/api';
+import type { MerchantResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
 import { useState } from 'react';
@@ -26,10 +19,6 @@ export default function SettingsPage() {
   const merchant = merchantData as MerchantResponse | undefined;
   const updateMerchant = useUpdateMerchant();
   const addLocation = useAddLocation();
-  const { data: perksData } = usePerks();
-  const perks = (perksData as MerchantPerk[] | undefined) || [];
-  const createPerk = useCreatePerk();
-  const deletePerk = useDeletePerk();
 
   const [isEditing, setIsEditing] = useState(false);
   const [businessName, setBusinessName] = useState('');
@@ -40,12 +29,6 @@ export default function SettingsPage() {
   const [newLocationName, setNewLocationName] = useState('');
   const [newLocationAddress, setNewLocationAddress] = useState('');
   const [newLocationCity, setNewLocationCity] = useState('');
-
-  const [showAddPerk, setShowAddPerk] = useState(false);
-  const [perkType, setPerkType] = useState('EARLY_ACCESS');
-  const [perkTitle, setPerkTitle] = useState('');
-  const [perkDescription, setPerkDescription] = useState('');
-  const [perkTier, setPerkTier] = useState('GOLD');
 
   const startEditing = () => {
     setBusinessName(merchant?.businessName || '');
@@ -86,33 +69,6 @@ export default function SettingsPage() {
   };
 
   const canManageLocations = merchant?.tier === 'PROFESSIONAL' || merchant?.tier === 'ENTERPRISE';
-
-  const handleAddPerk = async () => {
-    if (!authMerchant?.merchantId || !perkTitle || !perkDescription) return;
-    try {
-      await createPerk.mutateAsync({
-        type: perkType,
-        title: perkTitle,
-        description: perkDescription,
-        requiredTier: perkTier,
-      });
-      toast.success(t('success.created'));
-      setShowAddPerk(false);
-      setPerkTitle('');
-      setPerkDescription('');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('errors.serverError'));
-    }
-  };
-
-  const handleDeletePerk = async (perkId: string) => {
-    try {
-      await deletePerk.mutateAsync(perkId);
-      toast.success(t('success.deleted'));
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('errors.serverError'));
-    }
-  };
 
   if (isLoading) {
     return (
@@ -370,95 +326,6 @@ export default function SettingsPage() {
           </Card>
         </div>
       )}
-      {/* Perks Manager Section */}
-      <div className="mt-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>{t('perks.managedPerks')}</CardTitle>
-            <Button variant="outline" size="sm" onClick={() => setShowAddPerk(!showAddPerk)}>
-              {t('perks.addPerk')}
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {showAddPerk && (
-              <div className="mb-4 p-4 border rounded-md space-y-3">
-                <select
-                  className="w-full border rounded-md px-3 py-2 text-sm bg-background"
-                  value={perkType}
-                  onChange={(e) => setPerkType(e.target.value)}
-                >
-                  <option value="EARLY_ACCESS">{t('perks.earlyAccess')}</option>
-                  <option value="EXCLUSIVE_PRODUCT">{t('perks.exclusiveProduct')}</option>
-                  <option value="EVENT">{t('perks.event')}</option>
-                </select>
-                <Input
-                  placeholder={t('perks.title')}
-                  value={perkTitle}
-                  onChange={(e) => setPerkTitle(e.target.value)}
-                />
-                <Input
-                  placeholder={t('perks.description')}
-                  value={perkDescription}
-                  onChange={(e) => setPerkDescription(e.target.value)}
-                />
-                <select
-                  className="w-full border rounded-md px-3 py-2 text-sm bg-background"
-                  value={perkTier}
-                  onChange={(e) => setPerkTier(e.target.value)}
-                >
-                  <option value="BRONZE">Bronze</option>
-                  <option value="GOLD">Gold</option>
-                  <option value="PLATINUM">Platinum</option>
-                  <option value="DIAMOND">Diamond</option>
-                </select>
-                <div className="flex gap-3">
-                  <Button variant="outline" onClick={() => setShowAddPerk(false)}>
-                    {t('common.cancel')}
-                  </Button>
-                  <Button
-                    onClick={handleAddPerk}
-                    disabled={createPerk.isPending || !perkTitle || !perkDescription}
-                  >
-                    {createPerk.isPending ? t('common.loading') : t('common.save')}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              {perks
-                .filter((p) => p.isActive)
-                .map((perk) => (
-                  <div
-                    key={perk.id}
-                    className="flex items-center justify-between p-3 border rounded-md"
-                  >
-                    <div>
-                      <p className="font-medium">{perk.title}</p>
-                      <p className="text-sm text-muted-foreground">{perk.description}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {perk.type} · {perk.requiredTier}+
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeletePerk(perk.id)}
-                      disabled={deletePerk.isPending}
-                    >
-                      {t('common.delete')}
-                    </Button>
-                  </div>
-                ))}
-              {perks.filter((p) => p.isActive).length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  {t('common.noData')}
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
     </DashboardLayout>
   );
 }

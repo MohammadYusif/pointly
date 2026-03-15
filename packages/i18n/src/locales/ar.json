@@ -273,10 +273,28 @@
     "earlyAccess": "وصول مبكر",
     "exclusiveProduct": "منتج حصري",
     "event": "فعالية",
+    "birthdayReward": "مكافأة عيد الميلاد",
+    "birthdayRewardHint": "نقاط مضاعفة في شهر ميلاد العميل",
+    "spendBonus": "مكافأة الإنفاق",
+    "spendBonusHint": "نقاط إضافية عند تجاوز حد الإنفاق",
+    "referralBonus": "مكافأة الإحالة",
+    "referralBonusHint": "مكافأة العملاء على إحالة أصدقائهم",
+    "happyHour": "ساعة التخفيض",
+    "happyHourHint": "مضاعف نقاط لفترة زمنية محدودة",
+    "winBack": "استعادة العملاء",
+    "winBackHint": "إعادة تفاعل العملاء غير النشطين",
+    "welcomeOffer": "عرض الترحيب",
+    "welcomeOfferHint": "نقاط إضافية للعملاء الجدد",
     "perkType": "نوع الميزة",
     "requiredTier": "المستوى المطلوب",
     "description": "الوصف",
     "title_field": "العنوان"
+  },
+  "perkInsights": {
+    "birthdayThisMonth": "أعياد ميلاد هذا الشهر",
+    "inactiveCustomers": "غير نشطين 60+ يوم",
+    "newCustomers": "جدد هذا الشهر",
+    "totalCustomers": "إجمالي العملاء"
   },
   "expiry": {
     "pointsExpireIn": "تنتهي نقاطك خلال",
@@ -456,7 +474,7 @@
   },
   "marketing": {
     "title": "التسويق",
-    "subtitle": "إدارة الحملات والتكاملات"
+    "subtitle": "ادارة الحملات والعروض الترويجية"
   },
   "privacy": {
     "title": "سياسة الخصوصية",

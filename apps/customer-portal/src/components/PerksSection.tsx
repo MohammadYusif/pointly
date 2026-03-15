@@ -9,6 +9,12 @@ const perkTypeKey: Record<string, string> = {
   EARLY_ACCESS: 'perks.earlyAccess',
   EXCLUSIVE_PRODUCT: 'perks.exclusiveProduct',
   EVENT: 'perks.event',
+  BIRTHDAY_REWARD: 'perks.birthdayReward',
+  SPEND_BONUS: 'perks.spendBonus',
+  REFERRAL_BONUS: 'perks.referralBonus',
+  HAPPY_HOUR: 'perks.happyHour',
+  WIN_BACK: 'perks.winBack',
+  WELCOME_OFFER: 'perks.welcomeOffer',
 };
 
 const tierKey: Record<string, string> = {
