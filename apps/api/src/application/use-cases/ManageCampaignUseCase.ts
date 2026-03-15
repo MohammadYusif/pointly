@@ -18,6 +18,7 @@ export interface ManageCampaignRequest {
   multiplier?: number;
   message?: string;
   campaignId?: string;
+  targetTiers?: string[];
 }
 
 export class ManageCampaignUseCase {
@@ -60,6 +61,7 @@ export class ManageCampaignUseCase {
       endDate?: Date;
       multiplier?: number;
       message?: string;
+      targetTiers?: string[];
     } = {};
     if (request.name) overrides.name = request.name;
     if (request.description) overrides.description = request.description;
@@ -67,6 +69,9 @@ export class ManageCampaignUseCase {
     if (request.endDate) overrides.endDate = new Date(request.endDate);
     if (request.multiplier !== undefined) overrides.multiplier = request.multiplier;
     if (request.message) overrides.message = request.message;
+    if (request.targetTiers && request.targetTiers.length > 0) {
+      overrides.targetTiers = request.targetTiers;
+    }
 
     const campaign = Campaign.create(request.merchantId, type, overrides);
 

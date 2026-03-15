@@ -19,6 +19,7 @@ interface CampaignItem {
   isActive: boolean;
   message?: string;
   linkedPerkId?: string;
+  targetTiers?: string[];
   createdAt: string;
 }
 
@@ -98,6 +99,7 @@ export class CampaignRepository
     };
     if (item.message) props.message = item.message;
     if (item.linkedPerkId) props.linkedPerkId = item.linkedPerkId;
+    if (item.targetTiers) props.targetTiers = item.targetTiers;
     return Campaign.reconstitute(props);
   }
 
@@ -119,8 +121,10 @@ export class CampaignRepository
     };
     const message = entity.getMessage();
     const linkedPerkId = entity.getLinkedPerkId();
+    const targetTiers = entity.getTargetTiers();
     if (message) item.message = message;
     if (linkedPerkId) item.linkedPerkId = linkedPerkId;
+    if (targetTiers && targetTiers.length > 0) item.targetTiers = targetTiers;
     return item as unknown as Record<string, unknown>;
   }
 

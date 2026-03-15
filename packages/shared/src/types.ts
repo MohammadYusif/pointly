@@ -95,6 +95,8 @@ export interface CustomerResponse {
   tierColor: string;
   monthlyProgress: number;
   pointsToNextTier: number;
+  campaignMultiplier?: number;
+  campaignName?: string;
   earningMultiplier: number;
   isDecayImmune: boolean;
   tierLastUpdatedAt: string;
@@ -151,6 +153,9 @@ export interface TransactionResponse {
   balanceBefore: number;
   balanceAfter: number;
   metadata: Record<string, string>;
+  campaignId?: string;
+  campaignName?: string;
+  campaignMultiplier?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -173,6 +178,8 @@ export interface RecordPurchaseResponse {
   earningMultiplier: number;
   isDecayImmune: boolean;
   pointsToNextTier: number;
+  campaignMultiplier?: number;
+  campaignName?: string;
   message: string;
 }
 
@@ -303,6 +310,7 @@ export interface CampaignResponse {
   isActive: boolean;
   message?: string;
   linkedPerkId?: string;
+  targetTiers?: string[];
   createdAt: string;
 }
 

@@ -29,6 +29,7 @@ const createCampaignSchema = z.object({
   endDate: z.string().min(1).optional(),
   multiplier: z.number().min(1.0).max(5.0).optional(),
   message: z.string().max(500).optional(),
+  targetTiers: z.array(z.enum(['BRONZE', 'GOLD', 'PLATINUM', 'DIAMOND'])).optional(),
 });
 
 export async function campaignRoutes(server: FastifyInstance): Promise<void> {
@@ -45,6 +46,7 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
           endDate?: string;
           multiplier?: number;
           message?: string;
+          targetTiers?: string[];
         };
       }>,
       reply: FastifyReply,
@@ -65,6 +67,7 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
       if (body.endDate) req.endDate = body.endDate;
       if (body.multiplier !== undefined) req.multiplier = body.multiplier;
       if (body.message) req.message = body.message;
+      if (body.targetTiers && body.targetTiers.length > 0) req.targetTiers = body.targetTiers;
 
       const result = await container.manageCampaignUseCase.execute(req);
 

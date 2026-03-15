@@ -64,6 +64,13 @@ export const CAMPAIGN_DEFAULTS: Record<Exclude<CampaignType, 'CUSTOM'>, Campaign
   },
 };
 
+export interface CampaignEligibilityContext {
+  dateOfBirth?: string;
+  enrolledAt: Date;
+  lastTransactionAt?: Date;
+  customerTier: string;
+}
+
 export interface CampaignProps {
   campaignId: string;
   merchantId: string;
@@ -76,6 +83,7 @@ export interface CampaignProps {
   isActive: boolean;
   message?: string;
   linkedPerkId?: string;
+  targetTiers?: string[];
   createdAt: Date;
 }
 
@@ -91,6 +99,7 @@ export interface CampaignJSON {
   isActive: boolean;
   message?: string;
   linkedPerkId?: string;
+  targetTiers?: string[];
   createdAt: string;
 }
 
@@ -101,6 +110,7 @@ interface CampaignOverrides {
   endDate?: Date;
   multiplier?: number;
   message?: string;
+  targetTiers?: string[];
 }
 
 export class Campaign {
@@ -126,6 +136,9 @@ export class Campaign {
     };
     if (overrides?.message) {
       props.message = overrides.message;
+    }
+    if (overrides?.targetTiers && overrides.targetTiers.length > 0) {
+      props.targetTiers = overrides.targetTiers;
     }
     return new Campaign(props);
   }
@@ -227,6 +240,53 @@ export class Campaign {
     return this.props.createdAt;
   }
 
+  getTargetTiers(): string[] | undefined {
+    return this.props.targetTiers;
+  }
+
+  // Eligibility
+  isEligibleForCustomer(ctx: CampaignEligibilityContext): boolean {
+    if (!this.passesTierCheck(ctx.customerTier)) return false;
+    return this.passesTypeCheck(ctx);
+  }
+
+  private passesTierCheck(customerTier: string): boolean {
+    const tiers = this.props.targetTiers;
+    if (!tiers || tiers.length === 0) return true;
+    return tiers.includes(customerTier);
+  }
+
+  private passesTypeCheck(ctx: CampaignEligibilityContext): boolean {
+    switch (this.props.type) {
+      case 'BIRTHDAY_REWARD':
+        return this.isBirthdayEligible(ctx.dateOfBirth);
+      case 'WIN_BACK':
+        return this.isWinBackEligible(ctx.lastTransactionAt);
+      case 'WELCOME':
+        return this.isWelcomeEligible(ctx.enrolledAt);
+      default:
+        return true;
+    }
+  }
+
+  private isBirthdayEligible(dateOfBirth?: string): boolean {
+    if (!dateOfBirth) return false;
+    const now = new Date();
+    const dob = new Date(dateOfBirth);
+    return dob.getMonth() === now.getMonth();
+  }
+
+  private isWinBackEligible(lastTransactionAt?: Date): boolean {
+    if (!lastTransactionAt) return true;
+    const msIn60Days = 60 * 24 * 60 * 60 * 1000;
+    return Date.now() - lastTransactionAt.getTime() >= msIn60Days;
+  }
+
+  private isWelcomeEligible(enrolledAt: Date): boolean {
+    const msIn30Days = 30 * 24 * 60 * 60 * 1000;
+    return Date.now() - enrolledAt.getTime() <= msIn30Days;
+  }
+
   // Mutations
   setLinkedPerkId(id: string): void {
     this.props.linkedPerkId = id;
@@ -267,6 +327,9 @@ export class Campaign {
     };
     if (this.props.message) result.message = this.props.message;
     if (this.props.linkedPerkId) result.linkedPerkId = this.props.linkedPerkId;
+    if (this.props.targetTiers && this.props.targetTiers.length > 0) {
+      result.targetTiers = this.props.targetTiers;
+    }
     return result;
   }
 }

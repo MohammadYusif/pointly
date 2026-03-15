@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { CampaignEligibilityContext } from '../entities/Campaign';
 import { Campaign, ValidationError } from '../index';
 
 describe('Campaign Entity', () => {
@@ -147,5 +148,114 @@ describe('Campaign Entity', () => {
     expect(json.multiplier).toBe(2);
     expect(typeof json.startDate).toBe('string');
     expect(typeof json.endDate).toBe('string');
+  });
+
+  it('should include targetTiers in JSON when set', () => {
+    const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS', {
+      targetTiers: ['GOLD', 'PLATINUM'],
+    });
+    const json = campaign.toJSON();
+    expect(json.targetTiers).toEqual(['GOLD', 'PLATINUM']);
+  });
+
+  it('should not include targetTiers in JSON when not set', () => {
+    const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS');
+    const json = campaign.toJSON();
+    expect(json.targetTiers).toBeUndefined();
+  });
+
+  describe('isEligibleForCustomer', () => {
+    const baseCtx: CampaignEligibilityContext = {
+      enrolledAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+      customerTier: 'BRONZE',
+    };
+
+    it('should pass tier check when no targetTiers set', () => {
+      const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS');
+      expect(campaign.isEligibleForCustomer(baseCtx)).toBe(true);
+    });
+
+    it('should pass tier check when customer tier is in targetTiers', () => {
+      const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS', {
+        targetTiers: ['BRONZE', 'GOLD'],
+      });
+      expect(campaign.isEligibleForCustomer(baseCtx)).toBe(true);
+    });
+
+    it('should fail tier check when customer tier is not in targetTiers', () => {
+      const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS', {
+        targetTiers: ['GOLD', 'PLATINUM'],
+      });
+      expect(campaign.isEligibleForCustomer(baseCtx)).toBe(false);
+    });
+
+    it('should be eligible for DOUBLE_POINTS after tier check passes', () => {
+      const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS');
+      expect(campaign.isEligibleForCustomer(baseCtx)).toBe(true);
+    });
+
+    it('should be eligible for BIRTHDAY_REWARD when birth month matches current month', () => {
+      const now = new Date();
+      const dob = `1990-${String(now.getMonth() + 1).padStart(2, '0')}-15`;
+      const campaign = Campaign.create('merchant-1', 'BIRTHDAY_REWARD');
+      const ctx: CampaignEligibilityContext = { ...baseCtx, dateOfBirth: dob };
+      expect(campaign.isEligibleForCustomer(ctx)).toBe(true);
+    });
+
+    it('should not be eligible for BIRTHDAY_REWARD when birth month differs', () => {
+      const now = new Date();
+      const otherMonth = ((now.getMonth() + 6) % 12) + 1;
+      const dob = `1990-${String(otherMonth).padStart(2, '0')}-15`;
+      const campaign = Campaign.create('merchant-1', 'BIRTHDAY_REWARD');
+      const ctx: CampaignEligibilityContext = { ...baseCtx, dateOfBirth: dob };
+      expect(campaign.isEligibleForCustomer(ctx)).toBe(false);
+    });
+
+    it('should not be eligible for BIRTHDAY_REWARD when dateOfBirth is missing', () => {
+      const campaign = Campaign.create('merchant-1', 'BIRTHDAY_REWARD');
+      expect(campaign.isEligibleForCustomer(baseCtx)).toBe(false);
+    });
+
+    it('should be eligible for WIN_BACK when last transaction was 60+ days ago', () => {
+      const campaign = Campaign.create('merchant-1', 'WIN_BACK');
+      const ctx: CampaignEligibilityContext = {
+        ...baseCtx,
+        lastTransactionAt: new Date(Date.now() - 61 * 24 * 60 * 60 * 1000),
+      };
+      expect(campaign.isEligibleForCustomer(ctx)).toBe(true);
+    });
+
+    it('should not be eligible for WIN_BACK when last transaction was recent', () => {
+      const campaign = Campaign.create('merchant-1', 'WIN_BACK');
+      const ctx: CampaignEligibilityContext = {
+        ...baseCtx,
+        lastTransactionAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      };
+      expect(campaign.isEligibleForCustomer(ctx)).toBe(false);
+    });
+
+    it('should be eligible for WIN_BACK when customer never purchased', () => {
+      const campaign = Campaign.create('merchant-1', 'WIN_BACK');
+      expect(campaign.isEligibleForCustomer(baseCtx)).toBe(true);
+    });
+
+    it('should be eligible for WELCOME when enrolled within last 30 days', () => {
+      const campaign = Campaign.create('merchant-1', 'WELCOME');
+      expect(campaign.isEligibleForCustomer(baseCtx)).toBe(true);
+    });
+
+    it('should not be eligible for WELCOME when enrolled more than 30 days ago', () => {
+      const campaign = Campaign.create('merchant-1', 'WELCOME');
+      const ctx: CampaignEligibilityContext = {
+        ...baseCtx,
+        enrolledAt: new Date(Date.now() - 31 * 24 * 60 * 60 * 1000),
+      };
+      expect(campaign.isEligibleForCustomer(ctx)).toBe(false);
+    });
+
+    it('should be eligible for HAPPY_HOUR after tier check', () => {
+      const campaign = Campaign.create('merchant-1', 'HAPPY_HOUR');
+      expect(campaign.isEligibleForCustomer(baseCtx)).toBe(true);
+    });
   });
 });

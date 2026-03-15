@@ -9,6 +9,7 @@ import {
   ValidationError,
 } from '../../domain';
 import type { TransactionMetadata } from '../../domain';
+import type { CampaignEligibilityContext } from '../../domain/entities/Campaign';
 import type { ICampaignRepository } from '../repositories/ICampaignRepository';
 import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
@@ -113,18 +114,38 @@ export class RecordPurchaseUseCase {
     // 4b. Apply active campaign multiplier if available
     let activeCampaignMultiplier: number | undefined;
     let activeCampaignName: string | undefined;
+    let activeCampaignId: string | undefined;
     if (this.campaignRepository) {
       const activeCampaigns = await this.campaignRepository.findActiveCampaignsForMerchant(
         request.merchantId,
       );
-      if (activeCampaigns.length > 0 && activeCampaigns[0]) {
-        const campaign = activeCampaigns[0];
-        activeCampaignMultiplier = campaign.getMultiplier();
-        activeCampaignName = campaign.getName();
-        merchantPoints = Points.from(
-          Math.floor(merchantPoints.toNumber() * activeCampaignMultiplier),
-        );
-        globalPoints = Points.from(Math.floor(globalPoints.toNumber() * activeCampaignMultiplier));
+      if (activeCampaigns.length > 0) {
+        const enrollment = customer.getEnrollment(request.merchantId);
+        if (enrollment) {
+          const ctx: CampaignEligibilityContext = {
+            enrolledAt: enrollment.enrolledAt,
+            customerTier: customer.getCurrentTier().getLevel(),
+          };
+          const dob = customer.toJSON().dateOfBirth;
+          if (dob) ctx.dateOfBirth = dob;
+          if (enrollment.lastTransactionAt) {
+            ctx.lastTransactionAt = enrollment.lastTransactionAt;
+          }
+          const eligible = activeCampaigns.filter((c) => c.isEligibleForCustomer(ctx));
+          eligible.sort((a, b) => b.getMultiplier() - a.getMultiplier());
+          const campaign = eligible[0];
+          if (campaign) {
+            activeCampaignId = campaign.getCampaignId();
+            activeCampaignMultiplier = campaign.getMultiplier();
+            activeCampaignName = campaign.getName();
+            merchantPoints = Points.from(
+              Math.floor(merchantPoints.toNumber() * activeCampaignMultiplier),
+            );
+            globalPoints = Points.from(
+              Math.floor(globalPoints.toNumber() * activeCampaignMultiplier),
+            );
+          }
+        }
       }
     }
 
@@ -142,7 +163,17 @@ export class RecordPurchaseUseCase {
       merchantPoints,
     );
 
-    // 6. Create merchant transaction record
+    // 6. Create merchant transaction record (include campaign metadata if active)
+    const baseMetadata: TransactionMetadata = request.metadata || {};
+    const txMetadata: TransactionMetadata = activeCampaignName
+      ? {
+          ...baseMetadata,
+          campaignId: activeCampaignId ?? '',
+          campaignName: activeCampaignName,
+          campaignMultiplier: activeCampaignMultiplier ?? 1,
+        }
+      : baseMetadata;
+
     const transaction = Transaction.createEarn(
       request.merchantId,
       request.customerId,
@@ -150,7 +181,7 @@ export class RecordPurchaseUseCase {
       amount,
       merchantBalanceBefore,
       request.idempotencyKey,
-      request.metadata || {},
+      txMetadata,
       resolvedLocationId,
     );
 
@@ -162,7 +193,7 @@ export class RecordPurchaseUseCase {
       amount,
       globalBalanceBefore,
       request.idempotencyKey,
-      request.metadata || {},
+      txMetadata,
       resolvedLocationId,
     );
 
