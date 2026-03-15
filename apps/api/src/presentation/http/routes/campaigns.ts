@@ -48,7 +48,7 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
         multiplier: body.multiplier,
       });
 
-      return reply.status(201).send({ success: true, data: result });
+      return reply.status(201).send({ success: true, data: result?.toJSON() });
     },
   );
 
@@ -64,7 +64,8 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
         merchantId,
       });
 
-      return reply.send({ success: true, data: result });
+      const campaigns = result && 'items' in result ? result.items.map((c) => c.toJSON()) : [];
+      return reply.send({ success: true, data: campaigns });
     },
   );
 
