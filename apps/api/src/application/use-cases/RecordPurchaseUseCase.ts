@@ -109,7 +109,7 @@ export class RecordPurchaseUseCase {
     }
 
     let merchantPoints = Points.from(pointsCalculation.merchantPoints);
-    let globalPoints = Points.from(pointsCalculation.globalPoints);
+    const globalPoints = Points.from(pointsCalculation.globalPoints);
 
     // 4b. Apply active campaign multiplier if available
     let activeCampaignMultiplier: number | undefined;
@@ -120,16 +120,8 @@ export class RecordPurchaseUseCase {
       activeCampaignId = campaignResult.id;
       activeCampaignMultiplier = campaignResult.multiplier;
       activeCampaignName = campaignResult.name;
+      // Campaign only affects merchant points — global points are never touched by campaigns
       merchantPoints = campaignResult.merchantPoints;
-
-      // Additive combination: combined = campaignMultiplier + (tierMultiplier - 1)
-      // e.g., 3x campaign + Gold 1.1x tier = 3.1x total (not 3 * 1.1 = 3.3x)
-      const tierMultiplier = customer.getEarningMultiplier();
-      const combinedMultiplier = campaignResult.multiplier + (tierMultiplier - 1);
-      const baseGlobal = pointsCalculation.globalPoints;
-      globalPoints = Points.from(
-        Math.floor((baseGlobal * Math.round(combinedMultiplier * 100)) / 100),
-      );
     }
 
     // 5. Get current balances before transaction
@@ -139,13 +131,12 @@ export class RecordPurchaseUseCase {
     // 5b. Capture tier before awarding points (for upgrade detection)
     const tierBefore = customer.getCurrentTier();
 
-    // 5c. Award points to customer — entity applies tier multiplier and returns boosted amount
-    // When campaign is active, the combined multiplier is already in globalPoints — skip tier boost
+    // 5c. Award points to customer — entity applies tier multiplier to global points
+    // Campaign only affects merchantPoints; global points get the normal tier boost
     const { boostedGlobalPoints } = customer.addPointsFromPurchase(
       request.merchantId,
       globalPoints,
       merchantPoints,
-      activeCampaignMultiplier !== undefined ? { skipTierBoost: true } : undefined,
     );
 
     // 6. Create merchant transaction record (include campaign metadata if active)
