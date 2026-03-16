@@ -322,8 +322,8 @@ export default function ManualEntryPage() {
                     {result.breakdown.bonusPointsCap !== undefined &&
                       result.breakdown.bonusPointsBeforeCap !== undefined && (
                         <p>
-                          {t('transaction.breakdown_capped')}: {result.breakdown.bonusPointsCap}{' '}
-                          {t('transaction.breakdown_was')} {result.breakdown.bonusPointsBeforeCap}
+                          {t('transaction.breakdown_capped')} +{result.breakdown.bonusPointsCap}{' '}
+                          (was +{result.breakdown.bonusPointsBeforeCap})
                         </p>
                       )}
                     <p className="font-medium text-foreground">

@@ -138,9 +138,12 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
         ...(query.nextToken && { nextToken: query.nextToken }),
       });
 
+      // Exclude POINTLY_NETWORK audit trail entries — customers see merchant transactions only
+      // (global points info is shown in the transaction breakdown)
+      const withoutNetwork = result.items.filter((t) => t.getMerchantId() !== 'POINTLY_NETWORK');
       const filtered = query.type
-        ? result.items.filter((t) => t.getType() === query.type)
-        : result.items;
+        ? withoutNetwork.filter((t) => t.getType() === query.type)
+        : withoutNetwork;
 
       return reply.send({
         success: true,

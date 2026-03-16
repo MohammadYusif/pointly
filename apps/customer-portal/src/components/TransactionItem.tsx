@@ -71,8 +71,8 @@ export function TransactionItem({ transaction, merchantName }: TransactionItemPr
           {breakdown.bonusPointsCap !== undefined &&
             breakdown.bonusPointsBeforeCap !== undefined && (
               <p>
-                {t('transaction.breakdown_capped')}: {breakdown.bonusPointsCap}{' '}
-                {t('transaction.breakdown_was')} {breakdown.bonusPointsBeforeCap}
+                {t('transaction.breakdown_capped')} +{breakdown.bonusPointsCap} (was +
+                {breakdown.bonusPointsBeforeCap})
               </p>
             )}
           <p className="font-medium text-foreground">
