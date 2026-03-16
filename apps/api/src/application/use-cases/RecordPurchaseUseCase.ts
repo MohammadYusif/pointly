@@ -126,7 +126,15 @@ export class RecordPurchaseUseCase {
       activeCampaignMultiplier = campaignResult.multiplier;
       activeCampaignName = campaignResult.name;
       merchantPoints = campaignResult.merchantPoints;
-      globalPoints = campaignResult.globalPoints;
+
+      // Additive combination: combined = campaignMultiplier + (tierMultiplier - 1)
+      // e.g., 3x campaign + Gold 1.1x tier = 3.1x total (not 3 * 1.1 = 3.3x)
+      const tierMultiplier = customer.getEarningMultiplier();
+      const combinedMultiplier = campaignResult.multiplier + (tierMultiplier - 1);
+      const baseGlobal = pointsCalculation.globalPoints;
+      globalPoints = Points.from(
+        Math.floor((baseGlobal * Math.round(combinedMultiplier * 100)) / 100),
+      );
     }
 
     // 5. Get current balances before transaction
@@ -137,10 +145,12 @@ export class RecordPurchaseUseCase {
     const tierBefore = customer.getCurrentTier();
 
     // 5c. Award points to customer — entity applies tier multiplier and returns boosted amount
+    // When campaign is active, the combined multiplier is already in globalPoints — skip tier boost
     const { boostedGlobalPoints } = customer.addPointsFromPurchase(
       request.merchantId,
       globalPoints,
       merchantPoints,
+      activeCampaignMultiplier !== undefined ? { skipTierBoost: true } : undefined,
     );
 
     // 6. Create merchant transaction record (include campaign metadata if active)

@@ -35,6 +35,15 @@ export interface CustomerPerkView {
   isUnlocked: boolean;
   merchantId: string;
   merchantName: string;
+  // Campaign enrichment
+  campaignId?: string;
+  campaignMultiplier?: number;
+  campaignEndDate?: string;
+  campaignMinPurchaseAmount?: number;
+  campaignMaxUsesPerCustomer?: number;
+  campaignUsesRemaining?: number;
+  campaignTerms?: string;
+  isExhausted?: boolean;
 }
 
 export interface MerchantLocation {
@@ -314,7 +323,18 @@ export interface CampaignResponse {
   maxUsesPerCustomer?: number;
   minPurchaseAmount?: number;
   maxPointsPerTransaction?: number;
+  termsMessage?: string;
   createdAt: string;
+}
+
+// --- Tier Breakdown ---
+
+export interface TierBreakdownResponse {
+  BRONZE: number;
+  GOLD: number;
+  PLATINUM: number;
+  DIAMOND: number;
+  total: number;
 }
 
 // --- Challenges ---

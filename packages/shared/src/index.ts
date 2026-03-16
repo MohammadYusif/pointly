@@ -54,6 +54,7 @@ export type {
   CustomerInsights,
   CampaignType,
   CampaignResponse,
+  TierBreakdownResponse,
   ChallengeType,
   ChallengeProgressResponse,
   WebhookEventType,

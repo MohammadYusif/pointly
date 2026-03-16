@@ -45,6 +45,8 @@ interface TransactionItem {
   GSI2SK?: string; // TXN#<createdAt>#<id>
   GSI3PK?: string; // IDEMPOTENCY#<key>
   GSI3SK?: string; // TXN
+  GSI4PK?: string; // CUSTOMER#<customerId>#MERCHANT#<merchantId>
+  GSI4SK?: string; // TXN#<createdAt>#<id>
   GSI5PK?: string; // MERCHANT#<merchantId>#LOCATION#<locationId>
   GSI5SK?: string; // TXN#<createdAt>#<id>
 }
@@ -447,6 +449,8 @@ export class TransactionRepository
       GSI2SK: `TXN#${createdAt}#${json.transactionId}`,
       GSI3PK: `IDEMPOTENCY#${json.idempotencyKey}`,
       GSI3SK: 'TXN',
+      GSI4PK: `CUSTOMER#${json.customerId}#MERCHANT#${json.merchantId}`,
+      GSI4SK: `TXN#${createdAt}#${json.transactionId}`,
       ...(json.locationId && {
         locationId: json.locationId,
         GSI5PK: `MERCHANT#${json.merchantId}#LOCATION#${json.locationId}`,
