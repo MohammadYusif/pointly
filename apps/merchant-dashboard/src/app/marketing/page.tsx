@@ -1,7 +1,12 @@
 'use client';
 
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { useCampaigns, useCreateCampaign, useDeactivateCampaign } from '@/hooks/api';
+import {
+  useCampaigns,
+  useCreateCampaign,
+  useDeactivateCampaign,
+  useTierBreakdown,
+} from '@/hooks/api';
 import type { CampaignResponse, CampaignType } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import {
@@ -168,7 +173,32 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
   const [minPurchase, setMinPurchase] = useState('');
   const [maxPoints, setMaxPoints] = useState('');
 
+  const { data: tierBreakdown } = useTierBreakdown();
+
   const isCustom = selectedType === 'CUSTOM';
+
+  // Auto-generate terms preview from form fields
+  const termsPreview = useMemo(() => {
+    const parts: string[] = [];
+    const mult = Number.parseFloat(multiplier);
+    if (!Number.isNaN(mult) && mult > 0) parts.push(`Earn ${mult}x points on your purchases`);
+    const minP = Number.parseFloat(minPurchase);
+    if (!Number.isNaN(minP) && minP > 0) parts.push(`Minimum purchase: ${minP} SAR`);
+    const maxU = Number.parseInt(maxUses, 10);
+    if (!Number.isNaN(maxU) && maxU > 0)
+      parts.push(`Limited to ${maxU} ${maxU === 1 ? 'use' : 'uses'} per customer`);
+    const maxP = Number.parseInt(maxPoints, 10);
+    if (!Number.isNaN(maxP) && maxP > 0) parts.push(`Maximum ${maxP} bonus points per transaction`);
+    if (endDate) {
+      const endD = new Date(endDate);
+      if (!Number.isNaN(endD.getTime())) {
+        parts.push(
+          `Valid until ${endD.toLocaleDateString('en-SA', { year: 'numeric', month: 'long', day: 'numeric' })}`,
+        );
+      }
+    }
+    return parts.length > 0 ? `${parts.join('. ')}.` : '';
+  }, [multiplier, minPurchase, maxUses, maxPoints, endDate]);
 
   // Pre-populate fields when type changes
   useEffect(() => {
@@ -318,6 +348,19 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
           <div className="space-y-2">
             <p className="text-sm font-medium">{t('campaigns.targetTiers')}</p>
             <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedTiers(selectedTiers.length === ALL_TIERS.length ? [] : [...ALL_TIERS])
+                }
+                className={`px-3 py-1.5 text-sm border rounded-lg transition-colors ${
+                  selectedTiers.length === ALL_TIERS.length
+                    ? 'border-primary bg-primary/10 text-primary font-medium'
+                    : 'border-border text-muted-foreground'
+                }`}
+              >
+                {t('campaigns.allTiers')}
+              </button>
               {ALL_TIERS.map((tier) => (
                 <button
                   key={tier}
@@ -333,6 +376,24 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
                 </button>
               ))}
             </div>
+            {/* Audience preview — shows customer count per selected tier */}
+            {tierBreakdown && selectedTiers.length > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {selectedTiers
+                  .map(
+                    (tier) =>
+                      `${tierBreakdown[tier as keyof typeof tierBreakdown] ?? 0} ${t(`tier.${tier.toLowerCase()}`)}`,
+                  )
+                  .join(', ')}
+                {' — '}
+                {selectedTiers.reduce(
+                  (sum, tier) =>
+                    sum + ((tierBreakdown[tier as keyof typeof tierBreakdown] as number) ?? 0),
+                  0,
+                )}{' '}
+                {t('campaigns.totalReach')}
+              </p>
+            )}
           </div>
 
           {/* Campaign Limits */}
@@ -384,6 +445,16 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
               </div>
             </div>
           </div>
+
+          {/* Auto-generated terms preview */}
+          {termsPreview && (
+            <div className="p-3 border rounded-md bg-muted/20">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">
+                {t('campaigns.termsPreview')}
+              </p>
+              <p className="text-sm text-muted-foreground">{termsPreview}</p>
+            </div>
+          )}
 
           {/* Optional message */}
           <div>

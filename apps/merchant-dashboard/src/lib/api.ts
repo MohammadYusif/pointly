@@ -11,6 +11,7 @@ import type {
   PaginatedResponse,
   RecordPurchaseResponse,
   RedeemPointsResponse,
+  TierBreakdownResponse,
   TransactionResponse,
   WebhookConfigResponse,
 } from '@/types/api';
@@ -224,6 +225,9 @@ export const campaignApi = {
     fetchApi<void>(`/v1/merchants/${merchantId}/campaigns/${campaignId}`, {
       method: 'DELETE',
     }),
+
+  getTierBreakdown: (merchantId: string) =>
+    fetchApi<TierBreakdownResponse>(`/v1/merchants/${merchantId}/customers/tier-breakdown`),
 };
 
 // Webhook API

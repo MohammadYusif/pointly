@@ -1,6 +1,6 @@
 import { campaignApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-import type { CampaignType } from '@/types/api';
+import type { CampaignType, TierBreakdownResponse } from '@/types/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useCampaigns() {
@@ -36,6 +36,16 @@ export function useCreateCampaign() {
       queryClient.invalidateQueries({ queryKey: ['merchant', merchant?.merchantId, 'campaigns'] });
       queryClient.invalidateQueries({ queryKey: ['merchant', merchant?.merchantId, 'perks'] });
     },
+  });
+}
+
+export function useTierBreakdown() {
+  const { merchant } = useAuth();
+  return useQuery<TierBreakdownResponse>({
+    queryKey: ['merchant', merchant?.merchantId, 'tier-breakdown'],
+    // biome-ignore lint/style/noNonNullAssertion: enabled guard ensures merchantId exists
+    queryFn: () => campaignApi.getTierBreakdown(merchant!.merchantId),
+    enabled: !!merchant?.merchantId,
   });
 }
 

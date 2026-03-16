@@ -17,6 +17,7 @@ export type {
   AnalyticsData,
   CampaignResponse,
   CampaignType,
+  TierBreakdownResponse,
   CustomerInsights,
   PerkInsights,
   WebhookConfigResponse,

@@ -454,7 +454,9 @@
     "maxPoints": "Max Bonus Points",
     "maxPointsHint": "Max bonus points per transaction",
     "unlimited": "Unlimited",
-    "minSpend": "Min {{amount}} SAR"
+    "minSpend": "Min {{amount}} SAR",
+    "totalReach": "total reach",
+    "termsPreview": "Auto-generated terms (sent to customers)"
   },
   "challenges": {
     "title": "Challenges",
