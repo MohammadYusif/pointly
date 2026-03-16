@@ -288,7 +288,14 @@
     "perkType": "Perk Type",
     "requiredTier": "Required Tier",
     "description": "Description",
-    "title_field": "Title"
+    "title_field": "Title",
+    "campaignDetails": "Offer Details",
+    "multiplierLabel": "{{multiplier}}x Points",
+    "validUntil": "Valid until {{date}}",
+    "usesRemaining": "{{remaining}} of {{total}} uses remaining",
+    "exhausted": "You've used all your available uses for this offer",
+    "tapForDetails": "Tap for details",
+    "termsAndConditions": "Terms & Conditions"
   },
   "perkInsights": {
     "birthdayThisMonth": "birthdays this month",

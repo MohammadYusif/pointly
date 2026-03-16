@@ -24,3 +24,15 @@ export {
   type LanguageToggleProps,
 } from './components/LanguageToggle/LanguageToggle';
 export { Navbar, type NavbarProps, type NavItem } from './components/Navbar/Navbar';
+export {
+  Sheet,
+  SheetPortal,
+  SheetOverlay,
+  SheetTrigger,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+} from './components/Sheet/Sheet';

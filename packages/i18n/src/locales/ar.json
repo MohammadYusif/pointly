@@ -288,7 +288,14 @@
     "perkType": "نوع الميزة",
     "requiredTier": "المستوى المطلوب",
     "description": "الوصف",
-    "title_field": "العنوان"
+    "title_field": "العنوان",
+    "campaignDetails": "تفاصيل العرض",
+    "multiplierLabel": "{{multiplier}}x نقاط",
+    "validUntil": "صالح حتى {{date}}",
+    "usesRemaining": "{{remaining}} من {{total}} استخدامات متبقية",
+    "exhausted": "لقد استنفدت جميع استخداماتك المتاحة لهذا العرض",
+    "tapForDetails": "اضغط للتفاصيل",
+    "termsAndConditions": "الشروط والأحكام"
   },
   "perkInsights": {
     "birthdayThisMonth": "أعياد ميلاد هذا الشهر",
