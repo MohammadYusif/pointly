@@ -400,6 +400,41 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
   // GET /:merchantId/perk-insights — Backward compat alias for customer-insights
   server.get('/:merchantId/perk-insights', handleCustomerInsights);
 
+  // GET /:merchantId/customers/tier-breakdown — Customer count per tier
+  server.get(
+    '/:merchantId/customers/tier-breakdown',
+    async (request: FastifyRequest<{ Params: { merchantId: string } }>, reply: FastifyReply) => {
+      enforceMerchantAccess(request);
+      const { merchantId } = request.params;
+
+      const container = getContainer();
+      const result = await container.customerRepository.findByMerchant(merchantId, { limit: 500 });
+
+      const breakdown: Record<string, number> = {
+        BRONZE: 0,
+        GOLD: 0,
+        PLATINUM: 0,
+        DIAMOND: 0,
+      };
+
+      for (const customer of result.items) {
+        const tier = customer.getCurrentTier().getLevel();
+        const current = breakdown[tier];
+        if (current !== undefined) {
+          breakdown[tier] = current + 1;
+        }
+      }
+
+      return reply.send({
+        success: true,
+        data: {
+          ...breakdown,
+          total: result.items.length,
+        },
+      });
+    },
+  );
+
   // POST /:merchantId/register-customer — Find-or-create customer + enroll + grant consent atomically
   server.post(
     '/:merchantId/register-customer',

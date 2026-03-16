@@ -228,19 +228,89 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
       isUnlocked: boolean;
       merchantId: string;
       merchantName: string;
+      campaignId?: string;
+      campaignMultiplier?: number;
+      campaignEndDate?: string;
+      campaignMinPurchaseAmount?: number;
+      campaignMaxUsesPerCustomer?: number;
+      campaignUsesRemaining?: number;
+      campaignTerms?: string;
+      isExhausted?: boolean;
     }> = [];
 
     for (const merchantId of enrolledMerchantIds) {
       const merchant = await container.merchantRepository.findById(merchantId);
       if (!merchant) continue;
 
+      // Fetch campaigns for this merchant to enrich linked perks and filter expired ones
+      const campaignsResult = await container.campaignRepository.findByMerchant(merchantId);
+      const campaignByPerkId = new Map<string, (typeof campaignsResult.items)[number]>();
+      for (const c of campaignsResult.items) {
+        const perkId = c.getLinkedPerkId();
+        if (perkId) campaignByPerkId.set(perkId, c);
+      }
+
+      // Get campaign usage counts for this customer at this merchant
+      const useCounts = new Map<string, number>();
+      if (campaignByPerkId.size > 0) {
+        const txResult = await container.transactionRepository.findByCustomerAndMerchant(
+          customerId,
+          merchantId,
+          { limit: 200 },
+        );
+        for (const tx of txResult.items) {
+          const meta = tx.getMetadata();
+          // biome-ignore lint/complexity/useLiteralKeys: TS noPropertyAccessFromIndexSignature requires bracket notation
+          const cId = meta['campaignId'];
+          if (typeof cId === 'string') {
+            useCounts.set(cId, (useCounts.get(cId) ?? 0) + 1);
+          }
+        }
+      }
+
       const customerJSON = customer.toJSON();
       const activePerks = merchant.getPerks().filter((p) => p.isActive);
       for (const perk of activePerks) {
+        // Check if this perk is linked to a campaign
+        const linkedCampaign = campaignByPerkId.get(perk.id);
+
+        // Skip perks whose linked campaign has expired or is deactivated
+        if (linkedCampaign && (linkedCampaign.isExpired() || !linkedCampaign.getIsActive())) {
+          continue;
+        }
+
         // Skip perks the customer isn't eligible for based on campaign-style rules
         if (!isPerkEligibleForCustomer(perk.type, customerJSON, merchantId)) continue;
 
         const requiredRank = tierOrder[perk.requiredTier] ?? 0;
+
+        // Build campaign enrichment fields
+        let campaignFields = {};
+        if (linkedCampaign) {
+          const campaignId = linkedCampaign.getCampaignId();
+          const maxUses = linkedCampaign.getMaxUsesPerCustomer();
+          const used = useCounts.get(campaignId) ?? 0;
+          const isExhausted = maxUses != null && maxUses > 0 && used >= maxUses;
+
+          campaignFields = {
+            campaignId,
+            campaignMultiplier: linkedCampaign.getMultiplier(),
+            campaignEndDate: linkedCampaign.getEndDate().toISOString(),
+            ...(linkedCampaign.getMinPurchaseAmount() != null && {
+              campaignMinPurchaseAmount: linkedCampaign.getMinPurchaseAmount(),
+            }),
+            ...(maxUses != null &&
+              maxUses > 0 && {
+                campaignMaxUsesPerCustomer: maxUses,
+                campaignUsesRemaining: Math.max(0, maxUses - used),
+              }),
+            ...(linkedCampaign.getTermsMessage() && {
+              campaignTerms: linkedCampaign.getTermsMessage(),
+            }),
+            isExhausted,
+          };
+        }
+
         perksView.push({
           perkId: perk.id,
           type: perk.type,
@@ -251,6 +321,7 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
           isUnlocked: customerTierRank >= requiredRank,
           merchantId,
           merchantName: merchant.toJSON().businessName,
+          ...campaignFields,
         });
       }
     }

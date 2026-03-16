@@ -93,6 +93,10 @@ export class ManageCampaignUseCase {
     const overrides = ManageCampaignUseCase.buildOverrides(request);
     const campaign = Campaign.create(request.merchantId, type, overrides);
 
+    // Auto-generate terms message if merchant didn't provide one
+    const termsMessage = campaign.generateTermsMessage();
+    campaign.setTermsMessage(termsMessage);
+
     // Auto-create a linked perk on the merchant so the customer portal shows it
     const perkType = type !== 'CUSTOM' ? CAMPAIGN_DEFAULTS[type].perkType : 'SPEND_BONUS';
 

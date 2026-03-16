@@ -87,6 +87,7 @@ export interface CampaignProps {
   maxUsesPerCustomer?: number;
   minPurchaseAmount?: number;
   maxPointsPerTransaction?: number;
+  termsMessage?: string;
   createdAt: Date;
 }
 
@@ -106,6 +107,7 @@ export interface CampaignJSON {
   maxUsesPerCustomer?: number;
   minPurchaseAmount?: number;
   maxPointsPerTransaction?: number;
+  termsMessage?: string;
   createdAt: string;
 }
 
@@ -336,6 +338,47 @@ export class Campaign {
     return Date.now() - enrolledAt.getTime() <= msIn30Days;
   }
 
+  getTermsMessage(): string | undefined {
+    return this.props.termsMessage;
+  }
+
+  /**
+   * Auto-generate a terms message from campaign properties.
+   * Merchant can override this with a custom message.
+   */
+  generateTermsMessage(): string {
+    const parts: string[] = [];
+
+    parts.push(`Earn ${this.props.multiplier}x points on your purchases`);
+
+    if (this.props.minPurchaseAmount && this.props.minPurchaseAmount > 0) {
+      parts.push(`Minimum purchase: ${this.props.minPurchaseAmount} SAR`);
+    }
+
+    if (this.props.maxUsesPerCustomer && this.props.maxUsesPerCustomer > 0) {
+      parts.push(
+        `Limited to ${this.props.maxUsesPerCustomer} ${this.props.maxUsesPerCustomer === 1 ? 'use' : 'uses'} per customer`,
+      );
+    }
+
+    if (this.props.maxPointsPerTransaction && this.props.maxPointsPerTransaction > 0) {
+      parts.push(`Maximum ${this.props.maxPointsPerTransaction} bonus points per transaction`);
+    }
+
+    const endStr = this.props.endDate.toLocaleDateString('en-SA', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    parts.push(`Valid until ${endStr}`);
+
+    return `${parts.join('. ')}.`;
+  }
+
+  setTermsMessage(message: string): void {
+    this.props.termsMessage = message;
+  }
+
   // Mutations
   setLinkedPerkId(id: string): void {
     this.props.linkedPerkId = id;
@@ -387,6 +430,9 @@ export class Campaign {
     }
     if (this.props.maxPointsPerTransaction && this.props.maxPointsPerTransaction > 0) {
       result.maxPointsPerTransaction = this.props.maxPointsPerTransaction;
+    }
+    if (this.props.termsMessage) {
+      result.termsMessage = this.props.termsMessage;
     }
     return result;
   }

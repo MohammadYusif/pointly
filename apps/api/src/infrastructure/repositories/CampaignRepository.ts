@@ -23,6 +23,7 @@ interface CampaignItem {
   maxUsesPerCustomer?: number;
   minPurchaseAmount?: number;
   maxPointsPerTransaction?: number;
+  termsMessage?: string;
   createdAt: string;
 }
 
@@ -106,6 +107,7 @@ export class CampaignRepository
     if (item.maxUsesPerCustomer) props.maxUsesPerCustomer = item.maxUsesPerCustomer;
     if (item.minPurchaseAmount) props.minPurchaseAmount = item.minPurchaseAmount;
     if (item.maxPointsPerTransaction) props.maxPointsPerTransaction = item.maxPointsPerTransaction;
+    if (item.termsMessage) props.termsMessage = item.termsMessage;
     return Campaign.reconstitute(props);
   }
 
@@ -137,6 +139,8 @@ export class CampaignRepository
     if (maxUses && maxUses > 0) item.maxUsesPerCustomer = maxUses;
     if (minPurchase && minPurchase > 0) item.minPurchaseAmount = minPurchase;
     if (maxPoints && maxPoints > 0) item.maxPointsPerTransaction = maxPoints;
+    const termsMessage = entity.getTermsMessage();
+    if (termsMessage) item.termsMessage = termsMessage;
     return item as unknown as Record<string, unknown>;
   }
 
