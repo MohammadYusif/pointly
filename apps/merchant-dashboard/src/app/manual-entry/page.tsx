@@ -299,6 +299,42 @@ export default function ManualEntryPage() {
               </CardContent>
             </Card>
 
+            {result.breakdown && (
+              <Card>
+                <CardContent className="py-4 space-y-2">
+                  <p className="text-sm font-medium">{t('transaction.breakdown')}</p>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p>
+                      {result.breakdown.purchaseAmount} SAR × {result.breakdown.pointsPerSAR}{' '}
+                      {t('transaction.breakdown_rate')} = {result.breakdown.basePoints}{' '}
+                      {t('transaction.breakdown_base')}
+                    </p>
+                    <p>
+                      {t('transaction.breakdown_tier')}: {result.breakdown.tierName} (
+                      {result.breakdown.tierMultiplier}×)
+                    </p>
+                    {result.breakdown.campaignName && (
+                      <p>
+                        {t('transaction.breakdown_campaign')}: {result.breakdown.campaignName} (
+                        {result.breakdown.campaignMultiplier}×)
+                      </p>
+                    )}
+                    {result.breakdown.bonusPointsCap !== undefined &&
+                      result.breakdown.bonusPointsBeforeCap !== undefined && (
+                        <p>
+                          {t('transaction.breakdown_capped')}: {result.breakdown.bonusPointsCap}{' '}
+                          {t('transaction.breakdown_was')} {result.breakdown.bonusPointsBeforeCap}
+                        </p>
+                      )}
+                    <p className="font-medium text-foreground">
+                      {t('transaction.breakdown_merchant')}: {result.breakdown.finalMerchantPoints}{' '}
+                      · {t('transaction.breakdown_global')}: {result.breakdown.finalGlobalPoints}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Hidden printable receipt */}
             <div className="hidden print:block">
               <ThermalReceipt

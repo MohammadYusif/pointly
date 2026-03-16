@@ -35,6 +35,20 @@ export interface RecordPurchaseRequest {
   };
 }
 
+export interface PurchaseBreakdown {
+  purchaseAmount: number;
+  pointsPerSAR: number;
+  basePoints: number;
+  tierMultiplier: number;
+  tierName: string;
+  campaignName?: string;
+  campaignMultiplier?: number;
+  bonusPointsCap?: number;
+  bonusPointsBeforeCap?: number;
+  finalMerchantPoints: number;
+  finalGlobalPoints: number;
+}
+
 export interface RecordPurchaseResponse {
   transactionId: string;
   merchantPoints: number;
@@ -51,6 +65,8 @@ export interface RecordPurchaseResponse {
 
   campaignMultiplier?: number;
   campaignName?: string;
+
+  breakdown: PurchaseBreakdown;
 
   message: string;
 }
@@ -115,11 +131,15 @@ export class RecordPurchaseUseCase {
     let activeCampaignMultiplier: number | undefined;
     let activeCampaignName: string | undefined;
     let activeCampaignId: string | undefined;
+    let activeCampaignBonusCap: number | undefined;
+    let activeCampaignBonusBeforeCap: number | undefined;
     const campaignResult = await this.resolveBestCampaign(request, customer, merchantPoints);
     if (campaignResult) {
       activeCampaignId = campaignResult.id;
       activeCampaignMultiplier = campaignResult.multiplier;
       activeCampaignName = campaignResult.name;
+      activeCampaignBonusCap = campaignResult.bonusPointsCap;
+      activeCampaignBonusBeforeCap = campaignResult.bonusPointsBeforeCap;
       // Campaign only affects merchant points — global points are never touched by campaigns
       merchantPoints = campaignResult.merchantPoints;
     }
@@ -141,14 +161,38 @@ export class RecordPurchaseUseCase {
 
     // 6. Create merchant transaction record (include campaign metadata if active)
     const baseMetadata: TransactionMetadata = request.metadata || {};
-    const txMetadata: TransactionMetadata = activeCampaignName
-      ? {
-          ...baseMetadata,
-          campaignId: activeCampaignId ?? '',
-          campaignName: activeCampaignName,
-          campaignMultiplier: activeCampaignMultiplier ?? 1,
-        }
-      : baseMetadata;
+
+    // Build points calculation breakdown
+    const loyaltyConfig = merchant.getLoyaltyConfig();
+    const breakdown = {
+      purchaseAmount: request.amountSAR,
+      pointsPerSAR: loyaltyConfig.pointsPerSAR,
+      basePoints: pointsCalculation.merchantPoints,
+      tierMultiplier: customer.getEarningMultiplier(),
+      tierName: customer.getCurrentTier().getDisplayName(),
+      ...(activeCampaignName !== undefined && { campaignName: activeCampaignName }),
+      ...(activeCampaignMultiplier !== undefined && {
+        campaignMultiplier: activeCampaignMultiplier,
+      }),
+      ...(activeCampaignBonusCap !== undefined && { bonusPointsCap: activeCampaignBonusCap }),
+      ...(activeCampaignBonusBeforeCap !== undefined && {
+        bonusPointsBeforeCap: activeCampaignBonusBeforeCap,
+      }),
+      finalMerchantPoints: merchantPoints.toNumber(),
+      finalGlobalPoints: boostedGlobalPoints.toNumber(),
+    };
+
+    const txMetadata: TransactionMetadata = {
+      ...baseMetadata,
+      breakdown: JSON.stringify(breakdown),
+      ...(activeCampaignName
+        ? {
+            campaignId: activeCampaignId ?? '',
+            campaignName: activeCampaignName,
+            campaignMultiplier: activeCampaignMultiplier ?? 1,
+          }
+        : {}),
+    };
 
     const transaction = Transaction.createEarn(
       request.merchantId,
@@ -208,6 +252,8 @@ export class RecordPurchaseUseCase {
       }),
       ...(activeCampaignName !== undefined && { campaignName: activeCampaignName }),
 
+      breakdown,
+
       message: `Purchase recorded! Earned ${merchantPoints.toNumber()} merchant points and ${boostedGlobalPoints.toNumber()} Pointly Network points`,
     };
 
@@ -247,6 +293,8 @@ export class RecordPurchaseUseCase {
     multiplier: number;
     name: string;
     merchantPoints: Points;
+    bonusPointsCap?: number;
+    bonusPointsBeforeCap?: number;
   } | null> {
     if (!this.campaignRepository) return null;
     const activeCampaigns = await this.campaignRepository.findActiveCampaignsForMerchant(
@@ -284,8 +332,12 @@ export class RecordPurchaseUseCase {
     // Cap bonus points if campaign has a per-transaction cap
     const merchantBonus = campaignMerchant - baseMerchant;
     const cappedBonus = campaign.capBonusPoints(merchantBonus);
+    let bonusPointsCap: number | undefined;
+    let bonusPointsBeforeCap: number | undefined;
     if (cappedBonus < merchantBonus && merchantBonus > 0) {
       campaignMerchant = baseMerchant + cappedBonus;
+      bonusPointsCap = cappedBonus;
+      bonusPointsBeforeCap = merchantBonus;
     }
 
     return {
@@ -293,6 +345,8 @@ export class RecordPurchaseUseCase {
       multiplier: mult,
       name: campaign.getName(),
       merchantPoints: Points.from(campaignMerchant),
+      ...(bonusPointsCap !== undefined && { bonusPointsCap }),
+      ...(bonusPointsBeforeCap !== undefined && { bonusPointsBeforeCap }),
     };
   }
 

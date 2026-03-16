@@ -175,7 +175,16 @@
     "sortNewest": "Newest",
     "sortOldest": "Oldest",
     "minAmount": "Amount (min)",
-    "expiration": "Expiration"
+    "expiration": "Expiration",
+    "breakdown": "Points Breakdown",
+    "breakdown_rate": "pt/SAR =",
+    "breakdown_base": "base pts",
+    "breakdown_tier": "Tier",
+    "breakdown_campaign": "Campaign",
+    "breakdown_capped": "Bonus capped at",
+    "breakdown_was": "(was",
+    "breakdown_merchant": "Merchant pts",
+    "breakdown_global": "Global pts"
   },
   "tier": {
     "bronze": "Bronze",

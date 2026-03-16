@@ -60,4 +60,5 @@ export type {
   WebhookEventType,
   WebhookConfigResponse,
   GiftPointsRequest,
+  PointsBreakdown,
 } from './types';

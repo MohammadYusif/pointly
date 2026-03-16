@@ -165,6 +165,7 @@ export interface TransactionResponse {
   campaignId?: string;
   campaignName?: string;
   campaignMultiplier?: number;
+  breakdown?: PointsBreakdown;
   createdAt: string;
   updatedAt: string;
 }
@@ -174,6 +175,20 @@ export interface MerchantStatsResponse {
   totalPointsEarned: number;
   totalPointsRedeemed: number;
   averageTransactionValue: number;
+}
+
+export interface PointsBreakdown {
+  purchaseAmount: number;
+  pointsPerSAR: number;
+  basePoints: number;
+  tierMultiplier: number;
+  tierName: string;
+  campaignName?: string;
+  campaignMultiplier?: number;
+  bonusPointsCap?: number;
+  bonusPointsBeforeCap?: number;
+  finalMerchantPoints: number;
+  finalGlobalPoints: number;
 }
 
 export interface RecordPurchaseResponse {
@@ -189,6 +204,7 @@ export interface RecordPurchaseResponse {
   pointsToNextTier: number;
   campaignMultiplier?: number;
   campaignName?: string;
+  breakdown?: PointsBreakdown;
   message: string;
 }
 

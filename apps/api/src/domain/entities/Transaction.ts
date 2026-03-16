@@ -32,16 +32,31 @@ interface SurfacedMetadata {
   campaignId: string | undefined;
   campaignName: string | undefined;
   campaignMultiplier: number | undefined;
+  breakdown: Record<string, unknown> | undefined;
 }
 
 function extractSurfacedMetadata(metadata: TransactionMetadata): SurfacedMetadata {
-  const m = metadata as unknown as SurfacedMetadata;
+  const m = metadata as unknown as Record<string, unknown>;
+  let breakdown: Record<string, unknown> | undefined;
+  const rawBreakdown = m['breakdown'];
+  if (typeof rawBreakdown === 'string') {
+    try {
+      const parsed: unknown = JSON.parse(rawBreakdown);
+      if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        breakdown = parsed as Record<string, unknown>;
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }
   return {
-    vatAmount: typeof m.vatAmount === 'number' ? m.vatAmount : undefined,
-    merchantVatId: typeof m.merchantVatId === 'string' ? m.merchantVatId : undefined,
-    campaignId: typeof m.campaignId === 'string' ? m.campaignId : undefined,
-    campaignName: typeof m.campaignName === 'string' ? m.campaignName : undefined,
-    campaignMultiplier: typeof m.campaignMultiplier === 'number' ? m.campaignMultiplier : undefined,
+    vatAmount: typeof m['vatAmount'] === 'number' ? m['vatAmount'] : undefined,
+    merchantVatId: typeof m['merchantVatId'] === 'string' ? m['merchantVatId'] : undefined,
+    campaignId: typeof m['campaignId'] === 'string' ? m['campaignId'] : undefined,
+    campaignName: typeof m['campaignName'] === 'string' ? m['campaignName'] : undefined,
+    campaignMultiplier:
+      typeof m['campaignMultiplier'] === 'number' ? m['campaignMultiplier'] : undefined,
+    breakdown,
   };
 }
 

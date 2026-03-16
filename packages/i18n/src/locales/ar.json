@@ -175,7 +175,16 @@
     "sortNewest": "الأحدث",
     "sortOldest": "الأقدم",
     "minAmount": "المبلغ (أدنى)",
-    "expiration": "انتهاء"
+    "expiration": "انتهاء",
+    "breakdown": "تفاصيل النقاط",
+    "breakdown_rate": "نقطة/ريال =",
+    "breakdown_base": "نقاط أساسية",
+    "breakdown_tier": "المستوى",
+    "breakdown_campaign": "الحملة",
+    "breakdown_capped": "الحد الأقصى للمكافأة",
+    "breakdown_was": "(كان",
+    "breakdown_merchant": "نقاط التاجر",
+    "breakdown_global": "النقاط العامة"
   },
   "tier": {
     "bronze": "برونزي",

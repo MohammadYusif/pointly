@@ -21,4 +21,5 @@ export type {
   CustomerInsights,
   PerkInsights,
   WebhookConfigResponse,
+  PointsBreakdown,
 } from '@pointly/shared';

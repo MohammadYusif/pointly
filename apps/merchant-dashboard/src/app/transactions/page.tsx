@@ -10,7 +10,7 @@ import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { formatPhone, getStatusBadge, getTypeBadge } from '@pointly/shared';
 import { Button, Card, CardContent, useRTL } from '@pointly/ui';
-import { ArrowDownUp, Download } from 'lucide-react';
+import { ArrowDownUp, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -51,12 +51,14 @@ function getAmount(amount: unknown): number {
   return 0;
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: transaction list with filters, sorting, CSV export, and expandable breakdown
 export default function TransactionsPage() {
   const { t, formatCurrency, formatNumber, locale } = useTranslation();
   const { textStart, textEnd } = useRTL();
   const [locationId, setLocationId] = useState<string | undefined>(undefined);
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC');
+  const [expandedTxId, setExpandedTxId] = useState<string | null>(null);
 
   const { data: merchantData } = useMerchant();
   const {
@@ -164,6 +166,8 @@ export default function TransactionsPage() {
           {transactions.map((tx) => {
             const typeBadge = getTypeBadge(tx.type);
             const statusBadge = getStatusBadge(tx.status);
+            const isExpanded = expandedTxId === tx.transactionId;
+            const breakdown = tx.breakdown;
             return (
               <Card key={tx.transactionId} className="stagger-item">
                 <CardContent className="p-4">
@@ -199,7 +203,7 @@ export default function TransactionsPage() {
                         )}
                       </div>
                     </div>
-                    <div className={textEnd}>
+                    <div className={`${textEnd} flex flex-col items-end gap-1`}>
                       <p className="font-medium">{formatCurrency(getAmount(tx.amount))}</p>
                       <p
                         className={`text-sm ${tx.type === 'EARN' ? 'text-green-600' : 'text-orange-600'}`}
@@ -207,8 +211,52 @@ export default function TransactionsPage() {
                         {tx.type === 'EARN' ? '+' : '-'}
                         {formatNumber(tx.points)} {t('common.points')}
                       </p>
+                      {breakdown && tx.type === 'EARN' && (
+                        <button
+                          type="button"
+                          onClick={() => setExpandedTxId(isExpanded ? null : tx.transactionId)}
+                          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          {t('transaction.breakdown')}
+                          {isExpanded ? (
+                            <ChevronUp className="h-3 w-3" />
+                          ) : (
+                            <ChevronDown className="h-3 w-3" />
+                          )}
+                        </button>
+                      )}
                     </div>
                   </div>
+                  {isExpanded && breakdown && (
+                    <div className="mt-3 pt-3 border-t text-xs text-muted-foreground space-y-1">
+                      <p>
+                        {breakdown.purchaseAmount} SAR × {breakdown.pointsPerSAR}{' '}
+                        {t('transaction.breakdown_rate')} = {breakdown.basePoints}{' '}
+                        {t('transaction.breakdown_base')}
+                      </p>
+                      <p>
+                        {t('transaction.breakdown_tier')}: {breakdown.tierName} (
+                        {breakdown.tierMultiplier}×)
+                      </p>
+                      {breakdown.campaignName && (
+                        <p>
+                          {t('transaction.breakdown_campaign')}: {breakdown.campaignName} (
+                          {breakdown.campaignMultiplier}×)
+                        </p>
+                      )}
+                      {breakdown.bonusPointsCap !== undefined &&
+                        breakdown.bonusPointsBeforeCap !== undefined && (
+                          <p>
+                            {t('transaction.breakdown_capped')}: {breakdown.bonusPointsCap}{' '}
+                            {t('transaction.breakdown_was')} {breakdown.bonusPointsBeforeCap}
+                          </p>
+                        )}
+                      <p className="font-medium text-foreground">
+                        {t('transaction.breakdown_merchant')}: {breakdown.finalMerchantPoints} ·{' '}
+                        {t('transaction.breakdown_global')}: {breakdown.finalGlobalPoints}
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
