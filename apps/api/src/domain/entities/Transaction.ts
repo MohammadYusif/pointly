@@ -36,9 +36,10 @@ interface SurfacedMetadata {
 }
 
 function extractSurfacedMetadata(metadata: TransactionMetadata): SurfacedMetadata {
-  const m = metadata as unknown as Record<string, unknown>;
+  const m = metadata as unknown as SurfacedMetadata;
   let breakdown: Record<string, unknown> | undefined;
-  const rawBreakdown = m['breakdown'];
+  // biome-ignore lint/complexity/useLiteralKeys: TS noPropertyAccessFromIndexSignature requires bracket notation
+  const rawBreakdown = (metadata as unknown as Record<string, unknown>)['breakdown'];
   if (typeof rawBreakdown === 'string') {
     try {
       const parsed: unknown = JSON.parse(rawBreakdown);
@@ -50,12 +51,11 @@ function extractSurfacedMetadata(metadata: TransactionMetadata): SurfacedMetadat
     }
   }
   return {
-    vatAmount: typeof m['vatAmount'] === 'number' ? m['vatAmount'] : undefined,
-    merchantVatId: typeof m['merchantVatId'] === 'string' ? m['merchantVatId'] : undefined,
-    campaignId: typeof m['campaignId'] === 'string' ? m['campaignId'] : undefined,
-    campaignName: typeof m['campaignName'] === 'string' ? m['campaignName'] : undefined,
-    campaignMultiplier:
-      typeof m['campaignMultiplier'] === 'number' ? m['campaignMultiplier'] : undefined,
+    vatAmount: typeof m.vatAmount === 'number' ? m.vatAmount : undefined,
+    merchantVatId: typeof m.merchantVatId === 'string' ? m.merchantVatId : undefined,
+    campaignId: typeof m.campaignId === 'string' ? m.campaignId : undefined,
+    campaignName: typeof m.campaignName === 'string' ? m.campaignName : undefined,
+    campaignMultiplier: typeof m.campaignMultiplier === 'number' ? m.campaignMultiplier : undefined,
     breakdown,
   };
 }
