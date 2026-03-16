@@ -194,16 +194,18 @@ describe('Campaign Entity', () => {
       expect(campaign.isEligibleForCustomer(baseCtx)).toBe(true);
     });
 
-    it('should be eligible for BIRTHDAY_REWARD when birth month matches current month', () => {
+    it('should be eligible for BIRTHDAY_REWARD when birthday falls within campaign date range', () => {
       const now = new Date();
-      const dob = `1990-${String(now.getMonth() + 1).padStart(2, '0')}-15`;
+      // Use today's date so birthday falls within the campaign range (starts today, lasts 30 days)
+      const dob = `1990-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       const campaign = Campaign.create('merchant-1', 'BIRTHDAY_REWARD');
       const ctx: CampaignEligibilityContext = { ...baseCtx, dateOfBirth: dob };
       expect(campaign.isEligibleForCustomer(ctx)).toBe(true);
     });
 
-    it('should not be eligible for BIRTHDAY_REWARD when birth month differs', () => {
+    it('should not be eligible for BIRTHDAY_REWARD when birthday is outside campaign date range', () => {
       const now = new Date();
+      // 6 months away is well outside the 30-day birthday campaign window
       const otherMonth = ((now.getMonth() + 6) % 12) + 1;
       const dob = `1990-${String(otherMonth).padStart(2, '0')}-15`;
       const campaign = Campaign.create('merchant-1', 'BIRTHDAY_REWARD');

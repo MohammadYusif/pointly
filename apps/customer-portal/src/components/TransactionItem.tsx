@@ -53,32 +53,73 @@ export function TransactionItem({ transaction, merchantName }: TransactionItemPr
         </div>
       </div>
       {expanded && breakdown && (
-        <div className="mt-2 text-xs text-muted-foreground space-y-1 ps-2 border-s-2 border-muted">
-          <p>
-            {breakdown.purchaseAmount} SAR × {breakdown.pointsPerSAR}{' '}
-            {t('transaction.breakdown_rate')} = {breakdown.basePoints}{' '}
-            {t('transaction.breakdown_base')}
-          </p>
-          <p>
-            {t('transaction.breakdown_tier')}: {breakdown.tierName} ({breakdown.tierMultiplier}×)
-          </p>
-          {breakdown.campaignName && (
-            <p>
-              {t('transaction.breakdown_campaign')}: {breakdown.campaignName} (
-              {breakdown.campaignMultiplier}×)
-            </p>
-          )}
+        <div className="mt-3 rounded-lg bg-muted/40 p-3 text-xs space-y-2">
+          {/* Calculation rows */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+            <span className="text-muted-foreground">{t('transaction.breakdown_purchase')}</span>
+            <span className="text-end font-medium">
+              {formatNumber(breakdown.purchaseAmount)} SAR
+            </span>
+
+            <span className="text-muted-foreground">{t('transaction.breakdown_rate')}</span>
+            <span className="text-end font-medium">
+              {breakdown.pointsPerSAR} {t('transaction.breakdown_ptPerSar')}
+            </span>
+
+            <span className="text-muted-foreground">{t('transaction.breakdown_basePoints')}</span>
+            <span className="text-end font-medium">{formatNumber(breakdown.basePoints)}</span>
+          </div>
+
+          <div className="border-t border-border/50 my-1" />
+
+          {/* Multipliers */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+            <span className="text-muted-foreground">{t('transaction.breakdown_tier')}</span>
+            <span className="text-end">
+              <span className="inline-flex items-center gap-1 rounded-full bg-background px-2 py-0.5 font-medium">
+                {breakdown.tierName} {breakdown.tierMultiplier}×
+              </span>
+            </span>
+            {breakdown.campaignName && (
+              <>
+                <span className="text-muted-foreground">{t('transaction.breakdown_campaign')}</span>
+                <span className="text-end">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 text-purple-800 px-2 py-0.5 font-medium">
+                    {breakdown.campaignName} {breakdown.campaignMultiplier}×
+                  </span>
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* Bonus cap warning */}
           {breakdown.bonusPointsCap !== undefined &&
             breakdown.bonusPointsBeforeCap !== undefined && (
-              <p>
-                {t('transaction.breakdown_capped')} +{breakdown.bonusPointsCap} (was +
-                {breakdown.bonusPointsBeforeCap})
-              </p>
+              <div className="rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1.5 text-amber-800 flex items-center justify-between">
+                <span>{t('transaction.breakdown_bonusCapped')}</span>
+                <span className="font-medium">
+                  +{formatNumber(breakdown.bonusPointsCap)}
+                  <span className="text-amber-600 ms-1">
+                    ({t('transaction.breakdown_beforeCap')}: +
+                    {formatNumber(breakdown.bonusPointsBeforeCap)})
+                  </span>
+                </span>
+              </div>
             )}
-          <p className="font-medium text-foreground">
-            {t('transaction.breakdown_merchant')}: {breakdown.finalMerchantPoints} ·{' '}
-            {t('transaction.breakdown_global')}: {breakdown.finalGlobalPoints}
-          </p>
+
+          <div className="border-t border-border/50 my-1" />
+
+          {/* Final totals */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 font-medium text-foreground">
+            <span>{t('transaction.breakdown_merchant')}</span>
+            <span className="text-end text-green-600">
+              +{formatNumber(breakdown.finalMerchantPoints)}
+            </span>
+            <span>{t('transaction.breakdown_global')}</span>
+            <span className="text-end text-blue-600">
+              +{formatNumber(breakdown.finalGlobalPoints)}
+            </span>
+          </div>
         </div>
       )}
     </div>

@@ -177,13 +177,16 @@
     "minAmount": "المبلغ (أدنى)",
     "expiration": "انتهاء",
     "breakdown": "تفاصيل النقاط",
-    "breakdown_rate": "نقطة/ريال =",
-    "breakdown_base": "نقاط أساسية",
-    "breakdown_tier": "المستوى",
+    "breakdown_purchase": "المبلغ",
+    "breakdown_rate": "المعدل",
+    "breakdown_basePoints": "النقاط الأساسية",
+    "breakdown_tier": "مكافأة المستوى",
     "breakdown_campaign": "الحملة",
-    "breakdown_capped": "المكافأة محدودة:",
+    "breakdown_bonusCapped": "المكافأة محدودة",
+    "breakdown_beforeCap": "قبل الحد",
     "breakdown_merchant": "نقاط التاجر",
-    "breakdown_global": "النقاط العامة"
+    "breakdown_global": "النقاط العامة",
+    "breakdown_ptPerSar": "نقطة/ريال"
   },
   "tier": {
     "bronze": "برونزي",

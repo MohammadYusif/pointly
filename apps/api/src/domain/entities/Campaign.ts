@@ -322,9 +322,30 @@ export class Campaign {
 
   private isBirthdayEligible(dateOfBirth?: string): boolean {
     if (!dateOfBirth) return false;
-    const now = new Date();
     const dob = new Date(dateOfBirth);
-    return dob.getMonth() === now.getMonth();
+    const dobMonth = dob.getMonth();
+    const dobDay = dob.getDate();
+
+    // Normalize to date-only (strip time) for fair comparison
+    const startDate = new Date(
+      this.props.startDate.getFullYear(),
+      this.props.startDate.getMonth(),
+      this.props.startDate.getDate(),
+    );
+    const endDate = new Date(
+      this.props.endDate.getFullYear(),
+      this.props.endDate.getMonth(),
+      this.props.endDate.getDate(),
+    );
+
+    // Check if the customer's birthday (month+day) falls within the campaign date range
+    for (let year = startDate.getFullYear(); year <= endDate.getFullYear(); year++) {
+      const birthdayThisYear = new Date(year, dobMonth, dobDay);
+      if (birthdayThisYear >= startDate && birthdayThisYear <= endDate) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private isWinBackEligible(lastTransactionAt?: Date): boolean {
