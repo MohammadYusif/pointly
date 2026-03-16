@@ -250,22 +250,27 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
         if (perkId) campaignByPerkId.set(perkId, c);
       }
 
-      // Get campaign usage counts for this customer at this merchant
+      // Get campaign usage counts for this customer at this merchant (paginate to count all)
       const useCounts = new Map<string, number>();
       if (campaignByPerkId.size > 0) {
-        const txResult = await container.transactionRepository.findByCustomerAndMerchant(
-          customerId,
-          merchantId,
-          { limit: 200 },
-        );
-        for (const tx of txResult.items) {
-          const meta = tx.getMetadata();
-          // biome-ignore lint/complexity/useLiteralKeys: TS noPropertyAccessFromIndexSignature requires bracket notation
-          const cId = meta['campaignId'];
-          if (typeof cId === 'string') {
-            useCounts.set(cId, (useCounts.get(cId) ?? 0) + 1);
+        let txNextToken: string | undefined;
+        do {
+          const txOpts = txNextToken ? { limit: 200, nextToken: txNextToken } : { limit: 200 };
+          const txResult = await container.transactionRepository.findByCustomerAndMerchant(
+            customerId,
+            merchantId,
+            txOpts,
+          );
+          for (const tx of txResult.items) {
+            const meta = tx.getMetadata();
+            // biome-ignore lint/complexity/useLiteralKeys: TS noPropertyAccessFromIndexSignature requires bracket notation
+            const cId = meta['campaignId'];
+            if (typeof cId === 'string') {
+              useCounts.set(cId, (useCounts.get(cId) ?? 0) + 1);
+            }
           }
-        }
+          txNextToken = txResult.nextToken;
+        } while (txNextToken);
       }
 
       const customerJSON = customer.toJSON();

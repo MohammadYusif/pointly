@@ -115,12 +115,7 @@ export class RecordPurchaseUseCase {
     let activeCampaignMultiplier: number | undefined;
     let activeCampaignName: string | undefined;
     let activeCampaignId: string | undefined;
-    const campaignResult = await this.resolveBestCampaign(
-      request,
-      customer,
-      merchantPoints,
-      globalPoints,
-    );
+    const campaignResult = await this.resolveBestCampaign(request, customer, merchantPoints);
     if (campaignResult) {
       activeCampaignId = campaignResult.id;
       activeCampaignMultiplier = campaignResult.multiplier;
@@ -256,13 +251,11 @@ export class RecordPurchaseUseCase {
     request: RecordPurchaseRequest,
     customer: Customer,
     baseMerchantPoints: Points,
-    baseGlobalPoints: Points,
   ): Promise<{
     id: string;
     multiplier: number;
     name: string;
     merchantPoints: Points;
-    globalPoints: Points;
   } | null> {
     if (!this.campaignRepository) return null;
     const activeCampaigns = await this.campaignRepository.findActiveCampaignsForMerchant(
@@ -295,16 +288,13 @@ export class RecordPurchaseUseCase {
 
     const mult = campaign.getMultiplier();
     const baseMerchant = baseMerchantPoints.toNumber();
-    const baseGlobal = baseGlobalPoints.toNumber();
     let campaignMerchant = Math.floor(baseMerchant * mult);
-    let campaignGlobal = Math.floor(baseGlobal * mult);
 
-    const totalBonus = campaignMerchant - baseMerchant + (campaignGlobal - baseGlobal);
-    const cappedBonus = campaign.capBonusPoints(totalBonus);
-    if (cappedBonus < totalBonus && totalBonus > 0) {
-      const ratio = cappedBonus / totalBonus;
-      campaignMerchant = baseMerchant + Math.floor((campaignMerchant - baseMerchant) * ratio);
-      campaignGlobal = baseGlobal + Math.floor((campaignGlobal - baseGlobal) * ratio);
+    // Cap bonus points if campaign has a per-transaction cap
+    const merchantBonus = campaignMerchant - baseMerchant;
+    const cappedBonus = campaign.capBonusPoints(merchantBonus);
+    if (cappedBonus < merchantBonus && merchantBonus > 0) {
+      campaignMerchant = baseMerchant + cappedBonus;
     }
 
     return {
@@ -312,7 +302,6 @@ export class RecordPurchaseUseCase {
       multiplier: mult,
       name: campaign.getName(),
       merchantPoints: Points.from(campaignMerchant),
-      globalPoints: Points.from(campaignGlobal),
     };
   }
 
@@ -320,20 +309,25 @@ export class RecordPurchaseUseCase {
     customerId: string,
     merchantId: string,
   ): Promise<Map<string, number>> {
-    const result = await this.transactionRepository.findByCustomerAndMerchant(
-      customerId,
-      merchantId,
-      { limit: 200 },
-    );
     const counts = new Map<string, number>();
-    for (const tx of result.items) {
-      const meta = tx.getMetadata();
-      // biome-ignore lint/complexity/useLiteralKeys: TS noPropertyAccessFromIndexSignature requires bracket notation
-      const cId = meta['campaignId'];
-      if (typeof cId === 'string') {
-        counts.set(cId, (counts.get(cId) ?? 0) + 1);
+    let nextToken: string | undefined;
+    do {
+      const opts = nextToken ? { limit: 200, nextToken } : { limit: 200 };
+      const result = await this.transactionRepository.findByCustomerAndMerchant(
+        customerId,
+        merchantId,
+        opts,
+      );
+      for (const tx of result.items) {
+        const meta = tx.getMetadata();
+        // biome-ignore lint/complexity/useLiteralKeys: TS noPropertyAccessFromIndexSignature requires bracket notation
+        const cId = meta['campaignId'];
+        if (typeof cId === 'string') {
+          counts.set(cId, (counts.get(cId) ?? 0) + 1);
+        }
       }
-    }
+      nextToken = result.nextToken;
+    } while (nextToken);
     return counts;
   }
 
