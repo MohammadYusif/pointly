@@ -40,6 +40,19 @@ const campaignTypeEnum = z.enum([
   'CUSTOM',
 ]);
 
+const updateCampaignSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).optional(),
+  startDate: z.string().min(1).optional(),
+  endDate: z.string().min(1).optional(),
+  multiplier: z.number().min(1.0).max(5.0).optional(),
+  message: z.string().max(500).optional(),
+  targetTiers: z.array(z.enum(['BRONZE', 'GOLD', 'PLATINUM', 'DIAMOND'])).optional(),
+  maxUsesPerCustomer: z.number().int().min(0).max(1000).optional(),
+  minPurchaseAmount: z.number().min(0).max(100000).optional(),
+  maxPointsPerTransaction: z.number().int().min(0).max(100000).optional(),
+});
+
 const createCampaignSchema = z.object({
   type: campaignTypeEnum,
   name: z.string().min(1).max(100).optional(),
@@ -123,6 +136,39 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
       });
 
       return reply.send({ success: true });
+    },
+  );
+
+  server.patch(
+    '/:id/campaigns/:campaignId',
+    async (
+      request: FastifyRequest<{
+        Params: { id: string; campaignId: string };
+        Body: z.infer<typeof updateCampaignSchema>;
+      }>,
+      reply: FastifyReply,
+    ) => {
+      enforceMerchantAccess(request);
+      const { id: merchantId, campaignId } = request.params;
+      const body = updateCampaignSchema.parse(request.body);
+
+      const req: ManageCampaignRequest = { action: 'update', merchantId, campaignId };
+      if (body.name) req.name = body.name;
+      if (body.description !== undefined) req.description = body.description;
+      if (body.startDate) req.startDate = body.startDate;
+      if (body.endDate) req.endDate = body.endDate;
+      if (body.multiplier !== undefined) req.multiplier = body.multiplier;
+      if (body.message !== undefined) req.message = body.message;
+      if (body.targetTiers) req.targetTiers = body.targetTiers;
+      if (body.maxUsesPerCustomer !== undefined) req.maxUsesPerCustomer = body.maxUsesPerCustomer;
+      if (body.minPurchaseAmount !== undefined) req.minPurchaseAmount = body.minPurchaseAmount;
+      if (body.maxPointsPerTransaction !== undefined)
+        req.maxPointsPerTransaction = body.maxPointsPerTransaction;
+
+      const container = getContainer();
+      const result = await container.manageCampaignUseCase.execute(req);
+      const campaign = result as import('../../../domain/entities/Campaign').Campaign | undefined;
+      return reply.send({ success: true, data: campaign?.toJSON() });
     },
   );
 }

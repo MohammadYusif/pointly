@@ -221,6 +221,27 @@ export const campaignApi = {
       body: JSON.stringify(data),
     }),
 
+  update: (
+    merchantId: string,
+    campaignId: string,
+    data: {
+      name?: string;
+      description?: string;
+      startDate?: string;
+      endDate?: string;
+      multiplier?: number;
+      message?: string;
+      targetTiers?: string[];
+      maxUsesPerCustomer?: number;
+      minPurchaseAmount?: number;
+      maxPointsPerTransaction?: number;
+    },
+  ) =>
+    fetchApi<CampaignResponse>(`/v1/merchants/${merchantId}/campaigns/${campaignId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
   deactivate: (merchantId: string, campaignId: string) =>
     fetchApi<void>(`/v1/merchants/${merchantId}/campaigns/${campaignId}`, {
       method: 'DELETE',

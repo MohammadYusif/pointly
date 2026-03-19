@@ -8,7 +8,7 @@ import type { ISmsPublisherService, SmsMessage } from '../services/ISmsPublisher
 import type { PersistenceItem, QueryResult } from '../shared/interfaces/BaseRepository';
 
 export interface ManageCampaignRequest {
-  action: 'create' | 'list' | 'deactivate';
+  action: 'create' | 'list' | 'deactivate' | 'update';
   merchantId: string;
   type?: CampaignType;
   name?: string;
@@ -43,6 +43,8 @@ export class ManageCampaignUseCase {
         return this.list(request.merchantId);
       case 'deactivate':
         return this.deactivate(request);
+      case 'update':
+        return this.update(request);
     }
   }
 
@@ -148,6 +150,23 @@ export class ManageCampaignUseCase {
     }));
 
     await this.smsPublisherService.publishBatch(messages);
+  }
+
+  private async update(request: ManageCampaignRequest): Promise<Campaign> {
+    if (!request.campaignId) {
+      throw new NotFoundError('Campaign', 'campaignId is required');
+    }
+    const result = await this.campaignRepository.findByMerchant(request.merchantId);
+    const campaign = result.items.find((c) => c.getCampaignId() === request.campaignId);
+    if (!campaign) {
+      throw new NotFoundError('Campaign', request.campaignId);
+    }
+
+    const overrides = ManageCampaignUseCase.buildOverrides(request);
+    campaign.update(overrides);
+
+    await this.atomicWrite(this.campaignRepository.toPersistenceItem(campaign));
+    return campaign;
   }
 
   private async list(merchantId: string): Promise<QueryResult<Campaign>> {

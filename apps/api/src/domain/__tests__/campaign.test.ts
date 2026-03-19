@@ -203,12 +203,25 @@ describe('Campaign Entity', () => {
       expect(campaign.isEligibleForCustomer(ctx)).toBe(true);
     });
 
-    it('should not be eligible for BIRTHDAY_REWARD when birthday is outside campaign date range', () => {
+    it('should be eligible for BIRTHDAY_REWARD when birthday is 6 months away (year-round 365-day window)', () => {
       const now = new Date();
-      // 6 months away is well outside the 30-day birthday campaign window
+      // The default BIRTHDAY_REWARD campaign is 365 days — covers any birthday within the year
       const otherMonth = ((now.getMonth() + 6) % 12) + 1;
       const dob = `1990-${String(otherMonth).padStart(2, '0')}-15`;
       const campaign = Campaign.create('merchant-1', 'BIRTHDAY_REWARD');
+      const ctx: CampaignEligibilityContext = { ...baseCtx, dateOfBirth: dob };
+      expect(campaign.isEligibleForCustomer(ctx)).toBe(true);
+    });
+
+    it('should not be eligible for BIRTHDAY_REWARD when birthday is outside a short custom date range', () => {
+      const now = new Date();
+      // Merchant creates a custom short birthday window (7 days)
+      const start = now;
+      const end = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      // Birthday 6 months away is outside the 7-day window
+      const otherMonth = ((now.getMonth() + 6) % 12) + 1;
+      const dob = `1990-${String(otherMonth).padStart(2, '0')}-15`;
+      const campaign = Campaign.create('merchant-1', 'BIRTHDAY_REWARD', { startDate: start, endDate: end });
       const ctx: CampaignEligibilityContext = { ...baseCtx, dateOfBirth: dob };
       expect(campaign.isEligibleForCustomer(ctx)).toBe(false);
     });

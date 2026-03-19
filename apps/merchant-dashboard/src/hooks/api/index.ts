@@ -26,6 +26,7 @@ export { useMerchantAnalytics } from './use-analytics';
 export {
   useCampaigns,
   useCreateCampaign,
+  useUpdateCampaign,
   useDeactivateCampaign,
   useTierBreakdown,
 } from './use-campaigns';

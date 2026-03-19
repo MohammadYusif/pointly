@@ -6,6 +6,7 @@ import {
   useCreateCampaign,
   useDeactivateCampaign,
   useTierBreakdown,
+  useUpdateCampaign,
 } from '@/hooks/api';
 import type { CampaignResponse, CampaignType } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
@@ -19,6 +20,22 @@ import {
   Textarea,
   useRTL,
 } from '@pointly/ui';
+import {
+  Cake,
+  ChevronUp,
+  Clock,
+  Edit2,
+  Flame,
+  Gift,
+  Heart,
+  Megaphone,
+  Plus,
+  Search,
+  Sliders,
+  Sparkles,
+  Users,
+  Zap,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -26,21 +43,71 @@ import { toast } from 'sonner';
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-const CAMPAIGN_TYPES: { type: CampaignType; icon: string; labelKey: string }[] = [
-  { type: 'DOUBLE_POINTS', icon: '2️⃣', labelKey: 'campaigns.types.doublePoints' },
-  { type: 'TRIPLE_POINTS', icon: '3️⃣', labelKey: 'campaigns.types.triplePoints' },
-  { type: 'BIRTHDAY_REWARD', icon: '🎂', labelKey: 'campaigns.types.birthdayReward' },
-  { type: 'WIN_BACK', icon: '💌', labelKey: 'campaigns.types.winBack' },
-  { type: 'WELCOME', icon: '👋', labelKey: 'campaigns.types.welcome' },
-  { type: 'HAPPY_HOUR', icon: '⚡', labelKey: 'campaigns.types.happyHour' },
-  { type: 'CUSTOM', icon: '🛠️', labelKey: 'campaigns.types.custom' },
+type CampaignIconComponent = React.ComponentType<{ className?: string }>;
+
+const CAMPAIGN_TYPE_META: {
+  type: CampaignType;
+  Icon: CampaignIconComponent;
+  labelKey: string;
+  color: string;
+  descKey: string;
+}[] = [
+  {
+    type: 'DOUBLE_POINTS',
+    Icon: Zap,
+    labelKey: 'campaigns.types.doublePoints',
+    color: 'text-primary bg-primary/10',
+    descKey: 'campaigns.typeDesc.doublePoints',
+  },
+  {
+    type: 'TRIPLE_POINTS',
+    Icon: Flame,
+    labelKey: 'campaigns.types.triplePoints',
+    color: 'text-orange-600 bg-orange-50',
+    descKey: 'campaigns.typeDesc.triplePoints',
+  },
+  {
+    type: 'BIRTHDAY_REWARD',
+    Icon: Cake,
+    labelKey: 'campaigns.types.birthdayReward',
+    color: 'text-pink-600 bg-pink-50',
+    descKey: 'campaigns.typeDesc.birthdayReward',
+  },
+  {
+    type: 'WIN_BACK',
+    Icon: Heart,
+    labelKey: 'campaigns.types.winBack',
+    color: 'text-rose-600 bg-rose-50',
+    descKey: 'campaigns.typeDesc.winBack',
+  },
+  {
+    type: 'WELCOME',
+    Icon: Sparkles,
+    labelKey: 'campaigns.types.welcome',
+    color: 'text-secondary bg-secondary/10',
+    descKey: 'campaigns.typeDesc.welcome',
+  },
+  {
+    type: 'HAPPY_HOUR',
+    Icon: Clock,
+    labelKey: 'campaigns.types.happyHour',
+    color: 'text-amber-600 bg-amber-50',
+    descKey: 'campaigns.typeDesc.happyHour',
+  },
+  {
+    type: 'CUSTOM',
+    Icon: Sliders,
+    labelKey: 'campaigns.types.custom',
+    color: 'text-muted-foreground bg-muted',
+    descKey: 'campaigns.typeDesc.custom',
+  },
 ];
 
 /** Frontend mirror of CAMPAIGN_DEFAULTS from the API domain */
 const CAMPAIGN_DEFAULTS: Record<string, { durationDays: number; multiplier: number }> = {
   DOUBLE_POINTS: { durationDays: 7, multiplier: 2 },
   TRIPLE_POINTS: { durationDays: 3, multiplier: 3 },
-  BIRTHDAY_REWARD: { durationDays: 30, multiplier: 2 },
+  BIRTHDAY_REWARD: { durationDays: 365, multiplier: 2 },
   WIN_BACK: { durationDays: 14, multiplier: 3 },
   WELCOME: { durationDays: 7, multiplier: 2 },
   HAPPY_HOUR: { durationDays: 1, multiplier: 2 },
@@ -49,6 +116,7 @@ const CAMPAIGN_DEFAULTS: Record<string, { durationDays: number; multiplier: numb
 const ALL_TIERS = ['BRONZE', 'GOLD', 'PLATINUM', 'DIAMOND'] as const;
 
 type FilterTab = 'all' | 'active' | 'scheduled' | 'expired';
+type SortOption = 'newest' | 'multiplier' | 'name';
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -92,7 +160,7 @@ function getDefaultDates(durationDays: number): { start: string; end: string } {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Sub-components                                                     */
+/*  Badge components                                                   */
 /* ------------------------------------------------------------------ */
 
 function CampaignStatusBadge({ campaign }: { campaign: CampaignResponse }) {
@@ -100,10 +168,10 @@ function CampaignStatusBadge({ campaign }: { campaign: CampaignResponse }) {
   const status = getCampaignStatus(campaign);
 
   const styles: Record<string, string> = {
-    active: 'bg-green-100 text-green-800',
-    scheduled: 'bg-blue-100 text-blue-800',
-    expired: 'bg-amber-100 text-amber-800',
-    inactive: 'bg-gray-100 text-gray-800',
+    active: 'bg-primary/10 text-primary border border-primary/20',
+    scheduled: 'bg-secondary/10 text-secondary border border-secondary/20',
+    expired: 'bg-muted text-muted-foreground border border-border',
+    inactive: 'bg-muted text-muted-foreground border border-border',
   };
   const labels: Record<string, string> = {
     active: t('campaigns.active'),
@@ -111,9 +179,18 @@ function CampaignStatusBadge({ campaign }: { campaign: CampaignResponse }) {
     expired: t('campaigns.expired'),
     inactive: t('common.inactive'),
   };
+  const dots: Record<string, string> = {
+    active: 'bg-primary',
+    scheduled: 'bg-secondary',
+    expired: 'bg-muted-foreground',
+    inactive: 'bg-muted-foreground',
+  };
 
   return (
-    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${styles[status]}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${styles[status]}`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${dots[status]}`} />
       {labels[status]}
     </span>
   );
@@ -121,20 +198,32 @@ function CampaignStatusBadge({ campaign }: { campaign: CampaignResponse }) {
 
 function CampaignTypeBadge({ type }: { type: CampaignType | undefined }) {
   const { t } = useTranslation();
-  const entry = CAMPAIGN_TYPES.find((ct) => ct.type === type);
-  if (!entry) return null;
+  const meta = CAMPAIGN_TYPE_META.find((m) => m.type === type);
+  if (!meta) return null;
+  const { Icon, color } = meta;
   return (
-    <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-      {entry.icon} {t(entry.labelKey)}
+    <span
+      className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium ${color}`}
+    >
+      <Icon className="w-3 h-3" />
+      {t(meta.labelKey)}
     </span>
   );
 }
+
+const TIER_STYLES: Record<string, string> = {
+  BRONZE: 'bg-amber-50 text-amber-700 border border-amber-200',
+  GOLD: 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+  PLATINUM: 'bg-blue-50 text-blue-700 border border-blue-200',
+  DIAMOND: 'bg-primary/10 text-primary border border-primary/20',
+};
 
 function TierBadges({ tiers }: { tiers: string[] | undefined }) {
   const { t } = useTranslation();
   if (!tiers || tiers.length === 0 || tiers.length === ALL_TIERS.length) {
     return (
-      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+      <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground border border-border">
+        <Users className="w-3 h-3" />
         {t('campaigns.allTiers')}
       </span>
     );
@@ -144,12 +233,326 @@ function TierBadges({ tiers }: { tiers: string[] | undefined }) {
       {tiers.map((tier) => (
         <span
           key={tier}
-          className="text-xs px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-800"
+          className={`text-xs px-2 py-0.5 rounded-full font-medium ${TIER_STYLES[tier] ?? 'bg-muted text-muted-foreground'}`}
         >
           {t(`tier.${tier.toLowerCase()}`)}
         </span>
       ))}
     </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Multiplier display                                                 */
+/* ------------------------------------------------------------------ */
+
+function MultiplierBadge({ multiplier }: { multiplier: number }) {
+  const isHigh = multiplier >= 3;
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 text-sm font-bold px-2.5 py-0.5 rounded-full ${
+        isHigh ? 'bg-orange-100 text-orange-700' : 'bg-primary/10 text-primary'
+      }`}
+    >
+      <Zap className="w-3.5 h-3.5" />
+      {multiplier}x
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Shared form fields (used by both Create and Edit forms)           */
+/* ------------------------------------------------------------------ */
+
+interface CampaignFormFieldsProps {
+  isCustom?: boolean;
+  customName?: string;
+  setCustomName?: (v: string) => void;
+  customDesc?: string;
+  setCustomDesc?: (v: string) => void;
+  startDate: string;
+  setStartDate: (v: string) => void;
+  endDate: string;
+  setEndDate: (v: string) => void;
+  multiplier: string;
+  setMultiplier: (v: string) => void;
+  selectedTiers: string[];
+  setSelectedTiers: (v: string[]) => void;
+  maxUses: string;
+  setMaxUses: (v: string) => void;
+  minPurchase: string;
+  setMinPurchase: (v: string) => void;
+  maxPoints: string;
+  setMaxPoints: (v: string) => void;
+  message: string;
+  setMessage: (v: string) => void;
+  tierBreakdown?: Record<string, number>;
+  showTypeSpecificHint?: string;
+}
+
+function CampaignFormFields({
+  isCustom,
+  customName,
+  setCustomName,
+  customDesc,
+  setCustomDesc,
+  startDate,
+  setStartDate,
+  endDate,
+  setEndDate,
+  multiplier,
+  setMultiplier,
+  selectedTiers,
+  setSelectedTiers,
+  maxUses,
+  setMaxUses,
+  minPurchase,
+  setMinPurchase,
+  maxPoints,
+  setMaxPoints,
+  message,
+  setMessage,
+  tierBreakdown,
+  showTypeSpecificHint,
+}: CampaignFormFieldsProps) {
+  const { t } = useTranslation();
+
+  const termsPreview = useMemo(() => {
+    const parts: string[] = [];
+    const mult = Number.parseFloat(multiplier);
+    if (!Number.isNaN(mult) && mult > 0) parts.push(`Earn ${mult}x points on your purchases`);
+    const minP = Number.parseFloat(minPurchase);
+    if (!Number.isNaN(minP) && minP > 0) parts.push(`Minimum purchase: ${minP} SAR`);
+    const maxU = Number.parseInt(maxUses, 10);
+    if (!Number.isNaN(maxU) && maxU > 0)
+      parts.push(`Limited to ${maxU} ${maxU === 1 ? 'use' : 'uses'} per customer`);
+    const maxP = Number.parseInt(maxPoints, 10);
+    if (!Number.isNaN(maxP) && maxP > 0) parts.push(`Maximum ${maxP} bonus points per transaction`);
+    if (endDate) {
+      const endD = new Date(endDate);
+      if (!Number.isNaN(endD.getTime())) {
+        parts.push(
+          `Valid until ${endD.toLocaleDateString('en-SA', { year: 'numeric', month: 'long', day: 'numeric' })}`,
+        );
+      }
+    }
+    return parts.length > 0 ? `${parts.join('. ')}.` : '';
+  }, [multiplier, minPurchase, maxUses, maxPoints, endDate]);
+
+  const toggleTier = (tier: string) => {
+    setSelectedTiers(
+      selectedTiers.includes(tier)
+        ? selectedTiers.filter((t) => t !== tier)
+        : [...selectedTiers, tier],
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Custom-only: name + description */}
+      {isCustom && setCustomName && setCustomDesc && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Input
+            placeholder={t('campaigns.namePlaceholder')}
+            value={customName ?? ''}
+            onChange={(e) => setCustomName(e.target.value)}
+          />
+          <Input
+            placeholder={t('campaigns.descriptionPlaceholder')}
+            value={customDesc ?? ''}
+            onChange={(e) => setCustomDesc(e.target.value)}
+          />
+        </div>
+      )}
+
+      {/* Type-specific hint (e.g. birthday) */}
+      {showTypeSpecificHint && (
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm text-primary">
+          <Gift className="w-4 h-4 mt-0.5 shrink-0" />
+          <p>{showTypeSpecificHint}</p>
+        </div>
+      )}
+
+      {/* Dates + multiplier */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 border rounded-xl bg-muted/20">
+        <div>
+          <label
+            htmlFor="start-date"
+            className="text-xs font-medium text-muted-foreground block mb-1.5 uppercase tracking-wide"
+          >
+            {t('campaigns.startDate')}
+          </label>
+          <Input
+            id="start-date"
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="end-date"
+            className="text-xs font-medium text-muted-foreground block mb-1.5 uppercase tracking-wide"
+          >
+            {t('campaigns.endDate')}
+          </label>
+          <Input
+            id="end-date"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="multiplier"
+            className="text-xs font-medium text-muted-foreground block mb-1.5 uppercase tracking-wide"
+          >
+            {t('campaigns.multiplier')}
+          </label>
+          <Input
+            id="multiplier"
+            type="number"
+            min="1"
+            max="5"
+            step="0.5"
+            value={multiplier}
+            onChange={(e) => setMultiplier(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Tier targeting */}
+      <div className="space-y-2.5">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          {t('campaigns.targetTiers')}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              setSelectedTiers(selectedTiers.length === ALL_TIERS.length ? [] : [...ALL_TIERS])
+            }
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border rounded-lg transition-all ${
+              selectedTiers.length === ALL_TIERS.length
+                ? 'border-primary bg-primary/10 text-primary font-medium shadow-sm'
+                : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            {t('campaigns.allTiers')}
+          </button>
+          {ALL_TIERS.map((tier) => (
+            <button
+              key={tier}
+              type="button"
+              onClick={() => toggleTier(tier)}
+              className={`px-3 py-1.5 text-sm border rounded-lg transition-all font-medium ${
+                selectedTiers.includes(tier)
+                  ? `${TIER_STYLES[tier] ?? ''} shadow-sm`
+                  : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
+              }`}
+            >
+              {t(`tier.${tier.toLowerCase()}`)}
+            </button>
+          ))}
+        </div>
+        {tierBreakdown && selectedTiers.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {t('campaigns.reachPrefix')}{' '}
+            <span className="font-semibold text-foreground">
+              {selectedTiers.reduce(
+                (sum, tier) =>
+                  sum + ((tierBreakdown[tier as keyof typeof tierBreakdown] as number) ?? 0),
+                0,
+              )}
+            </span>{' '}
+            {t('campaigns.totalReach')}
+          </p>
+        )}
+      </div>
+
+      {/* Campaign Limits */}
+      <div className="grid grid-cols-3 gap-3 p-4 border rounded-xl bg-muted/20">
+        <div>
+          <label
+            htmlFor="max-uses"
+            className="text-xs font-medium text-muted-foreground block mb-1.5 uppercase tracking-wide"
+          >
+            {t('campaigns.maxUsesShort')}
+          </label>
+          <Input
+            id="max-uses"
+            type="number"
+            min="0"
+            max="1000"
+            placeholder={t('campaigns.maxUsesHint')}
+            value={maxUses}
+            onChange={(e) => setMaxUses(e.target.value)}
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="min-purchase"
+            className="text-xs font-medium text-muted-foreground block mb-1.5 uppercase tracking-wide"
+          >
+            {t('campaigns.minPurchaseShort')}
+          </label>
+          <Input
+            id="min-purchase"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder={t('campaigns.minPurchaseHint')}
+            value={minPurchase}
+            onChange={(e) => setMinPurchase(e.target.value)}
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="max-points"
+            className="text-xs font-medium text-muted-foreground block mb-1.5 uppercase tracking-wide"
+          >
+            {t('campaigns.maxPointsShort')}
+          </label>
+          <Input
+            id="max-points"
+            type="number"
+            min="0"
+            placeholder={t('campaigns.maxPointsHint')}
+            value={maxPoints}
+            onChange={(e) => setMaxPoints(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Auto-generated terms preview */}
+      {termsPreview && (
+        <div className="p-3 border rounded-xl bg-secondary/5 border-secondary/20">
+          <p className="text-xs font-medium text-secondary uppercase tracking-wide mb-1">
+            {t('campaigns.termsPreview')}
+          </p>
+          <p className="text-sm text-muted-foreground">{termsPreview}</p>
+        </div>
+      )}
+
+      {/* Optional message */}
+      <div>
+        <label
+          htmlFor="campaign-message"
+          className="text-xs font-medium text-muted-foreground block mb-1.5 uppercase tracking-wide"
+        >
+          {t('campaigns.messagePlaceholder')} ({t('common.optional')})
+        </label>
+        <Textarea
+          id="campaign-message"
+          placeholder={t('campaigns.messagePlaceholder')}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          rows={2}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -174,33 +577,8 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
   const [maxPoints, setMaxPoints] = useState('');
 
   const { data: tierBreakdown } = useTierBreakdown();
-
   const isCustom = selectedType === 'CUSTOM';
 
-  // Auto-generate terms preview from form fields
-  const termsPreview = useMemo(() => {
-    const parts: string[] = [];
-    const mult = Number.parseFloat(multiplier);
-    if (!Number.isNaN(mult) && mult > 0) parts.push(`Earn ${mult}x points on your purchases`);
-    const minP = Number.parseFloat(minPurchase);
-    if (!Number.isNaN(minP) && minP > 0) parts.push(`Minimum purchase: ${minP} SAR`);
-    const maxU = Number.parseInt(maxUses, 10);
-    if (!Number.isNaN(maxU) && maxU > 0)
-      parts.push(`Limited to ${maxU} ${maxU === 1 ? 'use' : 'uses'} per customer`);
-    const maxP = Number.parseInt(maxPoints, 10);
-    if (!Number.isNaN(maxP) && maxP > 0) parts.push(`Maximum ${maxP} bonus points per transaction`);
-    if (endDate) {
-      const endD = new Date(endDate);
-      if (!Number.isNaN(endD.getTime())) {
-        parts.push(
-          `Valid until ${endD.toLocaleDateString('en-SA', { year: 'numeric', month: 'long', day: 'numeric' })}`,
-        );
-      }
-    }
-    return parts.length > 0 ? `${parts.join('. ')}.` : '';
-  }, [multiplier, minPurchase, maxUses, maxPoints, endDate]);
-
-  // Pre-populate fields when type changes
   useEffect(() => {
     if (!selectedType || selectedType === 'CUSTOM') return;
     const defaults = CAMPAIGN_DEFAULTS[selectedType];
@@ -210,12 +588,6 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
     setEndDate(dates.end);
     setMultiplier(String(defaults.multiplier));
   }, [selectedType]);
-
-  const toggleTier = (tier: string) => {
-    setSelectedTiers((prev) =>
-      prev.includes(tier) ? prev.filter((t) => t !== tier) : [...prev, tier],
-    );
-  };
 
   const validateFields = (): string | null => {
     const mult = Number.parseFloat(multiplier);
@@ -257,239 +629,299 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="p-5 border rounded-lg space-y-5 bg-muted/30">
-      {/* Type selector grid */}
-      <div>
-        <p className="text-sm font-medium mb-3">{t('campaigns.selectType')}</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-          {CAMPAIGN_TYPES.map((ct) => (
-            <button
-              key={ct.type}
-              type="button"
-              onClick={() => setSelectedType(ct.type)}
-              className={`p-3 border rounded-lg text-center transition-all text-sm hover:border-primary/50 ${
-                selectedType === ct.type
-                  ? 'border-primary bg-primary/10 ring-1 ring-primary/30'
-                  : 'border-border'
-              }`}
+    <div className="border rounded-xl bg-muted/10 overflow-hidden">
+      <div className="p-4 border-b bg-muted/20 flex items-center gap-2">
+        <Megaphone className="w-4 h-4 text-primary" />
+        <p className="text-sm font-semibold">{t('campaigns.createCampaign')}</p>
+      </div>
+      <div className="p-5 space-y-5">
+        {/* Type selector grid */}
+        <div>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+            {t('campaigns.selectType')}
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {CAMPAIGN_TYPE_META.map((meta) => {
+              const { Icon } = meta;
+              return (
+                <button
+                  key={meta.type}
+                  type="button"
+                  onClick={() => setSelectedType(meta.type)}
+                  className={`p-3 border rounded-xl text-left transition-all group hover:border-primary/40 ${
+                    selectedType === meta.type
+                      ? 'border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm'
+                      : 'border-border bg-background'
+                  }`}
+                >
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${meta.color}`}
+                  >
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <p className="text-xs font-semibold leading-tight">{t(meta.labelKey)}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {selectedType && (
+          <CampaignFormFields
+            isCustom={isCustom}
+            customName={customName}
+            setCustomName={setCustomName}
+            customDesc={customDesc}
+            setCustomDesc={setCustomDesc}
+            startDate={startDate}
+            setStartDate={setStartDate}
+            endDate={endDate}
+            setEndDate={setEndDate}
+            multiplier={multiplier}
+            setMultiplier={setMultiplier}
+            selectedTiers={selectedTiers}
+            setSelectedTiers={setSelectedTiers}
+            maxUses={maxUses}
+            setMaxUses={setMaxUses}
+            minPurchase={minPurchase}
+            setMinPurchase={setMinPurchase}
+            maxPoints={maxPoints}
+            setMaxPoints={setMaxPoints}
+            message={message}
+            setMessage={setMessage}
+            tierBreakdown={tierBreakdown as Record<string, number> | undefined}
+            showTypeSpecificHint={
+              selectedType === 'BIRTHDAY_REWARD' ? t('campaigns.birthdayHint') : undefined
+            }
+          />
+        )}
+
+        <div className="flex gap-3 pt-2 border-t">
+          <Button variant="outline" onClick={onClose}>
+            {t('common.cancel')}
+          </Button>
+          <Button
+            onClick={handleCreate}
+            disabled={
+              createCampaign.isPending ||
+              !selectedType ||
+              !startDate ||
+              !endDate ||
+              (isCustom && !customName.trim())
+            }
+          >
+            {createCampaign.isPending ? t('common.loading') : t('campaigns.createCampaign')}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Edit Form (inline expand)                                         */
+/* ------------------------------------------------------------------ */
+
+function EditCampaignForm({
+  campaign,
+  onClose,
+}: {
+  campaign: CampaignResponse;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const updateCampaign = useUpdateCampaign();
+
+  const [startDate, setStartDate] = useState(formatDateInput(new Date(campaign.startDate)));
+  const [endDate, setEndDate] = useState(formatDateInput(new Date(campaign.endDate)));
+  const [multiplier, setMultiplier] = useState(String(campaign.multiplier));
+  const [selectedTiers, setSelectedTiers] = useState<string[]>(
+    campaign.targetTiers && campaign.targetTiers.length > 0 ? campaign.targetTiers : [...ALL_TIERS],
+  );
+  const [maxUses, setMaxUses] = useState(String(campaign.maxUsesPerCustomer ?? ''));
+  const [minPurchase, setMinPurchase] = useState(String(campaign.minPurchaseAmount ?? ''));
+  const [maxPoints, setMaxPoints] = useState(String(campaign.maxPointsPerTransaction ?? ''));
+  const [message, setMessage] = useState(campaign.message ?? '');
+
+  const { data: tierBreakdown } = useTierBreakdown();
+
+  const handleUpdate = async () => {
+    const mult = Number.parseFloat(multiplier);
+    if (mult < 1 || mult > 5) {
+      toast.error(t('campaigns.multiplierError'));
+      return;
+    }
+    if (!startDate || !endDate || endDate <= startDate) {
+      toast.error(t('campaigns.dateError'));
+      return;
+    }
+    if (selectedTiers.length === 0) {
+      toast.error(t('campaigns.tierRequired'));
+      return;
+    }
+    try {
+      const data: Record<string, unknown> = {
+        startDate: new Date(startDate).toISOString(),
+        endDate: new Date(endDate).toISOString(),
+        multiplier: mult,
+        targetTiers: selectedTiers.length < ALL_TIERS.length ? selectedTiers : [],
+        ...buildLimitsPayload(maxUses, minPurchase, maxPoints),
+      };
+      if (message.trim()) data.message = message.trim();
+
+      await updateCampaign.mutateAsync({
+        campaignId: campaign.campaignId,
+        data: data as Parameters<typeof updateCampaign.mutateAsync>[0]['data'],
+      });
+      toast.success(t('campaigns.updateSuccess'));
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('common.error'));
+    }
+  };
+
+  return (
+    <div className="mt-3 border-t pt-4 space-y-4">
+      <CampaignFormFields
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
+        multiplier={multiplier}
+        setMultiplier={setMultiplier}
+        selectedTiers={selectedTiers}
+        setSelectedTiers={setSelectedTiers}
+        maxUses={maxUses}
+        setMaxUses={setMaxUses}
+        minPurchase={minPurchase}
+        setMinPurchase={setMinPurchase}
+        maxPoints={maxPoints}
+        setMaxPoints={setMaxPoints}
+        message={message}
+        setMessage={setMessage}
+        tierBreakdown={tierBreakdown as Record<string, number> | undefined}
+        showTypeSpecificHint={
+          campaign.type === 'BIRTHDAY_REWARD' ? t('campaigns.birthdayHint') : undefined
+        }
+      />
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm" onClick={onClose}>
+          {t('common.cancel')}
+        </Button>
+        <Button size="sm" onClick={handleUpdate} disabled={updateCampaign.isPending}>
+          {updateCampaign.isPending ? t('common.loading') : t('campaigns.saveChanges')}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Campaign Card                                                      */
+/* ------------------------------------------------------------------ */
+
+function CampaignCard({
+  campaign,
+  onDeactivate,
+  deactivating,
+}: {
+  campaign: CampaignResponse;
+  onDeactivate: (id: string) => void;
+  deactivating: boolean;
+}) {
+  const { t, formatDate } = useTranslation();
+  const [showEdit, setShowEdit] = useState(false);
+  const status = getCampaignStatus(campaign);
+  const meta = CAMPAIGN_TYPE_META.find((m) => m.type === campaign.type);
+  const Icon = meta?.Icon ?? Megaphone;
+
+  return (
+    <div className="border rounded-xl bg-background transition-all hover:shadow-sm">
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          {/* Left: icon + info */}
+          <div className="flex items-start gap-3 min-w-0">
+            <div
+              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${meta?.color ?? 'text-muted-foreground bg-muted'}`}
             >
-              <span className="text-xl block mb-1">{ct.icon}</span>
-              <span className="font-medium">{t(ct.labelKey)}</span>
-            </button>
-          ))}
+              <Icon className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-semibold text-sm">{campaign.name}</p>
+                <CampaignStatusBadge campaign={campaign} />
+              </div>
+              {campaign.description && (
+                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                  {campaign.description}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1" suppressHydrationWarning>
+                {formatDate(campaign.startDate)} — {formatDate(campaign.endDate)}
+              </p>
+            </div>
+          </div>
+
+          {/* Right: actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            {campaign.isActive && (
+              <button
+                type="button"
+                onClick={() => setShowEdit(!showEdit)}
+                className={`p-1.5 rounded-lg border transition-colors ${
+                  showEdit
+                    ? 'bg-primary/10 border-primary/20 text-primary'
+                    : 'border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
+                }`}
+                title={t('campaigns.edit')}
+              >
+                {showEdit ? <ChevronUp className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
+              </button>
+            )}
+            {campaign.isActive && status !== 'expired' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDeactivate(campaign.campaignId)}
+                disabled={deactivating}
+                className="text-xs"
+              >
+                {t('campaigns.deactivate')}
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Badges row */}
+        <div className="flex flex-wrap gap-1.5 mt-3">
+          <CampaignTypeBadge type={campaign.type} />
+          <MultiplierBadge multiplier={campaign.multiplier} />
+          <TierBadges tiers={campaign.targetTiers} />
+          {campaign.maxUsesPerCustomer && campaign.maxUsesPerCustomer > 0 && (
+            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-secondary/10 text-secondary border border-secondary/20">
+              <Users className="w-3 h-3" />
+              {campaign.maxUsesPerCustomer}× {t('campaigns.maxUsesShort')}
+            </span>
+          )}
+          {campaign.minPurchaseAmount && campaign.minPurchaseAmount > 0 && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+              {t('campaigns.minSpend', { amount: campaign.minPurchaseAmount })}
+            </span>
+          )}
+          {campaign.maxPointsPerTransaction && campaign.maxPointsPerTransaction > 0 && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+              ≤{campaign.maxPointsPerTransaction} pts
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Fields — visible once type is selected */}
-      {selectedType && (
-        <>
-          {/* Custom-only: name + description */}
-          {isCustom && (
-            <div className="space-y-3">
-              <Input
-                placeholder={t('campaigns.namePlaceholder')}
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-              />
-              <Input
-                placeholder={t('campaigns.descriptionPlaceholder')}
-                value={customDesc}
-                onChange={(e) => setCustomDesc(e.target.value)}
-              />
-            </div>
-          )}
-
-          {/* Dates + multiplier — all types */}
-          <div className="space-y-3 p-4 border rounded-md bg-background">
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-              {t('campaigns.overrideDefaults')}
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="start-date" className="text-sm text-muted-foreground block mb-1">
-                  {t('campaigns.startDate')}
-                </label>
-                <Input
-                  id="start-date"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                />
-              </div>
-              <div>
-                <label htmlFor="end-date" className="text-sm text-muted-foreground block mb-1">
-                  {t('campaigns.endDate')}
-                </label>
-                <Input
-                  id="end-date"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="multiplier" className="text-sm text-muted-foreground block mb-1">
-                {t('campaigns.multiplier')}
-              </label>
-              <Input
-                id="multiplier"
-                type="number"
-                min="1"
-                max="5"
-                step="0.5"
-                value={multiplier}
-                onChange={(e) => setMultiplier(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Tier targeting */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium">{t('campaigns.targetTiers')}</p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() =>
-                  setSelectedTiers(selectedTiers.length === ALL_TIERS.length ? [] : [...ALL_TIERS])
-                }
-                className={`px-3 py-1.5 text-sm border rounded-lg transition-colors ${
-                  selectedTiers.length === ALL_TIERS.length
-                    ? 'border-primary bg-primary/10 text-primary font-medium'
-                    : 'border-border text-muted-foreground'
-                }`}
-              >
-                {t('campaigns.allTiers')}
-              </button>
-              {ALL_TIERS.map((tier) => (
-                <button
-                  key={tier}
-                  type="button"
-                  onClick={() => toggleTier(tier)}
-                  className={`px-3 py-1.5 text-sm border rounded-lg transition-colors ${
-                    selectedTiers.includes(tier)
-                      ? 'border-primary bg-primary/10 text-primary font-medium'
-                      : 'border-border text-muted-foreground'
-                  }`}
-                >
-                  {t(`tier.${tier.toLowerCase()}`)}
-                </button>
-              ))}
-            </div>
-            {/* Audience preview — shows customer count per selected tier */}
-            {tierBreakdown && selectedTiers.length > 0 && (
-              <p className="text-xs text-muted-foreground mt-1">
-                {selectedTiers
-                  .map(
-                    (tier) =>
-                      `${tierBreakdown[tier as keyof typeof tierBreakdown] ?? 0} ${t(`tier.${tier.toLowerCase()}`)}`,
-                  )
-                  .join(', ')}
-                {' — '}
-                {selectedTiers.reduce(
-                  (sum, tier) =>
-                    sum + ((tierBreakdown[tier as keyof typeof tierBreakdown] as number) ?? 0),
-                  0,
-                )}{' '}
-                {t('campaigns.totalReach')}
-              </p>
-            )}
-          </div>
-
-          {/* Campaign Limits */}
-          <div className="space-y-3 p-4 border rounded-md bg-background">
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-              {t('campaigns.campaignLimits')}
-            </p>
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label htmlFor="max-uses" className="text-sm text-muted-foreground block mb-1">
-                  {t('campaigns.maxUses')}
-                </label>
-                <Input
-                  id="max-uses"
-                  type="number"
-                  min="0"
-                  max="1000"
-                  placeholder={t('campaigns.maxUsesHint')}
-                  value={maxUses}
-                  onChange={(e) => setMaxUses(e.target.value)}
-                />
-              </div>
-              <div>
-                <label htmlFor="min-purchase" className="text-sm text-muted-foreground block mb-1">
-                  {t('campaigns.minPurchase')}
-                </label>
-                <Input
-                  id="min-purchase"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder={t('campaigns.minPurchaseHint')}
-                  value={minPurchase}
-                  onChange={(e) => setMinPurchase(e.target.value)}
-                />
-              </div>
-              <div>
-                <label htmlFor="max-points" className="text-sm text-muted-foreground block mb-1">
-                  {t('campaigns.maxPoints')}
-                </label>
-                <Input
-                  id="max-points"
-                  type="number"
-                  min="0"
-                  placeholder={t('campaigns.maxPointsHint')}
-                  value={maxPoints}
-                  onChange={(e) => setMaxPoints(e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Auto-generated terms preview */}
-          {termsPreview && (
-            <div className="p-3 border rounded-md bg-muted/20">
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">
-                {t('campaigns.termsPreview')}
-              </p>
-              <p className="text-sm text-muted-foreground">{termsPreview}</p>
-            </div>
-          )}
-
-          {/* Optional message */}
-          <div>
-            <label htmlFor="campaign-message" className="text-sm text-muted-foreground block mb-1">
-              {t('campaigns.messagePlaceholder')} ({t('common.optional')})
-            </label>
-            <Textarea
-              id="campaign-message"
-              placeholder={t('campaigns.messagePlaceholder')}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={2}
-            />
-          </div>
-        </>
+      {/* Inline edit */}
+      {showEdit && (
+        <div className="px-4 pb-4">
+          <EditCampaignForm campaign={campaign} onClose={() => setShowEdit(false)} />
+        </div>
       )}
-
-      {/* Actions */}
-      <div className="flex gap-3">
-        <Button variant="outline" onClick={onClose}>
-          {t('common.cancel')}
-        </Button>
-        <Button
-          onClick={handleCreate}
-          disabled={
-            createCampaign.isPending ||
-            !selectedType ||
-            !startDate ||
-            !endDate ||
-            (isCustom && !customName.trim())
-          }
-        >
-          {createCampaign.isPending ? t('common.loading') : t('campaigns.createCampaign')}
-        </Button>
-      </div>
     </div>
   );
 }
@@ -499,7 +931,7 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
 /* ------------------------------------------------------------------ */
 
 export default function MarketingPage() {
-  const { t, formatDate } = useTranslation();
+  const { t, formatDate: _formatDate } = useTranslation();
   const { textStart } = useRTL();
 
   const { data: campaigns, isLoading } = useCampaigns();
@@ -507,10 +939,13 @@ export default function MarketingPage() {
 
   const [showCreate, setShowCreate] = useState(false);
   const [filter, setFilter] = useState<FilterTab>('all');
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState<CampaignType | 'all'>('all');
+  const [sort, setSort] = useState<SortOption>('newest');
 
   // Stats
   const stats = useMemo(() => {
-    if (!campaigns) return { active: 0, total: 0 };
+    if (!campaigns) return { active: 0, total: 0, scheduled: 0 };
     const now = new Date();
     const active = campaigns.filter((c) => {
       if (!c.isActive) return false;
@@ -518,15 +953,49 @@ export default function MarketingPage() {
       const end = new Date(c.endDate);
       return now >= start && now <= end;
     }).length;
-    return { active, total: campaigns.length };
+    const scheduled = campaigns.filter((c) => {
+      if (!c.isActive) return false;
+      return new Date() < new Date(c.startDate);
+    }).length;
+    return { active, total: campaigns.length, scheduled };
   }, [campaigns]);
 
-  // Filtered campaigns
+  // Filtered + searched + sorted campaigns
   const filtered = useMemo(() => {
     if (!campaigns) return [];
-    if (filter === 'all') return campaigns;
-    return campaigns.filter((c) => getCampaignStatus(c) === filter);
-  }, [campaigns, filter]);
+    let list = campaigns;
+
+    // Status tab
+    if (filter !== 'all') {
+      list = list.filter((c) => getCampaignStatus(c) === filter);
+    }
+
+    // Type filter
+    if (typeFilter !== 'all') {
+      list = list.filter((c) => c.type === typeFilter);
+    }
+
+    // Search
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (c) => c.name.toLowerCase().includes(q) || (c.description ?? '').toLowerCase().includes(q),
+      );
+    }
+
+    // Sort
+    if (sort === 'newest') {
+      list = [...list].sort(
+        (a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime(),
+      );
+    } else if (sort === 'multiplier') {
+      list = [...list].sort((a, b) => b.multiplier - a.multiplier);
+    } else if (sort === 'name') {
+      list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    return list;
+  }, [campaigns, filter, typeFilter, search, sort]);
 
   const handleDeactivate = async (campaignId: string) => {
     try {
@@ -546,47 +1015,77 @@ export default function MarketingPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <h1 className={`text-2xl md:text-3xl font-bold text-foreground ${textStart}`}>
-          {t('marketing.title')}
-        </h1>
-        <p className={`text-sm text-muted-foreground mt-1 ${textStart}`}>
-          {t('marketing.subtitle')}
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className={`text-2xl md:text-3xl font-bold text-foreground ${textStart}`}>
+            {t('marketing.title')}
+          </h1>
+          <p className={`text-sm text-muted-foreground mt-1 ${textStart}`}>
+            {t('marketing.subtitle')}
+          </p>
+        </div>
+        <Button onClick={() => setShowCreate(!showCreate)} className="shrink-0 gap-2">
+          <Plus className="w-4 h-4" />
+          {showCreate ? t('common.cancel') : t('campaigns.createCampaign')}
+        </Button>
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-4 mb-6">
         <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-3xl font-bold text-primary">{stats.active}</p>
-            <p className="text-sm text-muted-foreground mt-1">{t('campaigns.activeCampaigns')}</p>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Zap className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-primary">{stats.active}</p>
+                <p className="text-xs text-muted-foreground">{t('campaigns.activeCampaigns')}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-3xl font-bold text-foreground">{stats.total}</p>
-            <p className="text-sm text-muted-foreground mt-1">{t('campaigns.totalCampaigns')}</p>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-secondary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-secondary">{stats.scheduled}</p>
+                <p className="text-xs text-muted-foreground">{t('campaigns.scheduledCampaigns')}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                <Megaphone className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+                <p className="text-xs text-muted-foreground">{t('campaigns.totalCampaigns')}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Create Form */}
+      {showCreate && (
+        <div className="mb-6">
+          <CreateCampaignForm onClose={() => setShowCreate(false)} />
+        </div>
+      )}
+
       {/* Campaigns Card */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="pb-3">
           <CardTitle>{t('campaigns.title')}</CardTitle>
-          <Button variant="outline" size="sm" onClick={() => setShowCreate(!showCreate)}>
-            {showCreate ? t('common.cancel') : t('campaigns.createCampaign')}
-          </Button>
         </CardHeader>
         <CardContent>
-          {/* Create Form */}
-          {showCreate && (
-            <div className="mb-5">
-              <CreateCampaignForm onClose={() => setShowCreate(false)} />
-            </div>
-          )}
-
           {/* Filter Tabs */}
           <div className="flex gap-1 mb-4 p-1 bg-muted/50 rounded-lg">
             {FILTER_TABS.map((tab) => (
@@ -605,64 +1104,57 @@ export default function MarketingPage() {
             ))}
           </div>
 
+          {/* Search + Type Filter + Sort */}
+          <div className="flex flex-col sm:flex-row gap-2 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder={t('campaigns.searchPlaceholder')}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value as CampaignType | 'all')}
+              className="h-9 px-3 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="all">{t('campaigns.allTypes')}</option>
+              {CAMPAIGN_TYPE_META.map((m) => (
+                <option key={m.type} value={m.type}>
+                  {t(m.labelKey)}
+                </option>
+              ))}
+            </select>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortOption)}
+              className="h-9 px-3 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="newest">{t('campaigns.sortNewest')}</option>
+              <option value="multiplier">{t('campaigns.sortMultiplier')}</option>
+              <option value="name">{t('campaigns.sortName')}</option>
+            </select>
+          </div>
+
           {/* Campaign List */}
           {isLoading ? (
             <p className="text-center text-muted-foreground py-8">{t('common.loading')}</p>
           ) : filtered.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              {t('campaigns.noCampaigns')}
-            </p>
+            <div className="text-center py-12">
+              <Megaphone className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">{t('campaigns.noCampaigns')}</p>
+            </div>
           ) : (
             <div className="space-y-2">
               {filtered.map((campaign) => (
-                <div
+                <CampaignCard
                   key={campaign.campaignId}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/30 transition-colors"
-                >
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-medium">{campaign.name}</p>
-                      <CampaignTypeBadge type={campaign.type} />
-                      <CampaignStatusBadge campaign={campaign} />
-                      <span className="text-xs font-semibold text-primary">
-                        {campaign.multiplier}
-                        {t('campaigns.multiplierSuffix')}
-                      </span>
-                      <TierBadges tiers={campaign.targetTiers} />
-                      {campaign.maxUsesPerCustomer && campaign.maxUsesPerCustomer > 0 && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">
-                          {campaign.maxUsesPerCustomer}x {t('campaigns.maxUses')}
-                        </span>
-                      )}
-                      {campaign.minPurchaseAmount && campaign.minPurchaseAmount > 0 && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-800">
-                          {t('campaigns.minSpend', { amount: campaign.minPurchaseAmount })}
-                        </span>
-                      )}
-                      {campaign.maxPointsPerTransaction && campaign.maxPointsPerTransaction > 0 && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800">
-                          {t('campaigns.maxPoints')}: {campaign.maxPointsPerTransaction}
-                        </span>
-                      )}
-                    </div>
-                    {campaign.description && (
-                      <p className="text-sm text-muted-foreground">{campaign.description}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-                      {formatDate(campaign.startDate)} — {formatDate(campaign.endDate)}
-                    </p>
-                  </div>
-                  {campaign.isActive && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeactivate(campaign.campaignId)}
-                      disabled={deactivateCampaign.isPending}
-                    >
-                      {t('campaigns.deactivate')}
-                    </Button>
-                  )}
-                </div>
+                  campaign={campaign}
+                  onDeactivate={handleDeactivate}
+                  deactivating={deactivateCampaign.isPending}
+                />
               ))}
             </div>
           )}

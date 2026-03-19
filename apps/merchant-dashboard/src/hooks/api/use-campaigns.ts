@@ -49,6 +49,36 @@ export function useTierBreakdown() {
   });
 }
 
+export function useUpdateCampaign() {
+  const { merchant } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      campaignId,
+      data,
+    }: {
+      campaignId: string;
+      data: {
+        name?: string;
+        description?: string;
+        startDate?: string;
+        endDate?: string;
+        multiplier?: number;
+        message?: string;
+        targetTiers?: string[];
+        maxUsesPerCustomer?: number;
+        minPurchaseAmount?: number;
+        maxPointsPerTransaction?: number;
+      };
+    }) =>
+      // biome-ignore lint/style/noNonNullAssertion: merchantId required
+      campaignApi.update(merchant!.merchantId, campaignId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['merchant', merchant?.merchantId, 'campaigns'] });
+    },
+  });
+}
+
 export function useDeactivateCampaign() {
   const { merchant } = useAuth();
   const queryClient = useQueryClient();

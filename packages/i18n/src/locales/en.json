@@ -473,8 +473,31 @@
     "maxPointsHint": "Max bonus points per transaction",
     "unlimited": "Unlimited",
     "minSpend": "Min {{amount}} SAR",
-    "totalReach": "total reach",
-    "termsPreview": "Auto-generated terms (sent to customers)"
+    "totalReach": "customers",
+    "reachPrefix": "Reaching",
+    "termsPreview": "Auto-generated terms (sent to customers)",
+    "scheduledCampaigns": "Scheduled",
+    "updateSuccess": "Campaign updated",
+    "saveChanges": "Save Changes",
+    "edit": "Edit campaign",
+    "searchPlaceholder": "Search campaigns...",
+    "allTypes": "All Types",
+    "sortNewest": "Newest first",
+    "sortMultiplier": "Highest multiplier",
+    "sortName": "Name A–Z",
+    "maxUsesShort": "max uses",
+    "minPurchaseShort": "Min SAR",
+    "maxPointsShort": "Max pts",
+    "birthdayHint": "Birthday campaigns apply when a customer's birthday falls within the date range. A 1-year window covers all birthdays year-round.",
+    "typeDesc": {
+      "doublePoints": "Earn 2x points on every purchase",
+      "triplePoints": "Earn 3x points for a limited time",
+      "birthdayReward": "Bonus points on customer birthdays",
+      "winBack": "Re-engage customers inactive for 60+ days",
+      "welcome": "Reward newly enrolled customers",
+      "happyHour": "Short burst of bonus points",
+      "custom": "Build your own campaign rules"
+    }
   },
   "challenges": {
     "title": "Challenges",

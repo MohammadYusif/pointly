@@ -37,7 +37,7 @@ export const CAMPAIGN_DEFAULTS: Record<Exclude<CampaignType, 'CUSTOM'>, Campaign
   BIRTHDAY_REWARD: {
     name: 'Birthday Special',
     description: 'Celebrate your birthday with bonus points',
-    durationDays: 30,
+    durationDays: 365,
     multiplier: 2,
     perkType: 'BIRTHDAY_REWARD',
   },
@@ -398,6 +398,70 @@ export class Campaign {
 
   setTermsMessage(message: string): void {
     this.props.termsMessage = message;
+  }
+
+  // Update mutable campaign fields (merchant-facing edit)
+  update(overrides: CampaignOverrides): void {
+    if (overrides.startDate !== undefined || overrides.endDate !== undefined) {
+      const newStart = overrides.startDate ?? this.props.startDate;
+      const newEnd = overrides.endDate ?? this.props.endDate;
+      Campaign.validateDates(newStart, newEnd);
+      this.props.startDate = newStart;
+      this.props.endDate = newEnd;
+    }
+    if (overrides.multiplier !== undefined) {
+      Campaign.validateMultiplier(overrides.multiplier);
+      this.props.multiplier = overrides.multiplier;
+    }
+    if (overrides.name !== undefined && overrides.name.trim().length > 0) {
+      this.props.name = overrides.name.trim();
+    }
+    if (overrides.description !== undefined) {
+      this.props.description = overrides.description.trim();
+    }
+    if (overrides.message !== undefined) {
+      const trimmed = overrides.message.trim();
+      if (trimmed) {
+        this.props.message = trimmed;
+      } else {
+        // biome-ignore lint/performance/noDelete: exactOptionalPropertyTypes requires delete to unset optional props
+        delete this.props.message;
+      }
+    }
+    if (overrides.targetTiers !== undefined) {
+      if (overrides.targetTiers.length > 0) {
+        this.props.targetTiers = overrides.targetTiers;
+      } else {
+        // biome-ignore lint/performance/noDelete: exactOptionalPropertyTypes requires delete to unset optional props
+        delete this.props.targetTiers;
+      }
+    }
+    if (overrides.maxUsesPerCustomer !== undefined) {
+      if (overrides.maxUsesPerCustomer > 0) {
+        this.props.maxUsesPerCustomer = overrides.maxUsesPerCustomer;
+      } else {
+        // biome-ignore lint/performance/noDelete: exactOptionalPropertyTypes requires delete to unset optional props
+        delete this.props.maxUsesPerCustomer;
+      }
+    }
+    if (overrides.minPurchaseAmount !== undefined) {
+      if (overrides.minPurchaseAmount > 0) {
+        this.props.minPurchaseAmount = overrides.minPurchaseAmount;
+      } else {
+        // biome-ignore lint/performance/noDelete: exactOptionalPropertyTypes requires delete to unset optional props
+        delete this.props.minPurchaseAmount;
+      }
+    }
+    if (overrides.maxPointsPerTransaction !== undefined) {
+      if (overrides.maxPointsPerTransaction > 0) {
+        this.props.maxPointsPerTransaction = overrides.maxPointsPerTransaction;
+      } else {
+        // biome-ignore lint/performance/noDelete: exactOptionalPropertyTypes requires delete to unset optional props
+        delete this.props.maxPointsPerTransaction;
+      }
+    }
+    // Regenerate terms after any update
+    this.props.termsMessage = this.generateTermsMessage();
   }
 
   // Mutations
