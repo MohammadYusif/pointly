@@ -402,13 +402,22 @@ export class Campaign {
 
   // Update mutable campaign fields (merchant-facing edit)
   update(overrides: CampaignOverrides): void {
-    if (overrides.startDate !== undefined || overrides.endDate !== undefined) {
-      const newStart = overrides.startDate ?? this.props.startDate;
-      const newEnd = overrides.endDate ?? this.props.endDate;
-      Campaign.validateDates(newStart, newEnd);
-      this.props.startDate = newStart;
-      this.props.endDate = newEnd;
-    }
+    this.applyDateOverrides(overrides);
+    this.applyScalarOverrides(overrides);
+    this.applyLimitOverrides(overrides);
+    this.props.termsMessage = this.generateTermsMessage();
+  }
+
+  private applyDateOverrides(overrides: CampaignOverrides): void {
+    if (overrides.startDate === undefined && overrides.endDate === undefined) return;
+    const newStart = overrides.startDate ?? this.props.startDate;
+    const newEnd = overrides.endDate ?? this.props.endDate;
+    Campaign.validateDates(newStart, newEnd);
+    this.props.startDate = newStart;
+    this.props.endDate = newEnd;
+  }
+
+  private applyScalarOverrides(overrides: CampaignOverrides): void {
     if (overrides.multiplier !== undefined) {
       Campaign.validateMultiplier(overrides.multiplier);
       this.props.multiplier = overrides.multiplier;
@@ -436,6 +445,9 @@ export class Campaign {
         delete this.props.targetTiers;
       }
     }
+  }
+
+  private applyLimitOverrides(overrides: CampaignOverrides): void {
     if (overrides.maxUsesPerCustomer !== undefined) {
       if (overrides.maxUsesPerCustomer > 0) {
         this.props.maxUsesPerCustomer = overrides.maxUsesPerCustomer;
@@ -460,8 +472,6 @@ export class Campaign {
         delete this.props.maxPointsPerTransaction;
       }
     }
-    // Regenerate terms after any update
-    this.props.termsMessage = this.generateTermsMessage();
   }
 
   // Mutations

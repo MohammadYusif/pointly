@@ -221,7 +221,10 @@ describe('Campaign Entity', () => {
       // Birthday 6 months away is outside the 7-day window
       const otherMonth = ((now.getMonth() + 6) % 12) + 1;
       const dob = `1990-${String(otherMonth).padStart(2, '0')}-15`;
-      const campaign = Campaign.create('merchant-1', 'BIRTHDAY_REWARD', { startDate: start, endDate: end });
+      const campaign = Campaign.create('merchant-1', 'BIRTHDAY_REWARD', {
+        startDate: start,
+        endDate: end,
+      });
       const ctx: CampaignEligibilityContext = { ...baseCtx, dateOfBirth: dob };
       expect(campaign.isEligibleForCustomer(ctx)).toBe(false);
     });

@@ -11,6 +11,26 @@ function enforceMerchantAccess(request: FastifyRequest<{ Params: { id: string } 
   }
 }
 
+function buildUpdateRequest(
+  merchantId: string,
+  campaignId: string,
+  body: z.infer<typeof updateCampaignSchema>,
+): ManageCampaignRequest {
+  const req: ManageCampaignRequest = { action: 'update', merchantId, campaignId };
+  if (body.name) req.name = body.name;
+  if (body.description !== undefined) req.description = body.description;
+  if (body.startDate) req.startDate = body.startDate;
+  if (body.endDate) req.endDate = body.endDate;
+  if (body.multiplier !== undefined) req.multiplier = body.multiplier;
+  if (body.message !== undefined) req.message = body.message;
+  if (body.targetTiers) req.targetTiers = body.targetTiers;
+  if (body.maxUsesPerCustomer !== undefined) req.maxUsesPerCustomer = body.maxUsesPerCustomer;
+  if (body.minPurchaseAmount !== undefined) req.minPurchaseAmount = body.minPurchaseAmount;
+  if (body.maxPointsPerTransaction !== undefined)
+    req.maxPointsPerTransaction = body.maxPointsPerTransaction;
+  return req;
+}
+
 function buildCampaignRequest(
   merchantId: string,
   body: z.infer<typeof createCampaignSchema>,
@@ -151,19 +171,7 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
       enforceMerchantAccess(request);
       const { id: merchantId, campaignId } = request.params;
       const body = updateCampaignSchema.parse(request.body);
-
-      const req: ManageCampaignRequest = { action: 'update', merchantId, campaignId };
-      if (body.name) req.name = body.name;
-      if (body.description !== undefined) req.description = body.description;
-      if (body.startDate) req.startDate = body.startDate;
-      if (body.endDate) req.endDate = body.endDate;
-      if (body.multiplier !== undefined) req.multiplier = body.multiplier;
-      if (body.message !== undefined) req.message = body.message;
-      if (body.targetTiers) req.targetTiers = body.targetTiers;
-      if (body.maxUsesPerCustomer !== undefined) req.maxUsesPerCustomer = body.maxUsesPerCustomer;
-      if (body.minPurchaseAmount !== undefined) req.minPurchaseAmount = body.minPurchaseAmount;
-      if (body.maxPointsPerTransaction !== undefined)
-        req.maxPointsPerTransaction = body.maxPointsPerTransaction;
+      const req = buildUpdateRequest(merchantId, campaignId, body);
 
       const container = getContainer();
       const result = await container.manageCampaignUseCase.execute(req);
