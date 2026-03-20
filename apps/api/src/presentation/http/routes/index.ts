@@ -9,6 +9,7 @@ import { healthRoutes } from './health';
 import { merchantPublicRoutes } from './merchantPublic';
 import { merchantRoutes } from './merchants';
 import { purchaseRoutes } from './purchases';
+import { pushCustomerRoutes, pushMerchantRoutes, pushPublicRoutes } from './push';
 import { webhookRoutes } from './webhooks';
 
 export async function registerRoutes(server: FastifyInstance): Promise<void> {
@@ -21,11 +22,13 @@ export async function registerRoutes(server: FastifyInstance): Promise<void> {
       // Public routes (no auth required)
       await app.register(customerPublicRoutes, { prefix: '/customers' });
       await app.register(merchantPublicRoutes, { prefix: '/merchants' });
+      await app.register(pushPublicRoutes, { prefix: '/push' });
 
       // Customer-authenticated routes
       await app.register(async (customerApp) => {
         customerApp.addHook('preHandler', verifyCustomerToken);
         await customerApp.register(customerSelfRoutes, { prefix: '/me' });
+        await customerApp.register(pushCustomerRoutes, { prefix: '/me/push-subscriptions' });
       });
 
       // Merchant-authenticated routes
@@ -37,6 +40,7 @@ export async function registerRoutes(server: FastifyInstance): Promise<void> {
         await protectedApp.register(merchantRoutes, { prefix: '/merchants' });
         await protectedApp.register(campaignRoutes, { prefix: '/merchants' });
         await protectedApp.register(webhookRoutes, { prefix: '/merchants' });
+        await protectedApp.register(pushMerchantRoutes, { prefix: '/merchants' });
       });
     },
     { prefix: '/v1' },

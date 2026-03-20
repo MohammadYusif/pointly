@@ -1,12 +1,14 @@
 import type { ICampaignRepository } from '../../application/repositories/ICampaignRepository';
 import type { ICustomerRepository } from '../../application/repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../../application/repositories/IMerchantRepository';
+import type { IPushSubscriptionRepository } from '../../application/repositories/IPushSubscriptionRepository';
 import type { IQRNonceRepository } from '../../application/repositories/IQRNonceRepository';
 import type { ITransactionRepository } from '../../application/repositories/ITransactionRepository';
 import type { IWebhookConfigRepository } from '../../application/repositories/IWebhookConfigRepository';
 import type { IDecayCalculatorService } from '../../application/services/IDecayCalculatorService';
 import type { IIdempotencyService } from '../../application/services/IIdempotencyService';
 import type { IOutgoingWebhookService } from '../../application/services/IOutgoingWebhookService';
+import type { IPushNotificationService } from '../../application/services/IPushNotificationService';
 import type { ISmsPublisherService } from '../../application/services/ISmsPublisherService';
 import { CheckChallengeEligibilityUseCase } from '../../application/use-cases/CheckChallengeEligibilityUseCase';
 import { EnrollCustomerUseCase } from '../../application/use-cases/EnrollCustomerUseCase';
@@ -14,6 +16,7 @@ import { GenerateQRCodeUseCase } from '../../application/use-cases/GenerateQRCod
 import { GetAnalyticsUseCase } from '../../application/use-cases/GetAnalyticsUseCase';
 import { ManageCampaignUseCase } from '../../application/use-cases/ManageCampaignUseCase';
 import { ManagePerkUseCase } from '../../application/use-cases/ManagePerkUseCase';
+import { ManagePushSubscriptionUseCase } from '../../application/use-cases/ManagePushSubscriptionUseCase';
 import { ProcessMonthlyTierResetUseCase } from '../../application/use-cases/ProcessMonthlyTierResetUseCase';
 import { ProcessPointsDecayUseCase } from '../../application/use-cases/ProcessPointsDecayUseCase';
 import { RecordPurchaseUseCase } from '../../application/use-cases/RecordPurchaseUseCase';
@@ -32,7 +35,9 @@ import {
   TransactionalWriter,
   WebhookConfigRepository,
 } from '../../infrastructure/repositories';
+import { PushSubscriptionRepository } from '../../infrastructure/repositories/PushSubscriptionRepository';
 import { QRNonceRepository } from '../../infrastructure/repositories/QRNonceRepository';
+import { WebPushService } from '../../infrastructure/services/WebPushService';
 
 export interface Container {
   // Repositories
@@ -42,6 +47,7 @@ export interface Container {
   qrNonceRepository: IQRNonceRepository;
   campaignRepository: ICampaignRepository;
   webhookConfigRepository: IWebhookConfigRepository;
+  pushSubscriptionRepository: IPushSubscriptionRepository;
 
   // Services
   idempotencyService: IIdempotencyService;
@@ -49,6 +55,7 @@ export interface Container {
   smsPublisherService: ISmsPublisherService;
   outgoingWebhookService: IOutgoingWebhookService;
   transactionalWriter: TransactionalWriter;
+  webPushService: IPushNotificationService;
 
   // Use Cases
   enrollCustomerUseCase: EnrollCustomerUseCase;
@@ -61,6 +68,7 @@ export interface Container {
   processMonthlyTierResetUseCase: ProcessMonthlyTierResetUseCase;
   getAnalyticsUseCase: GetAnalyticsUseCase;
   generateQRCodeUseCase: GenerateQRCodeUseCase;
+  managePushSubscriptionUseCase: ManagePushSubscriptionUseCase;
 }
 
 let container: Container | null = null;
@@ -76,6 +84,10 @@ export function createContainer(): Container {
   const qrNonceRepository = new QRNonceRepository(dbClient, env.QR_NONCE_TABLE);
   const campaignRepository = new CampaignRepository(dbClient, env.USER_LEDGER_TABLE);
   const webhookConfigRepository = new WebhookConfigRepository(dbClient, env.USER_LEDGER_TABLE);
+  const pushSubscriptionRepository = new PushSubscriptionRepository(
+    dbClient,
+    env.WALLET_PASSES_TABLE ?? 'pointly-wallet-passes',
+  );
 
   // Create services
   const idempotencyService = new IdempotencyService(dbClient, env.IDEMPOTENCY_TABLE);
@@ -83,6 +95,11 @@ export function createContainer(): Container {
   const smsPublisherService = new SmsPublisherService(env.SMS_QUEUE_URL, env.AWS_REGION);
   const outgoingWebhookService = new OutgoingWebhookService();
   const transactionalWriter = new TransactionalWriter(dbClient);
+  const webPushService = new WebPushService(
+    env.VAPID_SUBJECT,
+    env.VAPID_PUBLIC_KEY,
+    env.VAPID_PRIVATE_KEY,
+  );
 
   // Create use cases
   const enrollCustomerUseCase = new EnrollCustomerUseCase(
@@ -149,6 +166,11 @@ export function createContainer(): Container {
   // Create QR code use case
   const generateQRCodeUseCase = new GenerateQRCodeUseCase(customerRepository, qrNonceRepository);
 
+  const managePushSubscriptionUseCase = new ManagePushSubscriptionUseCase(
+    pushSubscriptionRepository,
+    env.VAPID_PUBLIC_KEY,
+  );
+
   return {
     customerRepository,
     merchantRepository,
@@ -156,11 +178,13 @@ export function createContainer(): Container {
     qrNonceRepository,
     campaignRepository,
     webhookConfigRepository,
+    pushSubscriptionRepository,
     idempotencyService,
     decayCalculatorService,
     smsPublisherService,
     outgoingWebhookService,
     transactionalWriter,
+    webPushService,
     enrollCustomerUseCase,
     managePerkUseCase,
     manageCampaignUseCase,
@@ -171,6 +195,7 @@ export function createContainer(): Container {
     processMonthlyTierResetUseCase,
     getAnalyticsUseCase,
     generateQRCodeUseCase,
+    managePushSubscriptionUseCase,
   };
 }
 

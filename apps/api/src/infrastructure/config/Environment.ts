@@ -19,6 +19,12 @@ const envSchema = z.object({
 
   // SQS
   SMS_QUEUE_URL: z.string(),
+  PUSH_QUEUE_URL: z.string().optional(),
+
+  // VAPID (Web Push)
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  VAPID_SUBJECT: z.string().optional(),
 
   // API Configuration
   API_PORT: z.string().default('3000').transform(Number),
