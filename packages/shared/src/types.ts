@@ -293,6 +293,7 @@ export interface CustomerMerchantView {
   enrolledAt: string;
   transactionCount: number;
   lastTransactionAt?: string;
+  walletConfig?: WalletConfig;
 }
 
 export interface AnalyticsData {

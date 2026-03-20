@@ -387,14 +387,16 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
       // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollments
       enrollments.map(async (e: any) => {
         const merchant = await container.merchantRepository.findById(e.merchantId as string);
+        const merchantJSON = merchant?.toJSON();
         return {
           merchantId: e.merchantId as string,
-          businessName: merchant?.toJSON().businessName ?? e.merchantId,
+          businessName: merchantJSON?.businessName ?? e.merchantId,
           merchantPointsBalance: e.merchantPointsBalance as number,
           merchantLifetimePoints: e.merchantLifetimePoints as number,
           enrolledAt: e.enrolledAt as string,
           transactionCount: e.transactionCount as number,
           lastTransactionAt: e.lastTransactionAt as string | undefined,
+          ...(merchantJSON?.walletConfig && { walletConfig: merchantJSON.walletConfig }),
         };
       }),
     );

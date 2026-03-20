@@ -1,13 +1,220 @@
 'use client';
 
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { useAddLocation, useMerchant, useUpdateMerchant } from '@/hooks/api';
+import {
+  useAddLocation,
+  useLogoUpload,
+  useMerchant,
+  useUpdateMerchant,
+  useUpdateWalletConfig,
+} from '@/hooks/api';
 import { useAuth } from '@/lib/auth-context';
 import type { MerchantResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+
+function WalletCardPreview({
+  businessName,
+  primaryColor,
+  backgroundColor,
+  logoUrl,
+}: {
+  businessName: string;
+  primaryColor: string;
+  backgroundColor: string;
+  logoUrl?: string;
+}) {
+  return (
+    <div
+      className="rounded-2xl p-5 w-72 shadow-lg border"
+      style={{ backgroundColor, borderColor: primaryColor }}
+    >
+      <div className="flex items-center justify-between mb-4">
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt="logo" className="h-8 object-contain" />
+        ) : (
+          <div className="w-8 h-8 rounded-full" style={{ backgroundColor: primaryColor }} />
+        )}
+        <span className="text-xs font-medium opacity-60" style={{ color: primaryColor }}>
+          Powered by Pointly
+        </span>
+      </div>
+      <p className="font-bold text-lg truncate" style={{ color: primaryColor }}>
+        {businessName || 'Your Business'}
+      </p>
+      <p className="text-sm opacity-70 mt-1" style={{ color: primaryColor }}>
+        1,250 pts · Gold
+      </p>
+    </div>
+  );
+}
+
+function WalletCardBrandingSection({
+  merchant,
+  merchantId,
+}: {
+  merchant: MerchantResponse;
+  merchantId: string;
+}) {
+  const updateWalletConfig = useUpdateWalletConfig(merchantId);
+  const logoUpload = useLogoUpload();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [primaryColor, setPrimaryColor] = useState(
+    merchant.walletConfig?.primaryColor ?? '#0d9488',
+  );
+  const [backgroundColor, setBackgroundColor] = useState(
+    merchant.walletConfig?.backgroundColor ?? '#ffffff',
+  );
+  const [logoUrl, setLogoUrl] = useState(merchant.walletConfig?.logoUrl);
+
+  useEffect(() => {
+    setPrimaryColor(merchant.walletConfig?.primaryColor ?? '#0d9488');
+    setBackgroundColor(merchant.walletConfig?.backgroundColor ?? '#ffffff');
+    setLogoUrl(merchant.walletConfig?.logoUrl);
+  }, [merchant.walletConfig]);
+
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const url = await logoUpload.mutateAsync({ merchantId, file });
+      setLogoUrl(url);
+      toast.success('Logo uploaded');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Upload failed');
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      await updateWalletConfig.mutateAsync({
+        primaryColor,
+        backgroundColor,
+        ...(logoUrl && { logoUrl }),
+      });
+      toast.success('Wallet branding saved');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save');
+    }
+  };
+
+  return (
+    <div className="mt-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Wallet Card Branding</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Customize how your card appears in customers' digital wallets
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col lg:flex-row gap-8">
+            <div className="flex-1 space-y-4">
+              {/* Primary Color */}
+              <div>
+                <label
+                  htmlFor="wallet-primary-color"
+                  className="text-sm text-muted-foreground block mb-1.5"
+                >
+                  Primary Color
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="wallet-primary-color"
+                    type="color"
+                    value={primaryColor}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    className="w-10 h-10 rounded cursor-pointer border"
+                  />
+                  <Input
+                    value={primaryColor}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    pattern="^#[0-9a-fA-F]{6}$"
+                    className="w-32 font-mono text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Background Color */}
+              <div>
+                <label
+                  htmlFor="wallet-bg-color"
+                  className="text-sm text-muted-foreground block mb-1.5"
+                >
+                  Background Color
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="wallet-bg-color"
+                    type="color"
+                    value={backgroundColor}
+                    onChange={(e) => setBackgroundColor(e.target.value)}
+                    className="w-10 h-10 rounded cursor-pointer border"
+                  />
+                  <Input
+                    value={backgroundColor}
+                    onChange={(e) => setBackgroundColor(e.target.value)}
+                    pattern="^#[0-9a-fA-F]{6}$"
+                    className="w-32 font-mono text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Logo Upload */}
+              <div>
+                <p className="text-sm text-muted-foreground mb-1.5">Logo</p>
+                {logoUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={logoUrl}
+                    alt="Current logo"
+                    className="h-10 object-contain mb-2 rounded border p-1"
+                  />
+                )}
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoChange}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={logoUpload.isPending}
+                  >
+                    {logoUpload.isPending ? 'Uploading...' : 'Upload Logo'}
+                  </Button>
+                </div>
+              </div>
+
+              <Button onClick={handleSave} disabled={updateWalletConfig.isPending}>
+                {updateWalletConfig.isPending ? 'Saving...' : 'Save Branding'}
+              </Button>
+            </div>
+
+            {/* Live Preview */}
+            <div className="flex flex-col items-start gap-2">
+              <p className="text-sm text-muted-foreground">Preview</p>
+              <WalletCardPreview
+                businessName={merchant.businessName}
+                primaryColor={primaryColor}
+                backgroundColor={backgroundColor}
+                logoUrl={logoUrl}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: settings page with edit mode and location management
 export default function SettingsPage() {
@@ -325,6 +532,11 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Wallet Card Branding */}
+      {merchant && authMerchant?.merchantId && (
+        <WalletCardBrandingSection merchant={merchant} merchantId={authMerchant.merchantId} />
       )}
     </DashboardLayout>
   );

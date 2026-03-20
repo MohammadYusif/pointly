@@ -5,9 +5,11 @@ import {
   useCampaigns,
   useCreateCampaign,
   useDeactivateCampaign,
+  usePushStats,
   useTierBreakdown,
   useUpdateCampaign,
 } from '@/hooks/api';
+import { useAuth } from '@/lib/auth-context';
 import type { CampaignResponse, CampaignType } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import {
@@ -32,6 +34,7 @@ import {
   Plus,
   Search,
   Sliders,
+  Smartphone,
   Sparkles,
   Users,
   Zap,
@@ -560,6 +563,8 @@ function CampaignFormFields({
 /*  Create Form                                                        */
 /* ------------------------------------------------------------------ */
 
+type PlatformFilter = 'all' | 'ios' | 'android';
+
 function CreateCampaignForm({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   const createCampaign = useCreateCampaign();
@@ -575,6 +580,8 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
   const [maxUses, setMaxUses] = useState('');
   const [minPurchase, setMinPurchase] = useState('');
   const [maxPoints, setMaxPoints] = useState('');
+  const [enablePush, setEnablePush] = useState(false);
+  const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
 
   const { data: tierBreakdown } = useTierBreakdown();
   const isCustom = selectedType === 'CUSTOM';
@@ -608,6 +615,7 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
     if (isCustom && customName.trim()) payload.name = customName.trim();
     if (isCustom && customDesc.trim()) payload.description = customDesc.trim();
     if (selectedTiers.length < ALL_TIERS.length) payload.targetTiers = selectedTiers;
+    if (enablePush && platformFilter !== 'all') payload.platformFilter = platformFilter;
     return { ...payload, ...buildLimitsPayload(maxUses, minPurchase, maxPoints) };
   };
 
@@ -694,6 +702,39 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
               selectedType === 'BIRTHDAY_REWARD' ? t('campaigns.birthdayHint') : undefined
             }
           />
+        )}
+
+        {selectedType && (
+          <div className="p-4 border rounded-xl bg-muted/20 space-y-3">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={enablePush}
+                onChange={(e) => setEnablePush(e.target.checked)}
+                className="w-4 h-4 rounded border-input accent-primary"
+              />
+              <Smartphone className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Push Notification</span>
+            </label>
+            {enablePush && (
+              <div className="flex flex-wrap gap-2 ps-6">
+                {(['all', 'ios', 'android'] as PlatformFilter[]).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPlatformFilter(p)}
+                    className={`px-3 py-1.5 text-sm border rounded-lg transition-all ${
+                      platformFilter === p
+                        ? 'border-primary bg-primary/10 text-primary font-medium'
+                        : 'border-border text-muted-foreground hover:border-primary/40'
+                    }`}
+                  >
+                    {p === 'all' ? 'All Platforms' : p === 'ios' ? 'iOS only' : 'Android only'}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         <div className="flex gap-3 pt-2 border-t">
@@ -933,9 +974,11 @@ function CampaignCard({
 export default function MarketingPage() {
   const { t, formatDate: _formatDate } = useTranslation();
   const { textStart } = useRTL();
+  const { merchant: authMerchant } = useAuth();
 
   const { data: campaigns, isLoading } = useCampaigns();
   const deactivateCampaign = useDeactivateCampaign();
+  const { data: pushStats } = usePushStats(authMerchant?.merchantId);
 
   const [showCreate, setShowCreate] = useState(false);
   const [filter, setFilter] = useState<FilterTab>('all');
@@ -1072,6 +1115,22 @@ export default function MarketingPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Push Subscriber Stats */}
+      {pushStats && (
+        <div className="flex flex-wrap gap-4 mb-6">
+          <div className="flex items-center gap-2 px-4 py-2.5 border rounded-xl bg-background text-sm">
+            <Smartphone className="w-4 h-4 text-muted-foreground" />
+            <span className="text-muted-foreground">iOS subscribers:</span>
+            <span className="font-semibold">{pushStats.ios}</span>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2.5 border rounded-xl bg-background text-sm">
+            <Smartphone className="w-4 h-4 text-muted-foreground" />
+            <span className="text-muted-foreground">Android subscribers:</span>
+            <span className="font-semibold">{pushStats.android}</span>
+          </div>
+        </div>
+      )}
 
       {/* Create Form */}
       {showCreate && (

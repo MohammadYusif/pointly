@@ -214,6 +214,7 @@ export const campaignApi = {
       maxUsesPerCustomer?: number;
       minPurchaseAmount?: number;
       maxPointsPerTransaction?: number;
+      platformFilter?: string;
     },
   ) =>
     fetchApi<CampaignResponse>(`/v1/merchants/${merchantId}/campaigns`, {
@@ -279,7 +280,12 @@ export const webhookApi = {
 export const merchantUpdateApi = {
   update: (
     merchantId: string,
-    data: { businessName?: string; contactName?: string; phone?: string },
+    data: {
+      businessName?: string;
+      contactName?: string;
+      phone?: string;
+      walletConfig?: { primaryColor: string; backgroundColor: string; logoUrl?: string };
+    },
   ) =>
     fetchApi<MerchantResponse>(`/v1/merchants/${merchantId}`, {
       method: 'PATCH',
@@ -294,4 +300,18 @@ export const merchantUpdateApi = {
         body: JSON.stringify(data),
       },
     ),
+};
+
+// Push notification API
+export const pushApi = {
+  getStats: (merchantId: string) =>
+    fetchApi<{ ios: number; android: number; web: number }>(
+      `/v1/merchants/${merchantId}/push-stats`,
+    ),
+
+  getLogoUploadUrl: (merchantId: string, filename: string, contentType: string) =>
+    fetchApi<{ url: string; publicUrl: string }>(`/v1/merchants/${merchantId}/logo-upload`, {
+      method: 'POST',
+      body: JSON.stringify({ filename, contentType }),
+    }),
 };
