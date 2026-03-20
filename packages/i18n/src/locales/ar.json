@@ -225,7 +225,40 @@
     "system": "النظام",
     "redemptionRate": "معدل الاستبدال",
     "sms": "SMS",
-    "used": "الاستخدام"
+    "used": "الاستخدام",
+    "walletCard": {
+      "title": "تخصيص بطاقة المحفظة",
+      "description": "خصّص مظهر بطاقتك في المحافظ الرقمية للعملاء",
+      "primaryColor": "اللون الأساسي",
+      "backgroundColor": "لون الخلفية",
+      "logo": "شعار المتجر",
+      "uploadLogo": "رفع الشعار",
+      "uploading": "جارٍ الرفع...",
+      "preview": "معاينة البطاقة",
+      "save": "حفظ التصميم",
+      "saving": "جارٍ الحفظ...",
+      "poweredBy": "مدعوم من Pointly",
+      "storePoints": "نقاط المتجر"
+    }
+  },
+  "notifications": {
+    "title": "الإشعارات الفورية",
+    "enablePrompt": "احصل على تنبيهات الحملات والعروض الحصرية مباشرة على جهازك",
+    "enable": "تفعيل الإشعارات",
+    "enabled": "الإشعارات مفعّلة",
+    "denied": "الإشعارات محظورة",
+    "deniedHint": "فعّل الإشعارات في إعدادات المتصفح لتلقّي التنبيهات",
+    "unsupported": "غير مدعوم على هذا الجهاز",
+    "iosHint": "أضف Pointly إلى الشاشة الرئيسية لتفعيل الإشعارات الفورية",
+    "ios": "iOS",
+    "android": "أندرويد",
+    "web": "ويب",
+    "subscribers": "مشترك",
+    "platformTargeting": "استهداف المنصة",
+    "allPlatforms": "جميع المنصات",
+    "iosOnly": "iOS فقط",
+    "androidOnly": "أندرويد فقط",
+    "enablePush": "إشعار عبر التطبيق"
   },
   "errors": {
     "required": "هذا الحقل مطلوب",
@@ -368,7 +401,15 @@
     "phase2": "جاري الانتهاء — قم بعملية شراء",
     "lifetimeEarned": "إجمالي المكتسب",
     "totalMerchantPoints": "إجمالي نقاط التجار",
-    "pointsValue": "قيمة النقاط"
+    "pointsValue": "قيمة النقاط",
+    "topStores": "بطاقات متاجرك",
+    "ptsToNextTier": "نقطة للمستوى {{tier}}",
+    "moreDetails": "مزيد من التفاصيل",
+    "lessDetails": "عرض أقل",
+    "storePoints": "نقاط المتجر",
+    "addToAppleWallet": "إضافة إلى Apple Wallet",
+    "saveToGoogleWallet": "حفظ في Google Wallet",
+    "memberSince": "عضو منذ {{year}}"
   },
   "merchants": {
     "title": "التجار",

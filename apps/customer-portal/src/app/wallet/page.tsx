@@ -146,7 +146,7 @@ interface MerchantCardProps {
 }
 
 function MerchantCard({ enrollment, merchant }: MerchantCardProps) {
-  const { formatNumber, formatCurrency } = useTranslation();
+  const { t, formatNumber, formatCurrency } = useTranslation();
   const sarValue = enrollment.merchantPointsBalance * DEFAULT_REDEMPTION_RATE;
   const businessName = merchant?.businessName ?? enrollment.merchantId;
 
@@ -177,14 +177,14 @@ function MerchantCard({ enrollment, merchant }: MerchantCardProps) {
             className="flex-1 inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-sm hover:bg-accent hover:text-accent-foreground"
             download
           >
-            Add to Apple Wallet
+            {t('wallet.addToAppleWallet')}
           </a>
           <button
             type="button"
             onClick={handleGoogleWallet}
             className="flex-1 inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-sm hover:bg-accent hover:text-accent-foreground"
           >
-            Save to Google Wallet
+            {t('wallet.saveToGoogleWallet')}
           </button>
         </div>
       </CardContent>
@@ -193,6 +193,7 @@ function MerchantCard({ enrollment, merchant }: MerchantCardProps) {
 }
 
 function PushNotificationsCard() {
+  const { t } = useTranslation();
   const { status, isRegistering, requestPermission } = useNotificationPermission();
   const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isStandalone =
@@ -204,31 +205,31 @@ function PushNotificationsCard() {
     <Card className="stagger-item">
       <CardHeader>
         <CardTitle className="text-base flex items-center justify-between">
-          <span>Push Notifications</span>
+          <span>{t('notifications.title')}</span>
           {status === 'granted' && (
             <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-green-100 text-green-700">
-              Enabled
+              {t('notifications.enabled')}
             </span>
           )}
-          {status === 'denied' && <span className="text-xs font-normal text-red-600">Blocked</span>}
+          {status === 'denied' && (
+            <span className="text-xs font-normal text-red-600">{t('notifications.denied')}</span>
+          )}
           {status === 'unsupported' && (
-            <span className="text-xs font-normal text-muted-foreground">Not supported</span>
+            <span className="text-xs font-normal text-muted-foreground">
+              {t('notifications.unsupported')}
+            </span>
           )}
         </CardTitle>
       </CardHeader>
       {status === 'default' && (
         <CardContent className="space-y-3">
           {isIOS && !isStandalone ? (
-            <p className="text-sm text-muted-foreground">
-              Add Pointly to your Home Screen to enable push notifications.
-            </p>
+            <p className="text-sm text-muted-foreground">{t('notifications.iosHint')}</p>
           ) : (
             <>
-              <p className="text-sm text-muted-foreground">
-                Get notified about points earned, rewards, and special offers.
-              </p>
+              <p className="text-sm text-muted-foreground">{t('notifications.enablePrompt')}</p>
               <Button size="sm" onClick={requestPermission} disabled={isRegistering}>
-                {isRegistering ? 'Enabling...' : 'Enable Notifications'}
+                {isRegistering ? t('common.loading') : t('notifications.enable')}
               </Button>
             </>
           )}
@@ -341,7 +342,8 @@ export default function WalletPage() {
                 />
               </div>
               <p className="text-xs text-white/70 mt-1">
-                {formatNumber(Math.max(0, ptsToNext))} pts to {nextTierName}
+                {formatNumber(Math.max(0, ptsToNext))}{' '}
+                {t('wallet.ptsToNextTier', { tier: nextTierName })}
               </p>
             </div>
           )}
@@ -349,7 +351,7 @@ export default function WalletPage() {
           <div className="flex items-end justify-between mt-auto">
             <span className="text-sm font-medium">{customer.name ?? ''}</span>
             <span className="text-xs text-white/60" suppressHydrationWarning>
-              Member {memberYear}
+              {t('wallet.memberSince', { year: memberYear })}
             </span>
           </div>
         </div>
@@ -357,7 +359,7 @@ export default function WalletPage() {
         {/* Section 2: Your Store Cards */}
         {sortedEnrollments.length > 0 && (
           <div className="space-y-3">
-            <h2 className={`text-base font-semibold ${textStart}`}>Your Store Cards</h2>
+            <h2 className={`text-base font-semibold ${textStart}`}>{t('wallet.topStores')}</h2>
             {sortedEnrollments.map((enrollment) => (
               <MerchantCard
                 key={enrollment.merchantId}
@@ -378,7 +380,9 @@ export default function WalletPage() {
             className={`text-sm font-medium text-muted-foreground flex items-center gap-1 w-full ${textStart}`}
             onClick={() => setShowDetails(!showDetails)}
           >
-            {showDetails ? 'Less \u25b4' : 'More Details \u25be'}
+            {showDetails
+              ? `${t('wallet.lessDetails')} \u25b4`
+              : `${t('wallet.moreDetails')} \u25be`}
           </button>
 
           {showDetails && (

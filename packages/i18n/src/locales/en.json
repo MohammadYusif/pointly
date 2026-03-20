@@ -225,7 +225,40 @@
     "system": "System",
     "redemptionRate": "Redemption Rate",
     "sms": "SMS",
-    "used": "Used"
+    "used": "Used",
+    "walletCard": {
+      "title": "Wallet Card Branding",
+      "description": "Customize how your card appears in customers' digital wallets",
+      "primaryColor": "Primary Colour",
+      "backgroundColor": "Background Colour",
+      "logo": "Merchant Logo",
+      "uploadLogo": "Upload Logo",
+      "uploading": "Uploading...",
+      "preview": "Card Preview",
+      "save": "Save Branding",
+      "saving": "Saving...",
+      "poweredBy": "Powered by Pointly",
+      "storePoints": "Store Points"
+    }
+  },
+  "notifications": {
+    "title": "Push Notifications",
+    "enablePrompt": "Get campaign alerts and exclusive offers directly on your device",
+    "enable": "Enable Notifications",
+    "enabled": "Notifications Enabled",
+    "denied": "Notifications Blocked",
+    "deniedHint": "Enable notifications in your browser settings to receive alerts",
+    "unsupported": "Not supported on this device",
+    "iosHint": "Add Pointly to your Home Screen to enable push notifications",
+    "ios": "iOS",
+    "android": "Android",
+    "web": "Web",
+    "subscribers": "subscribers",
+    "platformTargeting": "Platform targeting",
+    "allPlatforms": "All platforms",
+    "iosOnly": "iOS only",
+    "androidOnly": "Android only",
+    "enablePush": "Notify via push"
   },
   "errors": {
     "required": "This field is required",
@@ -368,7 +401,15 @@
     "phase2": "Decaying — make a purchase",
     "lifetimeEarned": "Lifetime Earned",
     "totalMerchantPoints": "Total Merchant Points",
-    "pointsValue": "Points Value"
+    "pointsValue": "Points Value",
+    "topStores": "Your Store Cards",
+    "ptsToNextTier": "pts to {{tier}}",
+    "moreDetails": "More Details",
+    "lessDetails": "Less Details",
+    "storePoints": "Store Points",
+    "addToAppleWallet": "Add to Apple Wallet",
+    "saveToGoogleWallet": "Save to Google Wallet",
+    "memberSince": "Member since {{year}}"
   },
   "merchants": {
     "title": "Merchants",

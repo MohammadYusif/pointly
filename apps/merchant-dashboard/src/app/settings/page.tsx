@@ -26,6 +26,7 @@ function WalletCardPreview({
   backgroundColor: string;
   logoUrl?: string;
 }) {
+  const { t } = useTranslation();
   return (
     <div
       className="rounded-2xl p-5 w-72 shadow-lg border"
@@ -39,14 +40,14 @@ function WalletCardPreview({
           <div className="w-8 h-8 rounded-full" style={{ backgroundColor: primaryColor }} />
         )}
         <span className="text-xs font-medium opacity-60" style={{ color: primaryColor }}>
-          Powered by Pointly
+          {t('settings.walletCard.poweredBy')}
         </span>
       </div>
       <p className="font-bold text-lg truncate" style={{ color: primaryColor }}>
         {businessName || 'Your Business'}
       </p>
       <p className="text-sm opacity-70 mt-1" style={{ color: primaryColor }}>
-        1,250 pts · Gold
+        1,250 pts · {t('tier.gold')}
       </p>
     </div>
   );
@@ -59,6 +60,7 @@ function WalletCardBrandingSection({
   merchant: MerchantResponse;
   merchantId: string;
 }) {
+  const { t } = useTranslation();
   const updateWalletConfig = useUpdateWalletConfig(merchantId);
   const logoUpload = useLogoUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -83,9 +85,9 @@ function WalletCardBrandingSection({
     try {
       const url = await logoUpload.mutateAsync({ merchantId, file });
       setLogoUrl(url);
-      toast.success('Logo uploaded');
+      toast.success(t('success.saved'));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Upload failed');
+      toast.error(err instanceof Error ? err.message : t('errors.serverError'));
     }
   };
 
@@ -96,9 +98,9 @@ function WalletCardBrandingSection({
         backgroundColor,
         ...(logoUrl && { logoUrl }),
       });
-      toast.success('Wallet branding saved');
+      toast.success(t('success.saved'));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save');
+      toast.error(err instanceof Error ? err.message : t('errors.serverError'));
     }
   };
 
@@ -106,10 +108,8 @@ function WalletCardBrandingSection({
     <div className="mt-6">
       <Card>
         <CardHeader>
-          <CardTitle>Wallet Card Branding</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Customize how your card appears in customers' digital wallets
-          </p>
+          <CardTitle>{t('settings.walletCard.title')}</CardTitle>
+          <p className="text-sm text-muted-foreground">{t('settings.walletCard.description')}</p>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col lg:flex-row gap-8">
@@ -120,7 +120,7 @@ function WalletCardBrandingSection({
                   htmlFor="wallet-primary-color"
                   className="text-sm text-muted-foreground block mb-1.5"
                 >
-                  Primary Color
+                  {t('settings.walletCard.primaryColor')}
                 </label>
                 <div className="flex items-center gap-2">
                   <input
@@ -145,7 +145,7 @@ function WalletCardBrandingSection({
                   htmlFor="wallet-bg-color"
                   className="text-sm text-muted-foreground block mb-1.5"
                 >
-                  Background Color
+                  {t('settings.walletCard.backgroundColor')}
                 </label>
                 <div className="flex items-center gap-2">
                   <input
@@ -166,7 +166,9 @@ function WalletCardBrandingSection({
 
               {/* Logo Upload */}
               <div>
-                <p className="text-sm text-muted-foreground mb-1.5">Logo</p>
+                <p className="text-sm text-muted-foreground mb-1.5">
+                  {t('settings.walletCard.logo')}
+                </p>
                 {logoUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -189,19 +191,23 @@ function WalletCardBrandingSection({
                     onClick={() => fileInputRef.current?.click()}
                     disabled={logoUpload.isPending}
                   >
-                    {logoUpload.isPending ? 'Uploading...' : 'Upload Logo'}
+                    {logoUpload.isPending
+                      ? t('settings.walletCard.uploading')
+                      : t('settings.walletCard.uploadLogo')}
                   </Button>
                 </div>
               </div>
 
               <Button onClick={handleSave} disabled={updateWalletConfig.isPending}>
-                {updateWalletConfig.isPending ? 'Saving...' : 'Save Branding'}
+                {updateWalletConfig.isPending
+                  ? t('settings.walletCard.saving')
+                  : t('settings.walletCard.save')}
               </Button>
             </div>
 
             {/* Live Preview */}
             <div className="flex flex-col items-start gap-2">
-              <p className="text-sm text-muted-foreground">Preview</p>
+              <p className="text-sm text-muted-foreground">{t('settings.walletCard.preview')}</p>
               <WalletCardPreview
                 businessName={merchant.businessName}
                 primaryColor={primaryColor}

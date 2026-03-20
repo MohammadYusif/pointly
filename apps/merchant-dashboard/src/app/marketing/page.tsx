@@ -714,7 +714,7 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
                 className="w-4 h-4 rounded border-input accent-primary"
               />
               <Smartphone className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Push Notification</span>
+              <span className="text-sm font-medium">{t('notifications.enablePush')}</span>
             </label>
             {enablePush && (
               <div className="flex flex-wrap gap-2 ps-6">
@@ -729,7 +729,11 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
                         : 'border-border text-muted-foreground hover:border-primary/40'
                     }`}
                   >
-                    {p === 'all' ? 'All Platforms' : p === 'ios' ? 'iOS only' : 'Android only'}
+                    {p === 'all'
+                      ? t('notifications.allPlatforms')
+                      : p === 'ios'
+                        ? t('notifications.iosOnly')
+                        : t('notifications.androidOnly')}
                   </button>
                 ))}
               </div>
@@ -1121,12 +1125,16 @@ export default function MarketingPage() {
         <div className="flex flex-wrap gap-4 mb-6">
           <div className="flex items-center gap-2 px-4 py-2.5 border rounded-xl bg-background text-sm">
             <Smartphone className="w-4 h-4 text-muted-foreground" />
-            <span className="text-muted-foreground">iOS subscribers:</span>
+            <span className="text-muted-foreground">
+              {t('notifications.ios')} {t('notifications.subscribers')}:
+            </span>
             <span className="font-semibold">{pushStats.ios}</span>
           </div>
           <div className="flex items-center gap-2 px-4 py-2.5 border rounded-xl bg-background text-sm">
             <Smartphone className="w-4 h-4 text-muted-foreground" />
-            <span className="text-muted-foreground">Android subscribers:</span>
+            <span className="text-muted-foreground">
+              {t('notifications.android')} {t('notifications.subscribers')}:
+            </span>
             <span className="font-semibold">{pushStats.android}</span>
           </div>
         </div>
