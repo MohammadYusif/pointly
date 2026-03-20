@@ -55,6 +55,12 @@ export interface MerchantLocation {
   createdAt: string;
 }
 
+export interface WalletConfig {
+  primaryColor: string;
+  backgroundColor: string;
+  logoUrl?: string;
+}
+
 export interface MerchantResponse {
   merchantId: string;
   businessName: string;
@@ -65,6 +71,7 @@ export interface MerchantResponse {
   status: string;
   verifiedAt?: string;
   activePerks?: MerchantPerk[];
+  walletConfig?: WalletConfig;
   loyaltyConfig: {
     pointsPerSAR: number;
     globalPointsPerSAR: number;

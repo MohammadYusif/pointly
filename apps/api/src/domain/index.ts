@@ -28,6 +28,7 @@ export type {
   LocationInfo,
   PointsCalculation,
   PerkType,
+  WalletConfig,
 } from './entities/Merchant';
 
 export {

@@ -911,6 +911,49 @@ describe('Domain Entities', () => {
       expect(json.updatedAt).toBeTruthy();
       expect(json.verifiedAt).toBeUndefined();
     });
+
+    it('should set and get walletConfig', () => {
+      const email = new Email('test@example.com');
+      const phone = new PhoneNumber('0501234567');
+      const merchant = Merchant.create('Test Store', email, phone, 'Ahmed', MerchantTier.BASIC);
+
+      expect(merchant.getWalletConfig()).toBeUndefined();
+
+      merchant.setWalletConfig({ primaryColor: '#0d9488', backgroundColor: '#ffffff' });
+      const config = merchant.getWalletConfig();
+
+      expect(config?.primaryColor).toBe('#0d9488');
+      expect(config?.backgroundColor).toBe('#ffffff');
+      expect(config?.logoUrl).toBeUndefined();
+    });
+
+    it('should include walletConfig in toJSON when set', () => {
+      const email = new Email('test@example.com');
+      const phone = new PhoneNumber('0501234567');
+      const merchant = Merchant.create('Test Store', email, phone, 'Ahmed', MerchantTier.BASIC);
+
+      merchant.setWalletConfig({
+        primaryColor: '#0d9488',
+        backgroundColor: '#ffffff',
+        logoUrl: 'https://cdn.example.com/logo.png',
+      });
+
+      const json = merchant.toJSON();
+      expect(json.walletConfig).toEqual({
+        primaryColor: '#0d9488',
+        backgroundColor: '#ffffff',
+        logoUrl: 'https://cdn.example.com/logo.png',
+      });
+    });
+
+    it('should omit walletConfig from toJSON when not set', () => {
+      const email = new Email('test@example.com');
+      const phone = new PhoneNumber('0501234567');
+      const merchant = Merchant.create('Test Store', email, phone, 'Ahmed', MerchantTier.BASIC);
+
+      const json = merchant.toJSON();
+      expect(json.walletConfig).toBeUndefined();
+    });
   });
 
   describe('Transaction Entity', () => {

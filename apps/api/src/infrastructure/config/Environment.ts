@@ -39,6 +39,10 @@ const envSchema = z.object({
 
   // AWS SDK
   AWS_NODEJS_CONNECTION_REUSE_ENABLED: z.string().optional(),
+
+  // Merchant Assets (S3 logo upload)
+  MERCHANT_ASSETS_BUCKET: z.string().optional(),
+  MERCHANT_ASSETS_URL: z.string().optional(),
 });
 
 export type Environment = z.infer<typeof envSchema>;

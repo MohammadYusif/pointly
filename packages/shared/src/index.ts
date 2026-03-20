@@ -31,6 +31,7 @@ export {
 
 // API Response Types
 export type {
+  WalletConfig,
   PerkType,
   MerchantPerk,
   CustomerPerkView,

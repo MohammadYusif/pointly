@@ -69,6 +69,12 @@ export interface MerchantPerk {
   createdAt: Date;
 }
 
+export interface WalletConfig {
+  primaryColor: string;
+  backgroundColor: string;
+  logoUrl?: string;
+}
+
 export interface MerchantProps {
   merchantId: string;
   businessName: string;
@@ -88,6 +94,7 @@ export interface MerchantProps {
   createdAt: Date;
   updatedAt: Date;
   verifiedAt?: Date;
+  walletConfig?: WalletConfig;
 }
 
 export class Merchant {
@@ -261,6 +268,15 @@ export class Merchant {
 
   getVerifiedAt(): Date | undefined {
     return this.props.verifiedAt;
+  }
+
+  getWalletConfig(): WalletConfig | undefined {
+    return this.props.walletConfig ? { ...this.props.walletConfig } : undefined;
+  }
+
+  setWalletConfig(config: WalletConfig): void {
+    this.props.walletConfig = { ...config };
+    this.props.updatedAt = new Date();
   }
 
   /**
@@ -529,6 +545,7 @@ export class Merchant {
       createdAt: this.props.createdAt.toISOString(),
       updatedAt: this.props.updatedAt.toISOString(),
       verifiedAt: this.props.verifiedAt?.toISOString(),
+      ...(this.props.walletConfig && { walletConfig: this.props.walletConfig }),
     };
   }
 }

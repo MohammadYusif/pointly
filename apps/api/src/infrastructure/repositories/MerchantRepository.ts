@@ -13,6 +13,7 @@ import {
   type PerkType,
   PhoneNumber,
   type SMSQuota,
+  type WalletConfig,
 } from '../../domain';
 import { BaseDynamoDBRepository } from './BaseRepository';
 
@@ -59,6 +60,7 @@ interface MerchantItem {
   createdAt: string;
   updatedAt: string;
   verifiedAt?: string;
+  walletConfig?: WalletConfig;
   GSI1PK?: string; // EMAIL#<email>
   GSI1SK?: string; // MERCHANT
   GSI2PK?: string; // PHONE#<phone>
@@ -324,6 +326,7 @@ export class MerchantRepository
       createdAt: new Date(item.createdAt),
       updatedAt: new Date(item.updatedAt),
       ...(item.verifiedAt && { verifiedAt: new Date(item.verifiedAt) }),
+      ...(item.walletConfig && { walletConfig: item.walletConfig }),
     };
 
     return Merchant.reconstitute(props);
@@ -361,6 +364,7 @@ export class MerchantRepository
       createdAt: json.createdAt,
       updatedAt: json.updatedAt,
       ...(json.verifiedAt && { verifiedAt: json.verifiedAt }),
+      ...(json.walletConfig && { walletConfig: json.walletConfig }),
       GSI1PK: `EMAIL#${json.email.toLowerCase()}`,
       GSI1SK: 'MERCHANT',
       GSI2PK: `PHONE#${json.phone}`,

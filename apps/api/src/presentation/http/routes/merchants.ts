@@ -1,7 +1,10 @@
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { Customer, PhoneNumber, ValidationError } from '../../../domain';
 import { ForbiddenError } from '../../../domain/errors/DomainError';
+import EnvironmentConfig from '../../../infrastructure/config/Environment';
 import { getContainer } from '../container';
 
 interface CustomerEnrollmentJSON {
@@ -302,7 +305,12 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
     async (
       request: FastifyRequest<{
         Params: { merchantId: string };
-        Body: { businessName?: string; contactName?: string; phone?: string };
+        Body: {
+          businessName?: string;
+          contactName?: string;
+          phone?: string;
+          walletConfig?: { primaryColor: string; backgroundColor: string; logoUrl?: string };
+        };
       }>,
       reply: FastifyReply,
     ) => {
@@ -313,6 +321,13 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
         businessName: z.string().min(2).max(100).optional(),
         contactName: z.string().min(1).optional(),
         phone: z.string().optional(),
+        walletConfig: z
+          .object({
+            primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+            backgroundColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+            logoUrl: z.string().url().optional(),
+          })
+          .optional(),
       });
       const body = updateSchema.parse(request.body);
 
@@ -336,9 +351,61 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       }
 
       merchant.updateBusinessInfo(updates);
+
+      if (body.walletConfig) {
+        const wc = body.walletConfig;
+        merchant.setWalletConfig({
+          primaryColor: wc.primaryColor,
+          backgroundColor: wc.backgroundColor,
+          ...(wc.logoUrl !== undefined && { logoUrl: wc.logoUrl }),
+        });
+      }
+
       await merchantRepository.save(merchant);
 
       return reply.send({ success: true, data: merchant.toJSON() });
+    },
+  );
+
+  // POST /:merchantId/logo-upload — Get presigned S3 PUT URL for logo upload
+  server.post(
+    '/:merchantId/logo-upload',
+    async (
+      request: FastifyRequest<{
+        Params: { merchantId: string };
+        Body: { filename: string; contentType: string };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      if (request.merchantId && request.params.merchantId !== request.merchantId) {
+        throw new ForbiddenError("Cannot access another merchant's data");
+      }
+      const { merchantId } = request.params;
+
+      const env = EnvironmentConfig.get();
+      if (!env.MERCHANT_ASSETS_BUCKET || !env.MERCHANT_ASSETS_URL) {
+        return reply.status(501).send({ error: 'Logo upload not configured' });
+      }
+
+      const logoUploadSchema = z.object({
+        filename: z.string().min(1),
+        contentType: z.enum(['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml']),
+      });
+      const body = logoUploadSchema.parse(request.body);
+
+      const ext = body.filename.split('.').pop() ?? 'bin';
+      const key = `merchants/${merchantId}/logo-${Date.now()}.${ext}`;
+
+      const s3 = new S3Client({ region: env.AWS_REGION });
+      const command = new PutObjectCommand({
+        Bucket: env.MERCHANT_ASSETS_BUCKET,
+        Key: key,
+        ContentType: body.contentType,
+      });
+      const url = await getSignedUrl(s3, command, { expiresIn: 300 });
+      const publicUrl = `${env.MERCHANT_ASSETS_URL}/${key}`;
+
+      return reply.send({ url, publicUrl });
     },
   );
 
