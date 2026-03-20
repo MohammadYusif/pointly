@@ -10,6 +10,7 @@ import { merchantPublicRoutes } from './merchantPublic';
 import { merchantRoutes } from './merchants';
 import { purchaseRoutes } from './purchases';
 import { pushCustomerRoutes, pushMerchantRoutes, pushPublicRoutes } from './push';
+import { walletPassRoutes } from './wallet-pass';
 import { webhookRoutes } from './webhooks';
 
 export async function registerRoutes(server: FastifyInstance): Promise<void> {
@@ -29,6 +30,7 @@ export async function registerRoutes(server: FastifyInstance): Promise<void> {
         customerApp.addHook('preHandler', verifyCustomerToken);
         await customerApp.register(customerSelfRoutes, { prefix: '/me' });
         await customerApp.register(pushCustomerRoutes, { prefix: '/me/push-subscriptions' });
+        await customerApp.register(walletPassRoutes, { prefix: '/me/wallet' });
       });
 
       // Merchant-authenticated routes

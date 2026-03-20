@@ -85,7 +85,28 @@ export class PushSubscriptionRepository
       }),
     );
 
-    return (result.Items ?? []).map((item) => this.itemToEntity(item as unknown as PushSubscriptionItem));
+    return (result.Items ?? []).map((item) =>
+      this.itemToEntity(item as unknown as PushSubscriptionItem),
+    );
+  }
+
+  async findAll(platform?: 'ios' | 'android' | 'web'): Promise<PushSubscription[]> {
+    const hasFilter = platform !== undefined;
+    const result = await this.client.send(
+      new ScanCommand({
+        TableName: this.tableName,
+        FilterExpression: hasFilter
+          ? 'EntityType = :et AND platform = :platform'
+          : 'EntityType = :et',
+        ExpressionAttributeValues: hasFilter
+          ? { ':et': 'PUSH_SUBSCRIPTION', ':platform': platform }
+          : { ':et': 'PUSH_SUBSCRIPTION' },
+      }),
+    );
+
+    return (result.Items ?? []).map((item) =>
+      this.itemToEntity(item as unknown as PushSubscriptionItem),
+    );
   }
 
   protected toEntity(item: Record<string, unknown>): PushSubscription {

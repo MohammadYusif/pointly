@@ -49,6 +49,19 @@ const envSchema = z.object({
   // Merchant Assets (S3 logo upload)
   MERCHANT_ASSETS_BUCKET: z.string().optional(),
   MERCHANT_ASSETS_URL: z.string().optional(),
+
+  // Apple Wallet
+  APPLE_PASS_CERT_PEM: z.string().optional(),
+  APPLE_PASS_KEY_PEM: z.string().optional(),
+  APPLE_PASS_KEY_PASSPHRASE: z.string().optional(),
+  APPLE_TEAM_ID: z.string().optional(),
+  APPLE_PASS_TYPE_ID: z.string().optional(),
+  APPLE_WWDR_PEM: z.string().optional(),
+
+  // Google Wallet
+  GOOGLE_WALLET_ISSUER_ID: z.string().optional(),
+  GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL: z.string().optional(),
+  GOOGLE_WALLET_PRIVATE_KEY: z.string().optional(),
 });
 
 export type Environment = z.infer<typeof envSchema>;

@@ -36,7 +36,9 @@
     "axios": "1.13.5",
     "fastify": "5.7.2",
     "fastify-plugin": "^5.1.0",
+    "jsonwebtoken": "^9.0.3",
     "jwks-rsa": "^3.2.2",
+    "passkit-generator": "^3.5.7",
     "pino": "9.6.0",
     "pino-pretty": "13.0.0",
     "ulid": "2.3.0",
@@ -46,6 +48,7 @@
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@types/aws-lambda": "8.10.145",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "22.10.5",
     "@types/web-push": "^3.6.4",
     "@vitest/coverage-v8": "2.1.9",

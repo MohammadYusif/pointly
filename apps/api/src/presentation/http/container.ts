@@ -17,6 +17,7 @@ import { GetAnalyticsUseCase } from '../../application/use-cases/GetAnalyticsUse
 import { ManageCampaignUseCase } from '../../application/use-cases/ManageCampaignUseCase';
 import { ManagePerkUseCase } from '../../application/use-cases/ManagePerkUseCase';
 import { ManagePushSubscriptionUseCase } from '../../application/use-cases/ManagePushSubscriptionUseCase';
+import { ManageWalletPassUseCase } from '../../application/use-cases/ManageWalletPassUseCase';
 import { ProcessMonthlyTierResetUseCase } from '../../application/use-cases/ProcessMonthlyTierResetUseCase';
 import { ProcessPointsDecayUseCase } from '../../application/use-cases/ProcessPointsDecayUseCase';
 import { RecordPurchaseUseCase } from '../../application/use-cases/RecordPurchaseUseCase';
@@ -69,6 +70,7 @@ export interface Container {
   getAnalyticsUseCase: GetAnalyticsUseCase;
   generateQRCodeUseCase: GenerateQRCodeUseCase;
   managePushSubscriptionUseCase: ManagePushSubscriptionUseCase;
+  manageWalletPassUseCase: ManageWalletPassUseCase;
 }
 
 let container: Container | null = null;
@@ -120,6 +122,8 @@ export function createContainer(): Container {
     (items) => transactionalWriter.writeAll(items),
     customerRepository,
     smsPublisherService,
+    pushSubscriptionRepository,
+    webPushService,
   );
 
   const recordPurchaseUseCase = new RecordPurchaseUseCase(
@@ -171,6 +175,12 @@ export function createContainer(): Container {
     env.VAPID_PUBLIC_KEY,
   );
 
+  const manageWalletPassUseCase = new ManageWalletPassUseCase(
+    customerRepository,
+    merchantRepository,
+    env,
+  );
+
   return {
     customerRepository,
     merchantRepository,
@@ -196,6 +206,7 @@ export function createContainer(): Container {
     getAnalyticsUseCase,
     generateQRCodeUseCase,
     managePushSubscriptionUseCase,
+    manageWalletPassUseCase,
   };
 }
 

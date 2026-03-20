@@ -15,4 +15,5 @@ export interface IPushSubscriptionRepository {
     merchantId: string,
     platform: 'ios' | 'android' | 'web',
   ): Promise<PushSubscription[]>;
+  findAll(platform?: 'ios' | 'android' | 'web'): Promise<PushSubscription[]>;
 }

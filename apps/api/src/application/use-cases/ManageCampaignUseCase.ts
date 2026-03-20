@@ -4,6 +4,8 @@ import { CAMPAIGN_DEFAULTS, type CampaignType } from '../../domain/entities/Camp
 import type { ICampaignRepository } from '../repositories/ICampaignRepository';
 import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
+import type { IPushSubscriptionRepository } from '../repositories/IPushSubscriptionRepository';
+import type { IPushNotificationService } from '../services/IPushNotificationService';
 import type { ISmsPublisherService, SmsMessage } from '../services/ISmsPublisherService';
 import type { PersistenceItem, QueryResult } from '../shared/interfaces/BaseRepository';
 
@@ -22,6 +24,7 @@ export interface ManageCampaignRequest {
   maxUsesPerCustomer?: number;
   minPurchaseAmount?: number;
   maxPointsPerTransaction?: number;
+  platformFilter?: 'ios' | 'android' | 'web';
 }
 
 export class ManageCampaignUseCase {
@@ -31,6 +34,8 @@ export class ManageCampaignUseCase {
     private atomicWrite: (items: PersistenceItem[]) => Promise<void>,
     private customerRepository?: ICustomerRepository,
     private smsPublisherService?: ISmsPublisherService,
+    private pushSubscriptionRepository?: IPushSubscriptionRepository,
+    private pushNotificationService?: IPushNotificationService,
   ) {}
 
   async execute(
@@ -117,7 +122,7 @@ export class ManageCampaignUseCase {
 
     // Fire-and-forget: notify all merchant customers about the new campaign
     try {
-      await this.notifyCustomers(merchant.getBusinessName(), campaign);
+      await this.notifyCustomers(merchant.getBusinessName(), campaign, request.platformFilter);
     } catch {
       // SMS fan-out is best-effort — campaign creation must not fail
     }
@@ -125,31 +130,43 @@ export class ManageCampaignUseCase {
     return campaign;
   }
 
-  private async notifyCustomers(businessName: string, campaign: Campaign): Promise<void> {
-    if (!this.customerRepository || !this.smsPublisherService) {
-      return;
-    }
-
-    const result = await this.customerRepository.findByMerchant(campaign.getMerchantId(), {
-      limit: 200,
-    });
-
-    if (result.items.length === 0) {
-      return;
-    }
-
+  private async notifyCustomers(
+    businessName: string,
+    campaign: Campaign,
+    platformFilter?: 'ios' | 'android' | 'web',
+  ): Promise<void> {
+    const merchantId = campaign.getMerchantId();
     const endDate = campaign.getEndDate().toLocaleDateString('en-SA');
     const customMessage = campaign.getMessage();
     const defaultBody = `${businessName}: ${campaign.getName()} — earn ${campaign.getMultiplier()}x points! Valid until ${endDate}`;
 
-    const messages: SmsMessage[] = result.items.map((customer) => ({
-      phone: customer.getPhone().toE164(),
-      body: customMessage ? `${businessName}: ${customMessage}` : defaultBody,
-      merchantId: campaign.getMerchantId(),
-      type: 'CAMPAIGN_NOTIFICATION' as const,
-    }));
+    if (this.customerRepository && this.smsPublisherService) {
+      const result = await this.customerRepository.findByMerchant(merchantId, { limit: 200 });
 
-    await this.smsPublisherService.publishBatch(messages);
+      if (result.items.length > 0) {
+        const messages: SmsMessage[] = result.items.map((customer) => ({
+          phone: customer.getPhone().toE164(),
+          body: customMessage ? `${businessName}: ${customMessage}` : defaultBody,
+          merchantId,
+          type: 'CAMPAIGN_NOTIFICATION' as const,
+        }));
+
+        await this.smsPublisherService.publishBatch(messages);
+      }
+    }
+
+    if (this.pushSubscriptionRepository && this.pushNotificationService) {
+      const subscriptions = await this.pushSubscriptionRepository.findAll(platformFilter);
+
+      if (subscriptions.length > 0) {
+        const pushPayload = {
+          title: campaign.getName(),
+          body: customMessage ?? defaultBody,
+        };
+
+        await this.pushNotificationService.sendBatch(subscriptions, pushPayload);
+      }
+    }
   }
 
   private async update(request: ManageCampaignRequest): Promise<Campaign> {
