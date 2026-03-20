@@ -14,7 +14,8 @@
       "coverage",
       "cdk.out",
       "next-env.d.ts",
-      ".terraform"
+      ".terraform",
+      "**/public/sw.js"
     ]
   },
   "formatter": {

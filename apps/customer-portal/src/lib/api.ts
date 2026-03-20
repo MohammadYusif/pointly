@@ -127,3 +127,19 @@ export function giftPoints(data: {
 export function deleteAccount(): Promise<void> {
   return fetchApi('/v1/me', { method: 'DELETE' });
 }
+
+export const pushApi = {
+  subscribe: (data: { endpoint: string; p256dh: string; auth: string; platform: string }) =>
+    fetchApi('/v1/me/push-subscriptions', { method: 'POST', body: JSON.stringify(data) }),
+  unsubscribe: (endpoint: string) =>
+    fetchApi('/v1/me/push-subscriptions', { method: 'DELETE', body: JSON.stringify({ endpoint }) }),
+};
+
+export const walletApi = {
+  getApplePassUrl: (merchantId: string) =>
+    `${API_BASE_URL}/v1/me/wallet/apple-pass?merchantId=${merchantId}`,
+  getGoogleWalletLink: (merchantId: string) =>
+    fetchApi<{ url: string }>(`/v1/me/wallet/google-link?merchantId=${merchantId}`, {
+      method: 'GET',
+    }),
+};

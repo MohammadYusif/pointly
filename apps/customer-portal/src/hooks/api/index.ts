@@ -11,3 +11,4 @@ export { useGenerateQR } from './use-qr';
 export { useDeleteAccount } from './use-delete-account';
 export { useMyChallenges } from './use-challenges';
 export { useGiftPoints } from './use-gift';
+export { useNotificationPermission } from './use-notifications';
