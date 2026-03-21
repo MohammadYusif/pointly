@@ -1,7 +1,9 @@
 import { createHash } from 'node:crypto';
 import { PushSubscription } from '../../domain/entities/PushSubscription';
+import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { PlatformCounts } from '../repositories/IPushSubscriptionRepository';
 import type { IPushSubscriptionRepository } from '../repositories/IPushSubscriptionRepository';
+import type { PersistenceItem } from '../shared/interfaces/BaseRepository';
 
 export interface SubscribeRequest {
   action: 'subscribe';
@@ -37,6 +39,8 @@ export class ManagePushSubscriptionUseCase {
   constructor(
     private pushSubscriptionRepository: IPushSubscriptionRepository,
     private vapidPublicKey: string | undefined,
+    private customerRepository: ICustomerRepository,
+    private writeAll: (items: PersistenceItem[]) => Promise<void>,
   ) {}
 
   async execute(
@@ -61,13 +65,36 @@ export class ManagePushSubscriptionUseCase {
       authKey: request.auth,
       platform: request.platform,
     });
-    await this.pushSubscriptionRepository.save(sub);
+
+    const customer = await this.customerRepository.findById(request.customerId);
+    const merchantIds = customer ? Array.from(customer.getEnrollments().keys()) : [];
+
+    const mainItem = this.pushSubscriptionRepository.toPushSubscriptionPersistenceItem(sub);
+    const merchantIndexItems = this.pushSubscriptionRepository.saveMerchantIndexRecords(
+      merchantIds,
+      sub,
+    );
+
+    await this.writeAll([mainItem, ...merchantIndexItems]);
     return sub;
   }
 
   private async unsubscribe(request: UnsubscribeRequest): Promise<undefined> {
     const hash = createHash('sha256').update(request.endpoint).digest('hex');
-    await this.pushSubscriptionRepository.deleteByEndpointHash(request.customerId, hash);
+
+    const customer = await this.customerRepository.findById(request.customerId);
+    const merchantIds = customer ? Array.from(customer.getEnrollments().keys()) : [];
+
+    if (merchantIds.length > 0) {
+      await this.pushSubscriptionRepository.deleteSubscriptionWithMerchantIndexes(
+        request.customerId,
+        hash,
+        merchantIds,
+      );
+    } else {
+      await this.pushSubscriptionRepository.deleteByEndpointHash(request.customerId, hash);
+    }
+
     return undefined;
   }
 

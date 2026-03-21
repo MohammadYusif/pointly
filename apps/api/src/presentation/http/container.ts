@@ -177,6 +177,8 @@ export function createContainer(): Container {
   const managePushSubscriptionUseCase = new ManagePushSubscriptionUseCase(
     pushSubscriptionRepository,
     env.VAPID_PUBLIC_KEY,
+    customerRepository,
+    (items) => transactionalWriter.writeAll(items),
   );
 
   const manageWalletPassUseCase = new ManageWalletPassUseCase(

@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto';
-import { ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import type {
   IPushSubscriptionRepository,
   PlatformCounts,
 } from '../../application/repositories/IPushSubscriptionRepository';
+import type { PersistenceItem } from '../../application/shared/interfaces/BaseRepository';
 import {
   PushSubscription,
   type PushSubscriptionProps,
@@ -16,6 +17,20 @@ interface PushSubscriptionItem {
   EntityType: 'PUSH_SUBSCRIPTION';
   pushId: string;
   customerId: string;
+  endpoint: string;
+  p256dhKey: string;
+  authKey: string;
+  platform: 'ios' | 'android' | 'web';
+  createdAt: string;
+}
+
+interface MerchantPushIndexItem {
+  PK: string;
+  SK: string;
+  EntityType: 'MERCHANT_PUSH_INDEX';
+  pushId: string;
+  customerId: string;
+  merchantId: string;
   endpoint: string;
   p256dhKey: string;
   authKey: string;
@@ -50,44 +65,116 @@ export class PushSubscriptionRepository
     await this.deleteItem(`CUSTOMER#${customerId}`, `PUSH#${endpointHash}`);
   }
 
-  async findPlatformCountsByMerchant(_merchantId: string): Promise<PlatformCounts> {
-    const result = await this.client.send(
-      new ScanCommand({
-        TableName: this.tableName,
-        FilterExpression: 'EntityType = :et',
-        ExpressionAttributeValues: { ':et': 'PUSH_SUBSCRIPTION' },
-        ProjectionExpression: 'platform',
-      }),
-    );
+  async deleteSubscriptionWithMerchantIndexes(
+    customerId: string,
+    endpointHash: string,
+    merchantIds: string[],
+  ): Promise<void> {
+    const deleteOps: Array<{
+      type: 'Delete';
+      tableName?: string;
+      key: { PK: string; SK: string };
+    }> = [
+      {
+        type: 'Delete',
+        key: { PK: `CUSTOMER#${customerId}`, SK: `PUSH#${endpointHash}` },
+      },
+      ...merchantIds.map((merchantId) => ({
+        type: 'Delete' as const,
+        key: {
+          PK: `MERCHANT_PUSH#${merchantId}`,
+          SK: `CUSTOMER#${customerId}#PUSH#${endpointHash}`,
+        },
+      })),
+    ];
 
+    await this.transactWrite(deleteOps);
+  }
+
+  toPushSubscriptionPersistenceItem(subscription: PushSubscription): PersistenceItem {
+    return { tableName: this.tableName, item: this.toItem(subscription) };
+  }
+
+  saveMerchantIndexRecords(
+    merchantIds: string[],
+    subscription: PushSubscription,
+  ): PersistenceItem[] {
+    const endpointHash = PushSubscriptionRepository.endpointHash(subscription.endpoint);
+    return merchantIds.map((merchantId) => {
+      const item: MerchantPushIndexItem = {
+        PK: `MERCHANT_PUSH#${merchantId}`,
+        SK: `CUSTOMER#${subscription.customerId}#PUSH#${endpointHash}`,
+        EntityType: 'MERCHANT_PUSH_INDEX',
+        pushId: subscription.pushId,
+        customerId: subscription.customerId,
+        merchantId,
+        endpoint: subscription.endpoint,
+        p256dhKey: subscription.p256dhKey,
+        authKey: subscription.authKey,
+        platform: subscription.platform,
+        createdAt: subscription.createdAt,
+      };
+      return { tableName: this.tableName, item: item as unknown as Record<string, unknown> };
+    });
+  }
+
+  async findPlatformCountsByMerchant(merchantId: string): Promise<PlatformCounts> {
     const counts: PlatformCounts = { ios: 0, android: 0, web: 0 };
-    for (const rawItem of result.Items ?? []) {
-      const platform = (rawItem as { platform?: string }).platform;
-      if (platform === 'ios') counts.ios++;
-      else if (platform === 'android') counts.android++;
-      else if (platform === 'web') counts.web++;
-    }
+    let lastEvaluatedKey: Record<string, unknown> | undefined;
+
+    do {
+      const result = await this.client.send(
+        new QueryCommand({
+          TableName: this.tableName,
+          KeyConditionExpression: 'PK = :pk',
+          ExpressionAttributeValues: { ':pk': `MERCHANT_PUSH#${merchantId}` },
+          ProjectionExpression: 'platform',
+          ...(lastEvaluatedKey && { ExclusiveStartKey: lastEvaluatedKey }),
+        }),
+      );
+
+      for (const rawItem of result.Items ?? []) {
+        const platform = (rawItem as { platform?: string }).platform;
+        if (platform === 'ios') counts.ios++;
+        else if (platform === 'android') counts.android++;
+        else if (platform === 'web') counts.web++;
+      }
+
+      lastEvaluatedKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
+    } while (lastEvaluatedKey !== undefined);
+
     return counts;
   }
 
   async findByPlatform(
-    _merchantId: string,
+    merchantId: string,
     platform: 'ios' | 'android' | 'web',
   ): Promise<PushSubscription[]> {
-    const result = await this.client.send(
-      new ScanCommand({
-        TableName: this.tableName,
-        FilterExpression: 'EntityType = :et AND platform = :platform',
-        ExpressionAttributeValues: {
-          ':et': 'PUSH_SUBSCRIPTION',
-          ':platform': platform,
-        },
-      }),
-    );
+    const items: MerchantPushIndexItem[] = [];
+    let lastEvaluatedKey: Record<string, unknown> | undefined;
 
-    return (result.Items ?? []).map((item) =>
-      this.itemToEntity(item as unknown as PushSubscriptionItem),
-    );
+    do {
+      const result = await this.client.send(
+        new QueryCommand({
+          TableName: this.tableName,
+          KeyConditionExpression: 'PK = :pk',
+          FilterExpression: 'platform = :platform',
+          ExpressionAttributeValues: {
+            ':pk': `MERCHANT_PUSH#${merchantId}`,
+            ':platform': platform,
+          },
+          ...(lastEvaluatedKey && { ExclusiveStartKey: lastEvaluatedKey }),
+        }),
+      );
+
+      for (const rawItem of result.Items ?? []) {
+        items.push(rawItem as MerchantPushIndexItem);
+      }
+
+      lastEvaluatedKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
+    } while (lastEvaluatedKey !== undefined);
+
+    return items.map((item) => this.itemToEntity(item));
   }
 
   async findAll(platform?: 'ios' | 'android' | 'web'): Promise<PushSubscription[]> {
@@ -113,7 +200,7 @@ export class PushSubscriptionRepository
     return this.itemToEntity(item as unknown as PushSubscriptionItem);
   }
 
-  private itemToEntity(item: PushSubscriptionItem): PushSubscription {
+  private itemToEntity(item: PushSubscriptionItem | MerchantPushIndexItem): PushSubscription {
     const props: PushSubscriptionProps = {
       pushId: item.pushId,
       customerId: item.customerId,
