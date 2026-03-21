@@ -11,7 +11,7 @@ export interface PushSubscriptionProps {
 }
 
 export class PushSubscription {
-  constructor(private props: PushSubscriptionProps) {}
+  private constructor(private readonly props: PushSubscriptionProps) {}
 
   get pushId(): string {
     return this.props.pushId;

@@ -13,13 +13,12 @@ const envSchema = z.object({
   TRANSACTION_TABLE: z.string(),
   IDEMPOTENCY_TABLE: z.string(),
   QR_NONCE_TABLE: z.string(),
-  PENDING_CONSENTS_TABLE: z.string().optional(),
+  PENDING_CONSENTS_TABLE: z.string().default('pointly-pending-consents'),
   SMS_QUOTA_TABLE: z.string(),
-  WALLET_PASSES_TABLE: z.string().optional(),
+  WALLET_PASSES_TABLE: z.string().default('pointly-wallet-passes'),
 
   // SQS
   SMS_QUEUE_URL: z.string(),
-  PUSH_QUEUE_URL: z.string().optional(),
 
   // VAPID (Web Push)
   VAPID_PUBLIC_KEY: z.string().optional(),

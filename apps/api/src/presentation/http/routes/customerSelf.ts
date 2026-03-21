@@ -5,6 +5,7 @@ import {
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { Customer, PhoneNumber } from '../../../domain';
+import { TIER_ORDER } from '../../../domain/config/TierConfig.js';
 import { ValidationError } from '../../../domain/errors/DomainError';
 import EnvironmentConfig from '../../../infrastructure/config/Environment';
 import { getContainer } from '../container';
@@ -204,8 +205,6 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
       throw new ValidationError('Customer ID not found in token');
     }
 
-    const tierOrder: Record<string, number> = { BRONZE: 0, GOLD: 1, PLATINUM: 2, DIAMOND: 3 };
-
     const container = getContainer();
     const customer = await container.customerRepository.findById(customerId);
     if (!customer) {
@@ -213,7 +212,7 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
     }
 
     const customerTierLevel = customer.getCurrentTier().getLevel();
-    const customerTierRank = tierOrder[customerTierLevel] ?? 0;
+    const customerTierRank = TIER_ORDER.indexOf(customerTierLevel);
 
     // Collect all enrolled merchants
     const enrolledMerchantIds = customer
@@ -290,7 +289,7 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
         // Skip perks the customer isn't eligible for based on campaign-style rules
         if (!isPerkEligibleForCustomer(perk.type, customerJSON, merchantId)) continue;
 
-        const requiredRank = tierOrder[perk.requiredTier] ?? 0;
+        const requiredRank = TIER_ORDER.indexOf(perk.requiredTier);
 
         // Build campaign enrichment fields
         let campaignFields = {};

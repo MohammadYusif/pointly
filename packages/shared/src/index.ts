@@ -10,6 +10,7 @@ export {
   TIER_ORDER,
   getTierColor,
   getTierTarget,
+  getTierBgColor,
 } from './tier-config';
 export type { CustomerTierLevel } from './tier-config';
 

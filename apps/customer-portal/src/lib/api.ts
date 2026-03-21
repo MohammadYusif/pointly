@@ -106,6 +106,8 @@ export const pushApi = {
     fetchApi('/v1/me/push-subscriptions', { method: 'POST', body: JSON.stringify(data) }),
   unsubscribe: (endpoint: string) =>
     fetchApi('/v1/me/push-subscriptions', { method: 'DELETE', body: JSON.stringify({ endpoint }) }),
+  getVapidKey: (): Promise<{ publicKey: string }> =>
+    fetchApi<{ publicKey: string }>('/v1/push/vapid-key'),
 };
 
 export const walletApi = {

@@ -68,11 +68,6 @@ const analyticsQuerySchema = z.object({
   groupBy: z.enum(['day', 'week', 'month']).optional(),
 });
 
-function isBirthdayThisMonth(dateOfBirth: string | undefined, currentMonth: number): boolean {
-  if (!dateOfBirth) return false;
-  return new Date(dateOfBirth).getMonth() === currentMonth;
-}
-
 function computeInsightCounts(customers: Customer[], merchantId: string) {
   const now = new Date();
   const currentMonth = now.getMonth();
@@ -85,7 +80,7 @@ function computeInsightCounts(customers: Customer[], merchantId: string) {
 
   for (const customer of customers) {
     const json = customer.toJSON();
-    if (isBirthdayThisMonth(json.dateOfBirth, currentMonth)) birthdayCount++;
+    if (json.dateOfBirth && new Date(json.dateOfBirth).getMonth() === currentMonth) birthdayCount++;
 
     const enrollment = json.enrollments?.find((e) => e.merchantId === merchantId);
     if (!enrollment) continue;

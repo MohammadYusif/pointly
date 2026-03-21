@@ -11,10 +11,12 @@ import {
   CUSTOMER_TIERS,
   DEFAULT_REDEMPTION_RATE,
   TIER_ORDER,
+  getTierBgColor,
   getTierTarget,
   isValidSaudiPhone,
   normalizePhone,
 } from '@pointly/shared';
+import type { CustomerTierLevel } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -121,23 +123,6 @@ function GiftCard({ maxPoints }: GiftCardProps) {
       )}
     </Card>
   );
-}
-
-function getTierBadgeColor(tier: string): string {
-  const upper = tier.toUpperCase();
-  if (upper === 'BRONZE') return 'bg-amber-500';
-  if (upper === 'GOLD') return 'bg-yellow-500';
-  if (upper === 'PLATINUM') return 'bg-blue-500';
-  if (upper === 'DIAMOND') return 'bg-teal-400';
-  return 'bg-amber-500';
-}
-
-function getNextTierName(tier: string): string {
-  const upper = tier.toUpperCase();
-  const idx = TIER_ORDER.indexOf(upper as (typeof TIER_ORDER)[number]);
-  if (idx < 0 || idx >= TIER_ORDER.length - 1) return '';
-  const nextKey = TIER_ORDER[idx + 1];
-  return CUSTOMER_TIERS[nextKey].displayName;
 }
 
 interface MerchantCardProps {
@@ -273,7 +258,9 @@ export default function WalletPage() {
   const progress = customer.monthlyProgress || 0;
   const progressPercent = tierTarget > 0 ? Math.min(100, (progress / tierTarget) * 100) : 100;
   const isDiamond = customer.currentTier.toUpperCase() === 'DIAMOND';
-  const nextTierName = getNextTierName(customer.currentTier);
+  const currentTierIndex = TIER_ORDER.indexOf(customer.currentTier as CustomerTierLevel);
+  const nextTierKey = TIER_ORDER[currentTierIndex + 1];
+  const nextTierName = nextTierKey ? CUSTOMER_TIERS[nextTierKey].displayName : '';
   const ptsToNext = tierTarget - progress;
 
   const memberYear = customer.createdAt ? customer.createdAt.split('T')[0].split('-')[0] : '';
@@ -326,7 +313,7 @@ export default function WalletPage() {
 
           <div className="flex items-center gap-2 mb-3">
             <span
-              className={`text-xs font-bold px-2 py-0.5 rounded-full text-white ${getTierBadgeColor(customer.currentTier)}`}
+              className={`text-xs font-bold px-2 py-0.5 rounded-full text-white ${getTierBgColor(customer.currentTier as CustomerTierLevel)}`}
             >
               {customer.tierDisplayName}
             </span>

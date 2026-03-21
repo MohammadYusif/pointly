@@ -34,8 +34,7 @@ export function useNotificationPermission() {
         const reg = await navigator.serviceWorker.ready;
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         const platform = isIOS ? 'ios' : 'android';
-        const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/push/vapid-key`);
-        const { publicKey } = (await resp.json()) as { publicKey: string | null };
+        const { publicKey } = await pushApi.getVapidKey();
         if (publicKey) {
           const sub = await reg.pushManager.subscribe({
             userVisibleOnly: true,

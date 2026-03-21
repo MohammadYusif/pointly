@@ -64,6 +64,24 @@ export function getTierColor(tier: string): string {
 }
 
 /**
+ * Get background Tailwind class for a tier badge.
+ */
+export function getTierBgColor(tier: CustomerTierLevel): string {
+  switch (tier) {
+    case 'BRONZE':
+      return 'bg-amber-500';
+    case 'GOLD':
+      return 'bg-yellow-500';
+    case 'PLATINUM':
+      return 'bg-blue-500';
+    case 'DIAMOND':
+      return 'bg-teal-400';
+    default:
+      return 'bg-amber-500';
+  }
+}
+
+/**
  * Get points target for next tier from a given tier level.
  * Returns 0 if already at max tier.
  */
