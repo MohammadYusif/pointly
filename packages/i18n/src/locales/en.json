@@ -537,6 +537,8 @@
     "welcomeDaysHint": "0 = unlimited",
     "welcomeHint": "Targets customers who enrolled within the last {{days}} days.",
     "campaignMessage": "Message to customer",
+    "lastVisitDays": "Inactive for at least (days)",
+    "lastVisitDaysHint": "Only target customers who haven't visited in this many days",
     "typeDesc": {
       "doublePoints": "Earn 2x points on every purchase",
       "triplePoints": "Earn 3x points for a limited time",
