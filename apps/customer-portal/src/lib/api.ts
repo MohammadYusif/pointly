@@ -1,8 +1,10 @@
 import { createFetchApi } from '@pointly/http-client';
 import type {
+  ChallengeProgressResponse,
   CustomerMerchantView,
   CustomerPerkView,
   CustomerResponse,
+  GiftPointsRequest,
   PublicMerchantDetail,
   PublicMerchantSummary,
   TransactionResponse,
@@ -85,18 +87,10 @@ export function getMerchantDetail(merchantId: string) {
 }
 
 export function getMyChallenges() {
-  return fetchApi<{
-    weeklyVisitCount: number;
-    weeklyVisitDates: string[];
-    lastStreakResetAt: string;
-  }>('/v1/me/challenges');
+  return fetchApi<ChallengeProgressResponse>('/v1/me/challenges');
 }
 
-export function giftPoints(data: {
-  recipientPhone: string;
-  points: number;
-  idempotencyKey: string;
-}) {
+export function giftPoints(data: GiftPointsRequest) {
   return fetchApi<{ success: boolean }>('/v1/me/gift', {
     method: 'POST',
     body: JSON.stringify(data),

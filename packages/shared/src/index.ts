@@ -62,4 +62,6 @@ export type {
   WebhookConfigResponse,
   GiftPointsRequest,
   PointsBreakdown,
+  ApiResponse,
+  PlatformCounts,
 } from './types';

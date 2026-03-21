@@ -58,7 +58,7 @@ export type PerkType =
   | 'WIN_BACK'
   | 'WELCOME_OFFER';
 
-export interface MerchantPerk {
+export interface MerchantPerkEntity {
   id: string;
   type: PerkType;
   title: string;
@@ -87,7 +87,7 @@ export interface MerchantProps {
   smsQuota: SMSQuota;
   locations: LocationInfo[];
   maxLocations: number;
-  activePerks: MerchantPerk[];
+  activePerks: MerchantPerkEntity[];
   totalCustomers: number;
   activeCustomers: number;
   totalTransactions: number;
@@ -484,12 +484,12 @@ export class Merchant {
   }
 
   // Perk management
-  getPerks(): MerchantPerk[] {
+  getPerks(): MerchantPerkEntity[] {
     return [...this.props.activePerks];
   }
 
-  addPerk(data: Omit<MerchantPerk, 'id' | 'isActive' | 'createdAt'>): MerchantPerk {
-    const perk: MerchantPerk = {
+  addPerk(data: Omit<MerchantPerkEntity, 'id' | 'isActive' | 'createdAt'>): MerchantPerkEntity {
+    const perk: MerchantPerkEntity = {
       id: ulid(),
       ...data,
       isActive: true,
@@ -500,7 +500,7 @@ export class Merchant {
     return perk;
   }
 
-  updatePerk(perkId: string, data: Partial<Omit<MerchantPerk, 'id' | 'createdAt'>>): void {
+  updatePerk(perkId: string, data: Partial<Omit<MerchantPerkEntity, 'id' | 'createdAt'>>): void {
     const perk = this.props.activePerks.find((p) => p.id === perkId);
     if (!perk) {
       throw new ValidationError(`Perk ${perkId} not found`);

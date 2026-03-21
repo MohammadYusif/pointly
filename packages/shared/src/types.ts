@@ -1,6 +1,7 @@
 /**
  * Shared API response types used by both merchant-dashboard and customer-portal.
  */
+import type { CustomerTierLevel } from './tier-config';
 
 export type PerkType =
   | 'EARLY_ACCESS'
@@ -12,7 +13,6 @@ export type PerkType =
   | 'HAPPY_HOUR'
   | 'WIN_BACK'
   | 'WELCOME_OFFER';
-type CustomerTierLevel = 'BRONZE' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
 
 export interface MerchantPerk {
   id: string;
@@ -366,15 +366,9 @@ export interface TierBreakdownResponse {
 export type ChallengeType = 'WEEKLY_VISIT_STREAK';
 
 export interface ChallengeProgressResponse {
-  challengeType: ChallengeType;
-  name: string;
-  description: string;
-  currentCount: number;
-  targetCount: number;
-  bonusPoints: number;
-  completed: boolean;
-  periodStartDate: string;
-  periodEndDate: string;
+  weeklyVisitCount: number;
+  weeklyVisitDates: string[];
+  lastStreakResetAt: string | null;
 }
 
 // --- Webhooks ---
@@ -396,4 +390,17 @@ export interface GiftPointsRequest {
   recipientPhone: string;
   points: number;
   message?: string;
+  idempotencyKey: string;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+
+export interface PlatformCounts {
+  ios: number;
+  android: number;
+  web: number;
 }

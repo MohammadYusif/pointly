@@ -1,5 +1,5 @@
 import { type CustomerTierLevel, NotFoundError } from '../../domain';
-import type { Merchant, MerchantPerk, PerkType } from '../../domain/entities/Merchant';
+import type { Merchant, MerchantPerkEntity, PerkType } from '../../domain/entities/Merchant';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
 import type { PersistenceItem } from '../shared/interfaces/BaseRepository';
 
@@ -32,7 +32,7 @@ export class ManagePerkUseCase {
     private atomicWrite: (items: PersistenceItem[]) => Promise<void>,
   ) {}
 
-  async createPerk(merchantId: string, data: CreatePerkRequest): Promise<MerchantPerk> {
+  async createPerk(merchantId: string, data: CreatePerkRequest): Promise<MerchantPerkEntity> {
     const merchant = await this.findAndValidateMerchant(merchantId);
     const perk = merchant.addPerk(data);
     await this.atomicWrite(this.merchantRepository.toPersistenceItem(merchant));
@@ -43,7 +43,7 @@ export class ManagePerkUseCase {
     merchantId: string,
     perkId: string,
     data: UpdatePerkRequest,
-  ): Promise<MerchantPerk> {
+  ): Promise<MerchantPerkEntity> {
     const merchant = await this.findAndValidateMerchant(merchantId);
     merchant.updatePerk(perkId, data);
     await this.atomicWrite(this.merchantRepository.toPersistenceItem(merchant));

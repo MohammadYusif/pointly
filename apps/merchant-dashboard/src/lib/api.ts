@@ -16,6 +16,7 @@ import type {
   WebhookConfigResponse,
 } from '@/types/api';
 import { createFetchApi } from '@pointly/http-client';
+import type { PlatformCounts } from '@pointly/shared';
 import { normalizePhone } from '@pointly/shared';
 import { getAccessToken, signOut } from './auth';
 
@@ -271,9 +272,7 @@ export const merchantUpdateApi = {
 // Push notification API
 export const pushApi = {
   getStats: (merchantId: string) =>
-    fetchApi<{ ios: number; android: number; web: number }>(
-      `/v1/merchants/${merchantId}/push-stats`,
-    ),
+    fetchApi<PlatformCounts>(`/v1/merchants/${merchantId}/push-stats`),
 
   getLogoUploadUrl: (merchantId: string, filename: string, contentType: string) =>
     fetchApi<{ url: string; publicUrl: string }>(`/v1/merchants/${merchantId}/logo-upload`, {
