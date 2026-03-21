@@ -351,6 +351,7 @@ export interface CampaignResponse {
   termsMessage?: string;
   winBackDays?: number;
   welcomeDays?: number;
+  lastVisitDays?: number;
   createdAt: string;
 }
 

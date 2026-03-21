@@ -45,7 +45,7 @@ function PerkItem({
   onClick: () => void;
 }) {
   const isExhausted = perk.isExhausted === true;
-  const isCampaign = !!perk.campaignId;
+  const hasMessage = !!perk.campaignMessage;
 
   return (
     <button
@@ -66,7 +66,7 @@ function PerkItem({
           <p className="text-xs text-muted-foreground mt-1">
             {t(perkTypeKey[perk.type] ?? perk.type)} · {perk.merchantName}
           </p>
-          {isCampaign && <p className="text-xs text-primary mt-1">{t('perks.tapForDetails')}</p>}
+          {hasMessage && <p className="text-xs text-primary mt-1">{t('perks.tapForDetails')}</p>}
         </div>
         <span
           className={`text-xs px-2 py-1 rounded-full shrink-0 ${
