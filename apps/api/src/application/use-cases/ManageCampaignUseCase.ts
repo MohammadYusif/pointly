@@ -26,6 +26,7 @@ export interface ManageCampaignRequest {
   maxPointsPerTransaction?: number;
   winBackDays?: number;
   welcomeDays?: number;
+  lastVisitDays?: number;
   platformFilter?: 'ios' | 'android' | 'web';
 }
 
@@ -69,6 +70,7 @@ export class ManageCampaignUseCase {
       maxPointsPerTransaction?: number;
       winBackDays?: number;
       welcomeDays?: number;
+      lastVisitDays?: number;
     } = {};
     if (request.name) overrides.name = request.name;
     if (request.description) overrides.description = request.description;
@@ -93,6 +95,9 @@ export class ManageCampaignUseCase {
     }
     if (request.welcomeDays !== undefined) {
       overrides.welcomeDays = request.welcomeDays;
+    }
+    if (request.lastVisitDays !== undefined) {
+      overrides.lastVisitDays = request.lastVisitDays;
     }
     return overrides;
   }

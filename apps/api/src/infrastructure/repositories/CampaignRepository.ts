@@ -26,6 +26,7 @@ interface CampaignItem {
   termsMessage?: string;
   winBackDays?: number;
   welcomeDays?: number;
+  lastVisitDays?: number;
   createdAt: string;
 }
 
@@ -112,6 +113,7 @@ export class CampaignRepository
     if (item.termsMessage) props.termsMessage = item.termsMessage;
     if (item.winBackDays) props.winBackDays = item.winBackDays;
     if (item.welcomeDays) props.welcomeDays = item.welcomeDays;
+    if (item.lastVisitDays) props.lastVisitDays = item.lastVisitDays;
     return Campaign.reconstitute(props);
   }
 
@@ -147,8 +149,10 @@ export class CampaignRepository
     if (termsMessage) item.termsMessage = termsMessage;
     const winBackDays = entity.getWinBackDays();
     const welcomeDays = entity.getWelcomeDays();
+    const lastVisitDays = entity.getLastVisitDays();
     if (winBackDays && winBackDays > 0) item.winBackDays = winBackDays;
     if (welcomeDays && welcomeDays > 0) item.welcomeDays = welcomeDays;
+    if (lastVisitDays && lastVisitDays > 0) item.lastVisitDays = lastVisitDays;
     return item as unknown as Record<string, unknown>;
   }
 

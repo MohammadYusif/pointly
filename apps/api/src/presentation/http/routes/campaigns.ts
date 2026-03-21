@@ -30,6 +30,7 @@ function buildUpdateRequest(
     req.maxPointsPerTransaction = body.maxPointsPerTransaction;
   if (body.winBackDays !== undefined) req.winBackDays = body.winBackDays;
   if (body.welcomeDays !== undefined) req.welcomeDays = body.welcomeDays;
+  if (body.lastVisitDays !== undefined) req.lastVisitDays = body.lastVisitDays;
   return req;
 }
 
@@ -51,6 +52,7 @@ function buildCampaignRequest(
     req.maxPointsPerTransaction = body.maxPointsPerTransaction;
   if (body.winBackDays !== undefined) req.winBackDays = body.winBackDays;
   if (body.welcomeDays !== undefined) req.welcomeDays = body.welcomeDays;
+  if (body.lastVisitDays !== undefined) req.lastVisitDays = body.lastVisitDays;
   return req;
 }
 
@@ -77,6 +79,7 @@ const updateCampaignSchema = z.object({
   maxPointsPerTransaction: z.number().int().min(0).max(100000).optional(),
   winBackDays: z.number().int().min(1).max(365).optional(),
   welcomeDays: z.number().int().min(1).max(365).optional(),
+  lastVisitDays: z.number().int().min(1).max(365).optional(),
 });
 
 const createCampaignSchema = z.object({
@@ -93,6 +96,7 @@ const createCampaignSchema = z.object({
   maxPointsPerTransaction: z.number().int().min(0).max(100000).optional(),
   winBackDays: z.number().int().min(1).max(365).optional(),
   welcomeDays: z.number().int().min(1).max(365).optional(),
+  lastVisitDays: z.number().int().min(1).max(365).optional(),
 });
 
 export async function campaignRoutes(server: FastifyInstance): Promise<void> {
