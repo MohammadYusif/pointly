@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@pointly/assets": "workspace:*",
+    "@pointly/http-client": "workspace:*",
     "@pointly/i18n": "workspace:*",
     "@pointly/shared": "workspace:*",
     "@pointly/ui": "workspace:*",

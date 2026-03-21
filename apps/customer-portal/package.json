@@ -9,6 +9,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@pointly/http-client": "workspace:*",
     "@pointly/i18n": "workspace:*",
     "@pointly/shared": "workspace:*",
     "@pointly/ui": "workspace:*",

@@ -15,49 +15,15 @@ import type {
   TransactionResponse,
   WebhookConfigResponse,
 } from '@/types/api';
+import { createFetchApi } from '@pointly/http-client';
 import { normalizePhone } from '@pointly/shared';
 import { getAccessToken, signOut } from './auth';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-
-interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
-
-async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
-
-  const token = await getAccessToken();
-  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-
-  const contentHeaders: Record<string, string> = options.body
-    ? { 'Content-Type': 'application/json' }
-    : {};
-
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...contentHeaders,
-      ...authHeaders,
-      ...options.headers,
-    },
-  });
-
-  if (response.status === 401) {
-    signOut();
-    throw new Error('Session expired');
-  }
-
-  const result: ApiResponse<T> = await response.json();
-
-  if (!response.ok || !result.success) {
-    throw new Error(result.error || 'An error occurred');
-  }
-
-  return result.data as T;
-}
+const fetchApi = createFetchApi({
+  baseUrl: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000',
+  getToken: () => getAccessToken(),
+  onUnauthorized: () => signOut(),
+});
 
 // Merchant API
 export const merchantApi = {

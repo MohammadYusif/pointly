@@ -147,6 +147,9 @@ importers:
 
   apps/customer-portal:
     dependencies:
+      '@pointly/http-client':
+        specifier: workspace:*
+        version: link:../../packages/http-client
       '@pointly/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
@@ -248,6 +251,9 @@ importers:
       '@pointly/assets':
         specifier: workspace:*
         version: link:../../packages/assets
+      '@pointly/http-client':
+        specifier: workspace:*
+        version: link:../../packages/http-client
       '@pointly/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
@@ -337,6 +343,15 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
+
+  packages/http-client:
+    devDependencies:
+      '@biomejs/biome':
+        specifier: 1.9.4
+        version: 1.9.4
+      typescript:
+        specifier: 5.7.2
+        version: 5.7.2
 
   packages/i18n:
     dependencies:
