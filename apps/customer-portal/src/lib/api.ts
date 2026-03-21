@@ -8,6 +8,7 @@ import type {
   GiftPointsRequest,
   PublicMerchantDetail,
   PublicMerchantSummary,
+  TierBenefitsResponse,
   TransactionResponse,
 } from '@pointly/shared';
 import { getAccessToken, signOut } from './auth';
@@ -93,6 +94,10 @@ export function getMyChallenges() {
 
 export function checkInChallenge() {
   return fetchApi<ChallengeCheckInResponse>('/v1/me/challenges/check-in', { method: 'POST' });
+}
+
+export function getTierBenefits() {
+  return fetchApi<TierBenefitsResponse>('/v1/me/tier-benefits');
 }
 
 export function giftPoints(data: GiftPointsRequest) {

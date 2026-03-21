@@ -12,3 +12,4 @@ export { useDeleteAccount } from './use-delete-account';
 export { useMyChallenges, useChallengeCheckIn } from './use-challenges';
 export { useGiftPoints } from './use-gift';
 export { useNotificationPermission } from './use-notifications';
+export { useTierBenefits } from './use-tier-benefits';

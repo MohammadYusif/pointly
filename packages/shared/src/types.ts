@@ -395,6 +395,22 @@ export interface WebhookConfigResponse {
   createdAt: string;
 }
 
+// --- Tier Benefits ---
+
+export interface TierBenefitItem {
+  key: string;
+  icon: string;
+}
+
+export interface TierBenefitsResponse {
+  tier: string;
+  displayName: string;
+  color: string;
+  earningMultiplier: number;
+  decayImmune: boolean;
+  benefits: TierBenefitItem[];
+}
+
 // --- Gift Points ---
 
 export interface GiftPointsRequest {

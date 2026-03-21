@@ -12,7 +12,7 @@ export {
   getTierTarget,
   getTierBgColor,
 } from './tier-config';
-export type { CustomerTierLevel } from './tier-config';
+export type { CustomerTierLevel, TierBenefit } from './tier-config';
 
 // Phone Utilities
 export { normalizePhone, formatPhone, isValidSaudiPhone } from './phone';
@@ -62,6 +62,8 @@ export type {
   ChallengeCheckInResponse,
   WebhookEventType,
   WebhookConfigResponse,
+  TierBenefitItem,
+  TierBenefitsResponse,
   GiftPointsRequest,
   MerchantGiftPointsRequest,
   MerchantGiftPointsResponse,

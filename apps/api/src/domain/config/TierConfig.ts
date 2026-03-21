@@ -13,12 +13,18 @@ export enum CustomerTierLevel {
   DIAMOND = 'DIAMOND',
 }
 
+export interface TierBenefit {
+  readonly key: string; // i18n key suffix, e.g. 'earningMultiplier'
+  readonly icon: string; // emoji icon for display
+}
+
 export interface TierThresholds {
   readonly monthlyMinimum: number;
   readonly earningMultiplier: number;
   readonly decays: boolean;
   readonly displayName: string;
   readonly color: string;
+  readonly benefits: readonly TierBenefit[];
 }
 
 /**
@@ -39,6 +45,11 @@ export const TIER_CONFIG: Record<CustomerTierLevel, TierThresholds> = {
     decays: true,
     displayName: 'Bronze',
     color: '#CD7F32',
+    benefits: [
+      { key: 'earnPoints', icon: '⭐' },
+      { key: 'merchantPerks', icon: '🎁' },
+      { key: 'weeklyStreak500', icon: '🔥' },
+    ],
   },
   [CustomerTierLevel.GOLD]: {
     monthlyMinimum: 5000,
@@ -46,6 +57,12 @@ export const TIER_CONFIG: Record<CustomerTierLevel, TierThresholds> = {
     decays: false,
     displayName: 'Gold',
     color: '#FFD700',
+    benefits: [
+      { key: 'multiplier1_1x', icon: '✨' },
+      { key: 'decayImmunity', icon: '🛡️' },
+      { key: 'weeklyStreak550', icon: '🔥' },
+      { key: 'priorityBadge', icon: '🥇' },
+    ],
   },
   [CustomerTierLevel.PLATINUM]: {
     monthlyMinimum: 10000,
@@ -53,6 +70,13 @@ export const TIER_CONFIG: Record<CustomerTierLevel, TierThresholds> = {
     decays: false,
     displayName: 'Platinum',
     color: '#E5E4E2',
+    benefits: [
+      { key: 'multiplier1_15x', icon: '✨' },
+      { key: 'decayImmunity', icon: '🛡️' },
+      { key: 'weeklyStreak625', icon: '🔥' },
+      { key: 'priorityBadge', icon: '🥇' },
+      { key: 'exclusivePerks', icon: '💎' },
+    ],
   },
   [CustomerTierLevel.DIAMOND]: {
     monthlyMinimum: 15000,
@@ -60,6 +84,14 @@ export const TIER_CONFIG: Record<CustomerTierLevel, TierThresholds> = {
     decays: false,
     displayName: 'Diamond',
     color: '#B9F2FF',
+    benefits: [
+      { key: 'multiplier1_2x', icon: '✨' },
+      { key: 'decayImmunity', icon: '🛡️' },
+      { key: 'weeklyStreak750', icon: '🔥' },
+      { key: 'priorityBadge', icon: '🥇' },
+      { key: 'exclusivePerks', icon: '💎' },
+      { key: 'diamondStatus', icon: '👑' },
+    ],
   },
 };
 

@@ -8,6 +8,11 @@
  * Tiers are ordered from lowest to highest.
  */
 
+export interface TierBenefit {
+  key: string; // i18n key suffix
+  icon: string; // emoji
+}
+
 export const CUSTOMER_TIERS = {
   BRONZE: {
     level: 'BRONZE',
@@ -16,6 +21,11 @@ export const CUSTOMER_TIERS = {
     earningMultiplier: 1.0,
     color: '#CD7F32',
     tailwindColor: 'text-amber-600',
+    benefits: [
+      { key: 'earnPoints', icon: '⭐' },
+      { key: 'merchantPerks', icon: '🎁' },
+      { key: 'weeklyStreak500', icon: '🔥' },
+    ] as TierBenefit[],
   },
   GOLD: {
     level: 'GOLD',
@@ -24,6 +34,12 @@ export const CUSTOMER_TIERS = {
     earningMultiplier: 1.1,
     color: '#FFD700',
     tailwindColor: 'text-yellow-600',
+    benefits: [
+      { key: 'multiplier1_1x', icon: '✨' },
+      { key: 'decayImmunity', icon: '🛡️' },
+      { key: 'weeklyStreak550', icon: '🔥' },
+      { key: 'priorityBadge', icon: '🥇' },
+    ] as TierBenefit[],
   },
   PLATINUM: {
     level: 'PLATINUM',
@@ -32,6 +48,13 @@ export const CUSTOMER_TIERS = {
     earningMultiplier: 1.15,
     color: '#E5E4E2',
     tailwindColor: 'text-gray-500',
+    benefits: [
+      { key: 'multiplier1_15x', icon: '✨' },
+      { key: 'decayImmunity', icon: '🛡️' },
+      { key: 'weeklyStreak625', icon: '🔥' },
+      { key: 'priorityBadge', icon: '🥇' },
+      { key: 'exclusivePerks', icon: '💎' },
+    ] as TierBenefit[],
   },
   DIAMOND: {
     level: 'DIAMOND',
@@ -40,6 +63,14 @@ export const CUSTOMER_TIERS = {
     earningMultiplier: 1.2,
     color: '#B9F2FF',
     tailwindColor: 'text-purple-600',
+    benefits: [
+      { key: 'multiplier1_2x', icon: '✨' },
+      { key: 'decayImmunity', icon: '🛡️' },
+      { key: 'weeklyStreak750', icon: '🔥' },
+      { key: 'priorityBadge', icon: '🥇' },
+      { key: 'exclusivePerks', icon: '💎' },
+      { key: 'diamondStatus', icon: '👑' },
+    ] as TierBenefit[],
   },
 } as const;
 

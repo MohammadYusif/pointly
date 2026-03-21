@@ -15,6 +15,7 @@ import {
   useMyChallenges,
   useMyMerchants,
   useRecentTransactions,
+  useTierBenefits,
 } from '@/hooks/api';
 import { useBadges } from '@/hooks/use-badges';
 import { useTranslation } from '@pointly/i18n';
@@ -23,6 +24,17 @@ import { Button, Card, CardContent, CardHeader, CardTitle, useRTL } from '@point
 import { Gem, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useMemo } from 'react';
+
+const STREAK_BONUS_BY_TIER: Record<string, number> = {
+  BRONZE: 500,
+  GOLD: 550,
+  PLATINUM: 625,
+  DIAMOND: 750,
+};
+
+function getStreakBonusForTier(tier: string): number {
+  return STREAK_BONUS_BY_TIER[tier] ?? 500;
+}
 
 function DashboardSkeleton() {
   return (
@@ -53,6 +65,7 @@ export default function CustomerDashboard() {
   const { data: txData, isLoading: txLoading } = useRecentTransactions(5);
   const { data: merchants } = useMyMerchants();
   const { data: challengeData } = useMyChallenges();
+  const { data: tierBenefits } = useTierBenefits();
   const checkIn = useChallengeCheckIn();
 
   // Fire-and-forget check-in on dashboard mount — counts as an app visit for streak.
@@ -178,9 +191,31 @@ export default function CustomerDashboard() {
                 description={t('challenges.weeklyStreakDesc', { count: 3 })}
                 current={challengeData.weeklyVisitCount}
                 target={3}
-                bonusPoints={500}
+                bonusPoints={tierBenefits ? getStreakBonusForTier(tierBenefits.tier) : 500}
                 daysRemaining={getDaysRemainingInWeek()}
               />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tier Benefits */}
+        {tierBenefits && (
+          <Card className="stagger-item">
+            <CardHeader>
+              <CardTitle className="text-base">{t('tier.benefits')}</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                {t('tier.benefitsSubtitle', { tier: tierBenefits.displayName })}
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {tierBenefits.benefits.map((b) => (
+                  <li key={b.key} className="flex items-center gap-2 text-sm">
+                    <span>{b.icon}</span>
+                    <span>{t(`tier.${b.key}`)}</span>
+                  </li>
+                ))}
+              </ul>
             </CardContent>
           </Card>
         )}

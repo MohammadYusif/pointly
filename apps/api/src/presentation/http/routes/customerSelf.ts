@@ -5,7 +5,7 @@ import {
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { Customer, PhoneNumber } from '../../../domain';
-import { TIER_ORDER } from '../../../domain/config/TierConfig.js';
+import { TIER_CONFIG, TIER_ORDER } from '../../../domain/config/TierConfig.js';
 import { ValidationError } from '../../../domain/errors/DomainError';
 import EnvironmentConfig from '../../../infrastructure/config/Environment';
 import { getContainer } from '../container';
@@ -300,6 +300,36 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
           lastResetAt: customer.getLastStreakResetAt().toISOString(),
           visitDates: customer.getWeeklyVisitDates(),
         },
+      },
+    });
+  });
+
+  // GET /v1/me/tier-benefits — Returns the benefit list for the customer's current global tier.
+  // Config-driven, no database read required.
+  server.get('/tier-benefits', async (request: FastifyRequest, reply: FastifyReply) => {
+    const { customerId } = request;
+    if (!customerId) {
+      return reply.status(400).send({ success: false, error: 'Customer ID not found in token' });
+    }
+
+    const container = getContainer();
+    const customer = await container.customerRepository.findById(customerId);
+    if (!customer) {
+      return reply.status(404).send({ success: false, error: 'Customer not found' });
+    }
+
+    const tierLevel = customer.getCurrentTier().getLevel();
+    const config = TIER_CONFIG[tierLevel as keyof typeof TIER_CONFIG];
+
+    return reply.send({
+      success: true,
+      data: {
+        tier: tierLevel,
+        displayName: config.displayName,
+        color: config.color,
+        earningMultiplier: config.earningMultiplier,
+        decayImmune: !config.decays,
+        benefits: config.benefits,
       },
     });
   });
