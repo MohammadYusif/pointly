@@ -30,6 +30,9 @@ export function useCreateCampaign() {
       minPurchaseAmount?: number;
       maxPointsPerTransaction?: number;
       platformFilter?: string;
+      winBackDays?: number;
+      welcomeDays?: number;
+      lastVisitDays?: number;
     }) =>
       // biome-ignore lint/style/noNonNullAssertion: merchantId required
       campaignApi.create(merchant!.merchantId, data),
@@ -70,6 +73,9 @@ export function useUpdateCampaign() {
         maxUsesPerCustomer?: number;
         minPurchaseAmount?: number;
         maxPointsPerTransaction?: number;
+        winBackDays?: number;
+        welcomeDays?: number;
+        lastVisitDays?: number;
       };
     }) =>
       // biome-ignore lint/style/noNonNullAssertion: merchantId required

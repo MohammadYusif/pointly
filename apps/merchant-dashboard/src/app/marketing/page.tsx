@@ -293,6 +293,8 @@ interface CampaignFormFieldsProps {
   setWinBackDays?: (v: string) => void;
   welcomeDays?: string;
   setWelcomeDays?: (v: string) => void;
+  lastVisitDays?: string;
+  setLastVisitDays?: (v: string) => void;
   tierBreakdown?: Record<string, number>;
   showTypeSpecificHint?: string;
 }
@@ -323,6 +325,8 @@ function CampaignFormFields({
   setWinBackDays,
   welcomeDays,
   setWelcomeDays,
+  lastVisitDays,
+  setLastVisitDays,
   tierBreakdown,
   showTypeSpecificHint,
 }: CampaignFormFieldsProps) {
@@ -425,6 +429,28 @@ function CampaignFormFields({
             onChange={(e) => setWelcomeDays(e.target.value)}
           />
           <p className="text-xs text-muted-foreground mt-1">{t('campaigns.welcomeDaysHint')}</p>
+        </div>
+      )}
+
+      {/* Generic last-visit filter (all types except WIN_BACK and WELCOME which have dedicated fields) */}
+      {setLastVisitDays !== undefined && (
+        <div>
+          <label
+            htmlFor="last-visit-days"
+            className="text-xs font-medium text-muted-foreground block mb-1.5 uppercase tracking-wide"
+          >
+            {t('campaigns.lastVisitDays')}
+          </label>
+          <Input
+            id="last-visit-days"
+            type="number"
+            min="1"
+            max="365"
+            placeholder="—"
+            value={lastVisitDays ?? ''}
+            onChange={(e) => setLastVisitDays(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground mt-1">{t('campaigns.lastVisitDaysHint')}</p>
         </div>
       )}
 
@@ -634,6 +660,7 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
   const [maxPoints, setMaxPoints] = useState('');
   const [winBackDays, setWinBackDays] = useState('60');
   const [welcomeDays, setWelcomeDays] = useState('30');
+  const [lastVisitDays, setLastVisitDays] = useState('');
   const [enablePush, setEnablePush] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
 
@@ -677,6 +704,10 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
     if (type === 'WELCOME') {
       const parsed = Number.parseInt(welcomeDays, 10);
       if (parsed > 0) payload.welcomeDays = parsed;
+    }
+    if (type !== 'WIN_BACK' && type !== 'WELCOME') {
+      const parsed = Number.parseInt(lastVisitDays, 10);
+      if (parsed > 0) payload.lastVisitDays = parsed;
     }
     return { ...payload, ...buildLimitsPayload(maxUses, minPurchase, maxPoints) };
   };
@@ -763,6 +794,14 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
             setWinBackDays={selectedType === 'WIN_BACK' ? setWinBackDays : undefined}
             welcomeDays={selectedType === 'WELCOME' ? welcomeDays : undefined}
             setWelcomeDays={selectedType === 'WELCOME' ? setWelcomeDays : undefined}
+            lastVisitDays={
+              selectedType !== 'WIN_BACK' && selectedType !== 'WELCOME' ? lastVisitDays : undefined
+            }
+            setLastVisitDays={
+              selectedType !== 'WIN_BACK' && selectedType !== 'WELCOME'
+                ? setLastVisitDays
+                : undefined
+            }
             tierBreakdown={tierBreakdown as Record<string, number> | undefined}
             showTypeSpecificHint={
               selectedType === 'BIRTHDAY_REWARD'
@@ -861,6 +900,7 @@ function EditCampaignForm({
   const [message, setMessage] = useState(campaign.message ?? '');
   const [winBackDays, setWinBackDays] = useState(String(campaign.winBackDays ?? '60'));
   const [welcomeDays, setWelcomeDays] = useState(String(campaign.welcomeDays ?? '30'));
+  const [lastVisitDays, setLastVisitDays] = useState(String(campaign.lastVisitDays ?? ''));
 
   const { data: tierBreakdown } = useTierBreakdown();
 
@@ -894,6 +934,10 @@ function EditCampaignForm({
       if (campaign.type === 'WELCOME') {
         const parsed = Number.parseInt(welcomeDays, 10);
         if (parsed > 0) data.welcomeDays = parsed;
+      }
+      if (campaign.type !== 'WIN_BACK' && campaign.type !== 'WELCOME') {
+        const parsed = Number.parseInt(lastVisitDays, 10);
+        if (parsed > 0) data.lastVisitDays = parsed;
       }
 
       await updateCampaign.mutateAsync({
@@ -930,6 +974,12 @@ function EditCampaignForm({
         setWinBackDays={campaign.type === 'WIN_BACK' ? setWinBackDays : undefined}
         welcomeDays={campaign.type === 'WELCOME' ? welcomeDays : undefined}
         setWelcomeDays={campaign.type === 'WELCOME' ? setWelcomeDays : undefined}
+        lastVisitDays={
+          campaign.type !== 'WIN_BACK' && campaign.type !== 'WELCOME' ? lastVisitDays : undefined
+        }
+        setLastVisitDays={
+          campaign.type !== 'WIN_BACK' && campaign.type !== 'WELCOME' ? setLastVisitDays : undefined
+        }
         tierBreakdown={tierBreakdown as Record<string, number> | undefined}
         showTypeSpecificHint={
           campaign.type === 'BIRTHDAY_REWARD'
@@ -1048,6 +1098,21 @@ function CampaignCard({
           {campaign.maxPointsPerTransaction && campaign.maxPointsPerTransaction > 0 && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
               ≤{campaign.maxPointsPerTransaction} pts
+            </span>
+          )}
+          {campaign.type === 'WIN_BACK' && campaign.winBackDays && campaign.winBackDays > 0 && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
+              {campaign.winBackDays}d inactive
+            </span>
+          )}
+          {campaign.type === 'WELCOME' && campaign.welcomeDays && campaign.welcomeDays > 0 && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+              within {campaign.welcomeDays}d
+            </span>
+          )}
+          {campaign.lastVisitDays && campaign.lastVisitDays > 0 && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+              inactive {campaign.lastVisitDays}d+
             </span>
           )}
         </div>

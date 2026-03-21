@@ -182,6 +182,9 @@ export const campaignApi = {
       minPurchaseAmount?: number;
       maxPointsPerTransaction?: number;
       platformFilter?: string;
+      winBackDays?: number;
+      welcomeDays?: number;
+      lastVisitDays?: number;
     },
   ) =>
     fetchApi<CampaignResponse>(`/v1/merchants/${merchantId}/campaigns`, {
@@ -203,6 +206,9 @@ export const campaignApi = {
       maxUsesPerCustomer?: number;
       minPurchaseAmount?: number;
       maxPointsPerTransaction?: number;
+      winBackDays?: number;
+      welcomeDays?: number;
+      lastVisitDays?: number;
     },
   ) =>
     fetchApi<CampaignResponse>(`/v1/merchants/${merchantId}/campaigns/${campaignId}`, {
