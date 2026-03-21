@@ -59,6 +59,7 @@ export type {
   TierBreakdownResponse,
   ChallengeType,
   ChallengeProgressResponse,
+  ChallengeCheckInResponse,
   WebhookEventType,
   WebhookConfigResponse,
   GiftPointsRequest,

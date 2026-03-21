@@ -304,6 +304,23 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
     });
   });
 
+  // POST /v1/me/challenges/check-in — Record an app visit for the weekly streak challenge.
+  // Decoupled from purchases so low-activity customers can still progress their streak.
+  server.post('/challenges/check-in', async (request: FastifyRequest, reply: FastifyReply) => {
+    const { customerId } = request;
+    if (!customerId) {
+      return reply.status(400).send({ success: false, error: 'Customer ID not found in token' });
+    }
+
+    const container = getContainer();
+    const result = await container.checkChallengeEligibilityUseCase.execute({
+      customerId,
+      merchantId: 'POINTLY_NETWORK',
+    });
+
+    return reply.send({ success: true, data: result });
+  });
+
   // POST /v1/me/gift — Gift global points to another customer (peer-to-peer)
   server.post('/gift', async (request: FastifyRequest, reply: FastifyReply) => {
     const { customerId } = request;

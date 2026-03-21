@@ -1,5 +1,6 @@
 import { createFetchApi } from '@pointly/http-client';
 import type {
+  ChallengeCheckInResponse,
   ChallengeProgressResponse,
   CustomerMerchantView,
   CustomerPerkView,
@@ -88,6 +89,10 @@ export function getMerchantDetail(merchantId: string) {
 
 export function getMyChallenges() {
   return fetchApi<ChallengeProgressResponse>('/v1/me/challenges');
+}
+
+export function checkInChallenge() {
+  return fetchApi<ChallengeCheckInResponse>('/v1/me/challenges/check-in', { method: 'POST' });
 }
 
 export function giftPoints(data: GiftPointsRequest) {

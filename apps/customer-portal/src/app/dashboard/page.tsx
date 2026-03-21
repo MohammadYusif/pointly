@@ -9,14 +9,20 @@ import { PointsCard } from '@/components/PointsCard';
 import { ProgressRing } from '@/components/ProgressRing';
 import { TierBadge } from '@/components/TierBadge';
 import { TransactionItem } from '@/components/TransactionItem';
-import { useCustomer, useMyChallenges, useMyMerchants, useRecentTransactions } from '@/hooks/api';
+import {
+  useChallengeCheckIn,
+  useCustomer,
+  useMyChallenges,
+  useMyMerchants,
+  useRecentTransactions,
+} from '@/hooks/api';
 import { useBadges } from '@/hooks/use-badges';
 import { useTranslation } from '@pointly/i18n';
 import { getTierColor, getTierTarget } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, useRTL } from '@pointly/ui';
 import { Gem, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 function DashboardSkeleton() {
   return (
@@ -47,6 +53,14 @@ export default function CustomerDashboard() {
   const { data: txData, isLoading: txLoading } = useRecentTransactions(5);
   const { data: merchants } = useMyMerchants();
   const { data: challengeData } = useMyChallenges();
+  const checkIn = useChallengeCheckIn();
+
+  // Fire-and-forget check-in on dashboard mount — counts as an app visit for streak.
+  // Activates customers who open the app but don't make purchases.
+  // mutate is stable across renders (TanStack Query guarantees this).
+  useEffect(() => {
+    checkIn.mutate();
+  }, [checkIn.mutate]);
   const badges = useBadges(customer);
   const earnedBadges = badges.filter((b) => b.isEarned).slice(0, 3);
 

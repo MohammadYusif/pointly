@@ -375,6 +375,13 @@ export interface ChallengeProgressResponse {
   lastStreakResetAt: string | null;
 }
 
+export interface ChallengeCheckInResponse {
+  streakCount: number;
+  targetMet: boolean;
+  bonusAwarded: boolean;
+  bonusPoints?: number;
+}
+
 // --- Webhooks ---
 
 export type WebhookEventType = 'REDEMPTION';
