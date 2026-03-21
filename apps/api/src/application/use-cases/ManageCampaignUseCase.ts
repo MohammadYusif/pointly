@@ -24,6 +24,8 @@ export interface ManageCampaignRequest {
   maxUsesPerCustomer?: number;
   minPurchaseAmount?: number;
   maxPointsPerTransaction?: number;
+  winBackDays?: number;
+  welcomeDays?: number;
   platformFilter?: 'ios' | 'android' | 'web';
 }
 
@@ -65,6 +67,8 @@ export class ManageCampaignUseCase {
       maxUsesPerCustomer?: number;
       minPurchaseAmount?: number;
       maxPointsPerTransaction?: number;
+      winBackDays?: number;
+      welcomeDays?: number;
     } = {};
     if (request.name) overrides.name = request.name;
     if (request.description) overrides.description = request.description;
@@ -83,6 +87,12 @@ export class ManageCampaignUseCase {
     }
     if (request.maxPointsPerTransaction !== undefined) {
       overrides.maxPointsPerTransaction = request.maxPointsPerTransaction;
+    }
+    if (request.winBackDays !== undefined) {
+      overrides.winBackDays = request.winBackDays;
+    }
+    if (request.welcomeDays !== undefined) {
+      overrides.welcomeDays = request.welcomeDays;
     }
     return overrides;
   }

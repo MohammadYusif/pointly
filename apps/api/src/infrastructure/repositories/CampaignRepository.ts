@@ -24,6 +24,8 @@ interface CampaignItem {
   minPurchaseAmount?: number;
   maxPointsPerTransaction?: number;
   termsMessage?: string;
+  winBackDays?: number;
+  welcomeDays?: number;
   createdAt: string;
 }
 
@@ -108,6 +110,8 @@ export class CampaignRepository
     if (item.minPurchaseAmount) props.minPurchaseAmount = item.minPurchaseAmount;
     if (item.maxPointsPerTransaction) props.maxPointsPerTransaction = item.maxPointsPerTransaction;
     if (item.termsMessage) props.termsMessage = item.termsMessage;
+    if (item.winBackDays) props.winBackDays = item.winBackDays;
+    if (item.welcomeDays) props.welcomeDays = item.welcomeDays;
     return Campaign.reconstitute(props);
   }
 
@@ -141,6 +145,10 @@ export class CampaignRepository
     if (maxPoints && maxPoints > 0) item.maxPointsPerTransaction = maxPoints;
     const termsMessage = entity.getTermsMessage();
     if (termsMessage) item.termsMessage = termsMessage;
+    const winBackDays = entity.getWinBackDays();
+    const welcomeDays = entity.getWelcomeDays();
+    if (winBackDays && winBackDays > 0) item.winBackDays = winBackDays;
+    if (welcomeDays && welcomeDays > 0) item.welcomeDays = welcomeDays;
     return item as unknown as Record<string, unknown>;
   }
 
