@@ -138,6 +138,9 @@ export function PerksSection() {
                     {t('perks.multiplierLabel', { multiplier: selectedPerk.campaignMultiplier })}
                   </div>
                 )}
+                {selectedPerk.campaignMessage && (
+                  <p className="text-sm text-foreground">{selectedPerk.campaignMessage}</p>
+                )}
                 {selectedPerk.campaignEndDate && (
                   <p className="text-sm text-muted-foreground">
                     {t('perks.validUntil', {

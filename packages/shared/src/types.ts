@@ -37,6 +37,7 @@ export interface CustomerPerkView {
   merchantName: string;
   // Campaign enrichment
   campaignId?: string;
+  campaignMessage?: string;
   campaignMultiplier?: number;
   campaignEndDate?: string;
   campaignMinPurchaseAmount?: number;
@@ -348,6 +349,8 @@ export interface CampaignResponse {
   minPurchaseAmount?: number;
   maxPointsPerTransaction?: number;
   termsMessage?: string;
+  winBackDays?: number;
+  welcomeDays?: number;
   createdAt: string;
 }
 
