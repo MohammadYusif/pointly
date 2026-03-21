@@ -92,6 +92,8 @@ export interface CampaignProps {
   winBackDays?: number;
   /** Days since enrollment to qualify for a WELCOME campaign. Defaults to 30. */
   welcomeDays?: number;
+  /** Generic inactivity filter — any campaign type. Customer must NOT have visited within this many days. */
+  lastVisitDays?: number;
   createdAt: Date;
 }
 
@@ -114,6 +116,7 @@ export interface CampaignJSON {
   termsMessage?: string;
   winBackDays?: number;
   welcomeDays?: number;
+  lastVisitDays?: number;
   createdAt: string;
 }
 
@@ -130,6 +133,7 @@ interface CampaignOverrides {
   maxPointsPerTransaction?: number;
   winBackDays?: number;
   welcomeDays?: number;
+  lastVisitDays?: number;
 }
 
 export class Campaign {
@@ -173,6 +177,9 @@ export class Campaign {
     }
     if (overrides?.welcomeDays && overrides.welcomeDays > 0) {
       props.welcomeDays = overrides.welcomeDays;
+    }
+    if (overrides?.lastVisitDays && overrides.lastVisitDays > 0) {
+      props.lastVisitDays = overrides.lastVisitDays;
     }
     return new Campaign(props);
   }
@@ -298,6 +305,10 @@ export class Campaign {
     return this.props.welcomeDays;
   }
 
+  getLastVisitDays(): number | undefined {
+    return this.props.lastVisitDays;
+  }
+
   // Campaign limit checks
   isWithinUsageLimit(usageCount: number): boolean {
     const max = this.props.maxUsesPerCustomer;
@@ -330,6 +341,7 @@ export class Campaign {
   }
 
   private passesTypeCheck(ctx: CampaignEligibilityContext): boolean {
+    if (!this.passesLastVisitFilter(ctx.lastTransactionAt)) return false;
     switch (this.props.type) {
       case 'BIRTHDAY_REWARD':
         return this.isBirthdayEligible(ctx.dateOfBirth);
@@ -340,6 +352,14 @@ export class Campaign {
       default:
         return true;
     }
+  }
+
+  private passesLastVisitFilter(lastTransactionAt?: Date): boolean {
+    const days = this.props.lastVisitDays;
+    if (!days || days <= 0) return true;
+    if (!lastTransactionAt) return true;
+    const msThreshold = days * 24 * 60 * 60 * 1000;
+    return Date.now() - lastTransactionAt.getTime() >= msThreshold;
   }
 
   private isBirthdayEligible(dateOfBirth?: string): boolean {
@@ -485,6 +505,14 @@ export class Campaign {
         delete this.props.welcomeDays;
       }
     }
+    if (overrides.lastVisitDays !== undefined) {
+      if (overrides.lastVisitDays > 0) {
+        this.props.lastVisitDays = overrides.lastVisitDays;
+      } else {
+        // biome-ignore lint/performance/noDelete: exactOptionalPropertyTypes requires delete to unset optional props
+        delete this.props.lastVisitDays;
+      }
+    }
   }
 
   private applyLimitOverrides(overrides: CampaignOverrides): void {
@@ -574,6 +602,9 @@ export class Campaign {
     }
     if (this.props.welcomeDays && this.props.welcomeDays > 0) {
       result.welcomeDays = this.props.welcomeDays;
+    }
+    if (this.props.lastVisitDays && this.props.lastVisitDays > 0) {
+      result.lastVisitDays = this.props.lastVisitDays;
     }
     return result;
   }

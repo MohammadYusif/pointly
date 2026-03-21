@@ -335,5 +335,76 @@ describe('Campaign Entity', () => {
       const campaign = Campaign.create('merchant-1', 'HAPPY_HOUR');
       expect(campaign.isEligibleForCustomer(baseCtx)).toBe(true);
     });
+
+    describe('lastVisitDays generic filter', () => {
+      it('should not filter when lastVisitDays is unset', () => {
+        const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS');
+        const ctx: CampaignEligibilityContext = {
+          ...baseCtx,
+          lastTransactionAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+        };
+        expect(campaign.isEligibleForCustomer(ctx)).toBe(true);
+      });
+
+      it('should be eligible when last tx exceeds lastVisitDays threshold', () => {
+        const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS', { lastVisitDays: 7 });
+        const ctx: CampaignEligibilityContext = {
+          ...baseCtx,
+          lastTransactionAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
+        };
+        expect(campaign.isEligibleForCustomer(ctx)).toBe(true);
+      });
+
+      it('should NOT be eligible when last tx is within lastVisitDays threshold', () => {
+        const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS', { lastVisitDays: 7 });
+        const ctx: CampaignEligibilityContext = {
+          ...baseCtx,
+          lastTransactionAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), // 6 days ago
+        };
+        expect(campaign.isEligibleForCustomer(ctx)).toBe(false);
+      });
+
+      it('should be eligible when customer has no lastTransactionAt (new customer)', () => {
+        const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS', { lastVisitDays: 7 });
+        expect(campaign.isEligibleForCustomer(baseCtx)).toBe(true);
+      });
+
+      it('WIN_BACK: lastVisitDays passes but winBackDays fails → NOT eligible', () => {
+        // lastVisitDays: 3 → passes (5 days ≥ 3), winBackDays: 7 → fails (5 days < 7)
+        const campaign = Campaign.create('merchant-1', 'WIN_BACK', {
+          lastVisitDays: 3,
+          winBackDays: 7,
+        });
+        const ctx: CampaignEligibilityContext = {
+          ...baseCtx,
+          lastTransactionAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+        };
+        expect(campaign.isEligibleForCustomer(ctx)).toBe(false);
+      });
+
+      it('WIN_BACK: both lastVisitDays and winBackDays pass → eligible', () => {
+        const campaign = Campaign.create('merchant-1', 'WIN_BACK', {
+          lastVisitDays: 3,
+          winBackDays: 7,
+        });
+        const ctx: CampaignEligibilityContext = {
+          ...baseCtx,
+          lastTransactionAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
+        };
+        expect(campaign.isEligibleForCustomer(ctx)).toBe(true);
+      });
+
+      it('should expose lastVisitDays via getter and include in toJSON', () => {
+        const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS', { lastVisitDays: 14 });
+        expect(campaign.getLastVisitDays()).toBe(14);
+        expect(campaign.toJSON().lastVisitDays).toBe(14);
+      });
+
+      it('should omit lastVisitDays from toJSON when not set', () => {
+        const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS');
+        expect(campaign.getLastVisitDays()).toBeUndefined();
+        expect(campaign.toJSON().lastVisitDays).toBeUndefined();
+      });
+    });
   });
 });
