@@ -103,4 +103,28 @@
     padding: 6px 16px;
     border-radius: var(--radius-sm);
   }
+
+  .tier-benefits {
+    list-style: none;
+    padding: 0;
+    margin: 16px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: start;
+  }
+
+  .tier-benefits li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .tier-benefits li span:first-child {
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
 }

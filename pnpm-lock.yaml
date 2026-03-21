@@ -211,6 +211,9 @@ importers:
 
   apps/landing:
     dependencies:
+      '@pointly/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       framer-motion:
         specifier: ^12.36.0
         version: 12.36.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)

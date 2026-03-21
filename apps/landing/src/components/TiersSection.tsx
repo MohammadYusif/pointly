@@ -1,11 +1,21 @@
 'use client';
 
 import type { TranslationKeys } from '@/i18n/translations';
+import { CUSTOMER_TIERS, TIER_ORDER } from '@pointly/shared';
+import type { CustomerTierLevel } from '@pointly/shared';
 import { ScrollReveal } from './ScrollReveal';
 
 interface TiersSectionProps {
   t: TranslationKeys;
 }
+
+/** Presentation-only mapping from domain tier level to CSS class name. */
+const TIER_CSS_COLOR: Record<CustomerTierLevel, string> = {
+  BRONZE: 'bronze',
+  GOLD: 'gold',
+  PLATINUM: 'platinum',
+  DIAMOND: 'diamond',
+};
 
 function TierIcon({ color }: { color: string }) {
   if (color === 'bronze') {
@@ -74,21 +84,37 @@ export function TiersSection({ t }: TiersSectionProps) {
         </ScrollReveal>
 
         <div className="tiers-grid">
-          {t.tiers.items.map((tier, i) => (
-            <ScrollReveal key={tier.name} delay={i + 1}>
-              <div className={`tier-card ${tier.color}`}>
-                <div className="tier-icon">
-                  <TierIcon color={tier.color} />
+          {TIER_ORDER.map((level, i) => {
+            const tier = CUSTOMER_TIERS[level];
+            const cssColor = TIER_CSS_COLOR[level];
+            const name = t.tiers.items[i].name;
+            const threshold = `${tier.monthlyMinimum.toLocaleString('en-SA')} ${t.tiers.ptsUnit}`;
+            const multiplier = `${tier.earningMultiplier}×`;
+
+            return (
+              <ScrollReveal key={level} delay={i + 1}>
+                <div className={`tier-card ${cssColor}`}>
+                  <div className="tier-icon">
+                    <TierIcon color={cssColor} />
+                  </div>
+                  <div className="tier-name">{name}</div>
+                  <div className="tier-threshold">{threshold}</div>
+                  <div className="tier-threshold-label">{t.tiers.thresholdLabel}</div>
+                  <div className="tier-multiplier">
+                    {multiplier} {t.tiers.multiplierLabel}
+                  </div>
+                  <ul className="tier-benefits">
+                    {tier.benefits.map((b) => (
+                      <li key={b.key}>
+                        <span>{b.icon}</span>
+                        <span>{t.tierBenefits[b.key as keyof typeof t.tierBenefits]}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <div className="tier-name">{tier.name}</div>
-                <div className="tier-threshold">{tier.threshold}</div>
-                <div className="tier-threshold-label">{t.tiers.thresholdLabel}</div>
-                <div className="tier-multiplier">
-                  {tier.multiplier} {t.tiers.multiplierLabel}
-                </div>
-              </div>
-            </ScrollReveal>
-          ))}
+              </ScrollReveal>
+            );
+          })}
         </div>
       </div>
     </section>
