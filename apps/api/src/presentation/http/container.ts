@@ -14,6 +14,7 @@ import { CheckChallengeEligibilityUseCase } from '../../application/use-cases/Ch
 import { EnrollCustomerUseCase } from '../../application/use-cases/EnrollCustomerUseCase';
 import { GenerateQRCodeUseCase } from '../../application/use-cases/GenerateQRCodeUseCase';
 import { GetAnalyticsUseCase } from '../../application/use-cases/GetAnalyticsUseCase';
+import { GetCustomerInsightsUseCase } from '../../application/use-cases/GetCustomerInsightsUseCase';
 import { GetCustomerPerksUseCase } from '../../application/use-cases/GetCustomerPerksUseCase';
 import { ManageCampaignUseCase } from '../../application/use-cases/ManageCampaignUseCase';
 import { ManagePerkUseCase } from '../../application/use-cases/ManagePerkUseCase';
@@ -73,6 +74,7 @@ export interface Container {
   managePushSubscriptionUseCase: ManagePushSubscriptionUseCase;
   manageWalletPassUseCase: ManageWalletPassUseCase;
   getCustomerPerksUseCase: GetCustomerPerksUseCase;
+  getCustomerInsightsUseCase: GetCustomerInsightsUseCase;
 }
 
 let container: Container | null = null;
@@ -189,6 +191,8 @@ export function createContainer(): Container {
     transactionRepository,
   );
 
+  const getCustomerInsightsUseCase = new GetCustomerInsightsUseCase(customerRepository);
+
   return {
     customerRepository,
     merchantRepository,
@@ -216,6 +220,7 @@ export function createContainer(): Container {
     managePushSubscriptionUseCase,
     manageWalletPassUseCase,
     getCustomerPerksUseCase,
+    getCustomerInsightsUseCase,
   };
 }
 

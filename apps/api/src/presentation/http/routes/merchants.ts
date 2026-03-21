@@ -68,32 +68,6 @@ const analyticsQuerySchema = z.object({
   groupBy: z.enum(['day', 'week', 'month']).optional(),
 });
 
-function computeInsightCounts(customers: Customer[], merchantId: string) {
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-  let birthdayCount = 0;
-  let winBackCount = 0;
-  let welcomeOfferCount = 0;
-
-  for (const customer of customers) {
-    const json = customer.toJSON();
-    if (json.dateOfBirth && new Date(json.dateOfBirth).getMonth() === currentMonth) birthdayCount++;
-
-    const enrollment = json.enrollments?.find((e) => e.merchantId === merchantId);
-    if (!enrollment) continue;
-
-    const lastTx = enrollment.lastTransactionAt ? new Date(enrollment.lastTransactionAt) : null;
-    if (!lastTx || lastTx < sixtyDaysAgo) winBackCount++;
-
-    if (new Date(enrollment.enrolledAt) > thirtyDaysAgo) welcomeOfferCount++;
-  }
-
-  return { birthdayCount, winBackCount, welcomeOfferCount };
-}
-
 /** Shared handler for customer insights (used by both /perk-insights and /customer-insights) */
 async function handleCustomerInsights(
   request: FastifyRequest<{ Params: { merchantId: string } }>,
@@ -103,18 +77,8 @@ async function handleCustomerInsights(
   const { merchantId } = request.params;
 
   const container = getContainer();
-  const result = await container.customerRepository.findByMerchant(merchantId, { limit: 500 });
-  const counts = computeInsightCounts(result.items, merchantId);
-
-  return reply.send({
-    success: true,
-    data: {
-      birthdayReward: { count: counts.birthdayCount },
-      winBack: { count: counts.winBackCount },
-      welcomeOffer: { count: counts.welcomeOfferCount },
-      totalCustomers: result.items.length,
-    },
-  });
+  const insights = await container.getCustomerInsightsUseCase.execute(merchantId);
+  return reply.send({ success: true, data: insights });
 }
 
 export async function merchantRoutes(server: FastifyInstance): Promise<void> {
