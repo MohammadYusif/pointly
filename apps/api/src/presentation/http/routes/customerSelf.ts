@@ -33,6 +33,13 @@ const setupSchema = z.object({
     .optional(),
 });
 
+const giftPointsSchema = z.object({
+  recipientPhone: z.string().min(1),
+  points: z.number().int().positive(),
+  idempotencyKey: z.string().min(1),
+  message: z.string().max(200).optional(),
+});
+
 export async function customerSelfRoutes(server: FastifyInstance): Promise<void> {
   // GET /v1/me — Get own customer profile
   server.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
@@ -295,6 +302,30 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
         },
       },
     });
+  });
+
+  // POST /v1/me/gift — Gift global points to another customer (peer-to-peer)
+  server.post('/gift', async (request: FastifyRequest, reply: FastifyReply) => {
+    const { customerId } = request;
+    if (!customerId) {
+      return reply.status(400).send({ success: false, error: 'Customer ID not found in token' });
+    }
+
+    const parsed = giftPointsSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ success: false, error: parsed.error.issues[0]?.message });
+    }
+
+    const container = getContainer();
+    const result = await container.giftPointsUseCase.execute({
+      senderId: customerId,
+      recipientPhone: parsed.data.recipientPhone,
+      points: parsed.data.points,
+      idempotencyKey: parsed.data.idempotencyKey,
+      message: parsed.data.message,
+    });
+
+    return reply.send({ success: true, data: result });
   });
 
   // DELETE /v1/me — Permanently delete account (DynamoDB + Cognito)

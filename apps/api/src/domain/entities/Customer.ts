@@ -785,6 +785,31 @@ export class Customer {
   }
 
   /**
+   * Award global points to this customer (e.g. received as a gift from another customer).
+   * Does NOT affect monthly progress or tier — gifts are not "earned through spending".
+   */
+  awardGlobalPoints(points: Points): void {
+    this.props.globalPointsBalance = this.props.globalPointsBalance.add(points);
+    this.props.globalLifetimePoints = this.props.globalLifetimePoints.add(points);
+    this.props.updatedAt = new Date();
+  }
+
+  /**
+   * Award merchant-specific points to this customer's enrollment balance.
+   * Called when a merchant gifts points directly to a customer.
+   * Does NOT affect globalPointsBalance, monthly progress, or tier.
+   */
+  awardMerchantPoints(merchantId: string, points: Points): void {
+    const enrollment = this.props.enrollments.get(merchantId);
+    if (!enrollment) {
+      throw new ValidationError('Customer not enrolled with this merchant');
+    }
+    enrollment.merchantPointsBalance = enrollment.merchantPointsBalance.add(points);
+    enrollment.merchantLifetimePoints = enrollment.merchantLifetimePoints.add(points);
+    this.props.updatedAt = new Date();
+  }
+
+  /**
    * Manually set tier (admin override)
    */
   setTier(tier: CustomerTier, _reason: string): void {

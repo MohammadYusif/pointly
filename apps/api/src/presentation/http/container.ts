@@ -16,6 +16,7 @@ import { GenerateQRCodeUseCase } from '../../application/use-cases/GenerateQRCod
 import { GetAnalyticsUseCase } from '../../application/use-cases/GetAnalyticsUseCase';
 import { GetCustomerInsightsUseCase } from '../../application/use-cases/GetCustomerInsightsUseCase';
 import { GetCustomerPerksUseCase } from '../../application/use-cases/GetCustomerPerksUseCase';
+import { GiftPointsUseCase } from '../../application/use-cases/GiftPointsUseCase';
 import { ManageCampaignUseCase } from '../../application/use-cases/ManageCampaignUseCase';
 import { ManagePerkUseCase } from '../../application/use-cases/ManagePerkUseCase';
 import { ManagePushSubscriptionUseCase } from '../../application/use-cases/ManagePushSubscriptionUseCase';
@@ -75,6 +76,7 @@ export interface Container {
   manageWalletPassUseCase: ManageWalletPassUseCase;
   getCustomerPerksUseCase: GetCustomerPerksUseCase;
   getCustomerInsightsUseCase: GetCustomerInsightsUseCase;
+  giftPointsUseCase: GiftPointsUseCase;
 }
 
 let container: Container | null = null;
@@ -195,6 +197,13 @@ export function createContainer(): Container {
 
   const getCustomerInsightsUseCase = new GetCustomerInsightsUseCase(customerRepository);
 
+  const giftPointsUseCase = new GiftPointsUseCase(
+    customerRepository,
+    transactionRepository,
+    idempotencyService,
+    (items) => transactionalWriter.writeAll(items),
+  );
+
   return {
     customerRepository,
     merchantRepository,
@@ -223,6 +232,7 @@ export function createContainer(): Container {
     manageWalletPassUseCase,
     getCustomerPerksUseCase,
     getCustomerInsightsUseCase,
+    giftPointsUseCase,
   };
 }
 
