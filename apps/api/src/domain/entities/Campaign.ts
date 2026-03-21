@@ -88,6 +88,10 @@ export interface CampaignProps {
   minPurchaseAmount?: number;
   maxPointsPerTransaction?: number;
   termsMessage?: string;
+  /** Days of inactivity required to qualify for a WIN_BACK campaign. Defaults to 60. */
+  winBackDays?: number;
+  /** Days since enrollment to qualify for a WELCOME campaign. Defaults to 30. */
+  welcomeDays?: number;
   createdAt: Date;
 }
 
@@ -108,6 +112,8 @@ export interface CampaignJSON {
   minPurchaseAmount?: number;
   maxPointsPerTransaction?: number;
   termsMessage?: string;
+  winBackDays?: number;
+  welcomeDays?: number;
   createdAt: string;
 }
 
@@ -122,6 +128,8 @@ interface CampaignOverrides {
   maxUsesPerCustomer?: number;
   minPurchaseAmount?: number;
   maxPointsPerTransaction?: number;
+  winBackDays?: number;
+  welcomeDays?: number;
 }
 
 export class Campaign {
@@ -159,6 +167,12 @@ export class Campaign {
     }
     if (overrides?.maxPointsPerTransaction && overrides.maxPointsPerTransaction > 0) {
       props.maxPointsPerTransaction = overrides.maxPointsPerTransaction;
+    }
+    if (overrides?.winBackDays && overrides.winBackDays > 0) {
+      props.winBackDays = overrides.winBackDays;
+    }
+    if (overrides?.welcomeDays && overrides.welcomeDays > 0) {
+      props.welcomeDays = overrides.welcomeDays;
     }
     return new Campaign(props);
   }
@@ -276,6 +290,14 @@ export class Campaign {
     return this.props.maxPointsPerTransaction;
   }
 
+  getWinBackDays(): number | undefined {
+    return this.props.winBackDays;
+  }
+
+  getWelcomeDays(): number | undefined {
+    return this.props.welcomeDays;
+  }
+
   // Campaign limit checks
   isWithinUsageLimit(usageCount: number): boolean {
     const max = this.props.maxUsesPerCustomer;
@@ -350,13 +372,15 @@ export class Campaign {
 
   private isWinBackEligible(lastTransactionAt?: Date): boolean {
     if (!lastTransactionAt) return true;
-    const msIn60Days = 60 * 24 * 60 * 60 * 1000;
-    return Date.now() - lastTransactionAt.getTime() >= msIn60Days;
+    const days = this.props.winBackDays ?? 60;
+    const msThreshold = days * 24 * 60 * 60 * 1000;
+    return Date.now() - lastTransactionAt.getTime() >= msThreshold;
   }
 
   private isWelcomeEligible(enrolledAt: Date): boolean {
-    const msIn30Days = 30 * 24 * 60 * 60 * 1000;
-    return Date.now() - enrolledAt.getTime() <= msIn30Days;
+    const days = this.props.welcomeDays ?? 30;
+    const msThreshold = days * 24 * 60 * 60 * 1000;
+    return Date.now() - enrolledAt.getTime() <= msThreshold;
   }
 
   getTermsMessage(): string | undefined {
@@ -445,6 +469,22 @@ export class Campaign {
         delete this.props.targetTiers;
       }
     }
+    if (overrides.winBackDays !== undefined) {
+      if (overrides.winBackDays > 0) {
+        this.props.winBackDays = overrides.winBackDays;
+      } else {
+        // biome-ignore lint/performance/noDelete: exactOptionalPropertyTypes requires delete to unset optional props
+        delete this.props.winBackDays;
+      }
+    }
+    if (overrides.welcomeDays !== undefined) {
+      if (overrides.welcomeDays > 0) {
+        this.props.welcomeDays = overrides.welcomeDays;
+      } else {
+        // biome-ignore lint/performance/noDelete: exactOptionalPropertyTypes requires delete to unset optional props
+        delete this.props.welcomeDays;
+      }
+    }
   }
 
   private applyLimitOverrides(overrides: CampaignOverrides): void {
@@ -528,6 +568,12 @@ export class Campaign {
     }
     if (this.props.termsMessage) {
       result.termsMessage = this.props.termsMessage;
+    }
+    if (this.props.winBackDays && this.props.winBackDays > 0) {
+      result.winBackDays = this.props.winBackDays;
+    }
+    if (this.props.welcomeDays && this.props.welcomeDays > 0) {
+      result.welcomeDays = this.props.welcomeDays;
     }
     return result;
   }

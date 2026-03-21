@@ -257,6 +257,36 @@ describe('Campaign Entity', () => {
       expect(campaign.isEligibleForCustomer(baseCtx)).toBe(true);
     });
 
+    it('should respect custom winBackDays — eligible when inactive long enough', () => {
+      const campaign = Campaign.create('merchant-1', 'WIN_BACK', { winBackDays: 7 });
+      const ctx: CampaignEligibilityContext = {
+        ...baseCtx,
+        lastTransactionAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+      };
+      expect(campaign.isEligibleForCustomer(ctx)).toBe(true);
+    });
+
+    it('should respect custom winBackDays — not eligible when recently active', () => {
+      const campaign = Campaign.create('merchant-1', 'WIN_BACK', { winBackDays: 7 });
+      const ctx: CampaignEligibilityContext = {
+        ...baseCtx,
+        lastTransactionAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+      };
+      expect(campaign.isEligibleForCustomer(ctx)).toBe(false);
+    });
+
+    it('should expose winBackDays via getter and include in toJSON', () => {
+      const campaign = Campaign.create('merchant-1', 'WIN_BACK', { winBackDays: 14 });
+      expect(campaign.getWinBackDays()).toBe(14);
+      expect(campaign.toJSON().winBackDays).toBe(14);
+    });
+
+    it('should omit winBackDays from toJSON when not set', () => {
+      const campaign = Campaign.create('merchant-1', 'WIN_BACK');
+      expect(campaign.getWinBackDays()).toBeUndefined();
+      expect(campaign.toJSON().winBackDays).toBeUndefined();
+    });
+
     it('should be eligible for WELCOME when enrolled within last 30 days', () => {
       const campaign = Campaign.create('merchant-1', 'WELCOME');
       expect(campaign.isEligibleForCustomer(baseCtx)).toBe(true);
@@ -269,6 +299,36 @@ describe('Campaign Entity', () => {
         enrolledAt: new Date(Date.now() - 31 * 24 * 60 * 60 * 1000),
       };
       expect(campaign.isEligibleForCustomer(ctx)).toBe(false);
+    });
+
+    it('should respect custom welcomeDays — eligible when enrolled within window', () => {
+      const campaign = Campaign.create('merchant-1', 'WELCOME', { welcomeDays: 14 });
+      const ctx: CampaignEligibilityContext = {
+        ...baseCtx,
+        enrolledAt: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000),
+      };
+      expect(campaign.isEligibleForCustomer(ctx)).toBe(true);
+    });
+
+    it('should respect custom welcomeDays — not eligible when enrolled outside window', () => {
+      const campaign = Campaign.create('merchant-1', 'WELCOME', { welcomeDays: 14 });
+      const ctx: CampaignEligibilityContext = {
+        ...baseCtx,
+        enrolledAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+      };
+      expect(campaign.isEligibleForCustomer(ctx)).toBe(false);
+    });
+
+    it('should expose welcomeDays via getter and include in toJSON', () => {
+      const campaign = Campaign.create('merchant-1', 'WELCOME', { welcomeDays: 14 });
+      expect(campaign.getWelcomeDays()).toBe(14);
+      expect(campaign.toJSON().welcomeDays).toBe(14);
+    });
+
+    it('should omit welcomeDays from toJSON when not set', () => {
+      const campaign = Campaign.create('merchant-1', 'WELCOME');
+      expect(campaign.getWelcomeDays()).toBeUndefined();
+      expect(campaign.toJSON().welcomeDays).toBeUndefined();
     });
 
     it('should be eligible for HAPPY_HOUR after tier check', () => {
