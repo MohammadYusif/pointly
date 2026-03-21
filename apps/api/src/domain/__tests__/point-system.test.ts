@@ -1268,4 +1268,129 @@ describe('Point System - Real World Scenarios', () => {
       });
     });
   });
+
+  /**
+   * ============================================
+   * TIER UPGRADES VIA addPointsFromPurchase
+   * ============================================
+   */
+  describe('Tier upgrades via addPointsFromPurchase', () => {
+    it('Bronze → Gold: crossing 5000 threshold by 1 point upgrades tier', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      setMonthlyProgress(customer, 4999);
+
+      customer.addPointsFromPurchase('merchant_123', Points.from(1), Points.from(1));
+
+      expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.GOLD);
+    });
+
+    it('Bronze → Gold: large single purchase that crosses 5000 threshold', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+
+      customer.addPointsFromPurchase('merchant_123', Points.from(6000), Points.from(6000));
+
+      expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.GOLD);
+    });
+
+    it('Gold → Platinum: crossing 10000 threshold by 1 point upgrades tier', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      setCustomerTier(customer, CustomerTier.gold());
+      setMonthlyProgress(customer, 9999);
+
+      customer.addPointsFromPurchase('merchant_123', Points.from(1), Points.from(1), {
+        skipTierBoost: true,
+      });
+
+      expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.PLATINUM);
+    });
+
+    it('Platinum → Diamond: crossing 15000 threshold by 1 point upgrades tier', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      setCustomerTier(customer, CustomerTier.platinum());
+      setMonthlyProgress(customer, 14999);
+
+      customer.addPointsFromPurchase('merchant_123', Points.from(1), Points.from(1), {
+        skipTierBoost: true,
+      });
+
+      expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.DIAMOND);
+    });
+
+    it('tierLastUpdatedAt is updated when tier upgrades', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      const before = customer.getTierLastUpdatedAt();
+      setMonthlyProgress(customer, 4999);
+
+      customer.addPointsFromPurchase('merchant_123', Points.from(1), Points.from(1));
+
+      const after = customer.getTierLastUpdatedAt();
+      expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.GOLD);
+      expect(after.getTime()).toBeGreaterThanOrEqual(before.getTime());
+    });
+
+    it('tierLastUpdatedAt is NOT updated when tier remains the same', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      const originalDate = new Date('2025-01-01T00:00:00.000Z');
+      const props = (customer as unknown as CustomerWithProps).props;
+      props.tierLastUpdatedAt = originalDate;
+
+      customer.addPointsFromPurchase('merchant_123', Points.from(100), Points.from(100));
+
+      expect(customer.getCurrentTier().getLevel()).toBe(CustomerTierLevel.BRONZE);
+      expect(customer.getTierLastUpdatedAt()).toBe(originalDate);
+    });
+
+    it('Gold multiplier (1.1x): 100 base points → 110 global points', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      setCustomerTier(customer, CustomerTier.gold());
+
+      const { boostedGlobalPoints } = customer.addPointsFromPurchase(
+        'merchant_123',
+        Points.from(100),
+        Points.from(100),
+      );
+
+      expect(boostedGlobalPoints.toNumber()).toBe(110);
+    });
+
+    it('Platinum multiplier (1.15x): 100 base points → 115 global points', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      setCustomerTier(customer, CustomerTier.platinum());
+
+      const { boostedGlobalPoints } = customer.addPointsFromPurchase(
+        'merchant_123',
+        Points.from(100),
+        Points.from(100),
+      );
+
+      expect(boostedGlobalPoints.toNumber()).toBe(115);
+    });
+
+    it('Diamond multiplier (1.2x): 100 base points → 120 global points', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      setCustomerTier(customer, CustomerTier.diamond());
+
+      const { boostedGlobalPoints } = customer.addPointsFromPurchase(
+        'merchant_123',
+        Points.from(100),
+        Points.from(100),
+      );
+
+      expect(boostedGlobalPoints.toNumber()).toBe(120);
+    });
+
+    it('Multiplier rounds down (floor): Platinum 7 base points → 8 global points', () => {
+      const customer = createCustomerWithEnrollment('merchant_123');
+      setCustomerTier(customer, CustomerTier.platinum());
+
+      const { boostedGlobalPoints } = customer.addPointsFromPurchase(
+        'merchant_123',
+        Points.from(7),
+        Points.from(7),
+      );
+
+      // Math.floor(7 * 1.15) = Math.floor(8.05) = 8
+      expect(boostedGlobalPoints.toNumber()).toBe(8);
+    });
+  });
 });

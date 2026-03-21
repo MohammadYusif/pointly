@@ -7,6 +7,23 @@ import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
 import { ManageWalletPassUseCase } from '../use-cases/ManageWalletPassUseCase';
 
+vi.mock('passkit-generator', () => {
+  const mockPassInstance = {
+    type: undefined as string | undefined,
+    primaryFields: [] as unknown[],
+    secondaryFields: [] as unknown[],
+    backFields: [] as unknown[],
+    getAsBuffer: vi.fn().mockReturnValue(Buffer.from('mock-pass')),
+  };
+  const PKPass = vi.fn().mockImplementation(() => {
+    mockPassInstance.primaryFields = [];
+    mockPassInstance.secondaryFields = [];
+    mockPassInstance.backFields = [];
+    return mockPassInstance;
+  });
+  return { PKPass };
+});
+
 function makeCustomerRepo(): ICustomerRepository {
   return {
     findById: vi.fn(),
@@ -143,6 +160,125 @@ describe('ManageWalletPassUseCase', () => {
       if ('url' in result) {
         expect(result.url).toMatch(/^https:\/\/pay\.google\.com\/gp\/v\/save\//);
       }
+    });
+
+    it('Google Wallet JWT contains loyaltyObjects with correct merchantId and accountId', async () => {
+      vi.mocked(customerRepo.findById).mockResolvedValue(customer);
+      vi.mocked(merchantRepo.findById).mockResolvedValue(merchant);
+
+      const { privateKey } = generateKeyPairSync('rsa', {
+        modulusLength: 2048,
+        publicKeyEncoding: { type: 'spki', format: 'pem' },
+        privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+      });
+
+      const issuerId = 'issuer_9999';
+      const useCase = new ManageWalletPassUseCase(customerRepo, merchantRepo, {
+        GOOGLE_WALLET_ISSUER_ID: issuerId,
+        GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL: 'sa@project.iam.gserviceaccount.com',
+        GOOGLE_WALLET_PRIVATE_KEY: privateKey,
+      });
+
+      const customerId = customer.getCustomerId();
+      const merchantId = merchant.getMerchantId();
+      const result = await useCase.generateGoogleLink(customerId, merchantId);
+
+      expect('url' in result).toBe(true);
+      if ('url' in result) {
+        const jwt = result.url.replace('https://pay.google.com/gp/v/save/', '');
+        const parts = jwt.split('.');
+        const payloadJson = Buffer.from(parts[1] as string, 'base64url').toString('utf-8');
+        const decoded = JSON.parse(payloadJson) as {
+          payload: { loyaltyObjects: Array<{ id: string; classId: string }> };
+        };
+        const loyaltyObject = decoded.payload.loyaltyObjects[0];
+        expect(loyaltyObject?.id).toBe(`${issuerId}.${merchantId}_${customerId}`);
+        expect(loyaltyObject?.classId).toBe(`${issuerId}.${merchantId}`);
+      }
+    });
+  });
+
+  describe('generateApplePass — merchant wallet theme', () => {
+    const appleEnv = {
+      APPLE_PASS_CERT_PEM: 'cert',
+      APPLE_PASS_KEY_PEM: 'key',
+      APPLE_TEAM_ID: 'TEAM1',
+      APPLE_PASS_TYPE_ID: 'pass.sa.pointly.loyalty',
+      APPLE_WWDR_PEM: 'wwdr',
+    };
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('uses merchant walletConfig.primaryColor as foreground color in the pass', async () => {
+      const { PKPass } = await import('passkit-generator');
+      vi.mocked(customerRepo.findById).mockResolvedValue(customer);
+      merchant.setWalletConfig({ primaryColor: '#FF5500', backgroundColor: '#000000' });
+      vi.mocked(merchantRepo.findById).mockResolvedValue(merchant);
+
+      const useCase = new ManageWalletPassUseCase(customerRepo, merchantRepo, appleEnv);
+      const result = await useCase.generateApplePass(
+        customer.getCustomerId(),
+        merchant.getMerchantId(),
+      );
+
+      expect('buffer' in result).toBe(true);
+      const constructorArgs = vi.mocked(PKPass).mock.calls[0] as [
+        unknown,
+        unknown,
+        { foregroundColor: string; backgroundColor: string },
+      ];
+      expect(constructorArgs[2].foregroundColor).toBe('#FF5500');
+    });
+
+    it('uses merchant walletConfig.backgroundColor in the pass', async () => {
+      const { PKPass } = await import('passkit-generator');
+      vi.mocked(customerRepo.findById).mockResolvedValue(customer);
+      merchant.setWalletConfig({ primaryColor: '#FF5500', backgroundColor: '#123456' });
+      vi.mocked(merchantRepo.findById).mockResolvedValue(merchant);
+
+      const useCase = new ManageWalletPassUseCase(customerRepo, merchantRepo, appleEnv);
+      const result = await useCase.generateApplePass(
+        customer.getCustomerId(),
+        merchant.getMerchantId(),
+      );
+
+      expect('buffer' in result).toBe(true);
+      const constructorArgs = vi.mocked(PKPass).mock.calls[0] as [
+        unknown,
+        unknown,
+        { foregroundColor: string; backgroundColor: string },
+      ];
+      expect(constructorArgs[2].backgroundColor).toBe('#123456');
+    });
+
+    it('falls back to default colors when merchant has no walletConfig', async () => {
+      const { PKPass } = await import('passkit-generator');
+      const freshMerchant = Merchant.create(
+        'Fresh Store',
+        new Email('fresh@example.com'),
+        new PhoneNumber('0501112222'),
+        'Owner',
+        MerchantTier.BASIC,
+      );
+      freshMerchant.verify();
+      const freshCustomer = Customer.create(new PhoneNumber('0503334444'), 'Fresh User');
+      freshCustomer.enrollWithMerchant(freshMerchant.getMerchantId());
+
+      vi.mocked(customerRepo.findById).mockResolvedValue(freshCustomer);
+      vi.mocked(merchantRepo.findById).mockResolvedValue(freshMerchant);
+
+      const useCase = new ManageWalletPassUseCase(customerRepo, merchantRepo, appleEnv);
+      await useCase.generateApplePass(freshCustomer.getCustomerId(), freshMerchant.getMerchantId());
+
+      const constructorArgs = vi.mocked(PKPass).mock.calls[0] as [
+        unknown,
+        unknown,
+        { foregroundColor: string; backgroundColor: string },
+      ];
+      expect(constructorArgs[2].backgroundColor).toBe('#ffffff');
+      expect(constructorArgs[2].foregroundColor).toBe('#0d9488');
     });
   });
 });

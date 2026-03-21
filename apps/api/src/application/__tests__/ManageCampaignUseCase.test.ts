@@ -9,9 +9,12 @@ import {
   PhoneNumber,
   UnauthorizedError,
 } from '../../domain';
+import type { PushSubscription } from '../../domain/entities/PushSubscription';
 import type { ICampaignRepository } from '../repositories/ICampaignRepository';
 import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
+import type { IPushSubscriptionRepository } from '../repositories/IPushSubscriptionRepository';
+import type { IPushNotificationService } from '../services/IPushNotificationService';
 import type { ISmsPublisherService } from '../services/ISmsPublisherService';
 import { ManageCampaignUseCase } from '../use-cases/ManageCampaignUseCase';
 
@@ -309,6 +312,192 @@ describe('ManageCampaignUseCase', () => {
           action: 'deactivate',
           merchantId,
           campaignId: 'nonexistent_campaign',
+        }),
+      ).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe('push notification fan-out', () => {
+    let mockPushSubRepo: IPushSubscriptionRepository;
+    let mockPushService: IPushNotificationService;
+    let useCaseWithPush: ManageCampaignUseCase;
+
+    function makePushSubscription(platform: 'ios' | 'android' | 'web'): PushSubscription {
+      return {
+        pushId: `push_${platform}`,
+        customerId: 'cust_1',
+        endpoint: `https://push.example.com/${platform}`,
+        p256dhKey: 'key',
+        authKey: 'auth',
+        platform,
+        createdAt: new Date().toISOString(),
+        toJSON: vi.fn(),
+      } as unknown as PushSubscription;
+    }
+
+    beforeEach(() => {
+      mockPushSubRepo = {
+        save: vi.fn(),
+        findByCustomer: vi.fn(),
+        deleteByEndpointHash: vi.fn(),
+        findPlatformCountsByMerchant: vi.fn(),
+        findByPlatform: vi.fn(),
+        findAll: vi.fn().mockResolvedValue([]),
+      };
+
+      mockPushService = {
+        send: vi.fn().mockResolvedValue(undefined),
+        sendBatch: vi.fn().mockResolvedValue(undefined),
+      };
+
+      useCaseWithPush = new ManageCampaignUseCase(
+        mockMerchantRepo,
+        mockCampaignRepo,
+        mockAtomicWrite,
+        mockCustomerRepo,
+        mockSmsPublisher,
+        mockPushSubRepo,
+        mockPushService,
+      );
+    });
+
+    it('push sendBatch is called on campaign create when subscriptions exist', async () => {
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockPushSubRepo.findAll).mockResolvedValue([
+        makePushSubscription('ios'),
+        makePushSubscription('android'),
+      ]);
+
+      await useCaseWithPush.execute({
+        action: 'create',
+        merchantId,
+        type: 'CUSTOM',
+        name: 'Push Sale',
+        startDate: '2026-06-01T00:00:00.000Z',
+        endDate: '2026-08-31T23:59:59.000Z',
+        multiplier: 2.0,
+      });
+
+      expect(mockPushService.sendBatch).toHaveBeenCalledTimes(1);
+      const [subs, payload] = vi.mocked(mockPushService.sendBatch).mock.calls[0] as [
+        PushSubscription[],
+        { title: string; body: string },
+      ];
+      expect(subs).toHaveLength(2);
+      expect(payload.title).toBe('Push Sale');
+    });
+
+    it('platformFilter ios: findAll is called with ios platform', async () => {
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockPushSubRepo.findAll).mockResolvedValue([makePushSubscription('ios')]);
+
+      await useCaseWithPush.execute({
+        action: 'create',
+        merchantId,
+        type: 'CUSTOM',
+        name: 'iOS Only',
+        startDate: '2026-06-01T00:00:00.000Z',
+        endDate: '2026-08-31T23:59:59.000Z',
+        multiplier: 1.5,
+        platformFilter: 'ios',
+      });
+
+      expect(mockPushSubRepo.findAll).toHaveBeenCalledWith('ios');
+    });
+
+    it('push failure is non-fatal: campaign is still created when sendBatch throws', async () => {
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockPushSubRepo.findAll).mockResolvedValue([makePushSubscription('web')]);
+      vi.mocked(mockPushService.sendBatch).mockRejectedValue(new Error('Push service down'));
+
+      const result = await useCaseWithPush.execute({
+        action: 'create',
+        merchantId,
+        type: 'CUSTOM',
+        name: 'Resilient Sale',
+        startDate: '2026-06-01T00:00:00.000Z',
+        endDate: '2026-08-31T23:59:59.000Z',
+        multiplier: 1.5,
+      });
+
+      expect(result).toBeInstanceOf(Campaign);
+      expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
+    });
+
+    it('both SMS and push fire when both repos are provided and have subscribers', async () => {
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(testMerchant);
+      vi.mocked(mockCustomerRepo.findByMerchant).mockResolvedValue({
+        items: [Customer.create(new PhoneNumber('0501111111'))],
+        count: 1,
+        nextToken: undefined,
+      });
+      vi.mocked(mockPushSubRepo.findAll).mockResolvedValue([makePushSubscription('android')]);
+
+      await useCaseWithPush.execute({
+        action: 'create',
+        merchantId,
+        type: 'CUSTOM',
+        name: 'Combined Sale',
+        startDate: '2026-06-01T00:00:00.000Z',
+        endDate: '2026-08-31T23:59:59.000Z',
+        multiplier: 2.0,
+      });
+
+      expect(mockSmsPublisher.publishBatch).toHaveBeenCalledTimes(1);
+      expect(mockPushService.sendBatch).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('campaign update', () => {
+    it('should update campaign multiplier and call atomicWrite with updated campaign', async () => {
+      const campaign = Campaign.create(merchantId, 'CUSTOM', {
+        name: 'Original Sale',
+        description: 'Desc',
+        startDate: new Date('2026-06-01'),
+        endDate: new Date('2026-08-31'),
+        multiplier: 2.0,
+      });
+      vi.mocked(mockCampaignRepo.findByMerchant).mockResolvedValue({
+        items: [campaign],
+        count: 1,
+        nextToken: undefined,
+      });
+
+      const result = await useCase.execute({
+        action: 'update',
+        merchantId,
+        campaignId: campaign.getCampaignId(),
+        multiplier: 3,
+      });
+
+      expect(result).toBeInstanceOf(Campaign);
+      const updated = result as Campaign;
+      expect(updated.getMultiplier()).toBe(3);
+      expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw NotFoundError when campaignId is missing on update', async () => {
+      await expect(
+        useCase.execute({
+          action: 'update',
+          merchantId,
+        }),
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should throw NotFoundError when campaign does not exist on update', async () => {
+      vi.mocked(mockCampaignRepo.findByMerchant).mockResolvedValue({
+        items: [],
+        count: 0,
+        nextToken: undefined,
+      });
+
+      await expect(
+        useCase.execute({
+          action: 'update',
+          merchantId,
+          campaignId: 'nonexistent_id',
+          multiplier: 3,
         }),
       ).rejects.toThrow(NotFoundError);
     });
