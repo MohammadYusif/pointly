@@ -131,6 +131,13 @@
     "enrolled": "تاريخ التسجيل",
     "recordPurchase": "تسجيل عملية شراء",
     "redeemPoints": "استبدال النقاط",
+    "giftPoints": "منح النقاط",
+    "giftPointsDescription": "منح نقاط التاجر مباشرةً لرصيد هذا العميل.",
+    "pointsToGift": "النقاط المُهداة",
+    "giftNote": "ملاحظة",
+    "giftNotePlaceholder": "مكافأة عيد الميلاد، مكافأة الولاء...",
+    "confirmGift": "تأكيد الهدية",
+    "giftSuccess": "تم منح {{points}} نقطة بنجاح",
     "exportCSV": "تصدير CSV",
     "phonePlaceholder": "+966 5XX XXX XXXX",
     "transactions": "عملية"

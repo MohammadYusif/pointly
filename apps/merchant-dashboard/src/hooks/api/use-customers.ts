@@ -1,4 +1,5 @@
 import { customerApi, merchantApi } from '@/lib/api';
+import type { MerchantGiftPointsRequest } from '@/types/api';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useCustomerByPhone(phone: string) {
@@ -55,6 +56,23 @@ export function useRegisterCustomer() {
       merchantApi.registerCustomer(merchantId, phone),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer'] });
+    },
+  });
+}
+
+export function useMerchantGiftPoints() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      merchantId,
+      data,
+    }: {
+      merchantId: string;
+      data: MerchantGiftPointsRequest;
+    }) => merchantApi.giftPoints(merchantId, data),
+    onSuccess: (_result, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['customer', variables.data.customerId] });
     },
   });
 }

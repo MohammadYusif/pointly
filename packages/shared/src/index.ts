@@ -62,6 +62,8 @@ export type {
   WebhookEventType,
   WebhookConfigResponse,
   GiftPointsRequest,
+  MerchantGiftPointsRequest,
+  MerchantGiftPointsResponse,
   PointsBreakdown,
   ApiResponse,
   PlatformCounts,

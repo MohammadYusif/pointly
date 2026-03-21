@@ -2,11 +2,27 @@
 
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { useCustomerById, useInfiniteCustomerTransactions, useMerchant } from '@/hooks/api';
+import {
+  useCustomerById,
+  useInfiniteCustomerTransactions,
+  useMerchant,
+  useMerchantGiftPoints,
+} from '@/hooks/api';
 import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
-import { Button, useRTL } from '@pointly/ui';
-import { ArrowLeft, ArrowRight, Receipt, ShoppingCart } from 'lucide-react';
+import {
+  Button,
+  Input,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  useRTL,
+} from '@pointly/ui';
+import { ArrowLeft, ArrowRight, Gift, Receipt, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -59,6 +75,36 @@ export default function CustomerDetailPage() {
 
   const BackIcon = language === 'ar' ? ArrowRight : ArrowLeft;
 
+  const giftMutation = useMerchantGiftPoints();
+  const [giftPoints, setGiftPoints] = useState('');
+  const [giftNote, setGiftNote] = useState('');
+  const [giftSheetOpen, setGiftSheetOpen] = useState(false);
+
+  const handleGiftSubmit = async () => {
+    const points = Number.parseInt(giftPoints, 10);
+    if (!merchantData?.merchantId || !customerId || Number.isNaN(points) || points <= 0) {
+      toast.error(t('errors.required'));
+      return;
+    }
+    try {
+      await giftMutation.mutateAsync({
+        merchantId: merchantData.merchantId,
+        data: {
+          customerId,
+          points,
+          idempotencyKey: crypto.randomUUID(),
+          ...(giftNote.trim() ? { note: giftNote.trim() } : {}),
+        },
+      });
+      toast.success(t('customer.giftSuccess', { points }));
+      setGiftPoints('');
+      setGiftNote('');
+      setGiftSheetOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('errors.serverError'));
+    }
+  };
+
   if (!customerId) {
     return (
       <DashboardLayout>
@@ -105,6 +151,57 @@ export default function CustomerDetailPage() {
                 {t('customer.redeemPoints')}
               </Button>
             </Link>
+            <Sheet open={giftSheetOpen} onOpenChange={setGiftSheetOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline">
+                  <Gift className="h-4 w-4 me-2" />
+                  {t('customer.giftPoints')}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                <SheetHeader>
+                  <SheetTitle>{t('customer.giftPoints')}</SheetTitle>
+                  <SheetDescription>{t('customer.giftPointsDescription')}</SheetDescription>
+                </SheetHeader>
+                <div className="flex flex-col gap-4 py-4">
+                  <div className="flex flex-col gap-1">
+                    <label htmlFor="gift-points" className="text-sm font-medium">
+                      {t('customer.pointsToGift')}
+                    </label>
+                    <Input
+                      id="gift-points"
+                      type="number"
+                      min="1"
+                      value={giftPoints}
+                      onChange={(e) => setGiftPoints(e.target.value)}
+                      placeholder="100"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label htmlFor="gift-note" className="text-sm font-medium">
+                      {t('customer.giftNote')}{' '}
+                      <span className="text-muted-foreground">({t('common.optional')})</span>
+                    </label>
+                    <Input
+                      id="gift-note"
+                      type="text"
+                      value={giftNote}
+                      onChange={(e) => setGiftNote(e.target.value)}
+                      placeholder={t('customer.giftNotePlaceholder')}
+                      maxLength={200}
+                    />
+                  </div>
+                </div>
+                <SheetFooter>
+                  <Button
+                    onClick={handleGiftSubmit}
+                    disabled={giftMutation.isPending || !giftPoints}
+                  >
+                    {giftMutation.isPending ? t('common.loading') : t('customer.confirmGift')}
+                  </Button>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
           </div>
 
           <ErrorBoundary>

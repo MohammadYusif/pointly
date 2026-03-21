@@ -397,6 +397,21 @@ export interface GiftPointsRequest {
   idempotencyKey: string;
 }
 
+// --- Merchant Gift Points ---
+
+export interface MerchantGiftPointsRequest {
+  customerId: string;
+  points: number;
+  idempotencyKey: string;
+  note?: string;
+}
+
+export interface MerchantGiftPointsResponse {
+  customerId: string;
+  merchantPointsBalanceAfter: number;
+  pointsGifted: number;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;

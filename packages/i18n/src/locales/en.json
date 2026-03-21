@@ -131,6 +131,13 @@
     "enrolled": "Enrolled",
     "recordPurchase": "Record Purchase",
     "redeemPoints": "Redeem Points",
+    "giftPoints": "Gift Points",
+    "giftPointsDescription": "Gift merchant points directly to this customer's balance.",
+    "pointsToGift": "Points to Gift",
+    "giftNote": "Note",
+    "giftNotePlaceholder": "Birthday bonus, loyalty reward...",
+    "confirmGift": "Confirm Gift",
+    "giftSuccess": "Successfully gifted {{points}} points",
     "exportCSV": "Export CSV",
     "phonePlaceholder": "+966 5XX XXX XXXX",
     "transactions": "transactions"

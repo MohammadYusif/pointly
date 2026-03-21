@@ -15,6 +15,7 @@ export {
   useInfiniteCustomerTransactions,
   useRegisterCustomer,
   useCustomerByPhoneLookup,
+  useMerchantGiftPoints,
 } from './use-customers';
 export {
   useRecordPurchase,

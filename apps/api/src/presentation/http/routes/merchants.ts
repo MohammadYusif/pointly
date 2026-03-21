@@ -567,6 +567,43 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
     },
   );
 
+  // POST /:merchantId/gift-points — Gift merchant-scoped points to an enrolled customer
+  server.post(
+    '/:merchantId/gift-points',
+    async (
+      request: FastifyRequest<{
+        Params: { merchantId: string };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      enforceMerchantAccess(request);
+      const { merchantId } = request.params;
+
+      const giftSchema = z.object({
+        customerId: z.string().min(1),
+        points: z.number().int().positive(),
+        idempotencyKey: z.string().min(1),
+        note: z.string().max(200).optional(),
+      });
+
+      const parsed = giftSchema.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.status(400).send({ success: false, error: parsed.error.issues[0]?.message });
+      }
+
+      const container = getContainer();
+      const result = await container.merchantGiftPointsUseCase.execute({
+        merchantId,
+        customerId: parsed.data.customerId,
+        points: parsed.data.points,
+        idempotencyKey: parsed.data.idempotencyKey,
+        note: parsed.data.note,
+      });
+
+      return reply.send({ success: true, data: result });
+    },
+  );
+
   // POST /:merchantId/verify-qr — Verify customer QR code
   server.post(
     '/:merchantId/verify-qr',

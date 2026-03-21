@@ -21,6 +21,7 @@ import { ManageCampaignUseCase } from '../../application/use-cases/ManageCampaig
 import { ManagePerkUseCase } from '../../application/use-cases/ManagePerkUseCase';
 import { ManagePushSubscriptionUseCase } from '../../application/use-cases/ManagePushSubscriptionUseCase';
 import { ManageWalletPassUseCase } from '../../application/use-cases/ManageWalletPassUseCase';
+import { MerchantGiftPointsUseCase } from '../../application/use-cases/MerchantGiftPointsUseCase';
 import { ProcessMonthlyTierResetUseCase } from '../../application/use-cases/ProcessMonthlyTierResetUseCase';
 import { ProcessPointsDecayUseCase } from '../../application/use-cases/ProcessPointsDecayUseCase';
 import { RecordPurchaseUseCase } from '../../application/use-cases/RecordPurchaseUseCase';
@@ -77,6 +78,7 @@ export interface Container {
   getCustomerPerksUseCase: GetCustomerPerksUseCase;
   getCustomerInsightsUseCase: GetCustomerInsightsUseCase;
   giftPointsUseCase: GiftPointsUseCase;
+  merchantGiftPointsUseCase: MerchantGiftPointsUseCase;
 }
 
 let container: Container | null = null;
@@ -204,6 +206,13 @@ export function createContainer(): Container {
     (items) => transactionalWriter.writeAll(items),
   );
 
+  const merchantGiftPointsUseCase = new MerchantGiftPointsUseCase(
+    customerRepository,
+    transactionRepository,
+    idempotencyService,
+    (items) => transactionalWriter.writeAll(items),
+  );
+
   return {
     customerRepository,
     merchantRepository,
@@ -233,6 +242,7 @@ export function createContainer(): Container {
     getCustomerPerksUseCase,
     getCustomerInsightsUseCase,
     giftPointsUseCase,
+    merchantGiftPointsUseCase,
   };
 }
 

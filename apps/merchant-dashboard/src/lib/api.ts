@@ -4,6 +4,8 @@ import type {
   CampaignType,
   CustomerInsights,
   CustomerResponse,
+  MerchantGiftPointsRequest,
+  MerchantGiftPointsResponse,
   MerchantPerk,
   MerchantResponse,
   MerchantScopedCustomerResponse,
@@ -90,6 +92,12 @@ export const merchantApi = {
     fetchApi<MerchantScopedCustomerResponse>(`/v1/merchants/${merchantId}/register-customer`, {
       method: 'POST',
       body: JSON.stringify({ phone, ...(name && { name }) }),
+    }),
+
+  giftPoints: (merchantId: string, data: MerchantGiftPointsRequest) =>
+    fetchApi<MerchantGiftPointsResponse>(`/v1/merchants/${merchantId}/gift-points`, {
+      method: 'POST',
+      body: JSON.stringify(data),
     }),
 };
 
