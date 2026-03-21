@@ -7,7 +7,7 @@
 ## Tech Stack
 
 - **API**: Fastify 5 on AWS Lambda (Node 20), DynamoDB, Clean/DDD architecture
-- **Dashboards**: Next.js 16 (merchant), Next.js 15 (customer portal + landing), React 18/19
+- **Dashboards**: Next.js 15 (merchant + customer portal + landing), React 18/19
 - **Infrastructure**: Terraform — 7 modules, AWS `me-south-1` (Bahrain)
 - **Monorepo**: pnpm 10+ / Turbo
 - **Linter**: Biome 1.9.4 — no ESLint, no Prettier
@@ -30,6 +30,7 @@ apps/landing/              → apps/landing/CLAUDE.md
 packages/shared/           → packages/shared/CLAUDE.md
 packages/ui/               → packages/ui/CLAUDE.md
 packages/infrastructure/   → packages/infrastructure/CLAUDE.md
+packages/http-client/      → no sub-CLAUDE.md (see packages/shared/CLAUDE.md for usage)
 ```
 
 ## RPI Workflow (MANDATORY for non-trivial tasks)
@@ -65,10 +66,15 @@ Run `/rpi` to orchestrate all three phases, or invoke phases individually.
 ❌ FORBIDDEN — touching >2 files without a research phase
 ❌ FORBIDDEN — committing with Biome errors or TypeScript errors
 ❌ FORBIDDEN — redefining types that exist in @pointly/shared
+❌ FORBIDDEN — starting dev servers or using preview tools to verify changes
 ✅ REQUIRED  — read sub-CLAUDE.md before touching any app
 ✅ REQUIRED  — commit after every successful phase gate
 ✅ REQUIRED  — run pnpm check before every commit
 ```
+
+> **No dev server verification**: Do NOT use `preview_start` or any preview tools after
+> making changes. Verification is done via `pnpm check`, `pnpm type-check`, and
+> `pnpm --filter @pointly/api test` only. Never launch a dev server to check UI changes.
 
 ## Agent Architecture
 
