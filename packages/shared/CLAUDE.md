@@ -39,10 +39,11 @@ DEFAULT_REDEMPTION_RATE = 0.01  // 0.01 SAR per point
 Frontend mirror of `apps/api/src/domain/config/TierConfig.ts`. **Must stay in sync manually** if tier thresholds change.
 
 ```ts
-CUSTOMER_TIERS       // Record of tier level → { displayName, monthlyMinimum, earningMultiplier, color, tailwindColor }
-TIER_ORDER           // ['BRONZE', 'GOLD', 'PLATINUM', 'DIAMOND'] — ordered low to high
-getTierColor(tier)   // returns Tailwind class e.g. 'text-yellow-600' — accepts 'GOLD' or 'Gold'
-getTierTarget(tier)  // returns monthlyMinimum of the next tier (0 if already Diamond)
+CUSTOMER_TIERS        // Record of tier level → { displayName, monthlyMinimum, earningMultiplier, color, tailwindColor }
+TIER_ORDER            // ['BRONZE', 'GOLD', 'PLATINUM', 'DIAMOND'] — ordered low to high
+getTierColor(tier)    // returns Tailwind text class e.g. 'text-yellow-600' — accepts 'GOLD' or 'Gold'
+getTierBgColor(tier)  // returns Tailwind bg class e.g. 'bg-yellow-100' — use for tier badge backgrounds
+getTierTarget(tier)   // returns monthlyMinimum of the next tier (0 if already Diamond)
 ```
 
 ### Phone Utilities (`phone.ts`)
@@ -78,10 +79,14 @@ Key interfaces used by both frontends:
 | `TransactionResponse` | Single transaction record |
 | `RecordPurchaseResponse` | Response after recording a purchase (includes `tierUpgrade`, `pointsToNextTier`) |
 | `PaginatedResponse<T>` | Paginated list with optional `nextToken` |
+| `ApiResponse<T>` | Generic wrapper `{ data: T }` — used as the standard fetch return type |
 | `AnalyticsData` | Summary + trends array for charts |
 | `MerchantPerk` / `CustomerPerkView` | Perk as seen by merchant vs customer |
 | `PublicMerchantSummary` | Minimal merchant info for customer-facing discovery |
 | `CustomerMerchantView` | Customer's view of an enrolled merchant |
+| `PlatformCounts` | `{ ios: number; android: number; web: number }` — push subscription breakdown per merchant |
+| `GiftPointsRequest` | `{ merchantId, points, idempotencyKey }` — `idempotencyKey` is required |
+| `ChallengeProgressResponse` | `{ weeklyVisitCount, weeklyVisitDates, lastStreakResetAt }` — note: no `streakCount` field |
 
 ### Badges (`badges.ts`)
 

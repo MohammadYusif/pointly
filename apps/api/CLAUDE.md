@@ -50,22 +50,66 @@ src/
 
 All routes under `/v1`. Auth scopes are applied at the registration level, not per-route.
 
-| Method | Path | Auth | Handler file |
-|--------|------|------|--------------|
-| GET | `/health` | Public | `routes/health.ts` |
-| POST | `/v1/customers` | Public | `routes/customerPublic.ts` |
-| GET | `/v1/customers/phone/:phone` | Public | `routes/customerPublic.ts` |
-| GET | `/v1/merchants/:id/public` | Public | `routes/merchantPublic.ts` |
-| GET | `/v1/me` | Customer JWT | `routes/customerSelf.ts` |
-| GET | `/v1/me/transactions` | Customer JWT | `routes/customerSelf.ts` |
-| GET | `/v1/me/qr` | Customer JWT | `routes/customerSelf.ts` |
-| POST | `/v1/purchases` | Merchant JWT | `routes/purchases.ts` |
-| POST | `/v1/purchases/redeem` | Merchant JWT | `routes/purchases.ts` |
-| GET | `/v1/customers/:id` | Merchant JWT | `routes/customers.ts` |
-| GET | `/v1/merchants/:id/customers` | Merchant JWT | `routes/customers.ts` |
-| GET | `/v1/merchants/:id/analytics` | Merchant JWT | `routes/merchants.ts` |
-| PATCH | `/v1/merchants/:id` | Merchant JWT | `routes/merchants.ts` |
-| POST | `/v1/merchants/:id/perks` | Merchant JWT | `routes/merchants.ts` |
+**Public routes:**
+| Method | Path | Handler file |
+|--------|------|--------------|
+| GET | `/health` | `routes/health.ts` |
+| POST | `/v1/customers` | `routes/customerPublic.ts` |
+| GET | `/v1/customers/phone/:phone` | `routes/customerPublic.ts` |
+| GET | `/v1/merchants/:id/public` | `routes/merchantPublic.ts` |
+| GET | `/v1/push/vapid-key` | `routes/push.ts` |
+
+**Customer JWT routes (`/v1/me/...`):**
+| Method | Path | Handler file |
+|--------|------|--------------|
+| GET | `/v1/me` | `routes/customerSelf.ts` |
+| PATCH | `/v1/me` | `routes/customerSelf.ts` |
+| DELETE | `/v1/me` | `routes/customerSelf.ts` |
+| POST | `/v1/me/setup` | `routes/customerSelf.ts` |
+| POST | `/v1/me/qr-code` | `routes/customerSelf.ts` |
+| GET | `/v1/me/transactions` | `routes/customerSelf.ts` |
+| GET | `/v1/me/perks` | `routes/customerSelf.ts` |
+| GET | `/v1/me/merchants` | `routes/customerSelf.ts` |
+| POST | `/v1/me/enroll` | `routes/customerSelf.ts` |
+| GET | `/v1/me/challenges` | `routes/customerSelf.ts` |
+| POST | `/v1/me/gift` | `routes/customerSelf.ts` |
+| POST | `/v1/me/consent/:merchantId` | `routes/customerSelf.ts` |
+| POST | `/v1/me/push-subscriptions` | `routes/push.ts` |
+| DELETE | `/v1/me/push-subscriptions` | `routes/push.ts` |
+| GET | `/v1/me/wallet/apple-pass` | `routes/wallet-pass.ts` |
+| GET | `/v1/me/wallet/google-link` | `routes/wallet-pass.ts` |
+
+**Merchant JWT routes:**
+| Method | Path | Handler file |
+|--------|------|--------------|
+| GET | `/v1/merchants/:id` | `routes/merchants.ts` |
+| PATCH | `/v1/merchants/:id` | `routes/merchants.ts` |
+| POST | `/v1/merchants/:id/logo-upload` | `routes/merchants.ts` |
+| POST | `/v1/merchants/:id/locations` | `routes/merchants.ts` |
+| GET | `/v1/merchants/:id/customers` | `routes/customers.ts` |
+| GET | `/v1/merchants/:id/transactions` | `routes/merchants.ts` |
+| GET | `/v1/merchants/:id/stats` | `routes/merchants.ts` |
+| GET | `/v1/merchants/:id/analytics` | `routes/merchants.ts` |
+| GET | `/v1/merchants/:id/analytics/locations/:locationId` | `routes/merchants.ts` |
+| GET | `/v1/merchants/:id/customer-insights` | `routes/merchants.ts` |
+| GET | `/v1/merchants/:id/perk-insights` | `routes/merchants.ts` |
+| GET | `/v1/merchants/:id/customers/tier-breakdown` | `routes/merchants.ts` |
+| POST | `/v1/merchants/:id/register-customer` | `routes/merchants.ts` |
+| POST | `/v1/merchants/:id/enroll-customer` | `routes/merchants.ts` |
+| GET | `/v1/merchants/:id/verify-qr` | `routes/merchants.ts` |
+| GET | `/v1/merchants/:id/push-stats` | `routes/push.ts` |
+| POST/PATCH/DELETE | `/v1/merchants/:id/perks` | `routes/merchants.ts` |
+| POST | `/v1/merchants/:id/campaigns` | `routes/campaigns.ts` |
+| GET/PATCH/DELETE | `/v1/merchants/:id/campaigns/:campaignId` | `routes/campaigns.ts` |
+| POST | `/v1/merchants/:id/webhooks` | `routes/webhooks.ts` |
+| GET | `/v1/merchants/:id/webhooks` | `routes/webhooks.ts` |
+| DELETE | `/v1/merchants/:id/webhooks/:webhookId` | `routes/webhooks.ts` |
+| POST | `/v1/purchases` | `routes/purchases.ts` |
+| POST | `/v1/purchases/redeem` | `routes/purchases.ts` |
+| GET | `/v1/purchases/:id` | `routes/purchases.ts` |
+| GET | `/v1/customers/:id` | `routes/customers.ts` |
+| GET | `/v1/customers/:id/transactions` | `routes/customers.ts` |
+| GET | `/v1/customers/:id/stats` | `routes/customers.ts` |
 
 ## Use Cases
 
@@ -77,9 +121,15 @@ All live in `application/use-cases/`. Each has a single `execute()` method.
 | `ApproveConsentUseCase` | POST `/v1/me/consent/:merchantId` |
 | `RecordPurchaseUseCase` | POST `/v1/purchases` |
 | `RedeemPointsUseCase` | POST `/v1/purchases/redeem` |
-| `GenerateQRCodeUseCase` | GET `/v1/me/qr` |
+| `GenerateQRCodeUseCase` | POST `/v1/me/qr-code` |
 | `ManagePerkUseCase` | POST/PATCH/DELETE `/v1/merchants/:id/perks` |
+| `ManageCampaignUseCase` | POST/PATCH/DELETE `/v1/merchants/:id/campaigns` |
 | `GetAnalyticsUseCase` | GET `/v1/merchants/:id/analytics` |
+| `GetCustomerPerksUseCase` | GET `/v1/me/perks` |
+| `GetCustomerInsightsUseCase` | GET `/v1/merchants/:id/customer-insights` |
+| `ManagePushSubscriptionUseCase` | POST/DELETE `/v1/me/push-subscriptions`, GET `/v1/push/vapid-key`, GET `/v1/merchants/:id/push-stats` |
+| `ManageWalletPassUseCase` | GET `/v1/me/wallet/apple-pass`, GET `/v1/me/wallet/google-link` |
+| `CheckChallengeEligibilityUseCase` | GET `/v1/me/challenges` |
 | `ProcessPointsDecayUseCase` | `scheduled-decay.ts` (EventBridge monthly) |
 | `ProcessMonthlyTierResetUseCase` | `scheduled-tier-reset.ts` (EventBridge monthly) |
 
@@ -97,15 +147,38 @@ USER_LEDGER_TABLE       # DynamoDB: customers + merchants (same table, PK differ
 TRANSACTION_TABLE
 IDEMPOTENCY_TABLE
 QR_NONCE_TABLE
-PENDING_CONSENTS_TABLE
+PENDING_CONSENTS_TABLE  # defaults to 'pointly-pending-consents' if absent
 SMS_QUOTA_TABLE
 SMS_QUEUE_URL           # SQS queue for SMS dispatch
+WALLET_PASSES_TABLE     # DynamoDB: push subscriptions + wallet pass data (defaults to 'pointly-wallet-passes')
 
 # Optional (Cognito — required in production)
 MERCHANT_USER_POOL_ID
 MERCHANT_USER_POOL_CLIENT_ID
 CUSTOMER_USER_POOL_ID
 CUSTOMER_USER_POOL_CLIENT_ID
+
+# Optional — Web Push (VAPID)
+VAPID_PUBLIC_KEY
+VAPID_PRIVATE_KEY
+VAPID_SUBJECT           # e.g. mailto:admin@pointly.sa
+
+# Optional — Apple Wallet (all required together if Apple pass enabled)
+APPLE_PASS_CERT_PEM
+APPLE_PASS_KEY_PEM
+APPLE_PASS_KEY_PASSPHRASE
+APPLE_TEAM_ID
+APPLE_PASS_TYPE_ID
+APPLE_WWDR_PEM
+
+# Optional — Google Wallet
+GOOGLE_WALLET_ISSUER_ID
+GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL
+GOOGLE_WALLET_PRIVATE_KEY
+
+# Optional — S3 merchant logo assets
+MERCHANT_ASSETS_BUCKET
+MERCHANT_ASSETS_URL     # CloudFront URL prefix for serving logo assets
 
 # Local dev
 DYNAMODB_ENDPOINT       # e.g. http://localhost:8000 (set by docker-compose)
@@ -155,3 +228,6 @@ Three separate esbuild bundles (no shared code at runtime):
 - `getContainer()` is a singleton per Lambda warm instance — `resetContainer()` in tests to avoid state leakage
 - Phone numbers stored in E.164 format (`+966XXXXXXXXX`) — use `normalizePhone()` from `@pointly/shared` before lookup
 - DynamoDB `USER_LEDGER_TABLE` holds both Customers and Merchants — PK prefix differentiates (`CUSTOMER#` vs `MERCHANT#`)
+- `@pointly/api` does NOT depend on `@pointly/shared` — domain types (`PerkType`, `WalletConfig`, `CampaignType`, etc.) are intentionally local to keep the Lambda bundle self-contained
+- `WALLET_PASSES_TABLE` stores both push subscription records (`PK: CUSTOMER#<id> SK: PUSH#<hash>`) and merchant-keyed push index records (`PK: MERCHANT_PUSH#<merchantId> SK: CUSTOMER#<id>#PUSH#<hash>`) — do not use `ScanCommand` for per-merchant queries; use `QueryCommand` on the merchant-keyed PK
+- Apple/Google Wallet generation returns a 501 gracefully if the relevant env vars are absent — no crash

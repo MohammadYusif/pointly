@@ -1,6 +1,6 @@
 # Merchant Dashboard – `apps/merchant-dashboard`
 
-Next.js 16 admin panel for merchants. Merchants log in with email/password (Cognito), then manage customers, record purchases, redeem points, and view analytics.
+Next.js 15 admin panel for merchants. Merchants log in with email/password (Cognito), then manage customers, record purchases, redeem points, and view analytics.
 
 ## Commands
 
@@ -25,7 +25,8 @@ src/
     transactions/page.tsx   # All transactions with filters
     manual-entry/page.tsx   # Record purchase by phone number
     redeem/page.tsx         # Redeem points for a customer
-    settings/page.tsx       # Merchant profile, locations, perks
+    settings/page.tsx       # Merchant profile, locations, perks, wallet card branding, push stats
+    marketing/page.tsx      # Campaign management + push notification targeting
     billing/page.tsx        # Billing info (static placeholder)
   components/
     DashboardLayout.tsx     # Sidebar nav + header shell
@@ -36,17 +37,20 @@ src/
     Logo.tsx                # Pointly logo component
   hooks/api/                # TanStack Query hooks (all API calls go here)
     use-analytics.ts
+    use-campaigns.ts
     use-customers.ts
     use-merchant.ts
     use-purchases.ts
+    use-wallet.ts
+    use-webhooks.ts
   lib/
-    api.ts          # All API client functions (merchantApi, customerApi, purchaseApi, perkApi)
+    api.ts          # All API client functions (merchantApi, customerApi, purchaseApi, perkApi, campaignApi, webhookApi, pushApi)
     auth.ts         # Cognito session helpers (signIn, signOut, getCurrentSession, getAccessToken)
     auth-context.tsx # AuthProvider + useAuth hook
     receipt-pdf.ts  # jsPDF receipt generation
     utils.ts        # cn() helper
   types/
-    api.ts          # TypeScript types mirroring API response shapes
+    api.ts          # Re-export relay — imports types from @pointly/shared and re-exports them (not a local type definition file)
 ```
 
 ## Auth Flow
@@ -83,11 +87,13 @@ All API calls go through `fetchApi()`, which:
 3. Auto-calls `signOut()` on 401
 
 Exported namespaces:
-- `merchantApi` — `getById`, `getCustomers`, `getTransactions`, `getStats`, `getAnalytics`, `getLocationAnalytics`, `registerCustomer`, `getPendingConsents`
+- `merchantApi` — `getById`, `getCustomers`, `getTransactions`, `getStats`, `getAnalytics`, `getLocationAnalytics`, `registerCustomer`, `getPendingConsents`, `getCustomerInsights`, `getPerkInsights`, `getTierBreakdown`, `getCustomerConsent`, `update`, `addLocation`, `uploadLogo`
 - `customerApi` — `getById`, `getByPhone`, `create`, `getTransactions`, `getStats`
 - `purchaseApi` — `record`, `getById`, `redeem`
 - `perkApi` — `getPerks`, `createPerk`, `updatePerk`, `deletePerk`
-- `merchantUpdateApi` — `update`, `addLocation`
+- `campaignApi` — `create`, `getById`, `update`, `delete`
+- `webhookApi` — `create`, `list`, `delete`
+- `pushApi` — `getStats` (platform counts per merchant)
 
 ## Data Fetching (TanStack Query v5)
 
@@ -138,7 +144,8 @@ Renders a styled receipt. `receipt-pdf.ts` converts the DOM to PDF using jsPDF. 
 | `/transactions` | Full transaction log | `useMerchantTransactions` |
 | `/manual-entry` | Record purchase by phone | `useRecordPurchase` |
 | `/redeem` | Point redemption flow | `useRedeemPoints` |
-| `/settings` | Profile, locations, perks | `useMerchant`, `usePerks` |
+| `/settings` | Profile, locations, perks, wallet branding, push stats | `useMerchant`, `usePerks`, `usePushStats` |
+| `/marketing` | Campaign management + push targeting | `useCampaigns` |
 
 ## Gotchas
 

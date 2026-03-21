@@ -23,6 +23,7 @@ src/
     history/page.tsx   # Transaction history with pagination
     enroll/page.tsx    # Browse & enroll with merchants
     profile/page.tsx   # Edit name, view enrolled merchants
+    wallet/page.tsx    # Apple/Google wallet pass download
     terms/page.tsx     # Static terms of service
     privacy/page.tsx   # Static privacy policy
     layout.tsx         # Root layout — RTL/LTR, IBM Plex Sans Arabic, Providers
@@ -32,6 +33,16 @@ src/
     CustomerLayout.tsx # Bottom nav shell + auth guard + session guard
     PerksSection.tsx   # Shows available perks for each enrolled merchant
     PointlyLogo.tsx    # Inline SVG logo (no external asset import needed)
+  hooks/api/           # TanStack Query hooks — all data fetching goes through here
+    use-challenges.ts  # useGetChallenges()
+    use-customer.ts    # useGetCustomer(), useUpdateCustomer()
+    use-delete-account.ts # useDeleteAccount()
+    use-gift.ts        # useGiftPoints()
+    use-merchants.ts   # useGetMyMerchants(), useGetPublicMerchants(), useEnrollMerchant()
+    use-notifications.ts # usePushNotifications() — VAPID key + subscription management
+    use-perks.ts       # useGetMyPerks()
+    use-qr.ts          # useGenerateQRCode()
+    use-transactions.ts # useGetMyTransactions()
   lib/
     auth.ts            # Cognito OTP helpers
     api.ts             # All API calls (customer-scoped /v1/me/* routes)
@@ -84,12 +95,20 @@ On 401, calls `signOut()` and redirects to `/?expired=1` (`window.location.repla
 | `getCustomer()` | GET `/v1/me` |
 | `getCustomerTransactions(params)` | GET `/v1/me/transactions` |
 | `updateCustomer(data)` | PATCH `/v1/me` |
+| `deleteAccount()` | DELETE `/v1/me` |
 | `generateQRCode()` | POST `/v1/me/qr-code` |
 | `getMyPerks()` | GET `/v1/me/perks` |
+| `getMyChallenges()` | GET `/v1/me/challenges` |
+| `giftPoints(data)` | POST `/v1/me/gift` |
 | `completeProfile(data)` | POST `/v1/me/setup` |
 | `getMyMerchants()` | GET `/v1/me/merchants` |
 | `getPublicMerchants()` | GET `/v1/merchants` |
 | `enrollMerchant(merchantId)` | POST `/v1/me/enroll` |
+| `pushApi.getVapidKey()` | GET `/v1/push/vapid-key` |
+| `pushApi.subscribe(sub)` | POST `/v1/me/push-subscriptions` |
+| `pushApi.unsubscribe()` | DELETE `/v1/me/push-subscriptions` |
+| `walletApi.getApplePass()` | GET `/v1/me/wallet/apple-pass` |
+| `walletApi.getGoogleLink()` | GET `/v1/me/wallet/google-link` |
 
 ## i18n & RTL
 
@@ -124,6 +143,7 @@ On 401, calls `signOut()` and redirects to `/?expired=1` (`window.location.repla
 | `/history` | Paginated transaction list | Yes |
 | `/enroll` | Browse merchants + enroll | Yes |
 | `/profile` | Edit name, view merchant enrollments | Yes |
+| `/wallet` | Download Apple/Google Wallet pass | Yes |
 | `/terms` | Terms of service (static) | No |
 | `/privacy` | Privacy policy (static) | No |
 
