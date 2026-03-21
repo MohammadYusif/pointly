@@ -289,6 +289,10 @@ interface CampaignFormFieldsProps {
   setMaxPoints: (v: string) => void;
   message: string;
   setMessage: (v: string) => void;
+  winBackDays?: string;
+  setWinBackDays?: (v: string) => void;
+  welcomeDays?: string;
+  setWelcomeDays?: (v: string) => void;
   tierBreakdown?: Record<string, number>;
   showTypeSpecificHint?: string;
 }
@@ -315,6 +319,10 @@ function CampaignFormFields({
   setMaxPoints,
   message,
   setMessage,
+  winBackDays,
+  setWinBackDays,
+  welcomeDays,
+  setWelcomeDays,
   tierBreakdown,
   showTypeSpecificHint,
 }: CampaignFormFieldsProps) {
@@ -368,11 +376,55 @@ function CampaignFormFields({
         </div>
       )}
 
-      {/* Type-specific hint (e.g. birthday) */}
+      {/* Type-specific hint (e.g. birthday, win-back, welcome) */}
       {showTypeSpecificHint && (
         <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm text-primary">
           <Gift className="w-4 h-4 mt-0.5 shrink-0" />
           <p>{showTypeSpecificHint}</p>
+        </div>
+      )}
+
+      {/* Win-back: configurable inactivity threshold */}
+      {setWinBackDays !== undefined && (
+        <div>
+          <label
+            htmlFor="win-back-days"
+            className="text-xs font-medium text-muted-foreground block mb-1.5 uppercase tracking-wide"
+          >
+            {t('campaigns.winBackDays')}
+          </label>
+          <Input
+            id="win-back-days"
+            type="number"
+            min="1"
+            max="365"
+            placeholder="60"
+            value={winBackDays ?? ''}
+            onChange={(e) => setWinBackDays(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground mt-1">{t('campaigns.winBackDaysHint')}</p>
+        </div>
+      )}
+
+      {/* Welcome: configurable enrollment window */}
+      {setWelcomeDays !== undefined && (
+        <div>
+          <label
+            htmlFor="welcome-days"
+            className="text-xs font-medium text-muted-foreground block mb-1.5 uppercase tracking-wide"
+          >
+            {t('campaigns.welcomeDays')}
+          </label>
+          <Input
+            id="welcome-days"
+            type="number"
+            min="1"
+            max="365"
+            placeholder="30"
+            value={welcomeDays ?? ''}
+            onChange={(e) => setWelcomeDays(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground mt-1">{t('campaigns.welcomeDaysHint')}</p>
         </div>
       )}
 
@@ -580,6 +632,8 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
   const [maxUses, setMaxUses] = useState('');
   const [minPurchase, setMinPurchase] = useState('');
   const [maxPoints, setMaxPoints] = useState('');
+  const [winBackDays, setWinBackDays] = useState('60');
+  const [welcomeDays, setWelcomeDays] = useState('30');
   const [enablePush, setEnablePush] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
 
@@ -616,6 +670,14 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
     if (isCustom && customDesc.trim()) payload.description = customDesc.trim();
     if (selectedTiers.length < ALL_TIERS.length) payload.targetTiers = selectedTiers;
     if (enablePush && platformFilter !== 'all') payload.platformFilter = platformFilter;
+    if (type === 'WIN_BACK') {
+      const parsed = Number.parseInt(winBackDays, 10);
+      if (parsed > 0) payload.winBackDays = parsed;
+    }
+    if (type === 'WELCOME') {
+      const parsed = Number.parseInt(welcomeDays, 10);
+      if (parsed > 0) payload.welcomeDays = parsed;
+    }
     return { ...payload, ...buildLimitsPayload(maxUses, minPurchase, maxPoints) };
   };
 
@@ -697,9 +759,19 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
             setMaxPoints={setMaxPoints}
             message={message}
             setMessage={setMessage}
+            winBackDays={selectedType === 'WIN_BACK' ? winBackDays : undefined}
+            setWinBackDays={selectedType === 'WIN_BACK' ? setWinBackDays : undefined}
+            welcomeDays={selectedType === 'WELCOME' ? welcomeDays : undefined}
+            setWelcomeDays={selectedType === 'WELCOME' ? setWelcomeDays : undefined}
             tierBreakdown={tierBreakdown as Record<string, number> | undefined}
             showTypeSpecificHint={
-              selectedType === 'BIRTHDAY_REWARD' ? t('campaigns.birthdayHint') : undefined
+              selectedType === 'BIRTHDAY_REWARD'
+                ? t('campaigns.birthdayHint')
+                : selectedType === 'WIN_BACK'
+                  ? t('campaigns.winBackHint', { days: winBackDays || '60' })
+                  : selectedType === 'WELCOME'
+                    ? t('campaigns.welcomeHint', { days: welcomeDays || '30' })
+                    : undefined
             }
           />
         )}
@@ -787,6 +859,8 @@ function EditCampaignForm({
   const [minPurchase, setMinPurchase] = useState(String(campaign.minPurchaseAmount ?? ''));
   const [maxPoints, setMaxPoints] = useState(String(campaign.maxPointsPerTransaction ?? ''));
   const [message, setMessage] = useState(campaign.message ?? '');
+  const [winBackDays, setWinBackDays] = useState(String(campaign.winBackDays ?? '60'));
+  const [welcomeDays, setWelcomeDays] = useState(String(campaign.welcomeDays ?? '30'));
 
   const { data: tierBreakdown } = useTierBreakdown();
 
@@ -813,6 +887,14 @@ function EditCampaignForm({
         ...buildLimitsPayload(maxUses, minPurchase, maxPoints),
       };
       if (message.trim()) data.message = message.trim();
+      if (campaign.type === 'WIN_BACK') {
+        const parsed = Number.parseInt(winBackDays, 10);
+        if (parsed > 0) data.winBackDays = parsed;
+      }
+      if (campaign.type === 'WELCOME') {
+        const parsed = Number.parseInt(welcomeDays, 10);
+        if (parsed > 0) data.welcomeDays = parsed;
+      }
 
       await updateCampaign.mutateAsync({
         campaignId: campaign.campaignId,
@@ -844,9 +926,19 @@ function EditCampaignForm({
         setMaxPoints={setMaxPoints}
         message={message}
         setMessage={setMessage}
+        winBackDays={campaign.type === 'WIN_BACK' ? winBackDays : undefined}
+        setWinBackDays={campaign.type === 'WIN_BACK' ? setWinBackDays : undefined}
+        welcomeDays={campaign.type === 'WELCOME' ? welcomeDays : undefined}
+        setWelcomeDays={campaign.type === 'WELCOME' ? setWelcomeDays : undefined}
         tierBreakdown={tierBreakdown as Record<string, number> | undefined}
         showTypeSpecificHint={
-          campaign.type === 'BIRTHDAY_REWARD' ? t('campaigns.birthdayHint') : undefined
+          campaign.type === 'BIRTHDAY_REWARD'
+            ? t('campaigns.birthdayHint')
+            : campaign.type === 'WIN_BACK'
+              ? t('campaigns.winBackHint', { days: winBackDays || '60' })
+              : campaign.type === 'WELCOME'
+                ? t('campaigns.welcomeHint', { days: welcomeDays || '30' })
+                : undefined
         }
       />
       <div className="flex gap-2">

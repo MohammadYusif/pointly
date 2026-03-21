@@ -530,6 +530,13 @@
     "minPurchaseShort": "Min SAR",
     "maxPointsShort": "Max pts",
     "birthdayHint": "Birthday campaigns apply when a customer's birthday falls within the date range. A 1-year window covers all birthdays year-round.",
+    "winBackDays": "Days since last visit",
+    "winBackDaysHint": "0 = unlimited",
+    "winBackHint": "Targets customers who haven't visited in at least {{days}} days.",
+    "welcomeDays": "Days since joining",
+    "welcomeDaysHint": "0 = unlimited",
+    "welcomeHint": "Targets customers who enrolled within the last {{days}} days.",
+    "campaignMessage": "Message to customer",
     "typeDesc": {
       "doublePoints": "Earn 2x points on every purchase",
       "triplePoints": "Earn 3x points for a limited time",
