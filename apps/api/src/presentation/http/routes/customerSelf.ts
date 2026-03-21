@@ -33,43 +33,6 @@ const setupSchema = z.object({
     .optional(),
 });
 
-/** Check if a perk type is eligible for a specific customer based on campaign-style rules */
-function isPerkEligibleForCustomer(
-  perkType: string,
-  // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
-  customerJSON: any,
-  merchantId: string,
-): boolean {
-  const now = new Date();
-
-  if (perkType === 'BIRTHDAY_REWARD') {
-    const dob = customerJSON.dateOfBirth;
-    if (!dob) return false;
-    return new Date(dob).getMonth() === now.getMonth();
-  }
-
-  if (perkType === 'WIN_BACK') {
-    // biome-ignore lint/suspicious/noExplicitAny: enrollment objects are untyped
-    const enrollment = customerJSON.enrollments.find((e: any) => e.merchantId === merchantId);
-    const lastTx = enrollment?.lastTransactionAt;
-    if (!lastTx) return true; // never transacted → eligible for win-back
-    const daysSince = (now.getTime() - new Date(lastTx).getTime()) / (1000 * 60 * 60 * 24);
-    return daysSince >= 60;
-  }
-
-  if (perkType === 'WELCOME_OFFER') {
-    // biome-ignore lint/suspicious/noExplicitAny: enrollment objects are untyped
-    const enrollment = customerJSON.enrollments.find((e: any) => e.merchantId === merchantId);
-    const enrolledAt = enrollment?.enrolledAt;
-    if (!enrolledAt) return false;
-    const daysSince = (now.getTime() - new Date(enrolledAt).getTime()) / (1000 * 60 * 60 * 24);
-    return daysSince <= 30;
-  }
-
-  // All other perk types (EARLY_ACCESS, EXCLUSIVE_PRODUCT, EVENT, HAPPY_HOUR, SPEND_BONUS, etc.)
-  return true;
-}
-
 export async function customerSelfRoutes(server: FastifyInstance): Promise<void> {
   // GET /v1/me — Get own customer profile
   server.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
@@ -213,127 +176,32 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
 
     const customerTierLevel = customer.getCurrentTier().getLevel();
     const customerTierRank = TIER_ORDER.indexOf(customerTierLevel);
+    const customerJSON = customer.toJSON();
+    // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
+    const enrolledMerchantIds = customerJSON.enrollments.map((e: any) => e.merchantId as string);
 
-    // Collect all enrolled merchants
-    const enrolledMerchantIds = customer
-      .toJSON()
-      // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
-      .enrollments.map((e: any) => e.merchantId as string);
+    const perks = await container.getCustomerPerksUseCase.execute({
+      customerId,
+      customerTierLevel,
+      customerTierRank,
+      enrolledMerchantIds,
+      customerJSON: {
+        ...(customerJSON.dateOfBirth && { dateOfBirth: customerJSON.dateOfBirth }),
+        enrollments: customerJSON.enrollments.map(
+          // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
+          (e: any) => {
+            const entry: { merchantId: string; enrolledAt: string; lastTransactionAt?: string } = {
+              merchantId: e.merchantId as string,
+              enrolledAt: e.enrolledAt as string,
+            };
+            if (e.lastTransactionAt) entry.lastTransactionAt = e.lastTransactionAt as string;
+            return entry;
+          },
+        ),
+      },
+    });
 
-    const perksView: Array<{
-      perkId: string;
-      type: string;
-      title: string;
-      description: string;
-      requiredTier: string;
-      capacityLimit?: number;
-      isUnlocked: boolean;
-      merchantId: string;
-      merchantName: string;
-      campaignId?: string;
-      campaignMultiplier?: number;
-      campaignEndDate?: string;
-      campaignMinPurchaseAmount?: number;
-      campaignMaxUsesPerCustomer?: number;
-      campaignUsesRemaining?: number;
-      campaignTerms?: string;
-      isExhausted?: boolean;
-    }> = [];
-
-    for (const merchantId of enrolledMerchantIds) {
-      const merchant = await container.merchantRepository.findById(merchantId);
-      if (!merchant) continue;
-
-      // Fetch campaigns for this merchant to enrich linked perks and filter expired ones
-      const campaignsResult = await container.campaignRepository.findByMerchant(merchantId);
-      const campaignByPerkId = new Map<string, (typeof campaignsResult.items)[number]>();
-      for (const c of campaignsResult.items) {
-        const perkId = c.getLinkedPerkId();
-        if (perkId) campaignByPerkId.set(perkId, c);
-      }
-
-      // Get campaign usage counts for this customer at this merchant (paginate to count all)
-      const useCounts = new Map<string, number>();
-      if (campaignByPerkId.size > 0) {
-        let txNextToken: string | undefined;
-        do {
-          const txOpts = txNextToken ? { limit: 200, nextToken: txNextToken } : { limit: 200 };
-          const txResult = await container.transactionRepository.findByCustomerAndMerchant(
-            customerId,
-            merchantId,
-            txOpts,
-          );
-          for (const tx of txResult.items) {
-            const meta = tx.getMetadata();
-            // biome-ignore lint/complexity/useLiteralKeys: TS noPropertyAccessFromIndexSignature requires bracket notation
-            const cId = meta['campaignId'];
-            if (typeof cId === 'string') {
-              useCounts.set(cId, (useCounts.get(cId) ?? 0) + 1);
-            }
-          }
-          txNextToken = txResult.nextToken;
-        } while (txNextToken);
-      }
-
-      const customerJSON = customer.toJSON();
-      const activePerks = merchant.getPerks().filter((p) => p.isActive);
-      for (const perk of activePerks) {
-        // Check if this perk is linked to a campaign
-        const linkedCampaign = campaignByPerkId.get(perk.id);
-
-        // Skip perks whose linked campaign has expired or is deactivated
-        if (linkedCampaign && (linkedCampaign.isExpired() || !linkedCampaign.getIsActive())) {
-          continue;
-        }
-
-        // Skip perks the customer isn't eligible for based on campaign-style rules
-        if (!isPerkEligibleForCustomer(perk.type, customerJSON, merchantId)) continue;
-
-        const requiredRank = TIER_ORDER.indexOf(perk.requiredTier);
-
-        // Build campaign enrichment fields
-        let campaignFields = {};
-        if (linkedCampaign) {
-          const campaignId = linkedCampaign.getCampaignId();
-          const maxUses = linkedCampaign.getMaxUsesPerCustomer();
-          const used = useCounts.get(campaignId) ?? 0;
-          const isExhausted = maxUses != null && maxUses > 0 && used >= maxUses;
-
-          campaignFields = {
-            campaignId,
-            campaignMultiplier: linkedCampaign.getMultiplier(),
-            campaignEndDate: linkedCampaign.getEndDate().toISOString(),
-            ...(linkedCampaign.getMinPurchaseAmount() != null && {
-              campaignMinPurchaseAmount: linkedCampaign.getMinPurchaseAmount(),
-            }),
-            ...(maxUses != null &&
-              maxUses > 0 && {
-                campaignMaxUsesPerCustomer: maxUses,
-                campaignUsesRemaining: Math.max(0, maxUses - used),
-              }),
-            ...(linkedCampaign.getTermsMessage() && {
-              campaignTerms: linkedCampaign.getTermsMessage(),
-            }),
-            isExhausted,
-          };
-        }
-
-        perksView.push({
-          perkId: perk.id,
-          type: perk.type,
-          title: perk.title,
-          description: perk.description,
-          requiredTier: perk.requiredTier,
-          ...(perk.capacityLimit !== undefined && { capacityLimit: perk.capacityLimit }),
-          isUnlocked: customerTierRank >= requiredRank,
-          merchantId,
-          merchantName: merchant.toJSON().businessName,
-          ...campaignFields,
-        });
-      }
-    }
-
-    return reply.send({ success: true, data: perksView });
+    return reply.send({ success: true, data: perks });
   });
 
   // POST /v1/me/setup — Complete profile after first OTP login (creates DynamoDB record)
