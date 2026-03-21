@@ -20,21 +20,35 @@ function makeMerchant(): Merchant {
 }
 
 function makeCampaign(overrides?: {
+  type?: 'CUSTOM' | 'WIN_BACK' | 'WELCOME';
   endDate?: Date;
   isActive?: boolean;
   linkedPerkId?: string;
   maxUsesPerCustomer?: number;
   minPurchaseAmount?: number;
   termsMessage?: string;
+  message?: string;
+  winBackDays?: number;
+  welcomeDays?: number;
 }): Campaign {
-  const campaign = Campaign.create(MERCHANT_ID, 'CUSTOM', {
-    name: 'Test Campaign',
-    description: 'Earn 2x points',
-    startDate: new Date(Date.now() - 1000 * 60 * 60),
-    endDate: overrides?.endDate ?? new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+  const type = overrides?.type ?? 'CUSTOM';
+  const campaign = Campaign.create(MERCHANT_ID, type, {
+    ...(type === 'CUSTOM' && {
+      name: 'Test Campaign',
+      description: 'Earn 2x points',
+      startDate: new Date(Date.now() - 1000 * 60 * 60),
+      endDate: overrides?.endDate ?? new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+    }),
+    ...(type !== 'CUSTOM' && {
+      startDate: new Date(Date.now() - 1000 * 60 * 60),
+      endDate: overrides?.endDate ?? new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+    }),
     multiplier: 2,
     maxUsesPerCustomer: overrides?.maxUsesPerCustomer,
     minPurchaseAmount: overrides?.minPurchaseAmount,
+    message: overrides?.message,
+    winBackDays: overrides?.winBackDays,
+    welcomeDays: overrides?.welcomeDays,
   });
   if (overrides?.linkedPerkId) campaign.setLinkedPerkId(overrides.linkedPerkId);
   if (overrides?.termsMessage) campaign.setTermsMessage(overrides.termsMessage);
@@ -381,6 +395,165 @@ describe('GetCustomerPerksUseCase', () => {
       expect(result).toHaveLength(1);
       expect(result[0]?.campaignId).toBeUndefined();
       expect(result[0]?.campaignMultiplier).toBeUndefined();
+    });
+
+    it('includes campaignMessage when linked campaign has a message', async () => {
+      const merchant = makeMerchant();
+      const perk = merchant.addPerk({
+        type: 'SPEND_BONUS',
+        title: 'Bonus points',
+        description: 'Earn more',
+        requiredTier: CustomerTierLevel.BRONZE,
+      });
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(merchant);
+
+      const campaign = makeCampaign({ linkedPerkId: perk.id, message: 'Enjoy double points!' });
+      vi.mocked(mockCampaignRepo.findByMerchant).mockResolvedValue({
+        items: [campaign],
+        count: 1,
+        nextToken: undefined,
+      });
+
+      const result = await useCase.execute(makeBaseRequest());
+
+      expect(result[0]?.campaignMessage).toBe('Enjoy double points!');
+    });
+
+    it('omits campaignMessage when linked campaign has no message', async () => {
+      const merchant = makeMerchant();
+      const perk = merchant.addPerk({
+        type: 'SPEND_BONUS',
+        title: 'Bonus points',
+        description: 'Earn more',
+        requiredTier: CustomerTierLevel.BRONZE,
+      });
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(merchant);
+
+      const campaign = makeCampaign({ linkedPerkId: perk.id });
+      vi.mocked(mockCampaignRepo.findByMerchant).mockResolvedValue({
+        items: [campaign],
+        count: 1,
+        nextToken: undefined,
+      });
+
+      const result = await useCase.execute(makeBaseRequest());
+
+      expect(result[0]?.campaignMessage).toBeUndefined();
+    });
+  });
+
+  describe('campaign eligibility delegation', () => {
+    it('WIN_BACK campaign with custom winBackDays: eligible when inactive long enough', async () => {
+      const merchant = makeMerchant();
+      const perk = merchant.addPerk({
+        type: 'WIN_BACK',
+        title: 'We miss you',
+        description: 'Come back',
+        requiredTier: CustomerTierLevel.BRONZE,
+      });
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(merchant);
+
+      const campaign = makeCampaign({ type: 'WIN_BACK', linkedPerkId: perk.id, winBackDays: 7 });
+      vi.mocked(mockCampaignRepo.findByMerchant).mockResolvedValue({
+        items: [campaign],
+        count: 1,
+        nextToken: undefined,
+      });
+
+      // 8 days since last transaction — exceeds the 7-day threshold
+      const lastTx = new Date(Date.now() - 1000 * 60 * 60 * 24 * 8).toISOString();
+      const result = await useCase.execute(
+        makeBaseRequest(CustomerTierLevel.BRONZE, { lastTransactionAt: lastTx }),
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.type).toBe('WIN_BACK');
+    });
+
+    it('WIN_BACK campaign with custom winBackDays: not eligible when recently active', async () => {
+      const merchant = makeMerchant();
+      const perk = merchant.addPerk({
+        type: 'WIN_BACK',
+        title: 'We miss you',
+        description: 'Come back',
+        requiredTier: CustomerTierLevel.BRONZE,
+      });
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(merchant);
+
+      const campaign = makeCampaign({ type: 'WIN_BACK', linkedPerkId: perk.id, winBackDays: 7 });
+      vi.mocked(mockCampaignRepo.findByMerchant).mockResolvedValue({
+        items: [campaign],
+        count: 1,
+        nextToken: undefined,
+      });
+
+      // 6 days since last transaction — within the 7-day threshold
+      const recentTx = new Date(Date.now() - 1000 * 60 * 60 * 24 * 6).toISOString();
+      const result = await useCase.execute(
+        makeBaseRequest(CustomerTierLevel.BRONZE, { lastTransactionAt: recentTx }),
+      );
+
+      expect(result).toHaveLength(0);
+    });
+
+    it('WELCOME campaign with custom welcomeDays: eligible when enrolled within window', async () => {
+      const merchant = makeMerchant();
+      const perk = merchant.addPerk({
+        type: 'WELCOME_OFFER',
+        title: 'Welcome',
+        description: 'New member bonus',
+        requiredTier: CustomerTierLevel.BRONZE,
+      });
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(merchant);
+
+      const campaign = makeCampaign({
+        type: 'WELCOME',
+        linkedPerkId: perk.id,
+        welcomeDays: 14,
+      });
+      vi.mocked(mockCampaignRepo.findByMerchant).mockResolvedValue({
+        items: [campaign],
+        count: 1,
+        nextToken: undefined,
+      });
+
+      // Enrolled 13 days ago — within the 14-day window
+      const recentEnrollment = new Date(Date.now() - 1000 * 60 * 60 * 24 * 13).toISOString();
+      const result = await useCase.execute(
+        makeBaseRequest(CustomerTierLevel.BRONZE, { enrolledAt: recentEnrollment }),
+      );
+
+      expect(result).toHaveLength(1);
+    });
+
+    it('WELCOME campaign with custom welcomeDays: not eligible when enrolled outside window', async () => {
+      const merchant = makeMerchant();
+      const perk = merchant.addPerk({
+        type: 'WELCOME_OFFER',
+        title: 'Welcome',
+        description: 'New member bonus',
+        requiredTier: CustomerTierLevel.BRONZE,
+      });
+      vi.mocked(mockMerchantRepo.findById).mockResolvedValue(merchant);
+
+      const campaign = makeCampaign({
+        type: 'WELCOME',
+        linkedPerkId: perk.id,
+        welcomeDays: 14,
+      });
+      vi.mocked(mockCampaignRepo.findByMerchant).mockResolvedValue({
+        items: [campaign],
+        count: 1,
+        nextToken: undefined,
+      });
+
+      // Enrolled 15 days ago — outside the 14-day window
+      const oldEnrollment = new Date(Date.now() - 1000 * 60 * 60 * 24 * 15).toISOString();
+      const result = await useCase.execute(
+        makeBaseRequest(CustomerTierLevel.BRONZE, { enrolledAt: oldEnrollment }),
+      );
+
+      expect(result).toHaveLength(0);
     });
   });
 

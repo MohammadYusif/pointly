@@ -1,4 +1,5 @@
 import { TIER_ORDER } from '../../domain/config/TierConfig.js';
+import type { CampaignEligibilityContext } from '../../domain/entities/Campaign.js';
 import type { ICampaignRepository } from '../repositories/ICampaignRepository.js';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository.js';
 import type { ITransactionRepository } from '../repositories/ITransactionRepository.js';
@@ -29,6 +30,7 @@ export interface PerkView {
   merchantId: string;
   merchantName: string;
   campaignId?: string;
+  campaignMessage?: string;
   campaignMultiplier?: number;
   campaignEndDate?: string;
   campaignMinPurchaseAmount?: number;
@@ -68,6 +70,26 @@ function isPerkEligibleForCustomer(
   }
 
   return true;
+}
+
+/**
+ * Builds the domain eligibility context for a customer at a specific merchant.
+ * Used to delegate eligibility decisions to the Campaign entity (DDD: entity owns rules).
+ */
+function buildEligibilityContext(
+  customerJSON: GetCustomerPerksRequest['customerJSON'],
+  merchantId: string,
+  customerTier: string,
+): CampaignEligibilityContext {
+  const enrollment = customerJSON.enrollments.find((e) => e.merchantId === merchantId);
+  return {
+    ...(customerJSON.dateOfBirth !== undefined && { dateOfBirth: customerJSON.dateOfBirth }),
+    enrolledAt: enrollment ? new Date(enrollment.enrolledAt) : new Date(0),
+    ...(enrollment?.lastTransactionAt !== undefined && {
+      lastTransactionAt: new Date(enrollment.lastTransactionAt),
+    }),
+    customerTier,
+  };
 }
 
 export class GetCustomerPerksUseCase {
@@ -123,7 +145,15 @@ export class GetCustomerPerksUseCase {
           continue;
         }
 
-        if (!isPerkEligibleForCustomer(perk.type, customerJSON, merchantId)) continue;
+        // Eligibility: campaign-linked perks delegate to the entity (which owns the rules
+        // and reads its own configurable winBackDays/welcomeDays). Standalone perks fall
+        // back to the type-based helper with default thresholds.
+        if (linkedCampaign) {
+          const ctx = buildEligibilityContext(customerJSON, merchantId, request.customerTierLevel);
+          if (!linkedCampaign.isEligibleForCustomer(ctx)) continue;
+        } else {
+          if (!isPerkEligibleForCustomer(perk.type, customerJSON, merchantId)) continue;
+        }
 
         const requiredRank = TIER_ORDER.indexOf(perk.requiredTier);
 
@@ -134,11 +164,13 @@ export class GetCustomerPerksUseCase {
           const used = useCounts.get(campaignId) ?? 0;
           const isExhausted = maxUses != null && maxUses > 0 && used >= maxUses;
 
+          const message = linkedCampaign.getMessage();
           const minPurchaseAmount = linkedCampaign.getMinPurchaseAmount();
           const termsMessage = linkedCampaign.getTermsMessage();
 
           campaignFields = {
             campaignId,
+            ...(message && { campaignMessage: message }),
             campaignMultiplier: linkedCampaign.getMultiplier(),
             campaignEndDate: linkedCampaign.getEndDate().toISOString(),
             ...(minPurchaseAmount != null && {
