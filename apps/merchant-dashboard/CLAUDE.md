@@ -155,3 +155,4 @@ Renders a styled receipt. `receipt-pdf.ts` converts the DOM to PDF using jsPDF. 
 - Phone normalisation: always call `normalizePhone()` (from `@pointly/shared`) before sending to API
 - Pagination: API returns `{ data: [...], nextToken: string }` — pass `nextToken` as query param for next page
 - `idempotencyKey` on purchases: generate with `crypto.randomUUID()` client-side before calling `purchaseApi.record()`
+- Form inputs in Sheets/modals must use `htmlFor`/`id` pairs on label+input — Biome enforces `noLabelWithoutControl` as an error

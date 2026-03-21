@@ -99,11 +99,13 @@ For infrastructure changes, load `.claude/skills/terraform-expert.md` as context
 ## Core Code Conventions
 
 - **IDs**: ULID — never UUID for new entities
-- **Phone**: always `normalizePhone()` from `@pointly/shared` before API calls or DB lookups
+- **Phone (frontends)**: always `normalizePhone()` from `@pointly/shared` before API calls
+- **Phone (API internals)**: use `new PhoneNumber(raw).toE164()` — the domain value object, NOT `normalizePhone()`
 - **Types**: import from `@pointly/shared`, never redeclare API shapes locally
 - **Auth token**: send the **ID token** (not access token) — it carries `custom:merchantId`
 - **Multi-entity writes (API)**: always use `TransactionalWriter.writeAll()` — never write repos individually
-- **Idempotency (API)**: always pass a client-generated `idempotencyKey` for purchase/redeem calls
+- **Idempotency (API)**: always pass a client-generated `idempotencyKey` for purchase/redeem/gift calls
+- **Idempotency keys (frontends)**: use `crypto.randomUUID()` — `ulid` is not available in Next.js apps
 - **Data fetching (frontends)**: TanStack Query hooks only — never fetch directly from components
 - **`import type`**: required for type-only imports (Biome error if violated)
 - **`any`**: forbidden — use `unknown` + narrowing or proper types

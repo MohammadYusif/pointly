@@ -226,7 +226,9 @@ Three separate esbuild bundles (no shared code at runtime):
 - `TransactionalWriter.writeAll()` is used for ALL multi-entity writes — never write repos individually in a use-case if multiple entities change
 - Idempotency check happens inside `RecordPurchaseUseCase` and `RedeemPointsUseCase` — always pass a client-generated `idempotencyKey`
 - `getContainer()` is a singleton per Lambda warm instance — `resetContainer()` in tests to avoid state leakage
-- Phone numbers stored in E.164 format (`+966XXXXXXXXX`) — use `normalizePhone()` from `@pointly/shared` before lookup
+- Phone numbers stored in E.164 format (`+966XXXXXXXXX`) — within the API use `new PhoneNumber(raw).toE164()`, NOT `normalizePhone()` (which is frontend-only from `@pointly/shared`)
+- Merchant gift use cases must only award `merchantPointsBalance` — never `globalPointsBalance` (prevents global currency inflation)
+- Optional fields in use-case request interfaces need `?: T | undefined` (not just `?: T`) — `exactOptionalPropertyTypes` is enabled
 - DynamoDB `USER_LEDGER_TABLE` holds both Customers and Merchants — PK prefix differentiates (`CUSTOMER#` vs `MERCHANT#`)
 - `@pointly/api` does NOT depend on `@pointly/shared` — domain types (`PerkType`, `WalletConfig`, `CampaignType`, etc.) are intentionally local to keep the Lambda bundle self-contained
 - `WALLET_PASSES_TABLE` stores both push subscription records (`PK: CUSTOMER#<id> SK: PUSH#<hash>`) and merchant-keyed push index records (`PK: MERCHANT_PUSH#<merchantId> SK: CUSTOMER#<id>#PUSH#<hash>`) — do not use `ScanCommand` for per-merchant queries; use `QueryCommand` on the merchant-keyed PK
