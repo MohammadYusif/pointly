@@ -1,14 +1,14 @@
 'use client';
 
 import type { TranslationKeys } from '@/i18n/translations';
-import { ArrowLeftRight, BadgeCheck, BarChart3, Layers, PenLine, Zap } from 'lucide-react';
+import { ArrowLeftRight, BarChart3, Flame, Gift, Layers, Zap } from 'lucide-react';
 import { ScrollReveal } from './ScrollReveal';
 
 interface FeaturesProps {
   t: TranslationKeys;
 }
 
-const ICONS = [Zap, Layers, ArrowLeftRight, PenLine, BarChart3, BadgeCheck];
+const ICONS = [Zap, Layers, ArrowLeftRight, Gift, BarChart3, Flame];
 
 export function Features({ t }: FeaturesProps) {
   return (

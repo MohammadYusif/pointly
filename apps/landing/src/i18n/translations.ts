@@ -48,19 +48,19 @@ export const translations = {
         },
         {
           title: 'Smart Tiers',
-          desc: 'Four automatic tiers — Bronze to Diamond — with higher multipliers as customers engage more.',
+          desc: 'Bronze to Diamond — each tier unlocks a higher earning multiplier, weekly streak bonuses (up to 750 pts), and decay immunity from Gold onwards.',
         },
         {
-          title: 'Manual Entry',
-          desc: "Enter any transaction amount manually — we'll calculate and award points instantly.",
+          title: 'Point Gifting',
+          desc: 'Merchants gift points directly to customers. Customers gift global points to each other — driving engagement across the whole network.',
         },
         {
           title: 'Real-time Dashboard',
-          desc: 'Track customers, transactions, and tier distribution from a clean merchant portal.',
+          desc: 'Track customers, transactions, tier distribution, and run targeted win-back campaigns from a clean merchant portal.',
         },
         {
-          title: 'Easy Redemption',
-          desc: 'Customers redeem at 0.01 SAR per point. Simple, transparent, and trusted.',
+          title: 'Engagement Challenges',
+          desc: 'Weekly visit streaks reward customers just for showing up. Tier-scaled bonuses give your best customers even more reason to return.',
         },
       ],
     },
@@ -78,7 +78,7 @@ export const translations = {
       label: 'Customer Tiers',
       title: 'Loyalty that rewards engagement',
       subtitle:
-        'Customers automatically progress through tiers as they earn points. Higher tiers earn faster — and they stay loyal because the rewards are real.',
+        'Customers automatically progress through tiers as they earn points. Higher tiers earn faster and never decay — Bronze customers risk losing their tier monthly, so the upgrade is always worth chasing.',
       items: [
         { name: 'Bronze', emoji: '🥉', threshold: '0 pts', multiplier: '1.0×', color: 'bronze' },
         { name: 'Gold', emoji: '🥇', threshold: '5,000 pts', multiplier: '1.1×', color: 'gold' },
@@ -300,19 +300,19 @@ export const translations = {
         },
         {
           title: 'مستويات ذكية',
-          desc: 'أربعة مستويات تلقائية — برونز إلى ألماس — مع مضاعفات أعلى كلما زاد تفاعل العميل.',
+          desc: 'من برونز إلى ألماس — كل مستوى يفتح مضاعف كسب أعلى، ومكافآت سلسلة أسبوعية (حتى 750 نقطة)، وحصانة من التراجع ابتداءً من الذهبي.',
         },
         {
-          title: 'إدخال يدوي',
-          desc: 'أدخل أي مبلغ معاملة يدوياً — وسنحسب النقاط ونمنحها فوراً.',
+          title: 'إهداء النقاط',
+          desc: 'يُهدي التجار النقاط مباشرةً للعملاء. ويتبادل العملاء النقاط العالمية فيما بينهم — مما يعزز التفاعل عبر الشبكة بأكملها.',
         },
         {
           title: 'لوحة تحكم حية',
-          desc: 'تتبع العملاء والمعاملات وتوزيع المستويات من بوابة التاجر البسيطة.',
+          desc: 'تتبع العملاء والمعاملات وتوزيع المستويات، وشغّل حملات استعادة موجّهة من بوابة التاجر البسيطة.',
         },
         {
-          title: 'استرداد سهل',
-          desc: 'يسترد العملاء بمعدل 0.01 ريال لكل نقطة. بسيط وشفاف وموثوق.',
+          title: 'تحديات التفاعل',
+          desc: 'سلاسل الزيارات الأسبوعية تكافئ العملاء على مجرد الحضور. والمكافآت المتدرجة بحسب المستوى تمنح عملاءك الأوفياء سبباً إضافياً للعودة.',
         },
       ],
     },
@@ -330,7 +330,7 @@ export const translations = {
       label: 'مستويات العملاء',
       title: 'ولاء يكافئ التفاعل',
       subtitle:
-        'يتقدم العملاء تلقائياً عبر المستويات مع كسب النقاط. المستويات الأعلى تكسب أسرع — ويبقى العملاء لأن المكافآت حقيقية.',
+        'يتقدم العملاء تلقائياً عبر المستويات مع كسب النقاط. المستويات الأعلى تكسب أسرع ولا تتراجع أبداً — بينما يخاطر عملاء البرونز بخسارة مستواهم شهرياً، مما يجعل الترقية دائماً تستحق المطاردة.',
       items: [
         { name: 'برونز', emoji: '🥉', threshold: '0 نقطة', multiplier: '1.0×', color: 'bronze' },
         { name: 'ذهبي', emoji: '🥇', threshold: '5,000 نقطة', multiplier: '1.1×', color: 'gold' },
