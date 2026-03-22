@@ -4,6 +4,19 @@ import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { ITransactionRepository } from '../repositories/ITransactionRepository';
 import type { PersistenceItem } from '../shared/interfaces/BaseRepository';
 
+/**
+ * Returns the ISO date (YYYY-MM-DD) of the Monday that starts the week
+ * containing `date`. Used to derive a deterministic, per-week idempotency key
+ * for streak bonuses so that retries within the same week are no-ops.
+ */
+function getWeekStartISO(date: Date): string {
+  const d = new Date(date);
+  const day = d.getUTCDay(); // 0 = Sun, 1 = Mon … 6 = Sat
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  d.setUTCDate(d.getUTCDate() + diffToMonday);
+  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
 const WEEKLY_VISIT_TARGET = 3;
 
 /** Tier-aware streak bonus: higher tiers earn more to reward network engagement */
@@ -60,7 +73,7 @@ export class CheckChallengeEligibilityUseCase {
         bonusPoints,
         Money.fromSAR(0),
         balanceBefore,
-        `streak_bonus_${request.customerId}_${Date.now()}`,
+        `streak_bonus_${request.customerId}_${getWeekStartISO(new Date())}`,
         { source: 'weekly_streak_bonus' },
       );
       bonusTransaction.complete();

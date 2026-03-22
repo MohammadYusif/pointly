@@ -115,6 +115,110 @@ describe('CheckChallengeEligibilityUseCase', () => {
     expect(vi.mocked(mockTransactionRepo.toPersistenceItem)).toHaveBeenCalledTimes(1);
   });
 
+  describe('Idempotency key for streak bonus (V7 fix)', () => {
+    /** Simulate 2 prior visits so the 3rd call triggers the bonus. */
+    function setupTwoVisits() {
+      const twoDaysAgo = new Date();
+      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      testCustomer.recordVisitForStreak(twoDaysAgo);
+      testCustomer.recordVisitForStreak(yesterday);
+    }
+
+    it('uses ISO week-start date (YYYY-MM-DD of Monday) as part of the bonus key', async () => {
+      // Pin to a known Wednesday so Monday = 2026-03-23
+      vi.setSystemTime(new Date('2026-03-25T10:00:00Z')); // Wednesday
+      setupTwoVisits();
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      // Capture the transaction passed to toPersistenceItem
+      let capturedTransaction: import('../../domain').Transaction | undefined;
+      vi.mocked(mockTransactionRepo.toPersistenceItem).mockImplementation(
+        (tx: import('../../domain').Transaction) => {
+          capturedTransaction = tx;
+          return [];
+        },
+      );
+
+      await useCase.execute({ customerId, merchantId });
+
+      expect(capturedTransaction).toBeDefined();
+      const key = capturedTransaction?.getIdempotencyKey();
+      expect(key).toContain('streak_bonus_');
+      // Must use week-start Monday (2026-03-23), NOT a timestamp
+      expect(key).toContain('2026-03-23'); // 2026-03-25 is Wed; Monday of that week is 2026-03-23
+      expect(key).not.toMatch(/\d{13}/); // must not contain a 13-digit ms timestamp
+
+      vi.useRealTimers();
+    });
+
+    it('two calls within the same week produce the same idempotency key', async () => {
+      // Pin to Monday
+      vi.setSystemTime(new Date('2026-03-23T09:00:00Z'));
+      setupTwoVisits();
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+
+      const keys: string[] = [];
+      vi.mocked(mockTransactionRepo.toPersistenceItem).mockImplementation(
+        (tx: import('../../domain').Transaction) => {
+          keys.push(tx.getIdempotencyKey());
+          return [];
+        },
+      );
+
+      // First call: earns bonus (3rd visit)
+      await useCase.execute({ customerId, merchantId });
+
+      // Re-create customer at 3-visit state and call again (same week)
+      const customer2 = Customer.create(new PhoneNumber('0501234567'), 'Ahmed');
+      const twoDaysAgo = new Date('2026-03-21T09:00:00Z');
+      const yesterday = new Date('2026-03-22T09:00:00Z');
+      customer2.recordVisitForStreak(twoDaysAgo);
+      customer2.recordVisitForStreak(yesterday);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(customer2);
+
+      await useCase.execute({ customerId, merchantId });
+
+      // Both bonus transactions must have the same idempotency key
+      expect(keys).toHaveLength(2);
+      expect(keys[0]).toBe(keys[1]);
+
+      vi.useRealTimers();
+    });
+
+    it('different weeks produce different idempotency keys', async () => {
+      const keys: string[] = [];
+      vi.mocked(mockTransactionRepo.toPersistenceItem).mockImplementation(
+        (tx: import('../../domain').Transaction) => {
+          keys.push(tx.getIdempotencyKey());
+          return [];
+        },
+      );
+
+      // Week 1 — Monday 2026-03-23
+      vi.setSystemTime(new Date('2026-03-23T09:00:00Z'));
+      setupTwoVisits();
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(testCustomer);
+      await useCase.execute({ customerId, merchantId });
+
+      // Week 2 — Monday 2026-03-30
+      vi.setSystemTime(new Date('2026-03-30T09:00:00Z'));
+      const customer2 = Customer.create(new PhoneNumber('0501234567'), 'Ahmed');
+      const twoDaysAgo = new Date('2026-03-28T09:00:00Z');
+      const yesterday = new Date('2026-03-29T09:00:00Z');
+      customer2.recordVisitForStreak(twoDaysAgo);
+      customer2.recordVisitForStreak(yesterday);
+      vi.mocked(mockCustomerRepo.findById).mockResolvedValue(customer2);
+      await useCase.execute({ customerId, merchantId });
+
+      expect(keys).toHaveLength(2);
+      expect(keys[0]).not.toBe(keys[1]);
+
+      vi.useRealTimers();
+    });
+  });
+
   it('should not award bonus again on a 4th visit within the same week', async () => {
     // Set up 3 prior visits on different days (already met target)
     const threeDaysAgo = new Date();

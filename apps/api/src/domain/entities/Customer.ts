@@ -554,7 +554,15 @@ export class Customer {
   }
 
   /**
-   * Calculate how many points should decay based on inactivity
+   * Calculate how many points should decay for ONE monthly job run.
+   *
+   * Applies a single month's rate at the current decay phase:
+   *   Phase 1 (months 12–17): 5% of current balance
+   *   Phase 2 (month 18+):   15% of current balance
+   *
+   * The monthly scheduled job calls this once per run. Applying one rate per
+   * invocation produces the correct compounding decay across successive months
+   * without re-simulating all prior months against the current balance.
    */
   calculateDecayAmount(): Points {
     const phase = this.calculateDecayPhase();
@@ -563,30 +571,15 @@ export class Customer {
       return Points.zero(); // No decay during grace period
     }
 
-    // Gold and Diamond tiers are immune to decay
+    // Decay-immune tiers (Gold/Platinum/Diamond) keep their global points
     if (this.props.currentTier.isDecayImmune()) {
       return Points.zero();
     }
 
-    const monthsInactive = this.getMonthsOfInactivity();
-    let balance = this.props.globalPointsBalance.toNumber();
-
-    // Calculate months in each phase (12-month grace period)
-    const lightDecayMonths = Math.min(Math.max(monthsInactive - 12, 0), 6); // Months 12-17 (up to 6 months)
-    const heavyDecayMonths = Math.max(monthsInactive - 18, 0); // Month 18+
-
-    // Apply light decay (5% per month) for months 3-5
-    for (let i = 0; i < lightDecayMonths; i++) {
-      balance = Math.floor(balance * 0.95);
-    }
-
-    // Apply heavy decay (15% per month) for month 6+
-    for (let i = 0; i < heavyDecayMonths; i++) {
-      balance = Math.floor(balance * 0.85);
-    }
-
-    const decayAmount = this.props.globalPointsBalance.toNumber() - balance;
-    return Points.from(decayAmount);
+    const balance = this.props.globalPointsBalance.toNumber();
+    // Phase 1: 5%/month (months 12–17). Phase 2: 15%/month (month 18+).
+    const rate = phase === 1 ? 0.05 : 0.15;
+    return Points.from(Math.floor(balance * rate));
   }
 
   /**

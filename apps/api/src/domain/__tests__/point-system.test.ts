@@ -392,18 +392,15 @@ describe('Point System - Real World Scenarios', () => {
         expect(decayAmount.toNumber()).toBe(50);
       });
 
-      it('should apply compounded decay in Phase 2 (month 18+)', () => {
+      it('should apply exactly 15% for a single Phase 2 monthly job run (month 19)', () => {
         const customer = createCustomerWithEnrollment('merchant_123');
         setGlobalPointsBalance(customer, 1000);
-        setLastActivityDate(customer, 19); // 19 months = 6 months Phase 1 + 1 month Phase 2
+        setLastActivityDate(customer, 19); // Phase 2
 
         const decayAmount = customer.calculateDecayAmount();
 
-        // 6 months at 5%: 1000 * 0.95^6 = 735 (approx)
-        // 1 month at 15%: 735 * 0.85 = 625 (approx)
-        // Decay = 1000 - 625 = 375
-        expect(decayAmount.toNumber()).toBeGreaterThan(340);
-        expect(decayAmount.toNumber()).toBeLessThan(410);
+        // One month at 15%: floor(1000 * 0.15) = 150
+        expect(decayAmount.toNumber()).toBe(150);
       });
 
       it('should apply zero decay for decay-immune tiers', () => {
@@ -415,6 +412,98 @@ describe('Point System - Real World Scenarios', () => {
         const decayAmount = customer.calculateDecayAmount();
 
         expect(decayAmount.toNumber()).toBe(0);
+      });
+
+      /**
+       * Multi-cycle decay correctness tests.
+       *
+       * These tests verify the fix for V2: calculateDecayAmount() must apply
+       * exactly one month's rate per invocation, not re-simulate all prior months.
+       * The monthly scheduled job calls applyGlobalPointsDecay() once per run.
+       */
+      describe('Multi-cycle decay correctness (V2 fix)', () => {
+        it('month 13: first Phase 1 run applies exactly 5% to starting balance', () => {
+          const customer = createCustomerWithEnrollment('merchant_123');
+          setGlobalPointsBalance(customer, 1000);
+          setLastActivityDate(customer, 13); // Phase 1, first month
+
+          const decay = customer.calculateDecayAmount();
+
+          // One month at 5%: floor(1000 * 0.05) = 50
+          expect(decay.toNumber()).toBe(50);
+        });
+
+        it('month 14: second Phase 1 run applies 5% to already-decayed balance, not 10% compound from scratch', () => {
+          const customer = createCustomerWithEnrollment('merchant_123');
+          setGlobalPointsBalance(customer, 1000);
+          setLastActivityDate(customer, 13); // Phase 1
+
+          // Simulate first monthly job run
+          customer.applyGlobalPointsDecay();
+          const balanceAfterRun1 = customer.getGlobalPointsBalance().toNumber();
+          expect(balanceAfterRun1).toBe(950); // 1000 - 50
+
+          // Move to month 14 and simulate second monthly job run
+          setLastActivityDate(customer, 14);
+          const decay2 = customer.calculateDecayAmount();
+
+          // One month at 5% on the already-decayed balance: floor(950 * 0.05) = 47
+          expect(decay2.toNumber()).toBe(47);
+
+          customer.applyGlobalPointsDecay();
+          expect(customer.getGlobalPointsBalance().toNumber()).toBe(903); // 950 - 47
+        });
+
+        it('month 19: Phase 2 run applies exactly 15% to current balance', () => {
+          const customer = createCustomerWithEnrollment('merchant_123');
+          setGlobalPointsBalance(customer, 1000);
+          setLastActivityDate(customer, 19); // Phase 2
+
+          const decay = customer.calculateDecayAmount();
+
+          // One month at 15%: floor(1000 * 0.15) = 150
+          expect(decay.toNumber()).toBe(150);
+        });
+
+        it('successive Phase 2 runs compound correctly on the current balance', () => {
+          const customer = createCustomerWithEnrollment('merchant_123');
+          setGlobalPointsBalance(customer, 1000);
+          setLastActivityDate(customer, 19); // Phase 2
+
+          // First Phase 2 run
+          customer.applyGlobalPointsDecay();
+          const balanceAfterRun1 = customer.getGlobalPointsBalance().toNumber();
+          expect(balanceAfterRun1).toBe(850); // floor(1000 * 0.85) = 850
+
+          // Second Phase 2 run
+          setLastActivityDate(customer, 20);
+          customer.applyGlobalPointsDecay();
+          const balanceAfterRun2 = customer.getGlobalPointsBalance().toNumber();
+          // decay = floor(850 * 0.15) = floor(127.5) = 127 → 850 - 127 = 723
+          expect(balanceAfterRun2).toBe(723);
+
+          // Third Phase 2 run
+          setLastActivityDate(customer, 21);
+          customer.applyGlobalPointsDecay();
+          const balanceAfterRun3 = customer.getGlobalPointsBalance().toNumber();
+          // decay = floor(723 * 0.15) = floor(108.45) = 108 → 723 - 108 = 615
+          expect(balanceAfterRun3).toBe(615);
+        });
+
+        it('transition from Phase 1 to Phase 2: applies Phase 2 rate at month 18', () => {
+          const customer = createCustomerWithEnrollment('merchant_123');
+          setGlobalPointsBalance(customer, 1000);
+
+          // Last Phase 1 run (month 17)
+          setLastActivityDate(customer, 17);
+          const phase1Decay = customer.calculateDecayAmount();
+          expect(phase1Decay.toNumber()).toBe(50); // 5% of 1000
+
+          // First Phase 2 run (month 18)
+          setLastActivityDate(customer, 18);
+          const phase2Decay = customer.calculateDecayAmount();
+          expect(phase2Decay.toNumber()).toBe(150); // 15% of 1000 (balance unchanged — just calculating)
+        });
       });
     });
   });
