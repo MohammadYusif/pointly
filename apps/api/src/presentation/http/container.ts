@@ -167,10 +167,7 @@ export function createContainer(): Container {
     transactionalWriter.writeAll(items),
   );
 
-  const processMonthlyTierResetUseCase = new ProcessMonthlyTierResetUseCase(
-    customerRepository,
-    (items) => transactionalWriter.writeAll(items),
-  );
+  const processMonthlyTierResetUseCase = new ProcessMonthlyTierResetUseCase(customerRepository);
 
   // Create analytics use case
   const getAnalyticsUseCase = new GetAnalyticsUseCase(merchantRepository, transactionRepository);

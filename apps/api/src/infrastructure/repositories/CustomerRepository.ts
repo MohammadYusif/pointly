@@ -1,4 +1,4 @@
-import { ScanCommand, type ScanCommandInput } from '@aws-sdk/lib-dynamodb';
+import { QueryCommand, type QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import type { ICustomerRepository } from '../../application/repositories/ICustomerRepository';
 import type { QueryOptions, QueryResult } from '../../application/shared/interfaces/BaseRepository';
 import {
@@ -123,9 +123,12 @@ export class CustomerRepository
   }
 
   async findAll(options?: QueryOptions): Promise<QueryResult<Customer>> {
-    const scanInput: ScanCommandInput = {
+    // Use EntityTypeIndex GSI so we query only CUSTOMER items (O(customers))
+    // instead of scanning the entire mixed-entity table (O(all entities)).
+    const queryInput: QueryCommandInput = {
       TableName: this.tableName,
-      FilterExpression: 'EntityType = :entityType',
+      IndexName: 'EntityTypeIndex',
+      KeyConditionExpression: 'EntityType = :entityType',
       ExpressionAttributeValues: {
         ':entityType': 'CUSTOMER',
       },
@@ -133,10 +136,12 @@ export class CustomerRepository
     };
 
     if (options?.nextToken) {
-      scanInput.ExclusiveStartKey = JSON.parse(Buffer.from(options.nextToken, 'base64').toString());
+      queryInput.ExclusiveStartKey = JSON.parse(
+        Buffer.from(options.nextToken, 'base64').toString(),
+      );
     }
 
-    const result = await this.client.send(new ScanCommand(scanInput));
+    const result = await this.client.send(new QueryCommand(queryInput));
 
     return {
       items: (result.Items || []).map((item) => this.itemToEntity(item as unknown as CustomerItem)),

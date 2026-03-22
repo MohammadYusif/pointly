@@ -1,6 +1,5 @@
 import { type Customer, TIER_ORDER } from '../../domain';
 import type { ICustomerRepository } from '../repositories/ICustomerRepository';
-import type { PersistenceItem } from '../shared/interfaces/BaseRepository';
 
 export interface TierResetResult {
   totalCustomersProcessed: number;
@@ -24,10 +23,7 @@ export interface TierResetResult {
  * 3. Reset monthlyProgress to 0 for the new month
  */
 export class ProcessMonthlyTierResetUseCase {
-  constructor(
-    private customerRepository: ICustomerRepository,
-    private atomicWrite: (items: PersistenceItem[]) => Promise<void>,
-  ) {}
+  constructor(private customerRepository: ICustomerRepository) {}
 
   async execute(): Promise<TierResetResult> {
     // Build tier distribution dynamically from TIER_ORDER
@@ -72,9 +68,8 @@ export class ProcessMonthlyTierResetUseCase {
           // Reset monthly progress for new month
           customer.resetMonthlyProgress();
 
-          // Persist atomically — matches the pattern used by all other use cases so
-          // future tier audit trail items can be added here without changing the call site.
-          await this.atomicWrite(this.customerRepository.toPersistenceItem(customer));
+          // Single-entity write: no transaction semantics needed here.
+          await this.customerRepository.save(customer);
 
           // Count tier distribution
           const tierKey = newTier.getLevel().toLowerCase();

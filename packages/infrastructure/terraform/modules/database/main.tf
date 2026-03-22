@@ -61,6 +61,18 @@ resource "aws_dynamodb_table" "user_ledger" {
     type = "S"
   }
 
+  attribute {
+    name = "EntityType"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "EntityTypeIndex"
+    hash_key        = "EntityType"
+    range_key       = "PK"
+    projection_type = "ALL"
+  }
+
   global_secondary_index {
     name            = "PhoneIndex"
     hash_key        = "phone"
