@@ -12,7 +12,9 @@ import type { IPushNotificationService } from '../../application/services/IPushN
 import type { ISmsPublisherService } from '../../application/services/ISmsPublisherService';
 import { AddMerchantLocationUseCase } from '../../application/use-cases/AddMerchantLocationUseCase';
 import { CheckChallengeEligibilityUseCase } from '../../application/use-cases/CheckChallengeEligibilityUseCase';
+import { CreateCampaignUseCase } from '../../application/use-cases/CreateCampaignUseCase';
 import { CreateCustomerUseCase } from '../../application/use-cases/CreateCustomerUseCase';
+import { DeactivateCampaignUseCase } from '../../application/use-cases/DeactivateCampaignUseCase';
 import { DeleteCustomerAccountUseCase } from '../../application/use-cases/DeleteCustomerAccountUseCase';
 import { EnrollCustomerUseCase } from '../../application/use-cases/EnrollCustomerUseCase';
 import { GenerateQRCodeUseCase } from '../../application/use-cases/GenerateQRCodeUseCase';
@@ -20,7 +22,7 @@ import { GetAnalyticsUseCase } from '../../application/use-cases/GetAnalyticsUse
 import { GetCustomerInsightsUseCase } from '../../application/use-cases/GetCustomerInsightsUseCase';
 import { GetCustomerPerksUseCase } from '../../application/use-cases/GetCustomerPerksUseCase';
 import { GiftPointsUseCase } from '../../application/use-cases/GiftPointsUseCase';
-import { ManageCampaignUseCase } from '../../application/use-cases/ManageCampaignUseCase';
+import { ListCampaignsUseCase } from '../../application/use-cases/ListCampaignsUseCase';
 import { ManagePerkUseCase } from '../../application/use-cases/ManagePerkUseCase';
 import { ManagePushSubscriptionUseCase } from '../../application/use-cases/ManagePushSubscriptionUseCase';
 import { ManageWalletPassUseCase } from '../../application/use-cases/ManageWalletPassUseCase';
@@ -31,6 +33,7 @@ import { RecordPurchaseUseCase } from '../../application/use-cases/RecordPurchas
 import { RedeemPointsUseCase } from '../../application/use-cases/RedeemPointsUseCase';
 import { RegisterCustomerForMerchantUseCase } from '../../application/use-cases/RegisterCustomerForMerchantUseCase';
 import { SetupCustomerAccountUseCase } from '../../application/use-cases/SetupCustomerAccountUseCase';
+import { UpdateCampaignUseCase } from '../../application/use-cases/UpdateCampaignUseCase';
 import { UpdateCustomerProfileUseCase } from '../../application/use-cases/UpdateCustomerProfileUseCase';
 import { UpdateMerchantProfileUseCase } from '../../application/use-cases/UpdateMerchantProfileUseCase';
 import EnvironmentConfig from '../../infrastructure/config/Environment';
@@ -49,6 +52,7 @@ import {
 } from '../../infrastructure/repositories';
 import { PushSubscriptionRepository } from '../../infrastructure/repositories/PushSubscriptionRepository';
 import { QRNonceRepository } from '../../infrastructure/repositories/QRNonceRepository';
+import { CampaignNotificationService } from '../../infrastructure/services/CampaignNotificationService';
 import { CognitoUserService } from '../../infrastructure/services/CognitoUserService';
 import { WebPushService } from '../../infrastructure/services/WebPushService';
 
@@ -79,7 +83,10 @@ export interface Container {
   registerCustomerForMerchantUseCase: RegisterCustomerForMerchantUseCase;
   enrollCustomerUseCase: EnrollCustomerUseCase;
   managePerkUseCase: ManagePerkUseCase;
-  manageCampaignUseCase: ManageCampaignUseCase;
+  createCampaignUseCase: CreateCampaignUseCase;
+  listCampaignsUseCase: ListCampaignsUseCase;
+  deactivateCampaignUseCase: DeactivateCampaignUseCase;
+  updateCampaignUseCase: UpdateCampaignUseCase;
   checkChallengeEligibilityUseCase: CheckChallengeEligibilityUseCase;
   recordPurchaseUseCase: RecordPurchaseUseCase;
   redeemPointsUseCase: RedeemPointsUseCase;
@@ -138,14 +145,27 @@ export function createContainer(): Container {
     (items) => transactionalWriter.writeAll(items),
   );
 
-  const manageCampaignUseCase = new ManageCampaignUseCase(
-    merchantRepository,
-    campaignRepository,
-    (items) => transactionalWriter.writeAll(items),
+  const campaignNotificationService = new CampaignNotificationService(
     customerRepository,
     smsPublisherService,
     pushSubscriptionRepository,
     webPushService,
+  );
+
+  const createCampaignUseCase = new CreateCampaignUseCase(
+    merchantRepository,
+    campaignRepository,
+    (items) => transactionalWriter.writeAll(items),
+    campaignNotificationService,
+  );
+  const listCampaignsUseCase = new ListCampaignsUseCase(campaignRepository);
+  const deactivateCampaignUseCase = new DeactivateCampaignUseCase(
+    merchantRepository,
+    campaignRepository,
+    (items) => transactionalWriter.writeAll(items),
+  );
+  const updateCampaignUseCase = new UpdateCampaignUseCase(campaignRepository, (items) =>
+    transactionalWriter.writeAll(items),
   );
 
   const recordPurchaseUseCase = new RecordPurchaseUseCase(
@@ -266,7 +286,10 @@ export function createContainer(): Container {
     registerCustomerForMerchantUseCase,
     enrollCustomerUseCase,
     managePerkUseCase,
-    manageCampaignUseCase,
+    createCampaignUseCase,
+    listCampaignsUseCase,
+    deactivateCampaignUseCase,
+    updateCampaignUseCase,
     checkChallengeEligibilityUseCase,
     recordPurchaseUseCase,
     redeemPointsUseCase,

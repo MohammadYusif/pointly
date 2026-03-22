@@ -1,7 +1,5 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import type { ManageCampaignRequest } from '../../../application/use-cases/ManageCampaignUseCase';
-import type { Campaign } from '../../../domain/entities/Campaign';
 import { ForbiddenError } from '../../../domain/errors/DomainError';
 import { getContainer } from '../container';
 
@@ -9,51 +7,6 @@ function enforceMerchantAccess(request: FastifyRequest<{ Params: { id: string } 
   if (request.merchantId && request.params.id !== request.merchantId) {
     throw new ForbiddenError("Cannot access another merchant's data");
   }
-}
-
-function buildUpdateRequest(
-  merchantId: string,
-  campaignId: string,
-  body: z.infer<typeof updateCampaignSchema>,
-): ManageCampaignRequest {
-  const req: ManageCampaignRequest = { action: 'update', merchantId, campaignId };
-  if (body.name) req.name = body.name;
-  if (body.description !== undefined) req.description = body.description;
-  if (body.startDate) req.startDate = body.startDate;
-  if (body.endDate) req.endDate = body.endDate;
-  if (body.multiplier !== undefined) req.multiplier = body.multiplier;
-  if (body.message !== undefined) req.message = body.message;
-  if (body.targetTiers) req.targetTiers = body.targetTiers;
-  if (body.maxUsesPerCustomer !== undefined) req.maxUsesPerCustomer = body.maxUsesPerCustomer;
-  if (body.minPurchaseAmount !== undefined) req.minPurchaseAmount = body.minPurchaseAmount;
-  if (body.maxPointsPerTransaction !== undefined)
-    req.maxPointsPerTransaction = body.maxPointsPerTransaction;
-  if (body.winBackDays !== undefined) req.winBackDays = body.winBackDays;
-  if (body.welcomeDays !== undefined) req.welcomeDays = body.welcomeDays;
-  if (body.lastVisitDays !== undefined) req.lastVisitDays = body.lastVisitDays;
-  return req;
-}
-
-function buildCampaignRequest(
-  merchantId: string,
-  body: z.infer<typeof createCampaignSchema>,
-): ManageCampaignRequest {
-  const req: ManageCampaignRequest = { action: 'create', merchantId, type: body.type };
-  if (body.name) req.name = body.name;
-  if (body.description) req.description = body.description;
-  if (body.startDate) req.startDate = body.startDate;
-  if (body.endDate) req.endDate = body.endDate;
-  if (body.multiplier !== undefined) req.multiplier = body.multiplier;
-  if (body.message) req.message = body.message;
-  if (body.targetTiers && body.targetTiers.length > 0) req.targetTiers = body.targetTiers;
-  if (body.maxUsesPerCustomer !== undefined) req.maxUsesPerCustomer = body.maxUsesPerCustomer;
-  if (body.minPurchaseAmount !== undefined) req.minPurchaseAmount = body.minPurchaseAmount;
-  if (body.maxPointsPerTransaction !== undefined)
-    req.maxPointsPerTransaction = body.maxPointsPerTransaction;
-  if (body.winBackDays !== undefined) req.winBackDays = body.winBackDays;
-  if (body.welcomeDays !== undefined) req.welcomeDays = body.welcomeDays;
-  if (body.lastVisitDays !== undefined) req.lastVisitDays = body.lastVisitDays;
-  return req;
 }
 
 const campaignTypeEnum = z.enum([
@@ -105,19 +58,7 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
     async (
       request: FastifyRequest<{
         Params: { id: string };
-        Body: {
-          type: string;
-          name?: string;
-          description?: string;
-          startDate?: string;
-          endDate?: string;
-          multiplier?: number;
-          message?: string;
-          targetTiers?: string[];
-          maxUsesPerCustomer?: number;
-          minPurchaseAmount?: number;
-          maxPointsPerTransaction?: number;
-        };
+        Body: z.infer<typeof createCampaignSchema>;
       }>,
       reply: FastifyReply,
     ) => {
@@ -125,12 +66,9 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
       const { id: merchantId } = request.params;
       const body = createCampaignSchema.parse(request.body);
 
-      const container = getContainer();
-      const req = buildCampaignRequest(merchantId, body);
-      const result = await container.manageCampaignUseCase.execute(req);
-
-      const campaign = result as Campaign | undefined;
-      return reply.status(201).send({ success: true, data: campaign?.toJSON() });
+      const { createCampaignUseCase } = getContainer();
+      const campaign = await createCampaignUseCase.execute({ merchantId, ...body });
+      return reply.status(201).send({ success: true, data: campaign.toJSON() });
     },
   );
 
@@ -140,14 +78,9 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
       enforceMerchantAccess(request);
       const { id: merchantId } = request.params;
 
-      const container = getContainer();
-      const result = await container.manageCampaignUseCase.execute({
-        action: 'list',
-        merchantId,
-      });
-
-      const campaigns = result && 'items' in result ? result.items.map((c) => c.toJSON()) : [];
-      return reply.send({ success: true, data: campaigns });
+      const { listCampaignsUseCase } = getContainer();
+      const result = await listCampaignsUseCase.execute(merchantId);
+      return reply.send({ success: true, data: result.items.map((c) => c.toJSON()) });
     },
   );
 
@@ -160,13 +93,8 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
       enforceMerchantAccess(request);
       const { id: merchantId, campaignId } = request.params;
 
-      const container = getContainer();
-      await container.manageCampaignUseCase.execute({
-        action: 'deactivate',
-        merchantId,
-        campaignId,
-      });
-
+      const { deactivateCampaignUseCase } = getContainer();
+      await deactivateCampaignUseCase.execute({ merchantId, campaignId });
       return reply.send({ success: true });
     },
   );
@@ -183,12 +111,10 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
       enforceMerchantAccess(request);
       const { id: merchantId, campaignId } = request.params;
       const body = updateCampaignSchema.parse(request.body);
-      const req = buildUpdateRequest(merchantId, campaignId, body);
 
-      const container = getContainer();
-      const result = await container.manageCampaignUseCase.execute(req);
-      const campaign = result as import('../../../domain/entities/Campaign').Campaign | undefined;
-      return reply.send({ success: true, data: campaign?.toJSON() });
+      const { updateCampaignUseCase } = getContainer();
+      const campaign = await updateCampaignUseCase.execute({ merchantId, campaignId, ...body });
+      return reply.send({ success: true, data: campaign.toJSON() });
     },
   );
 }

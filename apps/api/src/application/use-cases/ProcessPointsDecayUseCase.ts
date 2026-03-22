@@ -1,4 +1,5 @@
 import { type Customer, Transaction } from '../../domain';
+import { CustomerDecayService } from '../../domain/services/CustomerDecayService';
 import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { ITransactionRepository } from '../repositories/ITransactionRepository';
 import type { IDecayCalculatorService } from '../services/IDecayCalculatorService';
@@ -25,6 +26,8 @@ export interface DecayProcessingResult {
  * This should run as a Lambda on a monthly schedule (EventBridge).
  */
 export class ProcessPointsDecayUseCase {
+  private readonly customerDecayService = new CustomerDecayService();
+
   constructor(
     private customerRepository: ICustomerRepository,
     private transactionRepository: ITransactionRepository,
@@ -123,7 +126,7 @@ export class ProcessPointsDecayUseCase {
   /** Apply decay to the customer and persist. No-op (profile-only save) when no decay occurs. */
   private async applyDecay(customer: Customer, result: DecayProcessingResult): Promise<void> {
     const balanceBeforeDecay = customer.getGlobalPointsBalance();
-    const decayAmount = customer.applyGlobalPointsDecay();
+    const decayAmount = this.customerDecayService.applyMonthlyDecay(customer);
 
     if (decayAmount.isZero()) {
       await this.customerRepository.save(customer);
