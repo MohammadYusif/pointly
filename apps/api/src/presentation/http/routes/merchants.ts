@@ -2,7 +2,6 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import { Customer, PhoneNumber, ValidationError } from '../../../domain';
 import { ForbiddenError } from '../../../domain/errors/DomainError';
 import EnvironmentConfig from '../../../infrastructure/config/Environment';
 import { getContainer } from '../container';
@@ -290,39 +289,16 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       });
       const body = updateSchema.parse(request.body);
 
-      const container = getContainer();
-      const { merchantRepository } = container;
+      const { updateMerchantProfileUseCase } = getContainer();
+      const merchant = await updateMerchantProfileUseCase.execute({
+        merchantId,
+        businessName: body.businessName,
+        contactName: body.contactName,
+        phone: body.phone,
+        walletConfig: body.walletConfig,
+      });
 
-      const merchant = await merchantRepository.findById(merchantId);
-      if (!merchant) {
-        return reply.status(404).send({ success: false, error: 'Merchant not found' });
-      }
-
-      const updates: { businessName?: string; contactName?: string; phone?: PhoneNumber } = {};
-      if (body.businessName) updates.businessName = body.businessName;
-      if (body.contactName) updates.contactName = body.contactName;
-      if (body.phone) {
-        try {
-          updates.phone = new PhoneNumber(body.phone);
-        } catch {
-          throw new ValidationError('Invalid Saudi phone number format');
-        }
-      }
-
-      merchant.updateBusinessInfo(updates);
-
-      if (body.walletConfig) {
-        const wc = body.walletConfig;
-        merchant.setWalletConfig({
-          primaryColor: wc.primaryColor,
-          backgroundColor: wc.backgroundColor,
-          ...(wc.logoUrl !== undefined && { logoUrl: wc.logoUrl }),
-        });
-      }
-
-      await merchantRepository.save(merchant);
-
-      return reply.send({ success: true, data: merchant.toJSON() });
+      return reply.send({ success: true, data: merchant });
     },
   );
 
@@ -388,16 +364,13 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       });
       const body = locationSchema.parse(request.body);
 
-      const container = getContainer();
-      const { merchantRepository } = container;
-
-      const merchant = await merchantRepository.findById(merchantId);
-      if (!merchant) {
-        return reply.status(404).send({ success: false, error: 'Merchant not found' });
-      }
-
-      const location = merchant.addLocation(body.name, body.address, body.city);
-      await merchantRepository.save(merchant);
+      const { addMerchantLocationUseCase } = getContainer();
+      const location = await addMerchantLocationUseCase.execute({
+        merchantId,
+        name: body.name,
+        address: body.address,
+        city: body.city,
+      });
 
       return reply.status(201).send({ success: true, data: location });
     },
@@ -480,55 +453,16 @@ export async function merchantRoutes(server: FastifyInstance): Promise<void> {
       });
       const body = registerSchema.parse(request.body);
 
-      let normalizedPhone: PhoneNumber;
-      try {
-        normalizedPhone = new PhoneNumber(body.phone);
-      } catch {
-        throw new ValidationError(
-          'Invalid Saudi phone number format. Use 05XXXXXXXX or +9665XXXXXXXX',
-        );
-      }
+      const { registerCustomerForMerchantUseCase } = getContainer();
+      const result = await registerCustomerForMerchantUseCase.execute({
+        merchantId,
+        phone: body.phone,
+        name: body.name,
+      });
 
-      const container = getContainer();
-      const { customerRepository, merchantRepository } = container;
-
-      const merchant = await merchantRepository.findById(merchantId);
-      if (!merchant) {
-        return reply.status(404).send({ success: false, error: 'Merchant not found' });
-      }
-
-      if (!merchant.isVerified()) {
-        throw new ValidationError('Merchant is not verified');
-      }
-
-      // Find or create customer
-      let customer = await customerRepository.findByPhone(normalizedPhone.toE164());
-      let newlyCreated = false;
-
-      if (!customer) {
-        customer = Customer.create(normalizedPhone, body.name);
-        newlyCreated = true;
-      }
-
-      // Enroll if not already enrolled (consent is auto-granted)
-      const enrollment = customer.getEnrollment(merchantId);
-      let customerChanged = newlyCreated;
-
-      if (!enrollment) {
-        customer.enrollWithMerchant(merchantId);
-        merchant.incrementCustomerCount();
-        customerChanged = true;
-      }
-
-      if (customerChanged) {
-        await container.transactionalWriter.writeAll([
-          ...customerRepository.toEnrollmentItems(customer, merchantId),
-          ...merchantRepository.toPersistenceItem(merchant),
-        ]);
-      }
-
-      const scopedView = customer.toMerchantScopedView(merchantId);
-      return reply.status(newlyCreated ? 201 : 200).send({ success: true, data: scopedView });
+      return reply
+        .status(result.newlyCreated ? 201 : 200)
+        .send({ success: true, data: result.customer });
     },
   );
 

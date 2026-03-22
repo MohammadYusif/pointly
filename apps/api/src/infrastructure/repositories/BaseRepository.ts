@@ -88,6 +88,11 @@ export abstract class BaseDynamoDBRepository<T> {
   /**
    * Execute a DynamoDB TransactWriteItems operation for atomic multi-item writes.
    * Accepts items across different tables by specifying tableName per item.
+   *
+   * @deprecated Use the `atomicWrite` callback injected via the use-case constructor instead.
+   * This method bypasses the 25-item guard enforced by `TransactionalWriter.writeAll()` and
+   * couples repository subclasses to transaction orchestration. Retained only for the
+   * legacy `PushSubscriptionRepository` callsite — do not add new usages.
    */
   protected async transactWrite(
     items: Array<{

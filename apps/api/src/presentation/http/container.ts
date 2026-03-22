@@ -10,7 +10,10 @@ import type { IIdempotencyService } from '../../application/services/IIdempotenc
 import type { IOutgoingWebhookService } from '../../application/services/IOutgoingWebhookService';
 import type { IPushNotificationService } from '../../application/services/IPushNotificationService';
 import type { ISmsPublisherService } from '../../application/services/ISmsPublisherService';
+import { AddMerchantLocationUseCase } from '../../application/use-cases/AddMerchantLocationUseCase';
 import { CheckChallengeEligibilityUseCase } from '../../application/use-cases/CheckChallengeEligibilityUseCase';
+import { CreateCustomerUseCase } from '../../application/use-cases/CreateCustomerUseCase';
+import { DeleteCustomerAccountUseCase } from '../../application/use-cases/DeleteCustomerAccountUseCase';
 import { EnrollCustomerUseCase } from '../../application/use-cases/EnrollCustomerUseCase';
 import { GenerateQRCodeUseCase } from '../../application/use-cases/GenerateQRCodeUseCase';
 import { GetAnalyticsUseCase } from '../../application/use-cases/GetAnalyticsUseCase';
@@ -26,6 +29,10 @@ import { ProcessMonthlyTierResetUseCase } from '../../application/use-cases/Proc
 import { ProcessPointsDecayUseCase } from '../../application/use-cases/ProcessPointsDecayUseCase';
 import { RecordPurchaseUseCase } from '../../application/use-cases/RecordPurchaseUseCase';
 import { RedeemPointsUseCase } from '../../application/use-cases/RedeemPointsUseCase';
+import { RegisterCustomerForMerchantUseCase } from '../../application/use-cases/RegisterCustomerForMerchantUseCase';
+import { SetupCustomerAccountUseCase } from '../../application/use-cases/SetupCustomerAccountUseCase';
+import { UpdateCustomerProfileUseCase } from '../../application/use-cases/UpdateCustomerProfileUseCase';
+import { UpdateMerchantProfileUseCase } from '../../application/use-cases/UpdateMerchantProfileUseCase';
 import EnvironmentConfig from '../../infrastructure/config/Environment';
 import DynamoDBClientFactory from '../../infrastructure/database/DynamoDBClient';
 import {
@@ -42,6 +49,7 @@ import {
 } from '../../infrastructure/repositories';
 import { PushSubscriptionRepository } from '../../infrastructure/repositories/PushSubscriptionRepository';
 import { QRNonceRepository } from '../../infrastructure/repositories/QRNonceRepository';
+import { CognitoUserService } from '../../infrastructure/services/CognitoUserService';
 import { WebPushService } from '../../infrastructure/services/WebPushService';
 
 export interface Container {
@@ -59,10 +67,16 @@ export interface Container {
   decayCalculatorService: IDecayCalculatorService;
   smsPublisherService: ISmsPublisherService;
   outgoingWebhookService: IOutgoingWebhookService;
-  transactionalWriter: TransactionalWriter;
   webPushService: IPushNotificationService;
 
   // Use Cases
+  createCustomerUseCase: CreateCustomerUseCase;
+  updateCustomerProfileUseCase: UpdateCustomerProfileUseCase;
+  setupCustomerAccountUseCase: SetupCustomerAccountUseCase;
+  deleteCustomerAccountUseCase: DeleteCustomerAccountUseCase;
+  updateMerchantProfileUseCase: UpdateMerchantProfileUseCase;
+  addMerchantLocationUseCase: AddMerchantLocationUseCase;
+  registerCustomerForMerchantUseCase: RegisterCustomerForMerchantUseCase;
   enrollCustomerUseCase: EnrollCustomerUseCase;
   managePerkUseCase: ManagePerkUseCase;
   manageCampaignUseCase: ManageCampaignUseCase;
@@ -169,6 +183,26 @@ export function createContainer(): Container {
 
   const processMonthlyTierResetUseCase = new ProcessMonthlyTierResetUseCase(customerRepository);
 
+  const createCustomerUseCase = new CreateCustomerUseCase(customerRepository);
+  const updateCustomerProfileUseCase = new UpdateCustomerProfileUseCase(customerRepository);
+  const setupCustomerAccountUseCase = new SetupCustomerAccountUseCase(customerRepository);
+
+  const cognitoUserService = env.CUSTOMER_USER_POOL_ID
+    ? new CognitoUserService(env.CUSTOMER_USER_POOL_ID, env.AWS_REGION ?? 'me-south-1')
+    : null;
+  const deleteCustomerAccountUseCase = new DeleteCustomerAccountUseCase(
+    customerRepository,
+    cognitoUserService,
+  );
+
+  const updateMerchantProfileUseCase = new UpdateMerchantProfileUseCase(merchantRepository);
+  const addMerchantLocationUseCase = new AddMerchantLocationUseCase(merchantRepository);
+  const registerCustomerForMerchantUseCase = new RegisterCustomerForMerchantUseCase(
+    customerRepository,
+    merchantRepository,
+    (items) => transactionalWriter.writeAll(items),
+  );
+
   // Create analytics use case
   const getAnalyticsUseCase = new GetAnalyticsUseCase(merchantRepository, transactionRepository);
 
@@ -222,8 +256,14 @@ export function createContainer(): Container {
     decayCalculatorService,
     smsPublisherService,
     outgoingWebhookService,
-    transactionalWriter,
     webPushService,
+    createCustomerUseCase,
+    updateCustomerProfileUseCase,
+    setupCustomerAccountUseCase,
+    deleteCustomerAccountUseCase,
+    updateMerchantProfileUseCase,
+    addMerchantLocationUseCase,
+    registerCustomerForMerchantUseCase,
     enrollCustomerUseCase,
     managePerkUseCase,
     manageCampaignUseCase,

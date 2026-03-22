@@ -1,13 +1,7 @@
-import {
-  AdminDeleteUserCommand,
-  CognitoIdentityProviderClient,
-} from '@aws-sdk/client-cognito-identity-provider';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import { Customer, PhoneNumber } from '../../../domain';
 import { TIER_CONFIG, TIER_ORDER } from '../../../domain/config/TierConfig.js';
 import { ValidationError } from '../../../domain/errors/DomainError';
-import EnvironmentConfig from '../../../infrastructure/config/Environment';
 import { getContainer } from '../container';
 
 const updateProfileSchema = z.object({
@@ -68,21 +62,13 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
       }
 
       const body = updateProfileSchema.parse(request.body);
+      const { updateCustomerProfileUseCase } = getContainer();
+      const customer = await updateCustomerProfileUseCase.execute({
+        customerId,
+        name: body.name,
+      });
 
-      const container = getContainer();
-      const customer = await container.customerRepository.findById(customerId);
-
-      if (!customer) {
-        return reply.status(404).send({ success: false, error: 'Customer not found' });
-      }
-
-      if (body.name) {
-        customer.updateName(body.name);
-      }
-
-      await container.customerRepository.save(customer);
-
-      return reply.send({ success: true, data: customer.toJSON() });
+      return reply.send({ success: true, data: customer });
     },
   );
 
@@ -227,19 +213,17 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
       }
 
       const body = setupSchema.parse(request.body);
-      const container = getContainer();
+      const { setupCustomerAccountUseCase } = getContainer();
+      const result = await setupCustomerAccountUseCase.execute({
+        cognitoSub,
+        cognitoPhone,
+        name: body.name,
+        dateOfBirth: body.dateOfBirth,
+      });
 
-      // Return existing profile if already set up (idempotent)
-      const existing = await container.customerRepository.findById(cognitoSub);
-      if (existing) {
-        return reply.send({ success: true, data: existing.toJSON() });
-      }
-
-      const phone = new PhoneNumber(cognitoPhone);
-      const customer = Customer.createWithId(cognitoSub, phone, body.name, body.dateOfBirth);
-      await container.customerRepository.save(customer);
-
-      return reply.status(201).send({ success: true, data: customer.toJSON() });
+      return reply
+        .status(result.created ? 201 : 200)
+        .send({ success: true, data: result.customer });
     },
   );
 
@@ -383,31 +367,8 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
     }
 
     try {
-      const container = getContainer();
-
-      // 1. Delete customer from DynamoDB (profile + merchant index items)
-      await container.customerRepository.delete(customerId);
-
-      // 2. Delete user from Cognito (if pool is configured)
-      const env = EnvironmentConfig.get();
-      const userPoolId = env.CUSTOMER_USER_POOL_ID;
-      if (userPoolId && cognitoPhone) {
-        try {
-          const cognitoClient = new CognitoIdentityProviderClient({
-            region: env.AWS_REGION || 'me-south-1',
-          });
-          await cognitoClient.send(
-            new AdminDeleteUserCommand({
-              UserPoolId: userPoolId,
-              Username: cognitoPhone,
-            }),
-          );
-        } catch (err) {
-          // Log but don't fail — DynamoDB record is already deleted
-          request.log.error({ err, customerId }, 'Failed to delete Cognito user');
-        }
-      }
-
+      const { deleteCustomerAccountUseCase } = getContainer();
+      await deleteCustomerAccountUseCase.execute({ customerId, cognitoPhone });
       request.log.info({ customerId }, 'Account permanently deleted');
       return reply.send({ success: true });
     } catch (err) {
