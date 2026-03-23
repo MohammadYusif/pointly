@@ -8,13 +8,15 @@
   "scripts": {
     "lint": "biome check .",
     "format": "biome format --write .",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "zod": "3.24.1"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "typescript": "5.7.2"
+    "typescript": "5.7.2",
+    "vitest": "2.1.9"
   }
 }

@@ -508,9 +508,13 @@ export class Customer {
    */
   getMonthsOfInactivity(): number {
     const now = new Date();
-    const diffTime = Math.abs(now.getTime() - this.props.lastNetworkActivity.getTime());
-    const diffMonths = diffTime / (1000 * 60 * 60 * 24 * 30); // Approximate months
-    return Math.floor(diffMonths);
+    const last = this.props.lastNetworkActivity;
+    const years = now.getFullYear() - last.getFullYear();
+    const months = now.getMonth() - last.getMonth();
+    const totalMonths = years * 12 + months;
+    // Subtract 1 if the day-of-month anniversary hasn't been reached yet this month
+    const dayAdjustment = now.getDate() < last.getDate() ? 1 : 0;
+    return Math.max(0, totalMonths - dayAdjustment);
   }
 
   /**

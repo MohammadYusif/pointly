@@ -330,19 +330,30 @@ export class TransactionRepository
     return this.calculateStats(result.items);
   }
 
-  async getCustomerStats(customerId: string): Promise<TransactionStats> {
-    const result = await this.query<TransactionItem>({
-      IndexName: 'CustomerTransactionsIndex',
-      KeyConditionExpression: 'GSI1PK = :pk',
-      FilterExpression: '#status = :status',
-      ExpressionAttributeNames: {
-        '#status': 'status',
-      },
-      ExpressionAttributeValues: {
-        ':pk': `CUSTOMER#${customerId}`,
-        ':status': TransactionStatus.COMPLETED,
-      },
-    });
+  async getCustomerStats(customerId: string, merchantId?: string): Promise<TransactionStats> {
+    const queryInput = merchantId
+      ? {
+          IndexName: 'CustomerMerchantIndex',
+          KeyConditionExpression: 'GSI4PK = :pk',
+          FilterExpression: '#status = :status',
+          ExpressionAttributeNames: { '#status': 'status' },
+          ExpressionAttributeValues: {
+            ':pk': `CUSTOMER#${customerId}#MERCHANT#${merchantId}`,
+            ':status': TransactionStatus.COMPLETED,
+          },
+        }
+      : {
+          IndexName: 'CustomerTransactionsIndex',
+          KeyConditionExpression: 'GSI1PK = :pk',
+          FilterExpression: '#status = :status',
+          ExpressionAttributeNames: { '#status': 'status' },
+          ExpressionAttributeValues: {
+            ':pk': `CUSTOMER#${customerId}`,
+            ':status': TransactionStatus.COMPLETED,
+          },
+        };
+
+    const result = await this.query<TransactionItem>(queryInput);
 
     return this.calculateStats(result.items);
   }

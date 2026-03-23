@@ -42,6 +42,7 @@ export function signInWithPhone(rawPhone: string, rememberMe = true): Promise<Co
     if (!isValidSaudiPhone(rawPhone)) return reject(new Error('Invalid phone number format'));
 
     const phone = normalizePhone(rawPhone);
+    if (!phone) return reject(new Error('Invalid phone number format'));
     const user = new CognitoUser({ Username: phone, Pool: pool });
     const authDetails = new AuthenticationDetails({ Username: phone });
 
@@ -135,6 +136,7 @@ export function signUpWithCognito(rawPhone: string, name?: string): Promise<void
     if (!isValidSaudiPhone(rawPhone)) return reject(new Error('Invalid phone number format'));
 
     const phone = normalizePhone(rawPhone);
+    if (!phone) return reject(new Error('Invalid phone number format'));
     // Password required by Cognito even for OTP-only flows; never used for login.
     const password = `Tmp${Date.now()}${Math.random().toString(36).slice(2)}Aa1!`;
 

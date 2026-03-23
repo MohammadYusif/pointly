@@ -105,8 +105,11 @@ export const merchantApi = {
 export const customerApi = {
   getById: (id: string) => fetchApi<MerchantScopedCustomerResponse>(`/v1/customers/${id}`),
 
-  getByPhone: (phone: string) =>
-    fetchApi<MerchantScopedCustomerResponse>(`/v1/customers/phone/${normalizePhone(phone)}`),
+  getByPhone: (phone: string) => {
+    const normalized = normalizePhone(phone);
+    if (!normalized) throw new Error('Invalid Saudi phone number format');
+    return fetchApi<MerchantScopedCustomerResponse>(`/v1/customers/phone/${normalized}`);
+  },
 
   create: (phone: string, name?: string) =>
     fetchApi<CustomerResponse>('/v1/customers', {

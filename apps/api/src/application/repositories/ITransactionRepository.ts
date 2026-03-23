@@ -56,7 +56,7 @@ export interface ITransactionRepository extends BaseRepository<Transaction> {
     options?: QueryOptions,
   ): Promise<QueryResult<Transaction>>;
   getMerchantStats(merchantId: string): Promise<TransactionStats>;
-  getCustomerStats(customerId: string): Promise<TransactionStats>;
+  getCustomerStats(customerId: string, merchantId?: string): Promise<TransactionStats>;
   getMerchantAnalytics(merchantId: string, query: AnalyticsQuery): Promise<AnalyticsData>;
   getLocationAnalytics(
     merchantId: string,

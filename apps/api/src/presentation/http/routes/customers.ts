@@ -126,16 +126,17 @@ export async function customerRoutes(server: FastifyInstance): Promise<void> {
     },
   );
 
-  // Get customer stats
+  // Get customer stats (scoped to calling merchant)
   server.get(
     '/:customerId/stats',
     async (request: FastifyRequest<{ Params: { customerId: string } }>, reply: FastifyReply) => {
       const { customerId } = request.params;
+      const callerMerchantId = request.merchantId;
 
       const container = getContainer();
       const transactionRepository = container.transactionRepository;
 
-      const stats = await transactionRepository.getCustomerStats(customerId);
+      const stats = await transactionRepository.getCustomerStats(customerId, callerMerchantId);
 
       return reply.send({
         success: true,

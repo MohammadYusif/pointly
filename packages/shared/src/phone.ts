@@ -9,7 +9,7 @@
  * Normalize a Saudi phone number to E.164 format (+966XXXXXXXXX).
  * Handles: 9 digits, 05XXXXXXXX, 966XXXXXXXXX, and already-prefixed numbers.
  */
-export function normalizePhone(raw: string): string {
+export function normalizePhone(raw: string): string | null {
   const digits = raw.replace(/\D/g, '');
   // 9 digits starting with 5: subscriber number only (e.g. 512345678)
   if (/^5\d{8}$/.test(digits)) return `+966${digits}`;
@@ -19,7 +19,7 @@ export function normalizePhone(raw: string): string {
   if (/^9665\d{8}$/.test(digits)) return `+${digits}`;
   // Already E.164 (+966512345678)
   if (/^\+9665\d{8}$/.test(raw.trim())) return raw.trim();
-  return digits;
+  return null;
 }
 
 /**

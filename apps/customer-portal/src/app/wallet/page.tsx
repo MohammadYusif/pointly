@@ -58,9 +58,14 @@ function GiftCard({ maxPoints }: GiftCardProps) {
       toast.error(t('gift.invalidPhone'));
       return;
     }
+    const normalizedGiftPhone = normalizePhone(giftPhone);
+    if (!normalizedGiftPhone) {
+      toast.error(t('gift.invalidPhone'));
+      return;
+    }
     try {
       await giftMutation.mutateAsync({
-        recipientPhone: normalizePhone(giftPhone),
+        recipientPhone: normalizedGiftPhone,
         points,
         idempotencyKey: crypto.randomUUID(),
       });

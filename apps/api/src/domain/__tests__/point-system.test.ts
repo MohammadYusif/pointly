@@ -1483,3 +1483,43 @@ describe('Point System - Real World Scenarios', () => {
     });
   });
 });
+
+// Helper to set lastNetworkActivity on a customer for inactivity tests
+function setLastNetworkActivity(customer: Customer, date: Date): void {
+  const props = (customer as unknown as CustomerWithProps).props;
+  props.lastNetworkActivity = date;
+}
+
+describe('Customer.getMonthsOfInactivity()', () => {
+  it('returns 0 for activity today', () => {
+    const customer = createCustomerWithEnrollment();
+    setLastNetworkActivity(customer, new Date());
+    expect(customer.getMonthsOfInactivity()).toBe(0);
+  });
+
+  it('returns exactly 12 at 12-calendar-month anniversary', () => {
+    const customer = createCustomerWithEnrollment();
+    const now = new Date();
+    const twelveMonthsAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+    setLastNetworkActivity(customer, twelveMonthsAgo);
+    expect(customer.getMonthsOfInactivity()).toBe(12);
+  });
+
+  it('returns 11 one day before 12-month anniversary', () => {
+    const customer = createCustomerWithEnrollment();
+    const now = new Date();
+    // One day before the 12-month anniversary: same month/year offset but day + 1
+    const almostTwelveMonths = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate() + 1);
+    setLastNetworkActivity(customer, almostTwelveMonths);
+    expect(customer.getMonthsOfInactivity()).toBe(11);
+  });
+
+  it('handles cross-year boundary correctly', () => {
+    const customer = createCustomerWithEnrollment();
+    // Set activity to exactly 13 months ago (same day)
+    const now = new Date();
+    const thirteenMonthsAgo = new Date(now.getFullYear() - 1, now.getMonth() - 1, now.getDate());
+    setLastNetworkActivity(customer, thirteenMonthsAgo);
+    expect(customer.getMonthsOfInactivity()).toBe(13);
+  });
+});
