@@ -40,7 +40,7 @@ export async function createServer(): Promise<FastifyInstance> {
   await server.register(cors, {
     origin:
       env.NODE_ENV === 'production'
-        ? ['https://pointly.sa', 'https://merchant.pointly.sa', 'https://customer.pointly.sa']
+        ? ['https://pointly.sa', 'https://merchant.pointly.sa', 'https://app.pointly.sa']
         : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

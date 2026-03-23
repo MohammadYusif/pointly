@@ -21,7 +21,7 @@ export default function QRCodePage() {
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
   // Stable ref for fetch function — avoids re-creating the countdown interval
-  const fetchQRRef = useRef<() => void>();
+  const fetchQRRef = useRef<(() => void) | undefined>(undefined);
   fetchQRRef.current = () => {
     if (generateQR.isPending) return;
     generateQR.mutate(undefined, {

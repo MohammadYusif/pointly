@@ -649,7 +649,7 @@ resource "aws_lambda_function" "sms_consumer" {
   memory_size   = 256
 
   filename         = var.lambda_sms_consumer_zip_path
-  source_code_hash = filebase64sha256(var.lambda_sms_consumer_zip_path)
+  source_code_hash = fileexists(var.lambda_sms_consumer_zip_path) ? filebase64sha256(var.lambda_sms_consumer_zip_path) : null
 
   environment {
     variables = {
