@@ -9,6 +9,7 @@
     "build:lambda": "esbuild src/lambda.ts --bundle --platform=node --target=node20 --outfile=dist/lambda/index.js --external:@aws-sdk/* --minify",
     "build:lambda:decay": "esbuild src/scheduled-decay.ts --bundle --platform=node --target=node20 --outfile=dist/lambda-decay/index.js --external:@aws-sdk/* --minify",
     "build:lambda:tier-reset": "esbuild src/scheduled-tier-reset.ts --bundle --platform=node --target=node20 --outfile=dist/lambda-tier-reset/index.js --external:@aws-sdk/* --minify",
+    "build:lambda:sms-consumer": "esbuild src/sms-consumer.ts --bundle --platform=node --target=node20 --outfile=dist/lambda-sms-consumer/index.js --external:@aws-sdk/*",
     "build:lambda:all": "pnpm build:lambda && pnpm build:lambda:decay && pnpm build:lambda:tier-reset",
     "start": "node dist/presentation/http/server.js",
     "test": "vitest run --coverage",

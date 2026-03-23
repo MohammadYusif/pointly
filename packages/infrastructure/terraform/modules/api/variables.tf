@@ -16,6 +16,12 @@ variable "lambda_tier_reset_zip_path" {
   default = ""
 }
 
+variable "lambda_sms_consumer_zip_path" {
+  description = "Path to the SMS consumer Lambda zip file"
+  type        = string
+  default     = "lambda-sms-consumer.zip"
+}
+
 # Cognito
 variable "merchant_user_pool_id" {
   type = string

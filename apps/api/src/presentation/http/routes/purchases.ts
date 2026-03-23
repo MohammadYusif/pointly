@@ -124,6 +124,10 @@ export async function purchaseRoutes(server: FastifyInstance): Promise<void> {
         });
       }
 
+      if (request.merchantId && transaction.getMerchantId() !== request.merchantId) {
+        throw new ForbiddenError('Access denied to this transaction');
+      }
+
       return reply.send({
         success: true,
         data: transaction.toJSON(),

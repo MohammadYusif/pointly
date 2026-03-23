@@ -333,7 +333,6 @@ data "archive_file" "create_auth_challenge" {
           otp = prev.challengeMetadata.substring(4);
         } else {
           otp = String(Math.floor(100000 + Math.random() * 900000));
-          console.log('[OTP] Phone: ' + event.request.userAttributes.phone_number + ' | Code: ' + otp);
         }
         event.response.publicChallengeParameters = {
           phone: event.request.userAttributes.phone_number,

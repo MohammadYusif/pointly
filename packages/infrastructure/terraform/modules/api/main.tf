@@ -538,3 +538,165 @@ resource "aws_lambda_permission" "allow_eventbridge_tier_reset" {
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.tier_reset_schedule[0].arn
 }
+
+# ─── WAFv2 Web ACL ────────────────────────────────────────────────────────────
+
+resource "aws_wafv2_web_acl" "api" {
+  name  = "pointly-api-waf-${var.environment}"
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "AWSManagedRulesCommonRuleSet"
+    priority = 1
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        vendor_name = "AWS"
+        name        = "AWSManagedRulesCommonRuleSet"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "CommonRuleSet"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWSManagedRulesKnownBadInputsRuleSet"
+    priority = 2
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        vendor_name = "AWS"
+        name        = "AWSManagedRulesKnownBadInputsRuleSet"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "KnownBadInputs"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "IPRateLimit"
+    priority = 3
+
+    action {
+      block {}
+    }
+
+    statement {
+      rate_based_statement {
+        limit              = 2000
+        aggregate_key_type = "IP"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "IPRateLimit"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "pointly-api-waf-${var.environment}"
+    sampled_requests_enabled   = true
+  }
+
+  tags = {
+    Environment = var.environment
+    Service     = "pointly-api"
+  }
+}
+
+resource "aws_wafv2_web_acl_association" "api" {
+  # Associate WAF with the API Gateway stage
+  resource_arn = aws_api_gateway_stage.main.arn
+  web_acl_arn  = aws_wafv2_web_acl.api.arn
+}
+
+# ─── SMS Consumer Lambda ───────────────────────────────────────────────────────
+
+resource "aws_cloudwatch_log_group" "sms_consumer" {
+  name              = "/aws/lambda/pointly-sms-consumer-${var.environment}"
+  retention_in_days = var.environment == "prod" ? 30 : 7
+}
+
+resource "aws_lambda_function" "sms_consumer" {
+  function_name = "pointly-sms-consumer-${var.environment}"
+  role          = aws_iam_role.lambda_exec.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+  timeout       = 30
+  memory_size   = 256
+
+  filename         = var.lambda_sms_consumer_zip_path
+  source_code_hash = filebase64sha256(var.lambda_sms_consumer_zip_path)
+
+  environment {
+    variables = {
+      NODE_ENV    = var.environment
+      LOG_LEVEL   = var.environment == "prod" ? "info" : "debug"
+    }
+  }
+
+  tracing_config {
+    mode = "Active"
+  }
+
+  depends_on = [aws_cloudwatch_log_group.sms_consumer]
+
+  tags = {
+    Environment = var.environment
+    Service     = "pointly-sms-consumer"
+  }
+}
+
+resource "aws_lambda_event_source_mapping" "sms_consumer" {
+  event_source_arn = aws_sqs_queue.sms.arn
+  function_name    = aws_lambda_function.sms_consumer.arn
+  batch_size       = 10
+
+  # Allow Lambda to start with partial failures reported
+  function_response_types = ["ReportBatchItemFailures"]
+}
+
+# Allow SMS consumer Lambda to consume from the SQS queue
+resource "aws_iam_role_policy" "sms_consumer_sqs" {
+  name = "pointly-sms-consumer-sqs-${var.environment}"
+  role = aws_iam_role.lambda_exec.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:ChangeMessageVisibility",
+        ]
+        Resource = aws_sqs_queue.sms.arn
+      }
+    ]
+  })
+}

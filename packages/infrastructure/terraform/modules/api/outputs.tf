@@ -29,3 +29,18 @@ output "decay_lambda_function_name" {
 output "tier_reset_lambda_function_name" {
   value = try(aws_lambda_function.tier_reset[0].function_name, "")
 }
+
+output "waf_web_acl_arn" {
+  description = "ARN of the WAFv2 Web ACL protecting the API"
+  value       = aws_wafv2_web_acl.api.arn
+}
+
+output "sms_consumer_lambda_function_name" {
+  description = "Name of the SMS consumer Lambda function"
+  value       = aws_lambda_function.sms_consumer.function_name
+}
+
+output "sms_dlq_name" {
+  description = "Name of the SMS Dead Letter Queue"
+  value       = aws_sqs_queue.sms_dlq.name
+}

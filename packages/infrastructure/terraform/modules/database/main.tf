@@ -275,6 +275,10 @@ resource "aws_dynamodb_table" "idempotency" {
     enabled = true
   }
 
+  point_in_time_recovery {
+    enabled = local.is_prod
+  }
+
   deletion_protection_enabled = local.is_prod
 }
 
@@ -298,6 +302,10 @@ resource "aws_dynamodb_table" "qr_nonce" {
 
   server_side_encryption {
     enabled = true
+  }
+
+  point_in_time_recovery {
+    enabled = local.is_prod
   }
 
   deletion_protection_enabled = local.is_prod
@@ -331,6 +339,10 @@ resource "aws_dynamodb_table" "pending_consents" {
     enabled = true
   }
 
+  point_in_time_recovery {
+    enabled = local.is_prod
+  }
+
   deletion_protection_enabled = local.is_prod
 }
 
@@ -355,6 +367,10 @@ resource "aws_dynamodb_table" "sms_quota" {
 
   server_side_encryption {
     enabled = true
+  }
+
+  point_in_time_recovery {
+    enabled = local.is_prod
   }
 
   deletion_protection_enabled = local.is_prod
@@ -403,6 +419,10 @@ resource "aws_dynamodb_table" "wallet_passes" {
 
   server_side_encryption {
     enabled = true
+  }
+
+  point_in_time_recovery {
+    enabled = local.is_prod
   }
 
   deletion_protection_enabled = local.is_prod
