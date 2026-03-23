@@ -138,7 +138,7 @@ resource "aws_lambda_function" "api" {
   timeout     = 30
   memory_size = local.is_prod ? 1024 : 512
 
-  reserved_concurrent_executions = var.environment == "prod" ? 500 : 100
+  reserved_concurrent_executions = var.environment == "prod" ? 500 : -1
 
   tracing_config {
     mode = "Active"

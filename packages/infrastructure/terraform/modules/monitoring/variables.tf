@@ -30,14 +30,17 @@ variable "alarm_email" {
 variable "sms_dlq_name" {
   description = "Name of the SMS Dead Letter Queue (for DLQ depth alarm)"
   type        = string
+  default     = ""
 }
 
 variable "decay_lambda_function_name" {
   description = "Name of the monthly decay Lambda function (for error alarm)"
   type        = string
+  default     = ""
 }
 
 variable "tier_reset_lambda_function_name" {
   description = "Name of the monthly tier-reset Lambda function (for error alarm)"
   type        = string
+  default     = ""
 }

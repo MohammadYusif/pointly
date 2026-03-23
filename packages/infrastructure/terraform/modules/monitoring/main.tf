@@ -268,6 +268,8 @@ resource "aws_cloudwatch_metric_alarm" "sms_dlq_depth" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "decay_lambda_errors" {
+  count = var.decay_lambda_function_name != "" ? 1 : 0
+
   alarm_name          = "pointly-decay-lambda-errors-${var.environment}"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
@@ -292,6 +294,8 @@ resource "aws_cloudwatch_metric_alarm" "decay_lambda_errors" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "tier_reset_lambda_errors" {
+  count = var.tier_reset_lambda_function_name != "" ? 1 : 0
+
   alarm_name          = "pointly-tier-reset-lambda-errors-${var.environment}"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
