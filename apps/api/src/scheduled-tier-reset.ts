@@ -3,6 +3,7 @@ import { ProcessMonthlyTierResetUseCase } from './application/use-cases/ProcessM
 import EnvironmentConfig from './infrastructure/config/Environment';
 import DynamoDBClientFactory from './infrastructure/database/DynamoDBClient';
 import { CustomerRepository } from './infrastructure/repositories';
+import { logger } from './lib/logger';
 
 export const handler = async (_event: ScheduledEvent) => {
   const env = EnvironmentConfig.get();
@@ -12,12 +13,12 @@ export const handler = async (_event: ScheduledEvent) => {
 
   const useCase = new ProcessMonthlyTierResetUseCase(customerRepository);
 
-  console.log('Starting monthly tier reset processing...');
+  logger.info('Starting monthly tier reset processing');
   const result = await useCase.execute();
-  console.log('Tier reset complete:', JSON.stringify(result));
+  logger.info('Tier reset complete', { result });
 
   if (result.errors.length > 0) {
-    console.error('Tier reset errors:', result.errors);
+    logger.error('Tier reset job failed', { error: String(result.errors) });
   }
 
   return result;

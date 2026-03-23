@@ -9,6 +9,7 @@ import {
   TransactionRepository,
   TransactionalWriter,
 } from './infrastructure/repositories';
+import { logger } from './lib/logger';
 
 export const handler = async (_event: ScheduledEvent) => {
   const env = EnvironmentConfig.get();
@@ -28,12 +29,12 @@ export const handler = async (_event: ScheduledEvent) => {
     smsPublisherService,
   );
 
-  console.log('Starting points decay processing...');
+  logger.info('Starting points decay processing');
   const result = await useCase.execute();
-  console.log('Decay processing complete:', JSON.stringify(result));
+  logger.info('Decay complete', { result });
 
   if (result.errors.length > 0) {
-    console.error('Decay processing errors:', result.errors);
+    logger.error('Decay job failed', { error: String(result.errors) });
   }
 
   return result;

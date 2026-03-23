@@ -1308,8 +1308,7 @@ describe('Domain Entities', () => {
       const json = customer.toJSON();
 
       expect(json.lastNetworkActivity).toBeDefined();
-      expect(json.globalPointsDecayPhase).toBe(0);
-      expect(json.monthsOfInactivity).toBe(0);
+      expect(json.nextDecayDate).toBeDefined();
     });
   });
 });

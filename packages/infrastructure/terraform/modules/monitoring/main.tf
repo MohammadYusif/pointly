@@ -241,6 +241,80 @@ resource "aws_cloudwatch_metric_alarm" "cloudfront_5xx_rate" {
 # ===========================================
 # CloudWatch Dashboard
 # ===========================================
+# ─── Scheduled Job & Queue Alarms ──────────────────────────────────────────────
+
+resource "aws_cloudwatch_metric_alarm" "sms_dlq_depth" {
+  alarm_name          = "pointly-sms-dlq-depth-${var.environment}"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  namespace           = "AWS/SQS"
+  period              = 60
+  statistic           = "Maximum"
+  threshold           = 1
+  alarm_description   = "SMS messages are dead-lettering — investigate SQS DLQ immediately"
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = [aws_sns_topic.alarms.arn]
+  ok_actions          = [aws_sns_topic.alarms.arn]
+
+  dimensions = {
+    QueueName = var.sms_dlq_name
+  }
+
+  tags = {
+    Environment = var.environment
+    Severity    = "HIGH"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "decay_lambda_errors" {
+  alarm_name          = "pointly-decay-lambda-errors-${var.environment}"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  metric_name         = "Errors"
+  namespace           = "AWS/Lambda"
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 1
+  alarm_description   = "Monthly points-decay Lambda has failed — customer points may not have decayed correctly"
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = [aws_sns_topic.alarms.arn]
+  ok_actions          = [aws_sns_topic.alarms.arn]
+
+  dimensions = {
+    FunctionName = var.decay_lambda_function_name
+  }
+
+  tags = {
+    Environment = var.environment
+    Severity    = "HIGH"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "tier_reset_lambda_errors" {
+  alarm_name          = "pointly-tier-reset-lambda-errors-${var.environment}"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  metric_name         = "Errors"
+  namespace           = "AWS/Lambda"
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 1
+  alarm_description   = "Monthly tier-reset Lambda has failed — customer tier recalculations may be stale"
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = [aws_sns_topic.alarms.arn]
+  ok_actions          = [aws_sns_topic.alarms.arn]
+
+  dimensions = {
+    FunctionName = var.tier_reset_lambda_function_name
+  }
+
+  tags = {
+    Environment = var.environment
+    Severity    = "HIGH"
+  }
+}
+
 resource "aws_cloudwatch_dashboard" "main" {
   dashboard_name = "Pointly-${var.environment}"
 

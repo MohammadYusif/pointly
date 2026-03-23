@@ -883,11 +883,6 @@ export class Customer {
       // Decay tracking
       lastNetworkActivity: this.props.lastNetworkActivity.toISOString(),
       nextDecayDate: this.getNextDecayDate().toISOString(),
-      globalPointsDecayPhase: this.props.globalPointsDecayPhase,
-      decayStartDate: this.props.decayStartDate?.toISOString(),
-      lastDecayAppliedAt: this.props.lastDecayAppliedAt?.toISOString(),
-      lastInactivityWarningSentAt: this.props.lastInactivityWarningSentAt?.toISOString(),
-      monthsOfInactivity: this.getMonthsOfInactivity(),
 
       // Streak tracking
       weeklyVisitDates: this.props.weeklyVisitDates,

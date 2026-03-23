@@ -96,10 +96,13 @@ module "monitoring" {
   source      = "./modules/monitoring"
   environment = var.environment
 
-  api_gateway_name           = module.api.api_gateway_name
-  api_gateway_id             = module.api.api_gateway_id
-  lambda_function_name       = module.api.lambda_function_name
-  dynamodb_table_names       = module.database.all_table_names
-  cloudfront_distribution_id = module.frontend.distribution_id
-  alarm_email                = var.alarm_email
+  api_gateway_name                = module.api.api_gateway_name
+  api_gateway_id                  = module.api.api_gateway_id
+  lambda_function_name            = module.api.lambda_function_name
+  dynamodb_table_names            = module.database.all_table_names
+  cloudfront_distribution_id      = module.frontend.distribution_id
+  alarm_email                     = var.alarm_email
+  sms_dlq_name                    = module.api.sms_dlq_name
+  decay_lambda_function_name      = module.api.decay_lambda_function_name
+  tier_reset_lambda_function_name = module.api.tier_reset_lambda_function_name
 }

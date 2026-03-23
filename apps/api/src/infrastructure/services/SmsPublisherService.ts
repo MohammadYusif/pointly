@@ -3,6 +3,7 @@ import type {
   ISmsPublisherService,
   SmsMessage,
 } from '../../application/services/ISmsPublisherService';
+import { logger } from '../../lib/logger';
 
 export class SmsPublisherService implements ISmsPublisherService {
   private sqs: SQSClient;
@@ -31,8 +32,7 @@ export class SmsPublisherService implements ISmsPublisherService {
         }),
       );
     } catch (error) {
-      // Fire-and-forget: log but never throw
-      console.error('[SmsPublisher] Failed to publish SMS:', error);
+      logger.error('[SmsPublisher] Failed to publish SMS', { error: String(error) });
     }
   }
 
@@ -61,7 +61,7 @@ export class SmsPublisherService implements ISmsPublisherService {
           }),
         );
       } catch (error) {
-        console.error('[SmsPublisher] Failed to publish SMS batch:', error);
+        logger.error('[SmsPublisher] Failed to publish SMS batch', { error: String(error) });
       }
     }
   }
