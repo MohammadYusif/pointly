@@ -9,7 +9,7 @@ import {
   ValidationError,
 } from '../../domain';
 import type { TransactionMetadata } from '../../domain';
-import type { CampaignEligibilityContext } from '../../domain/entities/Campaign';
+import type { CampaignEligibilityContext, LineItem } from '../../domain/entities/Campaign';
 import type { ICampaignRepository } from '../repositories/ICampaignRepository';
 import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../repositories/IMerchantRepository';
@@ -28,6 +28,7 @@ export interface RecordPurchaseRequest {
   amountSAR: number;
   idempotencyKey: string;
   locationId?: string;
+  lineItems?: LineItem[] | undefined;
   metadata?: {
     receiptNumber?: string;
     cashierName?: string;
@@ -134,6 +135,7 @@ export class RecordPurchaseUseCase {
 
     let merchantPoints = Points.from(pointsCalculation.merchantPoints);
     const globalPoints = Points.from(pointsCalculation.globalPoints);
+    const pointsPerSAR = merchant.getLoyaltyConfig().pointsPerSAR;
 
     // 4b. Apply active campaign multiplier if available
     let activeCampaignMultiplier: number | undefined;
@@ -141,7 +143,12 @@ export class RecordPurchaseUseCase {
     let activeCampaignId: string | undefined;
     let activeCampaignBonusCap: number | undefined;
     let activeCampaignBonusBeforeCap: number | undefined;
-    const campaignResult = await this.resolveBestCampaign(request, customer, merchantPoints);
+    const campaignResult = await this.resolveBestCampaign(
+      request,
+      customer,
+      merchantPoints,
+      pointsPerSAR,
+    );
     if (campaignResult) {
       activeCampaignId = campaignResult.id;
       activeCampaignMultiplier = campaignResult.multiplier;
@@ -324,6 +331,7 @@ export class RecordPurchaseUseCase {
     request: RecordPurchaseRequest,
     customer: Customer,
     baseMerchantPoints: Points,
+    pointsPerSAR: number,
   ): Promise<{
     id: string;
     multiplier: number;
@@ -363,7 +371,12 @@ export class RecordPurchaseUseCase {
 
     const mult = campaign.getMultiplier();
     const baseMerchant = baseMerchantPoints.toNumber();
-    let campaignMerchant = Math.floor(baseMerchant * mult);
+    // Use calculateCampaignBonus for category-aware multiplier (or full if no categories)
+    let campaignMerchant = campaign.calculateCampaignBonus(
+      baseMerchant,
+      pointsPerSAR,
+      request.lineItems,
+    );
 
     // Cap bonus points if campaign has a per-transaction cap
     const merchantBonus = campaignMerchant - baseMerchant;

@@ -27,6 +27,7 @@ interface CampaignItem {
   winBackDays?: number;
   welcomeDays?: number;
   lastVisitDays?: number;
+  productCategories?: string[];
   createdAt: string;
 }
 
@@ -114,6 +115,9 @@ export class CampaignRepository
     if (item.winBackDays) props.winBackDays = item.winBackDays;
     if (item.welcomeDays) props.welcomeDays = item.welcomeDays;
     if (item.lastVisitDays) props.lastVisitDays = item.lastVisitDays;
+    if (item.productCategories && item.productCategories.length > 0) {
+      props.productCategories = item.productCategories;
+    }
     return Campaign.reconstitute(props);
   }
 
@@ -153,6 +157,9 @@ export class CampaignRepository
     if (winBackDays && winBackDays > 0) item.winBackDays = winBackDays;
     if (welcomeDays && welcomeDays > 0) item.welcomeDays = welcomeDays;
     if (lastVisitDays && lastVisitDays > 0) item.lastVisitDays = lastVisitDays;
+    const productCategories = entity.getProductCategories();
+    if (productCategories && productCategories.length > 0)
+      item.productCategories = productCategories;
     return item as unknown as Record<string, unknown>;
   }
 

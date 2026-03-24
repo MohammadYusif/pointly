@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { CampaignEligibilityContext } from '../entities/Campaign';
+import type { CampaignEligibilityContext, LineItem } from '../entities/Campaign';
 import { Campaign, ValidationError } from '../index';
 
 describe('Campaign Entity', () => {
@@ -405,6 +405,89 @@ describe('Campaign Entity', () => {
         expect(campaign.getLastVisitDays()).toBeUndefined();
         expect(campaign.toJSON().lastVisitDays).toBeUndefined();
       });
+    });
+  });
+
+  describe('Category/Product-Level Multiplier', () => {
+    const startDate = new Date(Date.now() - 1000);
+    const endDate = new Date(Date.now() + 86400000);
+    const pointsPerSAR = 1;
+
+    it('applies full multiplier when no productCategories configured (regression)', () => {
+      const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS');
+      // 100 base points × 2x = 200
+      expect(campaign.calculateCampaignBonus(100, pointsPerSAR)).toBe(200);
+    });
+
+    it('applies full multiplier when productCategories set but no lineItems provided (backward compat)', () => {
+      const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS', {
+        productCategories: ['food', 'beverages'],
+      });
+      expect(campaign.calculateCampaignBonus(100, pointsPerSAR)).toBe(200);
+    });
+
+    it('applies bonus only to matched line-item categories', () => {
+      const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS', {
+        productCategories: ['food'],
+      });
+      const lineItems: LineItem[] = [
+        { category: 'food', amountSAR: 60 }, // matched
+        { category: 'electronics', amountSAR: 40 }, // not matched
+      ];
+      // basePoints = 100 (total 100 SAR × 1 pt/SAR)
+      // matchedPoints = 60 × 1 = 60, incrementalBonus = 60 × (2 - 1) = 60
+      // total = 100 + 60 = 160
+      expect(campaign.calculateCampaignBonus(100, pointsPerSAR, lineItems)).toBe(160);
+    });
+
+    it('returns base points only when no line items match the categories', () => {
+      const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS', {
+        productCategories: ['food'],
+      });
+      const lineItems: LineItem[] = [{ category: 'electronics', amountSAR: 100 }];
+      expect(campaign.calculateCampaignBonus(100, pointsPerSAR, lineItems)).toBe(100);
+    });
+
+    it('applies full multiplier when all line items match the categories', () => {
+      const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS', {
+        productCategories: ['food'],
+      });
+      const lineItems: LineItem[] = [{ category: 'food', amountSAR: 100 }];
+      // matchedPoints = 100, incrementalBonus = 100 × 1 = 100 → total = 200
+      expect(campaign.calculateCampaignBonus(100, pointsPerSAR, lineItems)).toBe(200);
+    });
+
+    it('maxPointsPerTransaction cap still applies after category calculation', () => {
+      const campaign = Campaign.create('merchant-1', 'CUSTOM', {
+        name: 'Capped Cat',
+        startDate,
+        endDate,
+        multiplier: 3,
+        maxPointsPerTransaction: 50,
+        productCategories: ['food'],
+      });
+      // Without cap: 100 base + 100×2 bonus = 300 uncapped
+      const uncapped = campaign.calculateCampaignBonus(100, pointsPerSAR, [
+        { category: 'food', amountSAR: 100 },
+      ]);
+      expect(uncapped).toBe(300); // calculateCampaignBonus returns before cap
+      // Cap is applied externally via capBonusPoints (existing logic in RecordPurchaseUseCase)
+      const merchantBonus = uncapped - 100;
+      expect(campaign.capBonusPoints(merchantBonus)).toBe(50);
+    });
+
+    it('stores and serialises productCategories', () => {
+      const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS', {
+        productCategories: ['food', 'beverages'],
+      });
+      expect(campaign.getProductCategories()).toEqual(['food', 'beverages']);
+      expect(campaign.toJSON().productCategories).toEqual(['food', 'beverages']);
+    });
+
+    it('omits productCategories from toJSON when not set', () => {
+      const campaign = Campaign.create('merchant-1', 'DOUBLE_POINTS');
+      expect(campaign.getProductCategories()).toBeUndefined();
+      expect(campaign.toJSON().productCategories).toBeUndefined();
     });
   });
 });

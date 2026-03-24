@@ -64,6 +64,12 @@ export const CAMPAIGN_DEFAULTS: Record<Exclude<CampaignType, 'CUSTOM'>, Campaign
   },
 };
 
+/** A single purchase line item used for category-targeted campaign matching. */
+export interface LineItem {
+  category: string;
+  amountSAR: number;
+}
+
 export interface CampaignEligibilityContext {
   dateOfBirth?: string;
   enrolledAt: Date;
@@ -94,6 +100,8 @@ export interface CampaignProps {
   welcomeDays?: number;
   /** Generic inactivity filter — any campaign type. Customer must NOT have visited within this many days. */
   lastVisitDays?: number;
+  /** Category filter — bonus only applies to line items whose category is in this list. */
+  productCategories?: string[];
   createdAt: Date;
 }
 
@@ -117,6 +125,7 @@ export interface CampaignJSON {
   winBackDays?: number;
   welcomeDays?: number;
   lastVisitDays?: number;
+  productCategories?: string[];
   createdAt: string;
 }
 
@@ -134,6 +143,7 @@ interface CampaignOverrides {
   winBackDays?: number;
   welcomeDays?: number;
   lastVisitDays?: number;
+  productCategories?: string[];
 }
 
 export class Campaign {
@@ -180,6 +190,9 @@ export class Campaign {
     }
     if (overrides?.lastVisitDays && overrides.lastVisitDays > 0) {
       props.lastVisitDays = overrides.lastVisitDays;
+    }
+    if (overrides?.productCategories && overrides.productCategories.length > 0) {
+      props.productCategories = overrides.productCategories;
     }
     return new Campaign(props);
   }
@@ -307,6 +320,44 @@ export class Campaign {
 
   getLastVisitDays(): number | undefined {
     return this.props.lastVisitDays;
+  }
+
+  getProductCategories(): string[] | undefined {
+    return this.props.productCategories;
+  }
+
+  /**
+   * Calculate the total merchant points to award for this campaign, optionally
+   * filtered to only matched product categories.
+   *
+   * - No `productCategories` configured → full multiplier on `basePoints` (default).
+   * - `productCategories` configured, no `lineItems` provided → full multiplier (backward compat).
+   * - `productCategories` configured AND `lineItems` provided:
+   *   - Only line items whose `category` is in `productCategories` receive the bonus multiplier.
+   *   - Non-matching items earn base-rate points (no bonus).
+   *   - Returns `basePoints + incrementalBonus` (before any `maxPointsPerTransaction` cap).
+   *
+   * The `pointsPerSAR` parameter is the merchant's current `loyaltyConfig.pointsPerSAR`.
+   */
+  calculateCampaignBonus(basePoints: number, pointsPerSAR: number, lineItems?: LineItem[]): number {
+    const categories = this.props.productCategories;
+    if (!categories || categories.length === 0 || !lineItems || lineItems.length === 0) {
+      // Full multiplier on all points
+      return Math.floor(basePoints * this.props.multiplier);
+    }
+
+    // Sum only the matched line-item amounts
+    const matchedAmountSAR = lineItems
+      .filter((item) => categories.includes(item.category))
+      .reduce((sum, item) => sum + item.amountSAR, 0);
+
+    if (matchedAmountSAR === 0) {
+      return basePoints; // No matched categories — base points only
+    }
+
+    const matchedPoints = Math.floor(matchedAmountSAR * pointsPerSAR);
+    const incrementalBonus = Math.floor(matchedPoints * (this.props.multiplier - 1));
+    return basePoints + incrementalBonus;
   }
 
   // Campaign limit checks
@@ -513,6 +564,14 @@ export class Campaign {
         delete this.props.lastVisitDays;
       }
     }
+    if (overrides.productCategories !== undefined) {
+      if (overrides.productCategories.length > 0) {
+        this.props.productCategories = overrides.productCategories;
+      } else {
+        // biome-ignore lint/performance/noDelete: exactOptionalPropertyTypes requires delete to unset optional props
+        delete this.props.productCategories;
+      }
+    }
   }
 
   private applyLimitOverrides(overrides: CampaignOverrides): void {
@@ -605,6 +664,9 @@ export class Campaign {
     }
     if (this.props.lastVisitDays && this.props.lastVisitDays > 0) {
       result.lastVisitDays = this.props.lastVisitDays;
+    }
+    if (this.props.productCategories && this.props.productCategories.length > 0) {
+      result.productCategories = this.props.productCategories;
     }
     return result;
   }

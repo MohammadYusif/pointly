@@ -3,6 +3,12 @@
  */
 import type { CustomerTierLevel } from './tier-config';
 
+/** A single purchase line item used for category-targeted campaign matching. */
+export interface LineItem {
+  category: string;
+  amountSAR: number;
+}
+
 export interface MilestoneConfig {
   id: string;
   label: string;
@@ -364,6 +370,7 @@ export interface CampaignResponse {
   winBackDays?: number;
   welcomeDays?: number;
   lastVisitDays?: number;
+  productCategories?: string[];
   createdAt: string;
 }
 
