@@ -878,6 +878,19 @@ export class Customer {
   }
 
   /**
+   * Zero out the merchant points balance for the given merchant enrollment.
+   * Called by MerchantPointsExpiryService when a customer's enrollment has
+   * been inactive past the merchant's configured expiry window.
+   * No-op if the customer is not enrolled with this merchant.
+   */
+  expireMerchantPoints(merchantId: string): void {
+    const enrollment = this.props.enrollments.get(merchantId);
+    if (!enrollment) return;
+    enrollment.merchantPointsBalance = Points.zero();
+    this.props.updatedAt = new Date();
+  }
+
+  /**
    * Manually set tier (admin override)
    */
   setTier(tier: CustomerTier, _reason: string): void {

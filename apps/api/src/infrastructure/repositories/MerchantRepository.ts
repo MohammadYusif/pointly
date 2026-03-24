@@ -296,6 +296,9 @@ export class MerchantRepository
       enableMultiLocation: rawConfig.enableMultiLocation ?? false,
       referralBonusForReferrer: rawConfig.referralBonusForReferrer ?? 0,
       referralBonusForReferee: rawConfig.referralBonusForReferee ?? 0,
+      ...(rawConfig.merchantPointsExpiryDays !== undefined && {
+        merchantPointsExpiryDays: rawConfig.merchantPointsExpiryDays,
+      }),
       ...(rawConfig.milestones &&
         rawConfig.milestones.length > 0 && {
           milestones: rawConfig.milestones,

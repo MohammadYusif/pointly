@@ -54,6 +54,15 @@ export interface LoyaltyConfiguration {
   /** Merchant points awarded to the new (referred) customer on their first purchase.
    *  Set to 0 (default) to disable. */
   referralBonusForReferee: number;
+  /**
+   * Optional per-merchant points expiry window in days.
+   * When set, a customer's merchantPointsBalance for this merchant is zeroed out if their
+   * lastTransactionAt (or enrolledAt if never transacted) is older than this many days.
+   *
+   * KSA Ministry of Commerce compliance: minimum value is 365 days.
+   * Omitting this field means merchant points never expire (always legal).
+   */
+  merchantPointsExpiryDays?: number;
 }
 
 export interface SMSQuota {
@@ -277,6 +286,27 @@ export class Merchant {
       forReferrer: this.props.loyaltyConfig.referralBonusForReferrer,
       forReferee: this.props.loyaltyConfig.referralBonusForReferee,
     };
+  }
+
+  getMerchantPointsExpiryDays(): number | undefined {
+    return this.props.loyaltyConfig.merchantPointsExpiryDays;
+  }
+
+  /**
+   * Set the per-merchant points expiry window.
+   *
+   * KSA Ministry of Commerce compliance: the minimum value is 365 days.
+   * This mirrors the 12-month grace period already enforced for global point decay
+   * (CustomerDecayService). Lowering this floor would violate consumer protection regulations.
+   */
+  setMerchantPointsExpiry(days: number): void {
+    if (days < 365) {
+      throw new ValidationError(
+        'merchantPointsExpiryDays must be at least 365 (KSA Ministry of Commerce minimum)',
+      );
+    }
+    this.props.loyaltyConfig.merchantPointsExpiryDays = days;
+    this.props.updatedAt = new Date();
   }
 
   getSMSQuota(): SMSQuota {

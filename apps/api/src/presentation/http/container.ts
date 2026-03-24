@@ -27,6 +27,7 @@ import { ManagePerkUseCase } from '../../application/use-cases/ManagePerkUseCase
 import { ManagePushSubscriptionUseCase } from '../../application/use-cases/ManagePushSubscriptionUseCase';
 import { ManageWalletPassUseCase } from '../../application/use-cases/ManageWalletPassUseCase';
 import { MerchantGiftPointsUseCase } from '../../application/use-cases/MerchantGiftPointsUseCase';
+import { ProcessMerchantPointsExpiryUseCase } from '../../application/use-cases/ProcessMerchantPointsExpiryUseCase';
 import { ProcessMonthlyTierResetUseCase } from '../../application/use-cases/ProcessMonthlyTierResetUseCase';
 import { ProcessPointsDecayUseCase } from '../../application/use-cases/ProcessPointsDecayUseCase';
 import { ProcessReferralBonusUseCase } from '../../application/use-cases/ProcessReferralBonusUseCase';
@@ -102,6 +103,7 @@ export interface Container {
   giftPointsUseCase: GiftPointsUseCase;
   merchantGiftPointsUseCase: MerchantGiftPointsUseCase;
   processReferralBonusUseCase: ProcessReferralBonusUseCase;
+  processMerchantPointsExpiryUseCase: ProcessMerchantPointsExpiryUseCase;
 }
 
 let container: Container | null = null;
@@ -314,6 +316,10 @@ export function createContainer(): Container {
     giftPointsUseCase,
     merchantGiftPointsUseCase,
     processReferralBonusUseCase,
+    processMerchantPointsExpiryUseCase: new ProcessMerchantPointsExpiryUseCase(
+      customerRepository,
+      merchantRepository,
+    ),
   };
 }
 
