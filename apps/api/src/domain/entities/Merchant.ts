@@ -48,6 +48,12 @@ export interface LoyaltyConfiguration {
   /** Optional lifetime milestone rewards. Customers receive a one-time bonus when their
    *  globalLifetimePoints first cross each threshold. */
   milestones?: MilestoneConfig[];
+  /** Merchant points awarded to the referrer when their referred customer completes their
+   *  first purchase. Set to 0 (default) to disable referrals. */
+  referralBonusForReferrer: number;
+  /** Merchant points awarded to the new (referred) customer on their first purchase.
+   *  Set to 0 (default) to disable. */
+  referralBonusForReferee: number;
 }
 
 export interface SMSQuota {
@@ -172,6 +178,8 @@ export class Merchant {
         minimumRedemption: 100,
         welcomeBonus: 50,
         enableMultiLocation: false,
+        referralBonusForReferrer: 0,
+        referralBonusForReferee: 0,
       },
       [MerchantTier.PROFESSIONAL]: {
         pointsPerSAR: 1,
@@ -182,6 +190,8 @@ export class Merchant {
         minimumRedemption: 50,
         welcomeBonus: 100,
         enableMultiLocation: true,
+        referralBonusForReferrer: 0,
+        referralBonusForReferee: 0,
       },
       [MerchantTier.ENTERPRISE]: {
         pointsPerSAR: 1,
@@ -192,6 +202,8 @@ export class Merchant {
         minimumRedemption: 25,
         welcomeBonus: 200,
         enableMultiLocation: true,
+        referralBonusForReferrer: 0,
+        referralBonusForReferee: 0,
       },
     };
     return configs[tier];
@@ -258,6 +270,13 @@ export class Merchant {
 
   getMilestones(): MilestoneConfig[] {
     return this.props.loyaltyConfig.milestones ? [...this.props.loyaltyConfig.milestones] : [];
+  }
+
+  getReferralConfig(): { forReferrer: number; forReferee: number } {
+    return {
+      forReferrer: this.props.loyaltyConfig.referralBonusForReferrer,
+      forReferee: this.props.loyaltyConfig.referralBonusForReferee,
+    };
   }
 
   getSMSQuota(): SMSQuota {

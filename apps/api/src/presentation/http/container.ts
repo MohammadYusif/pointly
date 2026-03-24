@@ -29,6 +29,7 @@ import { ManageWalletPassUseCase } from '../../application/use-cases/ManageWalle
 import { MerchantGiftPointsUseCase } from '../../application/use-cases/MerchantGiftPointsUseCase';
 import { ProcessMonthlyTierResetUseCase } from '../../application/use-cases/ProcessMonthlyTierResetUseCase';
 import { ProcessPointsDecayUseCase } from '../../application/use-cases/ProcessPointsDecayUseCase';
+import { ProcessReferralBonusUseCase } from '../../application/use-cases/ProcessReferralBonusUseCase';
 import { RecordPurchaseUseCase } from '../../application/use-cases/RecordPurchaseUseCase';
 import { RedeemPointsUseCase } from '../../application/use-cases/RedeemPointsUseCase';
 import { RegisterCustomerForMerchantUseCase } from '../../application/use-cases/RegisterCustomerForMerchantUseCase';
@@ -100,6 +101,7 @@ export interface Container {
   getCustomerInsightsUseCase: GetCustomerInsightsUseCase;
   giftPointsUseCase: GiftPointsUseCase;
   merchantGiftPointsUseCase: MerchantGiftPointsUseCase;
+  processReferralBonusUseCase: ProcessReferralBonusUseCase;
 }
 
 let container: Container | null = null;
@@ -168,6 +170,13 @@ export function createContainer(): Container {
     transactionalWriter.writeAll(items),
   );
 
+  const processReferralBonusUseCase = new ProcessReferralBonusUseCase(
+    customerRepository,
+    merchantRepository,
+    transactionRepository,
+    (items) => transactionalWriter.writeAll(items),
+  );
+
   const recordPurchaseUseCase = new RecordPurchaseUseCase(
     customerRepository,
     merchantRepository,
@@ -177,6 +186,7 @@ export function createContainer(): Container {
     smsPublisherService,
     campaignRepository,
     checkChallengeEligibilityUseCase,
+    processReferralBonusUseCase,
   );
 
   const redeemPointsUseCase = new RedeemPointsUseCase(
@@ -303,6 +313,7 @@ export function createContainer(): Container {
     getCustomerInsightsUseCase,
     giftPointsUseCase,
     merchantGiftPointsUseCase,
+    processReferralBonusUseCase,
   };
 }
 

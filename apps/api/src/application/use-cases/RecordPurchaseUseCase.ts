@@ -18,6 +18,7 @@ import type { IIdempotencyService } from '../services/IIdempotencyService';
 import type { ISmsPublisherService } from '../services/ISmsPublisherService';
 import type { PersistenceItem } from '../shared/interfaces/BaseRepository';
 import type { CheckChallengeEligibilityUseCase } from './CheckChallengeEligibilityUseCase';
+import type { ProcessReferralBonusUseCase } from './ProcessReferralBonusUseCase';
 
 const IDEMPOTENCY_TTL_SECONDS = 3600;
 
@@ -71,6 +72,9 @@ export interface RecordPurchaseResponse {
   /** Lifetime milestones crossed and claimed during this purchase (empty when none). */
   milestonesAwarded?: Array<{ id: string; label: string; bonusPoints: number }>;
 
+  /** True when a referral bonus was applied for this customer's first purchase. */
+  referralBonusAwarded?: boolean;
+
   message: string;
 }
 
@@ -97,6 +101,7 @@ export class RecordPurchaseUseCase {
     private smsPublisher?: ISmsPublisherService,
     private campaignRepository?: ICampaignRepository,
     private checkChallengeEligibility?: CheckChallengeEligibilityUseCase,
+    private processReferralBonus?: ProcessReferralBonusUseCase,
   ) {}
 
   async execute(request: RecordPurchaseRequest): Promise<RecordPurchaseResponse> {
@@ -238,6 +243,21 @@ export class RecordPurchaseUseCase {
       ...this.merchantRepository.toPersistenceItem(merchant),
     ]);
 
+    // 10a. Fire-and-forget referral bonus on first purchase
+    const isFirstPurchase =
+      (customer.getEnrollment(request.merchantId)?.transactionCount ?? 0) === 1;
+    const referralBonusAwarded =
+      isFirstPurchase && !!this.processReferralBonus && !!customer.getReferredBy();
+    if (referralBonusAwarded) {
+      this.processReferralBonus
+        ?.execute({
+          refereeCustomerId: request.customerId,
+          merchantId: request.merchantId,
+          idempotencyKey: `${request.idempotencyKey}_referral`,
+        })
+        .catch(() => {});
+    }
+
     // 10. Store idempotency result
     const response: RecordPurchaseResponse = {
       transactionId: transaction.getTransactionId(),
@@ -267,6 +287,8 @@ export class RecordPurchaseUseCase {
           bonusPoints: m.bonusPoints,
         })),
       }),
+
+      ...(referralBonusAwarded && { referralBonusAwarded: true }),
 
       message: `Purchase recorded! Earned ${merchantPoints.toNumber()} merchant points and ${boostedGlobalPoints.toNumber()} Pointly Network points`,
     };

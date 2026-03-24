@@ -5,6 +5,7 @@ import { getContainer } from '../container';
 const createCustomerSchema = z.object({
   phone: z.string().min(1),
   name: z.string().optional(),
+  referredBy: z.string().optional(),
 });
 
 type CreateCustomerBody = z.infer<typeof createCustomerSchema>;
@@ -16,7 +17,11 @@ export async function customerPublicRoutes(server: FastifyInstance): Promise<voi
     async (request: FastifyRequest<{ Body: CreateCustomerBody }>, reply: FastifyReply) => {
       const body = createCustomerSchema.parse(request.body);
       const { createCustomerUseCase } = getContainer();
-      const customer = await createCustomerUseCase.execute({ phone: body.phone, name: body.name });
+      const customer = await createCustomerUseCase.execute({
+        phone: body.phone,
+        name: body.name,
+        referredBy: body.referredBy,
+      });
       return reply.status(201).send({ success: true, data: customer });
     },
   );

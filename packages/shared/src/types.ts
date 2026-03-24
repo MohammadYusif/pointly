@@ -136,6 +136,8 @@ export interface CustomerResponse {
   lastInactivityWarningSentAt?: string;
   monthsOfInactivity: number;
 
+  referralCode?: string;
+
   enrollments: CustomerEnrollment[];
   createdAt: string;
   updatedAt: string;
@@ -222,6 +224,7 @@ export interface RecordPurchaseResponse {
   campaignName?: string;
   breakdown?: PointsBreakdown;
   milestonesAwarded?: Array<{ id: string; label: string; bonusPoints: number }>;
+  referralBonusAwarded?: boolean;
   message: string;
 }
 

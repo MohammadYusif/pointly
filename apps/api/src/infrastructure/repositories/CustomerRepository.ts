@@ -1,4 +1,5 @@
 import { QueryCommand, type QueryCommandInput } from '@aws-sdk/lib-dynamodb';
+import { ulid } from 'ulid';
 import type { ICustomerRepository } from '../../application/repositories/ICustomerRepository';
 import type { QueryOptions, QueryResult } from '../../application/shared/interfaces/BaseRepository';
 import {
@@ -39,6 +40,8 @@ interface CustomerItem {
   weeklyVisitDates?: string[];
   lastStreakResetAt?: string;
   claimedMilestones?: string[];
+  referralCode?: string;
+  referredBy?: string;
   enrollments: EnrollmentItem[];
   createdAt: string;
   updatedAt: string;
@@ -90,6 +93,25 @@ export class CustomerRepository
 
     const firstItem = result.items[0];
     return firstItem ? this.itemToEntity(firstItem) : null;
+  }
+
+  async findByReferralCode(code: string): Promise<Customer | null> {
+    // Scan EntityTypeIndex (CUSTOMER-only partition) with a FilterExpression.
+    // Referral lookups are infrequent (first purchase only) so a filtered GSI scan is acceptable.
+    const queryInput: QueryCommandInput = {
+      TableName: this.tableName,
+      IndexName: 'EntityTypeIndex',
+      KeyConditionExpression: 'EntityType = :entityType',
+      FilterExpression: 'referralCode = :code',
+      ExpressionAttributeValues: {
+        ':entityType': 'CUSTOMER',
+        ':code': code,
+      },
+      Limit: 1,
+    };
+    const result = await this.client.send(new QueryCommand(queryInput));
+    const item = (result.Items || [])[0];
+    return item ? this.itemToEntity(item as unknown as CustomerItem) : null;
   }
 
   async findByMerchant(merchantId: string, options?: QueryOptions): Promise<QueryResult<Customer>> {
@@ -313,6 +335,8 @@ export class CustomerRepository
       weeklyVisitDates: customerItem.weeklyVisitDates || [],
       lastStreakResetAt: CustomerRepository.parseDate(customerItem.lastStreakResetAt, createdAt),
       claimedMilestones: customerItem.claimedMilestones || [],
+      // Migration-safe: generate a referral code for pre-existing records that lack one
+      referralCode: customerItem.referralCode || ulid().slice(-8).toUpperCase(),
       enrollments,
       createdAt,
       updatedAt: new Date(customerItem.updatedAt),
@@ -323,6 +347,9 @@ export class CustomerRepository
     }
     if (customerItem.dateOfBirth) {
       props.dateOfBirth = customerItem.dateOfBirth;
+    }
+    if (customerItem.referredBy) {
+      props.referredBy = customerItem.referredBy;
     }
     const decayStartDate = CustomerRepository.parseDateOptional(customerItem.decayStartDate);
     if (decayStartDate) {
@@ -390,6 +417,8 @@ export class CustomerRepository
       weeklyVisitDates: json.weeklyVisitDates,
       lastStreakResetAt: json.lastStreakResetAt,
       claimedMilestones: json.claimedMilestones,
+      referralCode: json.referralCode,
+      ...(json.referredBy && { referredBy: json.referredBy }),
       enrollments,
       createdAt: json.createdAt,
       updatedAt: json.updatedAt,

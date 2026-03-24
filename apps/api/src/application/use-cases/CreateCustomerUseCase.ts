@@ -4,6 +4,7 @@ import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 export interface CreateCustomerRequest {
   phone: string;
   name?: string | undefined;
+  referredBy?: string | undefined;
 }
 
 export class CreateCustomerUseCase {
@@ -27,6 +28,9 @@ export class CreateCustomerUseCase {
     }
 
     const customer = Customer.create(phone, request.name);
+    if (request.referredBy) {
+      customer.setReferredBy(request.referredBy);
+    }
     await this.customerRepository.save(customer);
 
     return customer.toJSON();

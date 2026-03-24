@@ -294,6 +294,8 @@ export class MerchantRepository
       minimumRedemption: rawConfig.minimumRedemption ?? 100,
       welcomeBonus: rawConfig.welcomeBonus ?? 50,
       enableMultiLocation: rawConfig.enableMultiLocation ?? false,
+      referralBonusForReferrer: rawConfig.referralBonusForReferrer ?? 0,
+      referralBonusForReferee: rawConfig.referralBonusForReferee ?? 0,
       ...(rawConfig.milestones &&
         rawConfig.milestones.length > 0 && {
           milestones: rawConfig.milestones,

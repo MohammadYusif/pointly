@@ -60,6 +60,10 @@ export interface CustomerProps {
   // Milestone tracking — IDs of milestones already claimed (one-time award, never re-triggered)
   claimedMilestones: string[];
 
+  // Referral program
+  referralCode: string; // Unique code this customer can share (e.g. "A1B2C3D4")
+  referredBy?: string; // Referral code used when this customer registered (referrer's code)
+
   enrollments: Map<string, CustomerEnrollment>;
   createdAt: Date;
   updatedAt: Date;
@@ -94,6 +98,9 @@ export class Customer {
 
       // Milestone tracking
       claimedMilestones: [],
+
+      // Referral program
+      referralCode: ulid().slice(-8).toUpperCase(),
 
       enrollments: new Map(),
       createdAt: now,
@@ -132,6 +139,7 @@ export class Customer {
       weeklyVisitDates: [],
       lastStreakResetAt: now,
       claimedMilestones: [],
+      referralCode: ulid().slice(-8).toUpperCase(),
       enrollments: new Map(),
       createdAt: now,
       updatedAt: now,
@@ -794,6 +802,23 @@ export class Customer {
     return [...this.props.claimedMilestones];
   }
 
+  /** Get the unique referral code for this customer. */
+  getReferralCode(): string {
+    return this.props.referralCode;
+  }
+
+  /** Get the referral code that was used when this customer registered, if any. */
+  getReferredBy(): string | undefined {
+    return this.props.referredBy;
+  }
+
+  /** Set the referral code used at registration time. Can only be set once. */
+  setReferredBy(referralCode: string): void {
+    if (this.props.referredBy) return; // idempotent — never overwrite
+    this.props.referredBy = referralCode;
+    this.props.updatedAt = new Date();
+  }
+
   /**
    * Check all provided milestone configs against globalLifetimePoints and claim any
    * that have been crossed but not yet claimed. Returns the list of newly claimed milestones.
@@ -936,6 +961,10 @@ export class Customer {
 
       // Milestone tracking
       claimedMilestones: this.props.claimedMilestones,
+
+      // Referral program
+      referralCode: this.props.referralCode,
+      ...(this.props.referredBy && { referredBy: this.props.referredBy }),
 
       enrollments: Array.from(this.props.enrollments.entries()).map(([, enrollment]) => ({
         merchantId: enrollment.merchantId,
