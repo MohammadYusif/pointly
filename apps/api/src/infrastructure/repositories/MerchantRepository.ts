@@ -294,6 +294,10 @@ export class MerchantRepository
       minimumRedemption: rawConfig.minimumRedemption ?? 100,
       welcomeBonus: rawConfig.welcomeBonus ?? 50,
       enableMultiLocation: rawConfig.enableMultiLocation ?? false,
+      ...(rawConfig.milestones &&
+        rawConfig.milestones.length > 0 && {
+          milestones: rawConfig.milestones,
+        }),
     };
 
     const activePerks = (item.activePerks || []).map((p) => ({

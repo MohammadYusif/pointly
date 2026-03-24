@@ -25,6 +25,17 @@ export interface LocationInfo {
   createdAt: Date;
 }
 
+export interface MilestoneConfig {
+  /** Unique identifier for this milestone (client-generated, e.g. crypto.randomUUID()) */
+  id: string;
+  /** Label shown to the customer when the milestone is reached (e.g. "First 10,000 points!") */
+  label: string;
+  /** Global lifetime points threshold that triggers this milestone */
+  threshold: number;
+  /** Bonus global points awarded when threshold is first crossed */
+  bonusPoints: number;
+}
+
 export interface LoyaltyConfiguration {
   pointsPerSAR: number;
   globalPointsPerSAR: number;
@@ -34,6 +45,9 @@ export interface LoyaltyConfiguration {
   minimumRedemption: number;
   welcomeBonus: number;
   enableMultiLocation: boolean;
+  /** Optional lifetime milestone rewards. Customers receive a one-time bonus when their
+   *  globalLifetimePoints first cross each threshold. */
+  milestones?: MilestoneConfig[];
 }
 
 export interface SMSQuota {
@@ -240,6 +254,10 @@ export class Merchant {
 
   getLoyaltyConfig(): LoyaltyConfiguration {
     return { ...this.props.loyaltyConfig };
+  }
+
+  getMilestones(): MilestoneConfig[] {
+    return this.props.loyaltyConfig.milestones ? [...this.props.loyaltyConfig.milestones] : [];
   }
 
   getSMSQuota(): SMSQuota {

@@ -38,6 +38,7 @@ interface CustomerItem {
   lastInactivityWarningSentAt: string | undefined;
   weeklyVisitDates?: string[];
   lastStreakResetAt?: string;
+  claimedMilestones?: string[];
   enrollments: EnrollmentItem[];
   createdAt: string;
   updatedAt: string;
@@ -311,6 +312,7 @@ export class CustomerRepository
       globalPointsDecayPhase: customerItem.globalPointsDecayPhase ?? 0,
       weeklyVisitDates: customerItem.weeklyVisitDates || [],
       lastStreakResetAt: CustomerRepository.parseDate(customerItem.lastStreakResetAt, createdAt),
+      claimedMilestones: customerItem.claimedMilestones || [],
       enrollments,
       createdAt,
       updatedAt: new Date(customerItem.updatedAt),
@@ -387,6 +389,7 @@ export class CustomerRepository
       lastInactivityWarningSentAt: entity.getLastInactivityWarningSentAt()?.toISOString(),
       weeklyVisitDates: json.weeklyVisitDates,
       lastStreakResetAt: json.lastStreakResetAt,
+      claimedMilestones: json.claimedMilestones,
       enrollments,
       createdAt: json.createdAt,
       updatedAt: json.updatedAt,

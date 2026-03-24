@@ -3,6 +3,7 @@ import { ValidationError } from '../errors/DomainError';
 import { CustomerTier } from '../value-objects/CustomerTier';
 import type { PhoneNumber } from '../value-objects/PhoneNumber';
 import { Points } from '../value-objects/Points';
+import type { MilestoneConfig } from './Merchant';
 
 export enum CustomerStatus {
   ACTIVE = 'ACTIVE',
@@ -56,6 +57,9 @@ export interface CustomerProps {
   weeklyVisitDates: string[]; // ISO date strings of visits this week (deduped by day)
   lastStreakResetAt: Date; // When weekly streak was last reset
 
+  // Milestone tracking — IDs of milestones already claimed (one-time award, never re-triggered)
+  claimedMilestones: string[];
+
   enrollments: Map<string, CustomerEnrollment>;
   createdAt: Date;
   updatedAt: Date;
@@ -87,6 +91,9 @@ export class Customer {
       // Streak tracking
       weeklyVisitDates: [],
       lastStreakResetAt: now,
+
+      // Milestone tracking
+      claimedMilestones: [],
 
       enrollments: new Map(),
       createdAt: now,
@@ -124,6 +131,7 @@ export class Customer {
       globalPointsDecayPhase: 0,
       weeklyVisitDates: [],
       lastStreakResetAt: now,
+      claimedMilestones: [],
       enrollments: new Map(),
       createdAt: now,
       updatedAt: now,
@@ -781,6 +789,44 @@ export class Customer {
     this.props.updatedAt = new Date();
   }
 
+  /** Get the list of milestone IDs already claimed by this customer. */
+  getClaimedMilestones(): string[] {
+    return [...this.props.claimedMilestones];
+  }
+
+  /**
+   * Check all provided milestone configs against globalLifetimePoints and claim any
+   * that have been crossed but not yet claimed. Returns the list of newly claimed milestones.
+   *
+   * Idempotent: a milestone can only be claimed once per customer (enforced via claimedMilestones).
+   */
+  checkAndClaimMilestones(configs: MilestoneConfig[]): MilestoneConfig[] {
+    if (configs.length === 0) return [];
+
+    const lifetimePoints = this.props.globalLifetimePoints.toNumber();
+    const claimed: MilestoneConfig[] = [];
+
+    for (const config of configs) {
+      if (lifetimePoints >= config.threshold && !this.props.claimedMilestones.includes(config.id)) {
+        this.props.claimedMilestones.push(config.id);
+        this.awardMilestoneBonus(Points.from(config.bonusPoints));
+        claimed.push(config);
+      }
+    }
+
+    return claimed;
+  }
+
+  /**
+   * Award bonus global points for a claimed lifetime milestone.
+   * Same pattern as awardStreakBonus — adds to balance AND lifetime total.
+   */
+  private awardMilestoneBonus(bonus: Points): void {
+    this.props.globalPointsBalance = this.props.globalPointsBalance.add(bonus);
+    this.props.globalLifetimePoints = this.props.globalLifetimePoints.add(bonus);
+    this.props.updatedAt = new Date();
+  }
+
   /**
    * Award global points to this customer (e.g. received as a gift from another customer).
    * Does NOT affect monthly progress or tier — gifts are not "earned through spending".
@@ -887,6 +933,9 @@ export class Customer {
       // Streak tracking
       weeklyVisitDates: this.props.weeklyVisitDates,
       lastStreakResetAt: this.props.lastStreakResetAt.toISOString(),
+
+      // Milestone tracking
+      claimedMilestones: this.props.claimedMilestones,
 
       enrollments: Array.from(this.props.enrollments.entries()).map(([, enrollment]) => ({
         merchantId: enrollment.merchantId,

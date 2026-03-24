@@ -3,6 +3,13 @@
  */
 import type { CustomerTierLevel } from './tier-config';
 
+export interface MilestoneConfig {
+  id: string;
+  label: string;
+  threshold: number;
+  bonusPoints: number;
+}
+
 export type PerkType =
   | 'EARLY_ACCESS'
   | 'EXCLUSIVE_PRODUCT'
@@ -82,6 +89,7 @@ export interface MerchantResponse {
     minimumRedemption: number;
     welcomeBonus: number;
     enableMultiLocation: boolean;
+    milestones?: MilestoneConfig[];
   };
   smsQuota: {
     monthlyLimit: number;
@@ -213,6 +221,7 @@ export interface RecordPurchaseResponse {
   campaignMultiplier?: number;
   campaignName?: string;
   breakdown?: PointsBreakdown;
+  milestonesAwarded?: Array<{ id: string; label: string; bonusPoints: number }>;
   message: string;
 }
 

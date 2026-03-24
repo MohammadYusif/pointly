@@ -68,6 +68,9 @@ export interface RecordPurchaseResponse {
 
   breakdown: PurchaseBreakdown;
 
+  /** Lifetime milestones crossed and claimed during this purchase (empty when none). */
+  milestonesAwarded?: Array<{ id: string; label: string; bonusPoints: number }>;
+
   message: string;
 }
 
@@ -158,6 +161,9 @@ export class RecordPurchaseUseCase {
       globalPoints,
       merchantPoints,
     );
+
+    // 5d. Check and claim any lifetime milestone rewards crossed by this purchase
+    const claimedMilestones = customer.checkAndClaimMilestones(merchant.getMilestones());
 
     // 6. Create merchant transaction record (include campaign metadata if active)
     const baseMetadata: TransactionMetadata = request.metadata || {};
@@ -253,6 +259,14 @@ export class RecordPurchaseUseCase {
       ...(activeCampaignName !== undefined && { campaignName: activeCampaignName }),
 
       breakdown,
+
+      ...(claimedMilestones.length > 0 && {
+        milestonesAwarded: claimedMilestones.map((m) => ({
+          id: m.id,
+          label: m.label,
+          bonusPoints: m.bonusPoints,
+        })),
+      }),
 
       message: `Purchase recorded! Earned ${merchantPoints.toNumber()} merchant points and ${boostedGlobalPoints.toNumber()} Pointly Network points`,
     };

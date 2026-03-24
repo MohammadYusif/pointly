@@ -24,6 +24,7 @@ export { Merchant, MerchantStatus, MerchantTier } from './entities/Merchant';
 export type {
   MerchantProps,
   LoyaltyConfiguration,
+  MilestoneConfig,
   SMSQuota,
   LocationInfo,
   PointsCalculation,
