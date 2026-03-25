@@ -875,6 +875,78 @@ function CreateCampaignForm({ onClose }: { onClose: () => void }) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Edit Form helpers (module-level — kept outside component)         */
+/* ------------------------------------------------------------------ */
+
+function validateEditForm(
+  mult: number,
+  startDate: string,
+  endDate: string,
+  tiersLength: number,
+): 'multiplierError' | 'dateError' | 'tierRequired' | null {
+  if (mult < 1 || mult > 5) return 'multiplierError';
+  if (!startDate || !endDate || endDate <= startDate) return 'dateError';
+  if (tiersLength === 0) return 'tierRequired';
+  return null;
+}
+
+function getCampaignTypeHint(
+  type: string,
+  winBackDays: string,
+  welcomeDays: string,
+  t: (key: string, opts?: Record<string, string | number>) => string,
+): string | undefined {
+  if (type === 'BIRTHDAY_REWARD') return t('campaigns.birthdayHint');
+  if (type === 'WIN_BACK') return t('campaigns.winBackHint', { days: winBackDays || '60' });
+  if (type === 'WELCOME') return t('campaigns.welcomeHint', { days: welcomeDays || '30' });
+  return undefined;
+}
+
+function buildCampaignTypePayload(
+  type: string,
+  winBackDays: string,
+  welcomeDays: string,
+  lastVisitDays: string,
+): Record<string, unknown> {
+  if (type === 'WIN_BACK') {
+    const v = Number.parseInt(winBackDays, 10);
+    return v > 0 ? { winBackDays: v } : {};
+  }
+  if (type === 'WELCOME') {
+    const v = Number.parseInt(welcomeDays, 10);
+    return v > 0 ? { welcomeDays: v } : {};
+  }
+  const v = Number.parseInt(lastVisitDays, 10);
+  return v > 0 ? { lastVisitDays: v } : {};
+}
+
+function buildUpdatePayload(args: {
+  startDate: string;
+  endDate: string;
+  mult: number;
+  selectedTiers: string[];
+  maxUses: string;
+  minPurchase: string;
+  maxPoints: string;
+  message: string;
+  type: string;
+  winBackDays: string;
+  welcomeDays: string;
+  lastVisitDays: string;
+}): Record<string, unknown> {
+  const data: Record<string, unknown> = {
+    startDate: new Date(args.startDate).toISOString(),
+    endDate: new Date(args.endDate).toISOString(),
+    multiplier: args.mult,
+    targetTiers: args.selectedTiers.length < ALL_TIERS.length ? args.selectedTiers : [],
+    ...buildLimitsPayload(args.maxUses, args.minPurchase, args.maxPoints),
+    ...buildCampaignTypePayload(args.type, args.winBackDays, args.welcomeDays, args.lastVisitDays),
+  };
+  if (args.message.trim()) data.message = args.message.trim();
+  return data;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Edit Form (inline expand)                                         */
 /* ------------------------------------------------------------------ */
 
@@ -904,42 +976,33 @@ function EditCampaignForm({
 
   const { data: tierBreakdown } = useTierBreakdown();
 
+  const isWinBack = campaign.type === 'WIN_BACK';
+  const isWelcome = campaign.type === 'WELCOME';
+  const isRegular = !isWinBack && !isWelcome;
+  const typeHint = getCampaignTypeHint(campaign.type, winBackDays, welcomeDays, t);
+
   const handleUpdate = async () => {
     const mult = Number.parseFloat(multiplier);
-    if (mult < 1 || mult > 5) {
-      toast.error(t('campaigns.multiplierError'));
-      return;
-    }
-    if (!startDate || !endDate || endDate <= startDate) {
-      toast.error(t('campaigns.dateError'));
-      return;
-    }
-    if (selectedTiers.length === 0) {
-      toast.error(t('campaigns.tierRequired'));
+    const validationKey = validateEditForm(mult, startDate, endDate, selectedTiers.length);
+    if (validationKey) {
+      toast.error(t(`campaigns.${validationKey}`));
       return;
     }
     try {
-      const data: Record<string, unknown> = {
-        startDate: new Date(startDate).toISOString(),
-        endDate: new Date(endDate).toISOString(),
-        multiplier: mult,
-        targetTiers: selectedTiers.length < ALL_TIERS.length ? selectedTiers : [],
-        ...buildLimitsPayload(maxUses, minPurchase, maxPoints),
-      };
-      if (message.trim()) data.message = message.trim();
-      if (campaign.type === 'WIN_BACK') {
-        const parsed = Number.parseInt(winBackDays, 10);
-        if (parsed > 0) data.winBackDays = parsed;
-      }
-      if (campaign.type === 'WELCOME') {
-        const parsed = Number.parseInt(welcomeDays, 10);
-        if (parsed > 0) data.welcomeDays = parsed;
-      }
-      if (campaign.type !== 'WIN_BACK' && campaign.type !== 'WELCOME') {
-        const parsed = Number.parseInt(lastVisitDays, 10);
-        if (parsed > 0) data.lastVisitDays = parsed;
-      }
-
+      const data = buildUpdatePayload({
+        startDate,
+        endDate,
+        mult,
+        selectedTiers,
+        maxUses,
+        minPurchase,
+        maxPoints,
+        message,
+        type: campaign.type,
+        winBackDays,
+        welcomeDays,
+        lastVisitDays,
+      });
       await updateCampaign.mutateAsync({
         campaignId: campaign.campaignId,
         data: data as Parameters<typeof updateCampaign.mutateAsync>[0]['data'],
@@ -970,26 +1033,14 @@ function EditCampaignForm({
         setMaxPoints={setMaxPoints}
         message={message}
         setMessage={setMessage}
-        winBackDays={campaign.type === 'WIN_BACK' ? winBackDays : undefined}
-        setWinBackDays={campaign.type === 'WIN_BACK' ? setWinBackDays : undefined}
-        welcomeDays={campaign.type === 'WELCOME' ? welcomeDays : undefined}
-        setWelcomeDays={campaign.type === 'WELCOME' ? setWelcomeDays : undefined}
-        lastVisitDays={
-          campaign.type !== 'WIN_BACK' && campaign.type !== 'WELCOME' ? lastVisitDays : undefined
-        }
-        setLastVisitDays={
-          campaign.type !== 'WIN_BACK' && campaign.type !== 'WELCOME' ? setLastVisitDays : undefined
-        }
+        winBackDays={isWinBack ? winBackDays : undefined}
+        setWinBackDays={isWinBack ? setWinBackDays : undefined}
+        welcomeDays={isWelcome ? welcomeDays : undefined}
+        setWelcomeDays={isWelcome ? setWelcomeDays : undefined}
+        lastVisitDays={isRegular ? lastVisitDays : undefined}
+        setLastVisitDays={isRegular ? setLastVisitDays : undefined}
         tierBreakdown={tierBreakdown as Record<string, number> | undefined}
-        showTypeSpecificHint={
-          campaign.type === 'BIRTHDAY_REWARD'
-            ? t('campaigns.birthdayHint')
-            : campaign.type === 'WIN_BACK'
-              ? t('campaigns.winBackHint', { days: winBackDays || '60' })
-              : campaign.type === 'WELCOME'
-                ? t('campaigns.welcomeHint', { days: welcomeDays || '30' })
-                : undefined
-        }
+        showTypeSpecificHint={typeHint}
       />
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={onClose}>
