@@ -1,6 +1,6 @@
 variable "aws_region" {
   type    = string
-  default = "me-south-1"
+  default = "eu-west-1"
 }
 
 variable "environment" {
@@ -32,7 +32,7 @@ variable "certificate_arn" {
 
 variable "lambda_zip_path" {
   type        = string
-  default     = "../../../apps/api/lambda.zip"
+  default     = "../../../apps/api/dist/lambda/lambda.zip"
   description = "Path to the pre-built Lambda deployment zip"
 }
 
@@ -46,4 +46,16 @@ variable "lambda_tier_reset_zip_path" {
   type        = string
   default     = ""
   description = "Path to the pre-built tier reset Lambda deployment zip. Empty = skip deployment."
+}
+
+variable "decay_lambda_function_name" {
+  type        = string
+  default     = ""
+  description = "Override name of decay Lambda for monitoring alarms. Auto-detected if empty."
+}
+
+variable "tier_reset_lambda_function_name" {
+  type        = string
+  default     = ""
+  description = "Override name of tier-reset Lambda for monitoring alarms. Auto-detected if empty."
 }

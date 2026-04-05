@@ -20,7 +20,7 @@ provider "aws" {
 
 variable "aws_region" {
   type    = string
-  default = "me-south-1"
+  default = "eu-west-1"
 }
 
 variable "project" {

@@ -11,7 +11,7 @@ data "aws_region" "current" {}
 # S3 Bucket for Static Website
 # ===========================================
 resource "aws_s3_bucket" "dashboard" {
-  bucket = "pointly-merchant-dashboard-${var.environment}-${data.aws_caller_identity.current.account_id}"
+  bucket = "pointly-merchant-dashboard-${var.environment}-${data.aws_caller_identity.current.account_id}-eu"
 
   force_destroy = !local.is_prod
 }
@@ -59,7 +59,7 @@ resource "aws_s3_bucket_cors_configuration" "dashboard" {
 # CloudFront Origin Access Control
 # ===========================================
 resource "aws_cloudfront_origin_access_control" "dashboard" {
-  name                              = "Pointly-MerchantDashboard-OAC-${var.environment}"
+  name                              = "Pointly-MerchantDashboard-OAC-${var.environment}-eu"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
@@ -69,11 +69,11 @@ resource "aws_cloudfront_origin_access_control" "dashboard" {
 # CloudFront Response Headers Policy
 # ===========================================
 resource "aws_cloudfront_response_headers_policy" "security" {
-  name = "Pointly-SecurityHeaders-${var.environment}"
+  name = "Pointly-SecurityHeaders-${var.environment}-eu"
 
   security_headers_config {
     content_security_policy {
-      content_security_policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' ${var.api_url} https://cognito-idp.me-south-1.amazonaws.com; frame-ancestors 'none'"
+      content_security_policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' ${var.api_url} https://cognito-idp.eu-west-1.amazonaws.com; frame-ancestors 'none'"
       override                = true
     }
 
@@ -118,7 +118,7 @@ resource "aws_cloudfront_response_headers_policy" "security" {
 # CloudFront Function for SPA URL Rewriting
 # ===========================================
 resource "aws_cloudfront_function" "url_rewrite" {
-  name    = "Pointly-UrlRewrite-${var.environment}"
+  name    = "Pointly-UrlRewrite-${var.environment}-eu"
   runtime = "cloudfront-js-2.0"
   publish = true
 
@@ -140,7 +140,7 @@ resource "aws_cloudfront_function" "url_rewrite" {
 # CloudFront Cache Policies
 # ===========================================
 resource "aws_cloudfront_cache_policy" "static_assets" {
-  name        = "Pointly-StaticAssets-${var.environment}"
+  name        = "Pointly-StaticAssets-${var.environment}-eu"
   default_ttl = 31536000 # 365 days
   max_ttl     = 31536000
   min_ttl     = 31536000

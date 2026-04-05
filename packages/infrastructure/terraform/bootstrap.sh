@@ -6,7 +6,7 @@ set -euo pipefail
 
 BUCKET_NAME="pointly-terraform-state"
 TABLE_NAME="pointly-terraform-locks"
-REGION="me-south-1"
+REGION="eu-west-1"
 
 echo "Creating S3 bucket for Terraform state..."
 aws s3api create-bucket \

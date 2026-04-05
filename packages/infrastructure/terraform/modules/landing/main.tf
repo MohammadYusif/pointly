@@ -10,7 +10,7 @@ data "aws_caller_identity" "current" {}
 # S3 Bucket for Landing Page
 # ===========================================
 resource "aws_s3_bucket" "landing" {
-  bucket = "pointly-landing-${var.environment}-${data.aws_caller_identity.current.account_id}"
+  bucket = "pointly-landing-${var.environment}-${data.aws_caller_identity.current.account_id}-eu"
 
   force_destroy = !local.is_prod
 }
@@ -46,7 +46,7 @@ resource "aws_s3_bucket_versioning" "landing" {
 # CloudFront Origin Access Control
 # ===========================================
 resource "aws_cloudfront_origin_access_control" "landing" {
-  name                              = "Pointly-Landing-OAC-${var.environment}"
+  name                              = "Pointly-Landing-OAC-${var.environment}-eu"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
@@ -56,7 +56,7 @@ resource "aws_cloudfront_origin_access_control" "landing" {
 # CloudFront Response Headers Policy
 # ===========================================
 resource "aws_cloudfront_response_headers_policy" "landing_security" {
-  name = "Pointly-LandingSecurityHeaders-${var.environment}"
+  name = "Pointly-LandingSecurityHeaders-${var.environment}-eu"
 
   security_headers_config {
     content_security_policy {
@@ -106,7 +106,7 @@ resource "aws_cloudfront_response_headers_policy" "landing_security" {
 # CloudFront Cache Policy — Static Assets
 # ===========================================
 resource "aws_cloudfront_cache_policy" "landing_static" {
-  name        = "Pointly-LandingStaticAssets-${var.environment}"
+  name        = "Pointly-LandingStaticAssets-${var.environment}-eu"
   default_ttl = 31536000
   max_ttl     = 31536000
   min_ttl     = 31536000

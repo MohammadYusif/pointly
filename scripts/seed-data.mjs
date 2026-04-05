@@ -28,7 +28,7 @@ const args = process.argv.slice(2);
 const env = args.includes('--env') ? args[args.indexOf('--env') + 1] : 'dev';
 const clean = args.includes('--clean');
 const poolId = args.includes('--pool-id') ? args[args.indexOf('--pool-id') + 1] : null;
-const region = 'me-south-1';
+const region = 'eu-west-1';
 
 const TABLES = {
   userLedger: `Pointly-UserLedger-${env}`,

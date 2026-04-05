@@ -1,9 +1,9 @@
 terraform {
   backend "s3" {
-    bucket         = "pointly-terraform-state-759316130972"
+    bucket         = "pointly-terraform-state-759316130972-eu"
     key            = "infrastructure/terraform.tfstate"
-    region         = "me-south-1"
-    dynamodb_table = "pointly-terraform-locks"
+    region         = "eu-west-1"
+    dynamodb_table = "pointly-terraform-locks-eu"
     encrypt        = true
   }
 }

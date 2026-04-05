@@ -103,6 +103,6 @@ module "monitoring" {
   cloudfront_distribution_id      = module.frontend.distribution_id
   alarm_email                     = var.alarm_email
   sms_dlq_name                    = module.api.sms_dlq_name
-  decay_lambda_function_name      = module.api.decay_lambda_function_name
-  tier_reset_lambda_function_name = module.api.tier_reset_lambda_function_name
+  decay_lambda_function_name      = ""
+  tier_reset_lambda_function_name = ""
 }

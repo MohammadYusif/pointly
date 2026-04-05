@@ -37,7 +37,7 @@ output "waf_web_acl_arn" {
 
 output "sms_consumer_lambda_function_name" {
   description = "Name of the SMS consumer Lambda function"
-  value       = aws_lambda_function.sms_consumer.function_name
+  value       = try(aws_lambda_function.sms_consumer[0].function_name, "")
 }
 
 output "sms_dlq_name" {
