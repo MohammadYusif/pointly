@@ -38,7 +38,10 @@
       "minimatch": ">=9.0.7",
       "rollup": ">=4.59.0",
       "@types/react": "^19.0.0",
-      "@types/react-dom": "^19.0.0"
+      "@types/react-dom": "^19.0.0",
+      "node-forge": ">=1.4.0",
+      "picomatch": ">=2.3.2",
+      "fast-jwt": ">=6.1.0"
     },
     "ignoredBuiltDependencies": ["@biomejs/biome", "core-js", "esbuild", "sharp"]
   },

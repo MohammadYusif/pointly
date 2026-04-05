@@ -642,14 +642,14 @@ resource "aws_cloudwatch_log_group" "sms_consumer" {
 }
 
 resource "aws_lambda_function" "sms_consumer" {
-  count           = fileexists(var.lambda_sms_consumer_zip_path) ? 1 : 0
-  function_name   = "pointly-sms-consumer-${var.environment}"
-  role            = aws_iam_role.lambda_exec.arn
-  handler         = "index.handler"
-  runtime         = "nodejs20.x"
-  timeout         = 30
-  memory_size     = 256
-  filename        = var.lambda_sms_consumer_zip_path
+  count            = fileexists(var.lambda_sms_consumer_zip_path) ? 1 : 0
+  function_name    = "pointly-sms-consumer-${var.environment}"
+  role             = aws_iam_role.lambda_exec.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  timeout          = 30
+  memory_size      = 256
+  filename         = var.lambda_sms_consumer_zip_path
   source_code_hash = filebase64sha256(var.lambda_sms_consumer_zip_path)
 
   environment {
@@ -672,17 +672,17 @@ resource "aws_lambda_function" "sms_consumer" {
 }
 
 resource "aws_lambda_event_source_mapping" "sms_consumer" {
-  count                 = fileexists(var.lambda_sms_consumer_zip_path) ? 1 : 0
-  event_source_arn      = aws_sqs_queue.sms.arn
-  function_name         = aws_lambda_function.sms_consumer[0].arn
-  batch_size            = 10
+  count                   = fileexists(var.lambda_sms_consumer_zip_path) ? 1 : 0
+  event_source_arn        = aws_sqs_queue.sms.arn
+  function_name           = aws_lambda_function.sms_consumer[0].arn
+  batch_size              = 10
   function_response_types = ["ReportBatchItemFailures"]
 }
 
 resource "aws_iam_role_policy" "sms_consumer_sqs" {
   count = fileexists(var.lambda_sms_consumer_zip_path) ? 1 : 0
   name  = "pointly-sms-consumer-sqs-${var.environment}"
-  role = aws_iam_role.lambda_exec.id
+  role  = aws_iam_role.lambda_exec.id
 
   policy = jsonencode({
     Version = "2012-10-17"
