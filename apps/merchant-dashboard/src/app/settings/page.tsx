@@ -11,6 +11,7 @@ import {
 import { useAuth } from '@/lib/auth-context';
 import type { MerchantResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
+import { normalizePhone } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -252,10 +253,11 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     if (!authMerchant?.merchantId) return;
+    const normalizedPhone = normalizePhone(phone);
     try {
       await updateMerchant.mutateAsync({
         merchantId: authMerchant.merchantId,
-        data: { businessName, contactName, phone },
+        data: { businessName, contactName, phone: normalizedPhone || phone },
       });
       toast.success(t('success.saved'));
       setIsEditing(false);

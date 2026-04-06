@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/auth-context';
 import { generateReceiptPDF } from '@/lib/receipt-pdf';
 import type { MerchantScopedCustomerResponse, RecordPurchaseResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
-import { getTierColor } from '@pointly/shared';
+import { getTierColor, normalizePhone } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
 import { CheckCircle, Download, Printer, RotateCcw } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
@@ -43,9 +43,14 @@ export default function ManualEntryPage() {
 
     try {
       if (!merchant) throw new Error('No merchant context');
+      const normalized = normalizePhone(phone);
+      if (!normalized) {
+        setError(t('errors.invalidPhone'));
+        return;
+      }
       const result = await registerMutation.mutateAsync({
         merchantId: merchant.merchantId,
-        phone,
+        phone: normalized,
       });
       setCustomer(result);
       setStep('confirming');
