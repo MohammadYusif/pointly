@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { useCustomerByPhone, useCustomerInsights, useInfiniteCustomers } from '@/hooks/api';
 import { useTranslation } from '@pointly/i18n';
 import { formatPhone } from '@pointly/shared';
+import type { MerchantScopedCustomerResponse } from '@pointly/shared';
 import { Button, Card, CardContent, Input, useRTL } from '@pointly/ui';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import Link from 'next/link';
@@ -41,18 +42,6 @@ function CustomersListSkeleton() {
   );
 }
 
-interface MerchantCustomerView {
-  customerId: string;
-  phone: string;
-  name?: string;
-  status: string;
-  merchantPointsBalance: number;
-  merchantLifetimePoints: number;
-  transactionCount: number;
-  enrolledAt?: string;
-  lastTransactionAt?: string;
-}
-
 export default function CustomersPage() {
   const { t, formatNumber, language } = useTranslation();
   const { textStart } = useRTL();
@@ -72,10 +61,10 @@ export default function CustomersPage() {
   } = useInfiniteCustomers(20);
   const { data: searchResult, isLoading: searchLoading } = useCustomerByPhone(searchQuery);
 
-  const customers = (pages?.pages.flatMap((p) => p.customers || []) ||
-    []) as unknown as MerchantCustomerView[];
+  const customers =
+    (pages?.pages.flatMap((p) => p.customers || []) as MerchantScopedCustomerResponse[]) || [];
   const displayCustomers =
-    searchQuery && searchResult ? [searchResult as unknown as MerchantCustomerView] : customers;
+    searchQuery && searchResult ? [searchResult as MerchantScopedCustomerResponse] : customers;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,12 +165,15 @@ export default function CustomersPage() {
                       {formatPhone(customer.phone)}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {formatNumber(customer.transactionCount)} {t('customer.transactions')}
+                      {formatNumber(customer.enrollment?.transactionCount ?? 0)}{' '}
+                      {t('customer.transactions')}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-end">
-                      <p className="font-medium">{formatNumber(customer.merchantPointsBalance)}</p>
+                      <p className="font-medium">
+                        {formatNumber(customer.enrollment?.merchantPointsBalance ?? 0)}
+                      </p>
                       <p className="text-xs text-muted-foreground">{t('common.points')}</p>
                     </div>
                     {language === 'ar' ? (
