@@ -51,14 +51,15 @@ interface CustomerListItem {
   merchantPointsBalance: number;
 }
 
-function toCustomerListItem(c: CustomerResponse, merchantId: string): CustomerListItem {
-  const enrollment = c.enrollments?.find((e) => e.merchantId === merchantId);
+/** The /:merchantId/customers endpoint returns a flattened shape (toMerchantCustomerView),
+ *  NOT the full CustomerResponse with enrollments[]. Map it directly. */
+function toCustomerListItem(c: Record<string, unknown>): CustomerListItem {
   return {
-    customerId: c.customerId,
-    name: c.name,
-    phone: c.phone,
-    transactionCount: enrollment?.transactionCount ?? 0,
-    merchantPointsBalance: enrollment?.merchantPointsBalance ?? 0,
+    customerId: (c.customerId as string) ?? '',
+    name: c.name as string | undefined,
+    phone: (c.phone as string) ?? '',
+    transactionCount: (c.transactionCount as number) ?? 0,
+    merchantPointsBalance: (c.merchantPointsBalance as number) ?? 0,
   };
 }
 
@@ -92,11 +93,9 @@ export default function CustomersPage() {
   } = useInfiniteCustomers(20);
   const { data: searchResult, isLoading: searchLoading } = useCustomerByPhone(searchQuery);
 
-  const merchantId = merchant?.merchantId ?? '';
-
   const customers =
     pages?.pages.flatMap((p) =>
-      (p.customers || []).map((c) => toCustomerListItem(c as CustomerResponse, merchantId)),
+      (p.customers || []).map((c) => toCustomerListItem(c as unknown as Record<string, unknown>)),
     ) || [];
   const displayCustomers: CustomerListItem[] =
     searchQuery && searchResult
