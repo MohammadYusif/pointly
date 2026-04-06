@@ -78,17 +78,13 @@ export async function verifyCustomerToken(request: FastifyRequest): Promise<void
   }
 
   try {
-    // biome-ignore lint/suspicious/noExplicitAny: namespace-based JWT verification
-    await (request as any).customerJwtVerify();
+    await request.customerJwtVerify();
   } catch {
     throw new UnauthorizedError('Invalid or expired customer token');
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: JWT payload shape varies
-  const rawUser = (request as any).customerUser;
-  // When decode: { complete: true }, @fastify/jwt wraps the token as { header, payload, signature }
-  // biome-ignore lint/suspicious/noExplicitAny: JWT payload shape varies
-  const payload: any = rawUser?.payload ?? rawUser;
+  const rawUser = request.customerUser;
+  const payload = rawUser?.payload ?? rawUser;
 
   if (!payload || payload.token_use !== 'id') {
     throw new UnauthorizedError('Invalid token type');

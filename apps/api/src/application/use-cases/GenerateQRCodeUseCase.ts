@@ -81,8 +81,7 @@ export class GenerateQRCodeUseCase {
     }
 
     const json = customer.toJSON();
-    // biome-ignore lint/suspicious/noExplicitAny: toJSON enrollment shape
-    const enrollment = json.enrollments?.find((e: any) => e.merchantId === request.merchantId);
+    const enrollment = json.enrollments?.find((e) => e.merchantId === request.merchantId);
 
     return {
       customerId: json.customerId,

@@ -29,6 +29,47 @@ export interface CustomerEnrollment {
   welcomeBonusApplied: boolean;
 }
 
+export interface EnrollmentJSON {
+  merchantId: string;
+  enrolledAt: string;
+  consentStatus: ConsentStatus;
+  consentGrantedAt?: string;
+  merchantPointsBalance: number;
+  merchantLifetimePoints: number;
+  transactionCount: number;
+  lastTransactionAt?: string;
+  welcomeBonusApplied: boolean;
+}
+
+export interface CustomerJSON {
+  customerId: string;
+  phone: string;
+  name: string;
+  dateOfBirth?: string;
+  status: CustomerStatus;
+  globalPointsBalance: number;
+  globalLifetimePoints: number;
+  currentTier: string;
+  tierDisplayName: string;
+  tierColor: string;
+  monthlyProgress: number;
+  pointsToNextTier: number;
+  earningMultiplier: number;
+  isDecayImmune: boolean;
+  tierLastUpdatedAt: string;
+  monthlyProgressResetAt: string;
+  lastNetworkActivity: string;
+  nextDecayDate: string;
+  weeklyVisitDates: string[];
+  lastStreakResetAt: string;
+  claimedMilestones: string[];
+  referralCode: string;
+  referredBy?: string;
+  enrollments: EnrollmentJSON[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CustomerProps {
   customerId: string;
   phone: PhoneNumber;
@@ -943,7 +984,7 @@ export class Customer {
   }
 
   // Serialization
-  toJSON() {
+  toJSON(): CustomerJSON {
     return {
       customerId: this.props.customerId,
       phone: this.props.phone.toString(),

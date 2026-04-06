@@ -223,8 +223,7 @@ export class CustomerRepository
    */
   private buildMerchantIndexItem(entity: Customer, merchantId: string) {
     const json = entity.toJSON();
-    // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
-    const enrollment = json.enrollments.find((e: any) => e.merchantId === merchantId);
+    const enrollment = json.enrollments.find((e) => e.merchantId === merchantId);
     if (!enrollment) {
       return null;
     }
@@ -377,8 +376,7 @@ export class CustomerRepository
 
   protected toItem(entity: Customer): Record<string, unknown> {
     const json = entity.toJSON();
-    // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
-    const enrollments: EnrollmentItem[] = json.enrollments.map((e: any) => {
+    const enrollments: EnrollmentItem[] = json.enrollments.map((e) => {
       const enrollment: EnrollmentItem = {
         merchantId: e.merchantId,
         enrolledAt: e.enrolledAt,

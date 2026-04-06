@@ -78,8 +78,7 @@ export async function verifyMerchantToken(request: FastifyRequest): Promise<void
     throw new UnauthorizedError('Invalid or expired token');
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: JWT payload shape varies
-  const payload = (request as any).user;
+  const payload = request.user;
 
   if (payload.token_use !== 'id') {
     throw new UnauthorizedError('Invalid token type — expected ID token');

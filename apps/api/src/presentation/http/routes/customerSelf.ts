@@ -170,8 +170,7 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
     const customerTierLevel = customer.getCurrentTier().getLevel();
     const customerTierRank = TIER_ORDER.indexOf(customerTierLevel);
     const customerJSON = customer.toJSON();
-    // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
-    const enrolledMerchantIds = customerJSON.enrollments.map((e: any) => e.merchantId as string);
+    const enrolledMerchantIds = customerJSON.enrollments.map((e) => e.merchantId);
 
     const perks = await container.getCustomerPerksUseCase.execute({
       customerId,
@@ -180,17 +179,14 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
       enrolledMerchantIds,
       customerJSON: {
         ...(customerJSON.dateOfBirth && { dateOfBirth: customerJSON.dateOfBirth }),
-        enrollments: customerJSON.enrollments.map(
-          // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollment objects
-          (e: any) => {
-            const entry: { merchantId: string; enrolledAt: string; lastTransactionAt?: string } = {
-              merchantId: e.merchantId as string,
-              enrolledAt: e.enrolledAt as string,
-            };
-            if (e.lastTransactionAt) entry.lastTransactionAt = e.lastTransactionAt as string;
-            return entry;
-          },
-        ),
+        enrollments: customerJSON.enrollments.map((e) => {
+          const entry: { merchantId: string; enrolledAt: string; lastTransactionAt?: string } = {
+            merchantId: e.merchantId,
+            enrolledAt: e.enrolledAt,
+          };
+          if (e.lastTransactionAt) entry.lastTransactionAt = e.lastTransactionAt;
+          return entry;
+        }),
       },
     });
 
@@ -242,18 +238,17 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
 
     const enrollments = customer.toJSON().enrollments;
     const results = await Promise.all(
-      // biome-ignore lint/suspicious/noExplicitAny: toJSON returns untyped enrollments
-      enrollments.map(async (e: any) => {
-        const merchant = await container.merchantRepository.findById(e.merchantId as string);
+      enrollments.map(async (e) => {
+        const merchant = await container.merchantRepository.findById(e.merchantId);
         const merchantJSON = merchant?.toJSON();
         return {
-          merchantId: e.merchantId as string,
+          merchantId: e.merchantId,
           businessName: merchantJSON?.businessName ?? e.merchantId,
-          merchantPointsBalance: e.merchantPointsBalance as number,
-          merchantLifetimePoints: e.merchantLifetimePoints as number,
-          enrolledAt: e.enrolledAt as string,
-          transactionCount: e.transactionCount as number,
-          lastTransactionAt: e.lastTransactionAt as string | undefined,
+          merchantPointsBalance: e.merchantPointsBalance,
+          merchantLifetimePoints: e.merchantLifetimePoints,
+          enrolledAt: e.enrolledAt,
+          transactionCount: e.transactionCount,
+          lastTransactionAt: e.lastTransactionAt,
           ...(merchantJSON?.walletConfig && { walletConfig: merchantJSON.walletConfig }),
         };
       }),

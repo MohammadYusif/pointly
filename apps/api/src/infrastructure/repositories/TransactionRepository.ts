@@ -404,8 +404,7 @@ export class TransactionRepository
     return super.exists(`TRANSACTION#${id}`, 'DETAILS');
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: Base class override requires any for DynamoDB item
-  protected toEntity(item: any): Transaction {
+  protected toEntity(item: Record<string, unknown>): Transaction {
     return this.itemToEntity(item as TransactionItem);
   }
 

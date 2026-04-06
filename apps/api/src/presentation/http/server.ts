@@ -26,8 +26,7 @@ export async function createServer(): Promise<FastifyInstance> {
             },
           }
         : undefined,
-      // biome-ignore lint/suspicious/noExplicitAny: Fastify logger options type is complex
-    } as any,
+    } satisfies FastifyInstance['options']['logger'],
     requestIdHeader: 'x-request-id',
     requestIdLogLabel: 'requestId',
   });
@@ -82,8 +81,7 @@ export async function createServer(): Promise<FastifyInstance> {
   });
 
   // Register routes
-  // biome-ignore lint/suspicious/noExplicitAny: FastifyInstance type variance issue
-  await registerRoutes(server as any);
+  await registerRoutes(server);
 
   return server;
 }
