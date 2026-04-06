@@ -2,13 +2,12 @@
 
 import { Logo } from '@/components/Logo';
 import { useAuth } from '@/lib/auth-context';
+import { EASE } from '@/lib/utils';
 import { useTranslation } from '@pointly/i18n';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
-import { type BezierDefinition, motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-
-const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
 
 export default function LoginPage() {
   const { t } = useTranslation();

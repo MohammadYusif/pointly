@@ -3,13 +3,12 @@
 import { Logo } from '@/components/Logo';
 import { PageTransition } from '@/components/PageTransition';
 import { useAuth } from '@/lib/auth-context';
+import { EASE } from '@/lib/utils';
 import { useTranslation } from '@pointly/i18n';
 import { Button, Container, type NavItem, Navbar } from '@pointly/ui';
-import { type BezierDefinition, motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { LogOut } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
-
-const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();

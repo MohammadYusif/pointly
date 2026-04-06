@@ -1,10 +1,9 @@
 'use client';
 
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
+import { EASE } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@pointly/ui';
-import { type BezierDefinition, motion, useReducedMotion } from 'framer-motion';
-
-const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
+import { motion, useReducedMotion } from 'framer-motion';
 
 interface KPICardProps {
   title: string;

@@ -1,9 +1,8 @@
 'use client';
 
-import { AnimatePresence, type BezierDefinition, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
-
-const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
+import { EASE } from '@/lib/utils';
 
 export function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
