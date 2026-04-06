@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
   PNPM_VERSION: '10.28.2'
 
 jobs:
@@ -195,7 +195,20 @@ jobs:
           # fast-jwt has unpatched critical CVEs (GHSA-mvf2-f6gm-w987, GHSA-hm7r-c7qw-ghp6)
           # with no patched version available. We audit and report but don't fail until a fix exists.
           pnpm audit --audit-level=critical --json > audit-results.json || true
-          CRITICAL=$(cat audit-results.json | python3 -c "import sys,json; d=json.load(sys.stdin); print(sum(1 for v in d.get('advisories',{}).values() if v.get('severity')=='critical'))" 2>/dev/null || echo "0")
+          # Filter out phantom patched versions like "<0.0.0" which aren't real releases
+          CRITICAL=$(cat audit-results.json | python3 -c "
+          import sys,json,re
+          d=json.load(sys.stdin)
+          count=0
+          for v in d.get('advisories',{}).values():
+              if v.get('severity')=='critical':
+                  patched=v.get('patchedVersions',[])
+                  # Skip phantom versions like '<0.0.0' that aren't real semver releases
+                  real_patches=[p for p in patched if p and p != '<0.0.0' and not p.startswith('<0.')]
+                  if real_patches:
+                      count+=1
+          print(count)
+          " 2>/dev/null || echo "0")
           if [ "$CRITICAL" -gt "0" ]; then
             echo "Found $CRITICAL critical vulnerabilities with available patches"
             exit 1
