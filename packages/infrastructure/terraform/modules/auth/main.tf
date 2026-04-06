@@ -300,7 +300,7 @@ resource "aws_lambda_function" "define_auth_challenge" {
   function_name    = "pointly-define-auth-challenge-${var.environment}"
   role             = aws_iam_role.cognito_triggers.arn
   handler          = "index.handler"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs22.x"
   filename         = data.archive_file.define_auth_challenge.output_path
   source_code_hash = data.archive_file.define_auth_challenge.output_base64sha256
 
@@ -355,7 +355,7 @@ resource "aws_lambda_function" "create_auth_challenge" {
   function_name    = "pointly-create-auth-challenge-${var.environment}"
   role             = aws_iam_role.cognito_triggers.arn
   handler          = "index.handler"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs22.x"
   filename         = data.archive_file.create_auth_challenge.output_path
   source_code_hash = data.archive_file.create_auth_challenge.output_base64sha256
 
@@ -397,7 +397,7 @@ resource "aws_lambda_function" "verify_auth_challenge" {
   function_name    = "pointly-verify-auth-challenge-${var.environment}"
   role             = aws_iam_role.cognito_triggers.arn
   handler          = "index.handler"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs22.x"
   filename         = data.archive_file.verify_auth_challenge.output_path
   source_code_hash = data.archive_file.verify_auth_challenge.output_base64sha256
 
@@ -437,7 +437,7 @@ resource "aws_lambda_function" "pre_sign_up" {
   function_name    = "pointly-pre-sign-up-${var.environment}"
   role             = aws_iam_role.cognito_triggers.arn
   handler          = "index.handler"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs22.x"
   filename         = data.archive_file.pre_sign_up.output_path
   source_code_hash = data.archive_file.pre_sign_up.output_base64sha256
 

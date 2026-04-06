@@ -132,7 +132,7 @@ resource "aws_lambda_function" "api" {
   filename         = var.lambda_zip_path
   source_code_hash = filebase64sha256(var.lambda_zip_path)
   handler          = "index.handler"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs22.x"
   role             = aws_iam_role.lambda_exec.arn
 
   timeout     = 30
@@ -414,7 +414,7 @@ resource "aws_lambda_function" "decay" {
   filename         = var.lambda_decay_zip_path
   source_code_hash = filebase64sha256(var.lambda_decay_zip_path)
   handler          = "index.handler"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs22.x"
   role             = aws_iam_role.lambda_exec.arn
 
   timeout     = 900 # 15 minutes — processes all customers
@@ -455,7 +455,7 @@ resource "aws_lambda_function" "tier_reset" {
   filename         = var.lambda_tier_reset_zip_path
   source_code_hash = filebase64sha256(var.lambda_tier_reset_zip_path)
   handler          = "index.handler"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs22.x"
   role             = aws_iam_role.lambda_exec.arn
 
   timeout     = 900 # 15 minutes — processes all customers
@@ -646,7 +646,7 @@ resource "aws_lambda_function" "sms_consumer" {
   function_name    = "pointly-sms-consumer-${var.environment}"
   role             = aws_iam_role.lambda_exec.arn
   handler          = "index.handler"
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs22.x"
   timeout          = 30
   memory_size      = 256
   filename         = var.lambda_sms_consumer_zip_path
