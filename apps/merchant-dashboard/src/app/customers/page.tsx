@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { useCustomerByPhone, useCustomerInsights, useInfiniteCustomers } from '@/hooks/api';
 import { useTranslation } from '@pointly/i18n';
 import { formatPhone } from '@pointly/shared';
-import type { MerchantScopedCustomerResponse } from '@pointly/shared';
+import type { CustomerResponse, MerchantScopedCustomerResponse } from '@pointly/shared';
 import { Button, Card, CardContent, Input, useRTL } from '@pointly/ui';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import Link from 'next/link';
@@ -42,6 +42,34 @@ function CustomersListSkeleton() {
   );
 }
 
+interface CustomerListItem {
+  customerId: string;
+  name?: string;
+  phone: string;
+  transactionCount: number;
+  merchantPointsBalance: number;
+}
+
+function toCustomerListItem(c: CustomerResponse): CustomerListItem {
+  return {
+    customerId: c.customerId,
+    name: c.name,
+    phone: c.phone,
+    transactionCount: c.enrollments?.[0]?.transactionCount ?? 0,
+    merchantPointsBalance: c.enrollments?.[0]?.merchantPointsBalance ?? 0,
+  };
+}
+
+function toCustomerListItemFromScoped(c: MerchantScopedCustomerResponse): CustomerListItem {
+  return {
+    customerId: c.customerId,
+    name: c.name,
+    phone: c.phone,
+    transactionCount: c.enrollment?.transactionCount ?? 0,
+    merchantPointsBalance: c.enrollment?.merchantPointsBalance ?? 0,
+  };
+}
+
 export default function CustomersPage() {
   const { t, formatNumber, language } = useTranslation();
   const { textStart } = useRTL();
@@ -62,9 +90,13 @@ export default function CustomersPage() {
   const { data: searchResult, isLoading: searchLoading } = useCustomerByPhone(searchQuery);
 
   const customers =
-    (pages?.pages.flatMap((p) => p.customers || []) as MerchantScopedCustomerResponse[]) || [];
-  const displayCustomers =
-    searchQuery && searchResult ? [searchResult as MerchantScopedCustomerResponse] : customers;
+    pages?.pages.flatMap((p) =>
+      (p.customers || []).map((c) => toCustomerListItem(c as CustomerResponse)),
+    ) || [];
+  const displayCustomers: CustomerListItem[] =
+    searchQuery && searchResult
+      ? [toCustomerListItemFromScoped(searchResult as MerchantScopedCustomerResponse)]
+      : customers;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,15 +197,12 @@ export default function CustomersPage() {
                       {formatPhone(customer.phone)}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {formatNumber(customer.enrollment?.transactionCount ?? 0)}{' '}
-                      {t('customer.transactions')}
+                      {formatNumber(customer.transactionCount)} {t('customer.transactions')}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-end">
-                      <p className="font-medium">
-                        {formatNumber(customer.enrollment?.merchantPointsBalance ?? 0)}
-                      </p>
+                      <p className="font-medium">{formatNumber(customer.merchantPointsBalance)}</p>
                       <p className="text-xs text-muted-foreground">{t('common.points')}</p>
                     </div>
                     {language === 'ar' ? (

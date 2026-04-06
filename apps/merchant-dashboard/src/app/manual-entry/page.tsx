@@ -1,8 +1,8 @@
 'use client';
 
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { ThermalReceipt } from '@/components/receipt/ThermalReceipt';
 import { TransactionBreakdown } from '@/components/TransactionBreakdown';
+import { ThermalReceipt } from '@/components/receipt/ThermalReceipt';
 import { useMerchant, useRecordPurchase, useRegisterCustomer } from '@/hooks/api';
 import { useAuth } from '@/lib/auth-context';
 import { generateReceiptPDF } from '@/lib/receipt-pdf';
