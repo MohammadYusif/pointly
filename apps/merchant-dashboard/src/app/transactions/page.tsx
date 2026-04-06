@@ -6,6 +6,7 @@ import { LocationSelector } from '@/components/analytics';
 import { ClientDate } from '@/components/ui/ClientDate';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useInfiniteTransactions, useMerchant, useMerchantCustomers } from '@/hooks/api';
+import { getAmount } from '@/lib/utils';
 import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { formatPhone, getStatusBadge, getTypeBadge } from '@pointly/shared';
@@ -40,15 +41,6 @@ function TransactionsTableSkeleton() {
       ))}
     </div>
   );
-}
-
-/** Extract numeric amount — handles both `{amount, currency}` object and plain number */
-function getAmount(amount: unknown): number {
-  if (typeof amount === 'number') return amount;
-  if (amount && typeof amount === 'object' && 'amount' in amount) {
-    return (amount as { amount: number }).amount;
-  }
-  return 0;
 }
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: transaction list with filters, sorting, CSV export, and expandable breakdown

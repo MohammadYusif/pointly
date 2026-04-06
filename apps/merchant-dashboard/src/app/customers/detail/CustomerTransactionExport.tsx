@@ -1,17 +1,10 @@
 'use client';
 
+import { getAmount } from '@/lib/utils';
 import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { Button } from '@pointly/ui';
 import { Download } from 'lucide-react';
-
-function getAmount(amount: unknown): number {
-  if (typeof amount === 'number') return amount;
-  if (amount && typeof amount === 'object' && 'amount' in amount) {
-    return (amount as { amount: number }).amount;
-  }
-  return 0;
-}
 
 interface CustomerTransactionExportProps {
   allTransactions: TransactionResponse[];

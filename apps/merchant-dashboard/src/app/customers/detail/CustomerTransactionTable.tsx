@@ -1,6 +1,7 @@
 'use client';
 
 import { ClientDate } from '@/components/ui/ClientDate';
+import { getAmount } from '@/lib/utils';
 import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { getStatusBadge, getTypeBadge } from '@pointly/shared';
@@ -8,14 +9,6 @@ import { Button, Card, CardContent, CardHeader, CardTitle, useRTL } from '@point
 import { ArrowDownUp } from 'lucide-react';
 import type { Dispatch, SetStateAction } from 'react';
 import { CustomerTransactionExport } from './CustomerTransactionExport';
-
-function getAmount(amount: unknown): number {
-  if (typeof amount === 'number') return amount;
-  if (amount && typeof amount === 'object' && 'amount' in amount) {
-    return (amount as { amount: number }).amount;
-  }
-  return 0;
-}
 
 interface CustomerTransactionTableProps {
   transactions: TransactionResponse[];
