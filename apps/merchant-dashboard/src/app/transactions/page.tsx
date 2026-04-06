@@ -2,10 +2,10 @@
 
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { TransactionBreakdown } from '@/components/TransactionBreakdown';
 import { LocationSelector } from '@/components/analytics';
 import { ClientDate } from '@/components/ui/ClientDate';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { TransactionBreakdown } from '@/components/TransactionBreakdown';
 import { useInfiniteTransactions, useMerchant, useMerchantCustomers } from '@/hooks/api';
 import { getAmount } from '@/lib/utils';
 import type { TransactionResponse } from '@/types/api';
@@ -78,12 +78,11 @@ export default function TransactionsPage() {
   }
   const customerNames: Record<string, string> = {};
   const customerPhones: Record<string, string> = {};
-  const customerNames: Record<string, string> = {};
-  const customerPhones: Record<string, string> = {};
   for (const c of customersData?.customers || []) {
     const customer = c as CustomerResponse;
     if (customer.customerId && customer.name) customerNames[customer.customerId] = customer.name;
-    if (customer.customerId && customer.phone) customerPhones[customer.customerId] = formatPhone(customer.phone);
+    if (customer.customerId && customer.phone)
+      customerPhones[customer.customerId] = formatPhone(customer.phone);
   }
 
   useEffect(() => {
