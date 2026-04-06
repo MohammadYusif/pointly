@@ -3,6 +3,7 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useCustomerByPhone, useCustomerInsights, useInfiniteCustomers } from '@/hooks/api';
+import { useAuth } from '@/lib/auth-context';
 import { useTranslation } from '@pointly/i18n';
 import { formatPhone } from '@pointly/shared';
 import type { CustomerResponse, MerchantScopedCustomerResponse } from '@pointly/shared';
@@ -50,13 +51,14 @@ interface CustomerListItem {
   merchantPointsBalance: number;
 }
 
-function toCustomerListItem(c: CustomerResponse): CustomerListItem {
+function toCustomerListItem(c: CustomerResponse, merchantId: string): CustomerListItem {
+  const enrollment = c.enrollments?.find((e) => e.merchantId === merchantId);
   return {
     customerId: c.customerId,
     name: c.name,
     phone: c.phone,
-    transactionCount: c.enrollments?.[0]?.transactionCount ?? 0,
-    merchantPointsBalance: c.enrollments?.[0]?.merchantPointsBalance ?? 0,
+    transactionCount: enrollment?.transactionCount ?? 0,
+    merchantPointsBalance: enrollment?.merchantPointsBalance ?? 0,
   };
 }
 
@@ -73,6 +75,7 @@ function toCustomerListItemFromScoped(c: MerchantScopedCustomerResponse): Custom
 export default function CustomersPage() {
   const { t, formatNumber, language } = useTranslation();
   const { textStart } = useRTL();
+  const { merchant } = useAuth();
 
   const { data: insights } = useCustomerInsights();
 
@@ -89,9 +92,11 @@ export default function CustomersPage() {
   } = useInfiniteCustomers(20);
   const { data: searchResult, isLoading: searchLoading } = useCustomerByPhone(searchQuery);
 
+  const merchantId = merchant?.merchantId ?? '';
+
   const customers =
     pages?.pages.flatMap((p) =>
-      (p.customers || []).map((c) => toCustomerListItem(c as CustomerResponse)),
+      (p.customers || []).map((c) => toCustomerListItem(c as CustomerResponse, merchantId)),
     ) || [];
   const displayCustomers: CustomerListItem[] =
     searchQuery && searchResult
