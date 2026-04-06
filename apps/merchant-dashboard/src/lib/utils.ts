@@ -1,5 +1,5 @@
 import { type ClassValue, clsx } from 'clsx';
-import { type BezierDefinition } from 'framer-motion';
+import type { BezierDefinition } from 'framer-motion';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
