@@ -1,6 +1,6 @@
 import 'fastify';
 
-interface DecodedToken {
+export interface DecodedToken {
   sub: string;
   'cognito:username': string;
   'custom:merchantId'?: string;
@@ -10,7 +10,14 @@ interface DecodedToken {
   email?: string;
   name?: string;
   phone_number?: string;
+  token_use?: string;
   [key: string]: unknown;
+}
+
+export interface JwtTokenWrapper {
+  header: Record<string, unknown>;
+  payload: DecodedToken;
+  signature: string;
 }
 
 declare module 'fastify' {
@@ -21,5 +28,7 @@ declare module 'fastify' {
     cognitoPhone: string;
     user: DecodedToken;
     customer: DecodedToken;
+    customerUser: JwtTokenWrapper | null;
+    customerJwtVerify(): Promise<void>;
   }
 }

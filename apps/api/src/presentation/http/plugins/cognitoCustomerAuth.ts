@@ -5,6 +5,7 @@ import fp from 'fastify-plugin';
 import jwksRsa from 'jwks-rsa';
 import { ForbiddenError, UnauthorizedError } from '../../../domain/errors/DomainError';
 import EnvironmentConfig from '../../../infrastructure/config/Environment';
+import type { DecodedToken } from '../../../types/fastify';
 
 let customerJwksClient: jwksRsa.JwksClient | null = null;
 
@@ -84,18 +85,22 @@ export async function verifyCustomerToken(request: FastifyRequest): Promise<void
   }
 
   const rawUser = request.customerUser;
-  const payload = rawUser?.payload ?? rawUser;
+  const payload = rawUser?.payload ?? (rawUser as unknown as DecodedToken);
 
-  if (!payload || payload.token_use !== 'id') {
+  // biome-ignore lint/complexity/useLiteralKeys: DecodedToken index signature requires bracket notation
+  if (!payload || payload['token_use'] !== 'id') {
     throw new UnauthorizedError('Invalid token type');
   }
 
-  const customerId = payload['custom:customerId'] || payload.sub;
+  // biome-ignore lint/complexity/useLiteralKeys: DecodedToken index signature requires bracket notation
+  const customerId = payload['custom:customerId'] || payload['sub'];
   if (!customerId) {
     throw new ForbiddenError('No customer ID associated with this account');
   }
 
-  request.customerId = customerId;
-  request.cognitoSub = payload.sub;
-  request.cognitoPhone = payload.phone_number || '';
+  request.customerId = customerId as string;
+  // biome-ignore lint/complexity/useLiteralKeys: DecodedToken index signature requires bracket notation
+  request.cognitoSub = payload['sub'] as string;
+  // biome-ignore lint/complexity/useLiteralKeys: DecodedToken index signature requires bracket notation
+  request.cognitoPhone = (payload['phone_number'] as string) || '';
 }

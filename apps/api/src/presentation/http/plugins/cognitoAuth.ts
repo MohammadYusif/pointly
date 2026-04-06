@@ -78,17 +78,19 @@ export async function verifyMerchantToken(request: FastifyRequest): Promise<void
     throw new UnauthorizedError('Invalid or expired token');
   }
 
-  const payload = request.user;
+  const payload = request.user as Record<string, unknown>;
 
-  if (payload.token_use !== 'id') {
+  // biome-ignore lint/complexity/useLiteralKeys: Record<string, unknown> requires bracket notation
+  if (payload['token_use'] !== 'id') {
     throw new UnauthorizedError('Invalid token type — expected ID token');
   }
 
-  const merchantId = payload['custom:merchantId'];
+  const merchantId = payload['custom:merchantId'] as string | undefined;
   if (!merchantId) {
     throw new ForbiddenError('No merchant ID associated with this account');
   }
 
   request.merchantId = merchantId;
-  request.cognitoSub = payload.sub;
+  // biome-ignore lint/complexity/useLiteralKeys: Record<string, unknown> requires bracket notation
+  request.cognitoSub = payload['sub'] as string;
 }

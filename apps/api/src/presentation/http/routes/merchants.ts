@@ -12,7 +12,10 @@ interface CustomerEnrollmentJSON {
   merchantPointsBalance: number;
   merchantLifetimePoints: number;
   transactionCount: number;
-  lastTransactionAt: string | undefined;
+  lastTransactionAt?: string | undefined;
+  welcomeBonusApplied?: boolean;
+  consentStatus?: string;
+  consentGrantedAt?: string | undefined;
 }
 
 interface CustomerJSON {

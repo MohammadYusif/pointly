@@ -33,11 +33,11 @@ export interface EnrollmentJSON {
   merchantId: string;
   enrolledAt: string;
   consentStatus: ConsentStatus;
-  consentGrantedAt?: string;
+  consentGrantedAt?: string | undefined;
   merchantPointsBalance: number;
   merchantLifetimePoints: number;
   transactionCount: number;
-  lastTransactionAt?: string;
+  lastTransactionAt?: string | undefined;
   welcomeBonusApplied: boolean;
 }
 
@@ -45,7 +45,7 @@ export interface CustomerJSON {
   customerId: string;
   phone: string;
   name: string;
-  dateOfBirth?: string;
+  dateOfBirth?: string | undefined;
   status: CustomerStatus;
   globalPointsBalance: number;
   globalLifetimePoints: number;
@@ -985,11 +985,29 @@ export class Customer {
 
   // Serialization
   toJSON(): CustomerJSON {
+    const enrollments: EnrollmentJSON[] = Array.from(this.props.enrollments.entries()).map(
+      ([, enrollment]) => {
+        const entry: EnrollmentJSON = {
+          merchantId: enrollment.merchantId,
+          enrolledAt: enrollment.enrolledAt.toISOString(),
+          consentStatus: enrollment.consentStatus,
+          merchantPointsBalance: enrollment.merchantPointsBalance.toNumber(),
+          merchantLifetimePoints: enrollment.merchantLifetimePoints.toNumber(),
+          transactionCount: enrollment.transactionCount,
+          welcomeBonusApplied: enrollment.welcomeBonusApplied,
+        };
+        if (enrollment.consentGrantedAt)
+          entry.consentGrantedAt = enrollment.consentGrantedAt.toISOString();
+        if (enrollment.lastTransactionAt)
+          entry.lastTransactionAt = enrollment.lastTransactionAt.toISOString();
+        return entry;
+      },
+    );
+
     return {
       customerId: this.props.customerId,
       phone: this.props.phone.toString(),
-      name: this.props.name,
-      dateOfBirth: this.props.dateOfBirth,
+      name: this.props.name ?? '',
       status: this.props.status,
       globalPointsBalance: this.props.globalPointsBalance.toNumber(),
       globalLifetimePoints: this.props.globalLifetimePoints.toNumber(),
@@ -1020,19 +1038,10 @@ export class Customer {
       referralCode: this.props.referralCode,
       ...(this.props.referredBy && { referredBy: this.props.referredBy }),
 
-      enrollments: Array.from(this.props.enrollments.entries()).map(([, enrollment]) => ({
-        merchantId: enrollment.merchantId,
-        enrolledAt: enrollment.enrolledAt.toISOString(),
-        consentStatus: enrollment.consentStatus,
-        consentGrantedAt: enrollment.consentGrantedAt?.toISOString(),
-        merchantPointsBalance: enrollment.merchantPointsBalance.toNumber(),
-        merchantLifetimePoints: enrollment.merchantLifetimePoints.toNumber(),
-        transactionCount: enrollment.transactionCount,
-        lastTransactionAt: enrollment.lastTransactionAt?.toISOString(),
-        welcomeBonusApplied: enrollment.welcomeBonusApplied,
-      })),
+      enrollments,
       createdAt: this.props.createdAt.toISOString(),
       updatedAt: this.props.updatedAt.toISOString(),
+      ...(this.props.dateOfBirth && { dateOfBirth: this.props.dateOfBirth }),
     };
   }
 }

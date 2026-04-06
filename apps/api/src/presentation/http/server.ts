@@ -14,19 +14,23 @@ export async function createServer(): Promise<FastifyInstance> {
   // biome-ignore lint/complexity/useLiteralKeys: TS noPropertyAccessFromIndexSignature requires bracket notation for process.env
   const isLocal = env.NODE_ENV !== 'production' && !process.env['AWS_LAMBDA_FUNCTION_NAME'];
 
+  const loggerOptions = isLocal
+    ? {
+        level: env.NODE_ENV === 'production' ? 'info' : ('debug' as const),
+        transport: {
+          target: 'pino-pretty',
+          options: {
+            translateTime: 'HH:MM:ss Z',
+            ignore: 'pid,hostname',
+          },
+        },
+      }
+    : {
+        level: env.NODE_ENV === 'production' ? 'info' : ('debug' as const),
+      };
+
   const server = Fastify({
-    logger: {
-      level: env.NODE_ENV === 'production' ? 'info' : 'debug',
-      transport: isLocal
-        ? {
-            target: 'pino-pretty',
-            options: {
-              translateTime: 'HH:MM:ss Z',
-              ignore: 'pid,hostname',
-            },
-          }
-        : undefined,
-    } satisfies FastifyInstance['options']['logger'],
+    logger: loggerOptions,
     requestIdHeader: 'x-request-id',
     requestIdLogLabel: 'requestId',
   });

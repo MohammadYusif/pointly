@@ -404,7 +404,7 @@ export class TransactionRepository
     return super.exists(`TRANSACTION#${id}`, 'DETAILS');
   }
 
-  protected toEntity(item: Record<string, unknown>): Transaction {
+  protected toEntity(item: unknown): Transaction {
     return this.itemToEntity(item as TransactionItem);
   }
 
