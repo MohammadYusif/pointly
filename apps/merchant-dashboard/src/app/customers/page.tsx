@@ -3,10 +3,9 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useCustomerByPhone, useCustomerInsights, useInfiniteCustomers } from '@/hooks/api';
-import { useAuth } from '@/lib/auth-context';
 import { useTranslation } from '@pointly/i18n';
 import { formatPhone } from '@pointly/shared';
-import type { CustomerResponse, MerchantScopedCustomerResponse } from '@pointly/shared';
+import type { MerchantScopedCustomerResponse } from '@pointly/shared';
 import { Button, Card, CardContent, Input, useRTL } from '@pointly/ui';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import Link from 'next/link';
@@ -76,7 +75,6 @@ function toCustomerListItemFromScoped(c: MerchantScopedCustomerResponse): Custom
 export default function CustomersPage() {
   const { t, formatNumber, language } = useTranslation();
   const { textStart } = useRTL();
-  const { merchant } = useAuth();
 
   const { data: insights } = useCustomerInsights();
 
