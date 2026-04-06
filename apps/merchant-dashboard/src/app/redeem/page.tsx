@@ -74,8 +74,8 @@ export default function RedeemPage() {
       const foundCustomer = await lookupMutation.mutateAsync(phone);
       setCustomer(foundCustomer);
       setStep('confirming');
-    } catch {
-      setError(t('errors.notFound'));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('errors.notFound'));
     }
   };
 

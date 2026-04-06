@@ -11,6 +11,7 @@ import { getAmount } from '@/lib/utils';
 import type { TransactionResponse } from '@/types/api';
 import { useTranslation } from '@pointly/i18n';
 import { formatPhone, getStatusBadge, getTypeBadge } from '@pointly/shared';
+import type { CustomerResponse } from '@pointly/shared';
 import { Button, Card, CardContent, useRTL } from '@pointly/ui';
 import { ArrowDownUp, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -77,10 +78,12 @@ export default function TransactionsPage() {
   }
   const customerNames: Record<string, string> = {};
   const customerPhones: Record<string, string> = {};
-  // biome-ignore lint/suspicious/noExplicitAny: API response shape varies
-  for (const c of (customersData?.customers || []) as any[]) {
-    if (c.customerId && c.name) customerNames[c.customerId] = c.name;
-    if (c.customerId && c.phone) customerPhones[c.customerId] = formatPhone(c.phone);
+  const customerNames: Record<string, string> = {};
+  const customerPhones: Record<string, string> = {};
+  for (const c of customersData?.customers || []) {
+    const customer = c as CustomerResponse;
+    if (customer.customerId && customer.name) customerNames[customer.customerId] = customer.name;
+    if (customer.customerId && customer.phone) customerPhones[customer.customerId] = formatPhone(customer.phone);
   }
 
   useEffect(() => {

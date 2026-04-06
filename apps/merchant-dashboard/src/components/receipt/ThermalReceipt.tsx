@@ -1,3 +1,7 @@
+'use client';
+
+'use client';
+
 export interface ReceiptData {
   transactionId: string;
   businessName: string;

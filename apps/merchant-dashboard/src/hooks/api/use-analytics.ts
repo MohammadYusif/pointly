@@ -14,7 +14,15 @@ export function useMerchantAnalytics(params?: AnalyticsParams) {
   const { locationId, ...queryParams } = params || {};
 
   return useQuery({
-    queryKey: ['merchant', merchant?.merchantId, 'analytics', params],
+    queryKey: [
+      'merchant',
+      merchant?.merchantId,
+      'analytics',
+      params?.startDate,
+      params?.endDate,
+      params?.groupBy,
+      params?.locationId,
+    ],
     queryFn: () => {
       // biome-ignore lint/style/noNonNullAssertion: enabled guard ensures merchantId exists
       const merchantId = merchant!.merchantId;
