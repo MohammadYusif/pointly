@@ -2,6 +2,7 @@
 
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { ThermalReceipt } from '@/components/receipt/ThermalReceipt';
+import { TransactionBreakdown } from '@/components/TransactionBreakdown';
 import { useMerchant, useRecordPurchase, useRegisterCustomer } from '@/hooks/api';
 import { useAuth } from '@/lib/auth-context';
 import { generateReceiptPDF } from '@/lib/receipt-pdf';
@@ -304,93 +305,7 @@ export default function ManualEntryPage() {
               </CardContent>
             </Card>
 
-            {result.breakdown && (
-              <Card>
-                <CardContent className="py-4 space-y-2">
-                  <p className="text-sm font-medium">{t('transaction.breakdown')}</p>
-                  <div className="text-xs space-y-2">
-                    {/* Calculation rows */}
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                      <span className="text-muted-foreground">
-                        {t('transaction.breakdown_purchase')}
-                      </span>
-                      <span className="text-end font-medium">
-                        {formatNumber(result.breakdown.purchaseAmount)} SAR
-                      </span>
-
-                      <span className="text-muted-foreground">
-                        {t('transaction.breakdown_rate')}
-                      </span>
-                      <span className="text-end font-medium">
-                        {result.breakdown.pointsPerSAR} {t('transaction.breakdown_ptPerSar')}
-                      </span>
-
-                      <span className="text-muted-foreground">
-                        {t('transaction.breakdown_basePoints')}
-                      </span>
-                      <span className="text-end font-medium">
-                        {formatNumber(result.breakdown.basePoints)}
-                      </span>
-                    </div>
-
-                    <div className="border-t border-border/50" />
-
-                    {/* Multipliers */}
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                      <span className="text-muted-foreground">
-                        {t('transaction.breakdown_tier')}
-                      </span>
-                      <span className="text-end">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-medium">
-                          {result.breakdown.tierName} {result.breakdown.tierMultiplier}×
-                        </span>
-                      </span>
-                      {result.breakdown.campaignName && (
-                        <>
-                          <span className="text-muted-foreground">
-                            {t('transaction.breakdown_campaign')}
-                          </span>
-                          <span className="text-end">
-                            <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 text-purple-800 px-2 py-0.5 font-medium">
-                              {result.breakdown.campaignName} {result.breakdown.campaignMultiplier}×
-                            </span>
-                          </span>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Bonus cap warning */}
-                    {result.breakdown.bonusPointsCap !== undefined &&
-                      result.breakdown.bonusPointsBeforeCap !== undefined && (
-                        <div className="rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1.5 text-amber-800 flex items-center justify-between">
-                          <span>{t('transaction.breakdown_bonusCapped')}</span>
-                          <span className="font-medium">
-                            +{formatNumber(result.breakdown.bonusPointsCap)}
-                            <span className="text-amber-600 ms-1">
-                              ({t('transaction.breakdown_beforeCap')}: +
-                              {formatNumber(result.breakdown.bonusPointsBeforeCap)})
-                            </span>
-                          </span>
-                        </div>
-                      )}
-
-                    <div className="border-t border-border/50" />
-
-                    {/* Final totals */}
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 font-medium text-foreground">
-                      <span>{t('transaction.breakdown_merchant')}</span>
-                      <span className="text-end text-green-600">
-                        +{formatNumber(result.breakdown.finalMerchantPoints)}
-                      </span>
-                      <span>{t('transaction.breakdown_global')}</span>
-                      <span className="text-end text-blue-600">
-                        +{formatNumber(result.breakdown.finalGlobalPoints)}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {result.breakdown && <TransactionBreakdown breakdown={result.breakdown} />}
 
             {/* Hidden printable receipt */}
             <div className="hidden print:block">
