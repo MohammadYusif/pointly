@@ -71,7 +71,7 @@ export function Navbar({ t, locale, onLocaleChange }: NavbarProps) {
           {/* Desktop actions */}
           <div className="nav-actions">
             <a
-              href={process.env.NEXT_PUBLIC_CUSTOMER_URL ?? 'https://d3p5cjqkvcaltp.cloudfront.net'}
+              href={process.env.NEXT_PUBLIC_CUSTOMER_URL ?? 'https://d33qgcnm1sph18.cloudfront.net'}
               target="_blank"
               rel="noopener noreferrer"
               className="nav-link portal-link"
@@ -79,7 +79,7 @@ export function Navbar({ t, locale, onLocaleChange }: NavbarProps) {
               {t.nav.customerPortal}
             </a>
             <a
-              href={process.env.NEXT_PUBLIC_MERCHANT_URL ?? 'https://d861ap8kkp4f6.cloudfront.net'}
+              href={process.env.NEXT_PUBLIC_MERCHANT_URL ?? 'https://d62obmvn36z3a.cloudfront.net'}
               target="_blank"
               rel="noopener noreferrer"
               className="nav-link portal-link"
@@ -150,7 +150,7 @@ export function Navbar({ t, locale, onLocaleChange }: NavbarProps) {
             <div className="mobile-menu-portals">
               <a
                 href={
-                  process.env.NEXT_PUBLIC_CUSTOMER_URL ?? 'https://d3p5cjqkvcaltp.cloudfront.net'
+                  process.env.NEXT_PUBLIC_CUSTOMER_URL ?? 'https://d33qgcnm1sph18.cloudfront.net'
                 }
                 target="_blank"
                 rel="noopener noreferrer"
@@ -160,7 +160,7 @@ export function Navbar({ t, locale, onLocaleChange }: NavbarProps) {
               </a>
               <a
                 href={
-                  process.env.NEXT_PUBLIC_MERCHANT_URL ?? 'https://d861ap8kkp4f6.cloudfront.net'
+                  process.env.NEXT_PUBLIC_MERCHANT_URL ?? 'https://d62obmvn36z3a.cloudfront.net'
                 }
                 target="_blank"
                 rel="noopener noreferrer"
