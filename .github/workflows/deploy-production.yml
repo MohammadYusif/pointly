@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
   PNPM_VERSION: '10.28.2'
   AWS_REGION: eu-west-1
   ENVIRONMENT: prod
@@ -54,7 +54,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -148,7 +148,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -195,7 +195,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -244,7 +244,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: ${{ env.PNPM_VERSION }}
 
