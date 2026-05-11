@@ -36,6 +36,61 @@ function getStreakBonusForTier(tier: string): number {
   return STREAK_BONUS_BY_TIER[tier] ?? 500;
 }
 
+function getDaysRemainingInWeek(): number {
+  const dayOfWeek = new Date().getDay();
+  return dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+}
+
+function buildMerchantNameMap(
+  merchants: Array<{ merchantId: string; businessName: string }> | undefined,
+): Record<string, string> {
+  const names: Record<string, string> = {};
+  if (merchants) {
+    for (const m of merchants) {
+      names[m.merchantId] = m.businessName;
+    }
+  }
+  return names;
+}
+
+type Transaction = Parameters<typeof TransactionItem>[0]['transaction'];
+
+function TransactionListContent({
+  isLoading,
+  transactions,
+  merchantNameMap,
+  noDataLabel,
+}: {
+  isLoading: boolean;
+  transactions: Transaction[];
+  merchantNameMap: Record<string, string>;
+  noDataLabel: string;
+}) {
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {['ta', 'tb', 'tc'].map((k) => (
+          <div key={k} className="h-12 skeleton rounded-md" />
+        ))}
+      </div>
+    );
+  }
+  if (transactions.length === 0) {
+    return <p className="text-sm text-muted-foreground">{noDataLabel}</p>;
+  }
+  return (
+    <>
+      {transactions.map((tx) => (
+        <TransactionItem
+          key={tx.transactionId}
+          transaction={tx}
+          merchantName={merchantNameMap[tx.merchantId]}
+        />
+      ))}
+    </>
+  );
+}
+
 function DashboardSkeleton() {
   return (
     <div className="space-y-4">
@@ -77,15 +132,7 @@ export default function CustomerDashboard() {
   const badges = useBadges(customer);
   const earnedBadges = badges.filter((b) => b.isEarned).slice(0, 3);
 
-  const merchantNameMap = useMemo(() => {
-    const names: Record<string, string> = {};
-    if (merchants) {
-      for (const m of merchants) {
-        names[m.merchantId] = m.businessName;
-      }
-    }
-    return names;
-  }, [merchants]);
+  const merchantNameMap = useMemo(() => buildMerchantNameMap(merchants), [merchants]);
 
   const transactions = txData?.transactions ?? [];
 
@@ -115,12 +162,6 @@ export default function CustomerDashboard() {
   const progressPercent = tierTarget > 0 ? Math.min(100, (progress / tierTarget) * 100) : 100;
 
   const enrolledCount = (customer.enrollments || []).length;
-
-  const getDaysRemainingInWeek = () => {
-    const now = new Date();
-    const dayOfWeek = now.getDay(); // 0=Sunday
-    return dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
-  };
 
   return (
     <CustomerLayout>
@@ -248,23 +289,12 @@ export default function CustomerDashboard() {
             </Link>
           </CardHeader>
           <CardContent className="space-y-3">
-            {txLoading ? (
-              <div className="space-y-3">
-                {['ta', 'tb', 'tc'].map((k) => (
-                  <div key={k} className="h-12 skeleton rounded-md" />
-                ))}
-              </div>
-            ) : transactions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t('common.noData')}</p>
-            ) : (
-              transactions.map((tx) => (
-                <TransactionItem
-                  key={tx.transactionId}
-                  transaction={tx}
-                  merchantName={merchantNameMap[tx.merchantId]}
-                />
-              ))
-            )}
+            <TransactionListContent
+              isLoading={txLoading}
+              transactions={transactions}
+              merchantNameMap={merchantNameMap}
+              noDataLabel={t('common.noData')}
+            />
           </CardContent>
         </Card>
 

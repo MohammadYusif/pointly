@@ -21,6 +21,26 @@ import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from 
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+type TFn = ReturnType<typeof useTranslation>['t'];
+
+function getDecayPhaseLabel(phase: number | undefined, t: TFn): string {
+  if (phase === 0) return t('wallet.phase0');
+  if (phase === 1) return t('wallet.phase1');
+  return t('wallet.phase2');
+}
+
+function buildMerchantMap(
+  merchants: CustomerMerchantView[] | undefined,
+): Record<string, CustomerMerchantView> {
+  const map: Record<string, CustomerMerchantView> = {};
+  if (merchants) {
+    for (const m of merchants) {
+      map[m.merchantId] = m;
+    }
+  }
+  return map;
+}
+
 function WalletSkeleton() {
   return (
     <div className="space-y-4">
@@ -270,23 +290,13 @@ export default function WalletPage() {
 
   const memberYear = customer.createdAt ? customer.createdAt.split('T')[0].split('-')[0] : '';
 
-  const merchantMap: Record<string, CustomerMerchantView> = {};
-  if (merchants) {
-    for (const m of merchants) {
-      merchantMap[m.merchantId] = m;
-    }
-  }
+  const merchantMap = buildMerchantMap(merchants);
 
   const sortedEnrollments = [...(customer.enrollments || [])].sort(
     (a, b) => (b.merchantPointsBalance || 0) - (a.merchantPointsBalance || 0),
   );
 
-  const decayPhaseLabel =
-    customer.globalPointsDecayPhase === 0
-      ? t('wallet.phase0')
-      : customer.globalPointsDecayPhase === 1
-        ? t('wallet.phase1')
-        : t('wallet.phase2');
+  const decayPhaseLabel = getDecayPhaseLabel(customer.globalPointsDecayPhase, t);
 
   return (
     <CustomerLayout>

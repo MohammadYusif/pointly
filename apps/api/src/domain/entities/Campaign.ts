@@ -167,34 +167,36 @@ export class Campaign {
       isActive: true,
       createdAt: now,
     };
-    if (overrides?.message) {
-      props.message = overrides.message;
-    }
-    if (overrides?.targetTiers && overrides.targetTiers.length > 0) {
-      props.targetTiers = overrides.targetTiers;
-    }
-    if (overrides?.maxUsesPerCustomer && overrides.maxUsesPerCustomer > 0) {
-      props.maxUsesPerCustomer = overrides.maxUsesPerCustomer;
-    }
-    if (overrides?.minPurchaseAmount && overrides.minPurchaseAmount > 0) {
-      props.minPurchaseAmount = overrides.minPurchaseAmount;
-    }
-    if (overrides?.maxPointsPerTransaction && overrides.maxPointsPerTransaction > 0) {
-      props.maxPointsPerTransaction = overrides.maxPointsPerTransaction;
-    }
-    if (overrides?.winBackDays && overrides.winBackDays > 0) {
-      props.winBackDays = overrides.winBackDays;
-    }
-    if (overrides?.welcomeDays && overrides.welcomeDays > 0) {
-      props.welcomeDays = overrides.welcomeDays;
-    }
-    if (overrides?.lastVisitDays && overrides.lastVisitDays > 0) {
-      props.lastVisitDays = overrides.lastVisitDays;
-    }
-    if (overrides?.productCategories && overrides.productCategories.length > 0) {
-      props.productCategories = overrides.productCategories;
-    }
+    if (overrides) Campaign.applyCreationOverrides(props, overrides);
     return new Campaign(props);
+  }
+
+  private static applyCreationOverrides(props: CampaignProps, overrides: CampaignOverrides): void {
+    if (overrides.message) props.message = overrides.message;
+    Campaign.applyCreationLimits(props, overrides);
+    Campaign.applyCreationDays(props, overrides);
+  }
+
+  private static applyCreationLimits(props: CampaignProps, overrides: CampaignOverrides): void {
+    if (overrides.targetTiers && overrides.targetTiers.length > 0)
+      props.targetTiers = overrides.targetTiers;
+    if (overrides.maxUsesPerCustomer && overrides.maxUsesPerCustomer > 0)
+      props.maxUsesPerCustomer = overrides.maxUsesPerCustomer;
+    if (overrides.minPurchaseAmount && overrides.minPurchaseAmount > 0)
+      props.minPurchaseAmount = overrides.minPurchaseAmount;
+    if (overrides.maxPointsPerTransaction && overrides.maxPointsPerTransaction > 0)
+      props.maxPointsPerTransaction = overrides.maxPointsPerTransaction;
+    if (overrides.productCategories && overrides.productCategories.length > 0)
+      props.productCategories = overrides.productCategories;
+  }
+
+  private static applyCreationDays(props: CampaignProps, overrides: CampaignOverrides): void {
+    if (overrides.winBackDays && overrides.winBackDays > 0)
+      props.winBackDays = overrides.winBackDays;
+    if (overrides.welcomeDays && overrides.welcomeDays > 0)
+      props.welcomeDays = overrides.welcomeDays;
+    if (overrides.lastVisitDays && overrides.lastVisitDays > 0)
+      props.lastVisitDays = overrides.lastVisitDays;
   }
 
   private static resolveCustom(overrides?: CampaignOverrides) {
@@ -513,6 +515,12 @@ export class Campaign {
   }
 
   private applyScalarOverrides(overrides: CampaignOverrides): void {
+    this.applyTextOverrides(overrides);
+    this.applyDayWindowOverrides(overrides);
+    this.applyListOverrides(overrides);
+  }
+
+  private applyTextOverrides(overrides: CampaignOverrides): void {
     if (overrides.multiplier !== undefined) {
       Campaign.validateMultiplier(overrides.multiplier);
       this.props.multiplier = overrides.multiplier;
@@ -532,14 +540,9 @@ export class Campaign {
         delete this.props.message;
       }
     }
-    if (overrides.targetTiers !== undefined) {
-      if (overrides.targetTiers.length > 0) {
-        this.props.targetTiers = overrides.targetTiers;
-      } else {
-        // biome-ignore lint/performance/noDelete: exactOptionalPropertyTypes requires delete to unset optional props
-        delete this.props.targetTiers;
-      }
-    }
+  }
+
+  private applyDayWindowOverrides(overrides: CampaignOverrides): void {
     if (overrides.winBackDays !== undefined) {
       if (overrides.winBackDays > 0) {
         this.props.winBackDays = overrides.winBackDays;
@@ -562,6 +565,17 @@ export class Campaign {
       } else {
         // biome-ignore lint/performance/noDelete: exactOptionalPropertyTypes requires delete to unset optional props
         delete this.props.lastVisitDays;
+      }
+    }
+  }
+
+  private applyListOverrides(overrides: CampaignOverrides): void {
+    if (overrides.targetTiers !== undefined) {
+      if (overrides.targetTiers.length > 0) {
+        this.props.targetTiers = overrides.targetTiers;
+      } else {
+        // biome-ignore lint/performance/noDelete: exactOptionalPropertyTypes requires delete to unset optional props
+        delete this.props.targetTiers;
       }
     }
     if (overrides.productCategories !== undefined) {
@@ -639,35 +653,37 @@ export class Campaign {
       isActive: this.props.isActive,
       createdAt: this.props.createdAt.toISOString(),
     };
+    this.addOptionalJsonFields(result);
+    return result;
+  }
+
+  private addOptionalJsonFields(result: CampaignJSON): void {
+    this.addOptionalJsonTextFields(result);
+    this.addOptionalJsonNumericFields(result);
+  }
+
+  private addOptionalJsonTextFields(result: CampaignJSON): void {
     if (this.props.message) result.message = this.props.message;
     if (this.props.linkedPerkId) result.linkedPerkId = this.props.linkedPerkId;
-    if (this.props.targetTiers && this.props.targetTiers.length > 0) {
+    if (this.props.termsMessage) result.termsMessage = this.props.termsMessage;
+    if (this.props.targetTiers && this.props.targetTiers.length > 0)
       result.targetTiers = this.props.targetTiers;
-    }
-    if (this.props.maxUsesPerCustomer && this.props.maxUsesPerCustomer > 0) {
-      result.maxUsesPerCustomer = this.props.maxUsesPerCustomer;
-    }
-    if (this.props.minPurchaseAmount && this.props.minPurchaseAmount > 0) {
-      result.minPurchaseAmount = this.props.minPurchaseAmount;
-    }
-    if (this.props.maxPointsPerTransaction && this.props.maxPointsPerTransaction > 0) {
-      result.maxPointsPerTransaction = this.props.maxPointsPerTransaction;
-    }
-    if (this.props.termsMessage) {
-      result.termsMessage = this.props.termsMessage;
-    }
-    if (this.props.winBackDays && this.props.winBackDays > 0) {
-      result.winBackDays = this.props.winBackDays;
-    }
-    if (this.props.welcomeDays && this.props.welcomeDays > 0) {
-      result.welcomeDays = this.props.welcomeDays;
-    }
-    if (this.props.lastVisitDays && this.props.lastVisitDays > 0) {
-      result.lastVisitDays = this.props.lastVisitDays;
-    }
-    if (this.props.productCategories && this.props.productCategories.length > 0) {
+    if (this.props.productCategories && this.props.productCategories.length > 0)
       result.productCategories = this.props.productCategories;
-    }
-    return result;
+  }
+
+  private addOptionalJsonNumericFields(result: CampaignJSON): void {
+    if (this.props.maxUsesPerCustomer && this.props.maxUsesPerCustomer > 0)
+      result.maxUsesPerCustomer = this.props.maxUsesPerCustomer;
+    if (this.props.minPurchaseAmount && this.props.minPurchaseAmount > 0)
+      result.minPurchaseAmount = this.props.minPurchaseAmount;
+    if (this.props.maxPointsPerTransaction && this.props.maxPointsPerTransaction > 0)
+      result.maxPointsPerTransaction = this.props.maxPointsPerTransaction;
+    if (this.props.winBackDays && this.props.winBackDays > 0)
+      result.winBackDays = this.props.winBackDays;
+    if (this.props.welcomeDays && this.props.welcomeDays > 0)
+      result.welcomeDays = this.props.welcomeDays;
+    if (this.props.lastVisitDays && this.props.lastVisitDays > 0)
+      result.lastVisitDays = this.props.lastVisitDays;
   }
 }

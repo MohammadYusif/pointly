@@ -71,6 +71,66 @@ export function CampaignTypeSelector({
 }
 
 /* ------------------------------------------------------------------ */
+/*  Create Campaign Form helpers                                       */
+/* ------------------------------------------------------------------ */
+
+function buildCreatePayload(args: {
+  type: CampaignType;
+  startDate: string;
+  endDate: string;
+  multiplier: string;
+  message: string;
+  isCustom: boolean;
+  customName: string;
+  customDesc: string;
+  selectedTiers: string[];
+  enablePush: boolean;
+  platformFilter: PlatformFilter;
+  winBackDays: string;
+  welcomeDays: string;
+  lastVisitDays: string;
+  maxUses: string;
+  minPurchase: string;
+  maxPoints: string;
+}): Record<string, unknown> {
+  const {
+    type,
+    startDate,
+    endDate,
+    multiplier,
+    message,
+    isCustom,
+    customName,
+    customDesc,
+    selectedTiers,
+    enablePush,
+    platformFilter,
+    winBackDays,
+    welcomeDays,
+    lastVisitDays,
+    maxUses,
+    minPurchase,
+    maxPoints,
+  } = args;
+  const payload: Record<string, unknown> = {
+    type,
+    startDate: new Date(startDate).toISOString(),
+    endDate: new Date(endDate).toISOString(),
+    multiplier: Number.parseFloat(multiplier),
+  };
+  if (message.trim()) payload.message = message.trim();
+  if (isCustom && customName.trim()) payload.name = customName.trim();
+  if (isCustom && customDesc.trim()) payload.description = customDesc.trim();
+  if (selectedTiers.length < ALL_TIERS.length) payload.targetTiers = selectedTiers;
+  if (enablePush && platformFilter !== 'all') payload.platformFilter = platformFilter;
+  return {
+    ...payload,
+    ...buildCampaignTypePayload(type, winBackDays, welcomeDays, lastVisitDays),
+    ...buildLimitsPayload(maxUses, minPurchase, maxPoints),
+  };
+}
+
+/* ------------------------------------------------------------------ */
 /*  Create Campaign Form                                               */
 /* ------------------------------------------------------------------ */
 
@@ -108,50 +168,41 @@ export function CreateCampaignForm({ onClose }: { onClose: () => void }) {
     setMultiplier(String(defaults.multiplier));
   }, [selectedType]);
 
-  const validateFields = (): string | null => {
-    const mult = Number.parseFloat(multiplier);
-    if (mult < 1 || mult > 5) return t('campaigns.multiplierError');
-    if (!startDate || !endDate || endDate <= startDate) return t('campaigns.dateError');
-    if (selectedTiers.length === 0) return t('campaigns.tierRequired');
-    return null;
-  };
-
-  const buildPayload = (type: CampaignType): Record<string, unknown> => {
-    const payload: Record<string, unknown> = {
-      type,
-      startDate: new Date(startDate).toISOString(),
-      endDate: new Date(endDate).toISOString(),
-      multiplier: Number.parseFloat(multiplier),
-    };
-    if (message.trim()) payload.message = message.trim();
-    if (isCustom && customName.trim()) payload.name = customName.trim();
-    if (isCustom && customDesc.trim()) payload.description = customDesc.trim();
-    if (selectedTiers.length < ALL_TIERS.length) payload.targetTiers = selectedTiers;
-    if (enablePush && platformFilter !== 'all') payload.platformFilter = platformFilter;
-    if (type === 'WIN_BACK') {
-      const parsed = Number.parseInt(winBackDays, 10);
-      if (parsed > 0) payload.winBackDays = parsed;
-    }
-    if (type === 'WELCOME') {
-      const parsed = Number.parseInt(welcomeDays, 10);
-      if (parsed > 0) payload.welcomeDays = parsed;
-    }
-    if (type !== 'WIN_BACK' && type !== 'WELCOME') {
-      const parsed = Number.parseInt(lastVisitDays, 10);
-      if (parsed > 0) payload.lastVisitDays = parsed;
-    }
-    return { ...payload, ...buildLimitsPayload(maxUses, minPurchase, maxPoints) };
-  };
-
   const handleCreate = async () => {
     if (!selectedType) return;
-    const error = validateFields();
-    if (error) {
-      toast.error(error);
+    const mult = Number.parseFloat(multiplier);
+    if (mult < 1 || mult > 5) {
+      toast.error(t('campaigns.multiplierError'));
+      return;
+    }
+    if (!startDate || !endDate || endDate <= startDate) {
+      toast.error(t('campaigns.dateError'));
+      return;
+    }
+    if (selectedTiers.length === 0) {
+      toast.error(t('campaigns.tierRequired'));
       return;
     }
     try {
-      const payload = buildPayload(selectedType);
+      const payload = buildCreatePayload({
+        type: selectedType,
+        startDate,
+        endDate,
+        multiplier,
+        message,
+        isCustom,
+        customName,
+        customDesc,
+        selectedTiers,
+        enablePush,
+        platformFilter,
+        winBackDays,
+        welcomeDays,
+        lastVisitDays,
+        maxUses,
+        minPurchase,
+        maxPoints,
+      });
       await createCampaign.mutateAsync(payload as Parameters<typeof createCampaign.mutateAsync>[0]);
       toast.success(t('campaigns.createSuccess'));
       onClose();
@@ -205,15 +256,7 @@ export function CreateCampaignForm({ onClose }: { onClose: () => void }) {
                 : undefined
             }
             tierBreakdown={tierBreakdown as Record<string, number> | undefined}
-            showTypeSpecificHint={
-              selectedType === 'BIRTHDAY_REWARD'
-                ? t('campaigns.birthdayHint')
-                : selectedType === 'WIN_BACK'
-                  ? t('campaigns.winBackHint', { days: winBackDays || '60' })
-                  : selectedType === 'WELCOME'
-                    ? t('campaigns.welcomeHint', { days: welcomeDays || '30' })
-                    : undefined
-            }
+            showTypeSpecificHint={getCampaignTypeHint(selectedType, winBackDays, welcomeDays, t)}
           />
         )}
 
@@ -384,8 +427,34 @@ export function EditCampaignForm({
 
   const isWinBack = campaign.type === 'WIN_BACK';
   const isWelcome = campaign.type === 'WELCOME';
-  const isRegular = !isWinBack && !isWelcome;
   const typeHint = getCampaignTypeHint(campaign.type, winBackDays, welcomeDays, t);
+
+  const typeFieldProps = isWinBack
+    ? {
+        winBackDays,
+        setWinBackDays,
+        welcomeDays: undefined,
+        setWelcomeDays: undefined,
+        lastVisitDays: undefined,
+        setLastVisitDays: undefined,
+      }
+    : isWelcome
+      ? {
+          winBackDays: undefined,
+          setWinBackDays: undefined,
+          welcomeDays,
+          setWelcomeDays,
+          lastVisitDays: undefined,
+          setLastVisitDays: undefined,
+        }
+      : {
+          winBackDays: undefined,
+          setWinBackDays: undefined,
+          welcomeDays: undefined,
+          setWelcomeDays: undefined,
+          lastVisitDays,
+          setLastVisitDays,
+        };
 
   const handleUpdate = async () => {
     const mult = Number.parseFloat(multiplier);
@@ -439,12 +508,7 @@ export function EditCampaignForm({
         setMaxPoints={setMaxPoints}
         message={message}
         setMessage={setMessage}
-        winBackDays={isWinBack ? winBackDays : undefined}
-        setWinBackDays={isWinBack ? setWinBackDays : undefined}
-        welcomeDays={isWelcome ? welcomeDays : undefined}
-        setWelcomeDays={isWelcome ? setWelcomeDays : undefined}
-        lastVisitDays={isRegular ? lastVisitDays : undefined}
-        setLastVisitDays={isRegular ? setLastVisitDays : undefined}
+        {...typeFieldProps}
         tierBreakdown={tierBreakdown as Record<string, number> | undefined}
         showTypeSpecificHint={typeHint}
       />

@@ -137,30 +137,42 @@ export class CampaignRepository
       isActive: entity.getIsActive(),
       createdAt: entity.getCreatedAt().toISOString(),
     };
+    this.addOptionalCampaignFields(item, entity);
+    return item as unknown as Record<string, unknown>;
+  }
+
+  private addOptionalCampaignFields(item: CampaignItem, entity: Campaign): void {
+    this.addOptionalTextFields(item, entity);
+    this.addOptionalNumericFields(item, entity);
+  }
+
+  private addOptionalTextFields(item: CampaignItem, entity: Campaign): void {
     const message = entity.getMessage();
     const linkedPerkId = entity.getLinkedPerkId();
     const targetTiers = entity.getTargetTiers();
+    const termsMessage = entity.getTermsMessage();
+    const productCategories = entity.getProductCategories();
     if (message) item.message = message;
     if (linkedPerkId) item.linkedPerkId = linkedPerkId;
+    if (termsMessage) item.termsMessage = termsMessage;
     if (targetTiers && targetTiers.length > 0) item.targetTiers = targetTiers;
+    if (productCategories && productCategories.length > 0)
+      item.productCategories = productCategories;
+  }
+
+  private addOptionalNumericFields(item: CampaignItem, entity: Campaign): void {
     const maxUses = entity.getMaxUsesPerCustomer();
     const minPurchase = entity.getMinPurchaseAmount();
     const maxPoints = entity.getMaxPointsPerTransaction();
-    if (maxUses && maxUses > 0) item.maxUsesPerCustomer = maxUses;
-    if (minPurchase && minPurchase > 0) item.minPurchaseAmount = minPurchase;
-    if (maxPoints && maxPoints > 0) item.maxPointsPerTransaction = maxPoints;
-    const termsMessage = entity.getTermsMessage();
-    if (termsMessage) item.termsMessage = termsMessage;
     const winBackDays = entity.getWinBackDays();
     const welcomeDays = entity.getWelcomeDays();
     const lastVisitDays = entity.getLastVisitDays();
+    if (maxUses && maxUses > 0) item.maxUsesPerCustomer = maxUses;
+    if (minPurchase && minPurchase > 0) item.minPurchaseAmount = minPurchase;
+    if (maxPoints && maxPoints > 0) item.maxPointsPerTransaction = maxPoints;
     if (winBackDays && winBackDays > 0) item.winBackDays = winBackDays;
     if (welcomeDays && welcomeDays > 0) item.welcomeDays = welcomeDays;
     if (lastVisitDays && lastVisitDays > 0) item.lastVisitDays = lastVisitDays;
-    const productCategories = entity.getProductCategories();
-    if (productCategories && productCategories.length > 0)
-      item.productCategories = productCategories;
-    return item as unknown as Record<string, unknown>;
   }
 
   async deactivateCampaign(merchantId: string, campaignId: string): Promise<void> {

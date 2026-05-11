@@ -68,11 +68,6 @@ export function Hero({ t, isRtl }: HeroProps) {
             initial="hidden"
             animate="visible"
           >
-            <motion.div className="hero-badge" variants={itemVariants}>
-              <span className="hero-badge-dot" />
-              {t.hero.badge}
-            </motion.div>
-
             <motion.h1 className="hero-title" variants={itemVariants}>
               {t.hero.title} <span className="highlight">{t.hero.titleHighlight}</span>
             </motion.h1>

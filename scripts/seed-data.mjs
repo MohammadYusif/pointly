@@ -27,7 +27,10 @@ import { DeleteCommand, DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-
 const args = process.argv.slice(2);
 const env = args.includes('--env') ? args[args.indexOf('--env') + 1] : 'dev';
 const clean = args.includes('--clean');
-const poolId = args.includes('--pool-id') ? args[args.indexOf('--pool-id') + 1] : null;
+const merchantPoolId = args.includes('--pool-id') ? args[args.indexOf('--pool-id') + 1] : null;
+const customerPoolId = args.includes('--customer-pool-id')
+  ? args[args.indexOf('--customer-pool-id') + 1]
+  : null;
 const region = 'eu-west-1';
 
 const TABLES = {
@@ -40,7 +43,8 @@ const client = new DynamoDBClient({ region });
 const docClient = DynamoDBDocumentClient.from(client, {
   marshallOptions: { removeUndefinedValues: true },
 });
-const cognitoClient = poolId ? new CognitoIdentityProviderClient({ region }) : null;
+const cognitoClient =
+  merchantPoolId || customerPoolId ? new CognitoIdentityProviderClient({ region }) : null;
 
 // --- Deterministic IDs for seed data ---
 const MERCHANT_IDS = {
@@ -987,6 +991,30 @@ Customers:
 }
 
 // --- Cognito User Seeding ---
+const MERCHANT_PASSWORD = 'Pointly2024!';
+const CUSTOMER_PASSWORD = 'Pointly1!';
+
+const COGNITO_MERCHANTS = [
+  {
+    email: 'admin@shawarmahouse.sa',
+    name: 'Abdullah Al-Rashid',
+    merchantId: MERCHANT_IDS.shawarma,
+    businessName: 'Shawarma House',
+  },
+  {
+    email: 'hello@dosecafe.sa',
+    name: 'Faisal Al-Otaibi',
+    merchantId: MERCHANT_IDS.dose,
+    businessName: 'Dose Cafe',
+  },
+  {
+    email: 'manager@nayomi.sa',
+    name: 'Maha Al-Ghamdi',
+    merchantId: MERCHANT_IDS.nayomi,
+    businessName: 'Nayomi Fashion',
+  },
+];
+
 const COGNITO_CUSTOMERS = [
   { phone: '+966501111111', name: 'Ahmed Al-Dosari', id: CUSTOMER_IDS.ahmed },
   { phone: '+966502222222', name: 'Fatimah Al-Harbi', id: CUSTOMER_IDS.fatimah },
@@ -1002,16 +1030,51 @@ const COGNITO_CUSTOMERS = [
   { phone: '+966513334444', name: 'Tariq Al-Harthy', id: CUSTOMER_IDS.tariq },
 ];
 
-async function seedCognitoUsers() {
-  if (!cognitoClient || !poolId) return;
+async function seedMerchantCognitoUsers() {
+  if (!cognitoClient || !merchantPoolId) return;
+  console.log(`\nSeeding ${COGNITO_MERCHANTS.length} merchant users in pool: ${merchantPoolId}`);
+  for (const { email, name, merchantId, businessName } of COGNITO_MERCHANTS) {
+    try {
+      await cognitoClient.send(
+        new AdminCreateUserCommand({
+          UserPoolId: merchantPoolId,
+          Username: email,
+          MessageAction: 'SUPPRESS',
+          UserAttributes: [
+            { Name: 'email', Value: email },
+            { Name: 'name', Value: name },
+            { Name: 'custom:merchantId', Value: merchantId },
+            { Name: 'custom:businessName', Value: businessName },
+          ],
+        }),
+      );
+      await cognitoClient.send(
+        new AdminSetUserPasswordCommand({
+          UserPoolId: merchantPoolId,
+          Username: email,
+          Password: MERCHANT_PASSWORD,
+          Permanent: true,
+        }),
+      );
+      console.log(`  [+] ${businessName} (${email})`);
+    } catch (err) {
+      if (err.name === 'UsernameExistsException') {
+        console.log(`  [=] ${businessName} (${email}) — already exists, skipped`);
+      } else {
+        console.error(`  [!] ${businessName} (${email}) — ${err.message}`);
+      }
+    }
+  }
+}
 
-  console.log(`\nSeeding Cognito users in pool: ${poolId}`);
-
+async function seedCustomerCognitoUsers() {
+  if (!cognitoClient || !customerPoolId) return;
+  console.log(`\nSeeding ${COGNITO_CUSTOMERS.length} customer users in pool: ${customerPoolId}`);
   for (const { phone, name, id } of COGNITO_CUSTOMERS) {
     try {
       await cognitoClient.send(
         new AdminCreateUserCommand({
-          UserPoolId: poolId,
+          UserPoolId: customerPoolId,
           Username: phone,
           MessageAction: 'SUPPRESS',
           UserAttributes: [
@@ -1021,16 +1084,14 @@ async function seedCognitoUsers() {
           ],
         }),
       );
-
       await cognitoClient.send(
         new AdminSetUserPasswordCommand({
-          UserPoolId: poolId,
+          UserPoolId: customerPoolId,
           Username: phone,
-          Password: 'Pointly1!',
+          Password: CUSTOMER_PASSWORD,
           Permanent: true,
         }),
       );
-
       console.log(`  [+] ${name} (${phone})`);
     } catch (err) {
       if (err.name === 'UsernameExistsException') {
@@ -1040,6 +1101,11 @@ async function seedCognitoUsers() {
       }
     }
   }
+}
+
+async function seedCognitoUsers() {
+  await seedMerchantCognitoUsers();
+  await seedCustomerCognitoUsers();
 }
 
 seed().catch((err) => {

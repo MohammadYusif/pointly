@@ -13,7 +13,6 @@ export const translations = {
       customerPortal: 'Customer Portal',
     },
     hero: {
-      badge: 'Coming soon to Saudi Arabia',
       title: 'One loyalty card.',
       titleHighlight: 'Every merchant.',
       subtitle:
@@ -206,18 +205,7 @@ export const translations = {
         },
         {
           title: 'Company',
-          links: [
-            { label: 'About', href: '/#about' },
-            { label: 'Blog', href: '/blog' },
-            { label: 'Careers', href: '/careers' },
-          ],
-        },
-        {
-          title: 'Support',
-          links: [
-            { label: 'Contact', href: '/contact' },
-            { label: 'Help Center', href: '/help' },
-          ],
+          links: [{ label: 'About', href: '/#about' }],
         },
       ],
     },
@@ -265,7 +253,6 @@ export const translations = {
       customerPortal: 'بوابة العميل',
     },
     hero: {
-      badge: 'قادم قريباً إلى المملكة العربية السعودية',
       title: 'بطاقة ولاء واحدة.',
       titleHighlight: 'كل التجار.',
       subtitle:
@@ -456,18 +443,7 @@ export const translations = {
         },
         {
           title: 'الشركة',
-          links: [
-            { label: 'عن بوينتلي', href: '/#about' },
-            { label: 'المدونة', href: '/blog' },
-            { label: 'الوظائف', href: '/careers' },
-          ],
-        },
-        {
-          title: 'الدعم',
-          links: [
-            { label: 'تواصل معنا', href: '/contact' },
-            { label: 'مركز المساعدة', href: '/help' },
-          ],
+          links: [{ label: 'عن بوينتلي', href: '/#about' }],
         },
       ],
     },

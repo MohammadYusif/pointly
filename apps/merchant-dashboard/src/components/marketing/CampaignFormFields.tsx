@@ -1,6 +1,51 @@
 'use client';
 
 import { useTranslation } from '@pointly/i18n';
+
+function multiplierPart(multiplier: string): string | null {
+  const mult = Number.parseFloat(multiplier);
+  return !Number.isNaN(mult) && mult > 0 ? `Earn ${mult}x points on your purchases` : null;
+}
+
+function minPurchasePart(minPurchase: string): string | null {
+  const minP = Number.parseFloat(minPurchase);
+  return !Number.isNaN(minP) && minP > 0 ? `Minimum purchase: ${minP} SAR` : null;
+}
+
+function maxUsesPart(maxUses: string): string | null {
+  const maxU = Number.parseInt(maxUses, 10);
+  return !Number.isNaN(maxU) && maxU > 0
+    ? `Limited to ${maxU} ${maxU === 1 ? 'use' : 'uses'} per customer`
+    : null;
+}
+
+function maxPointsPart(maxPoints: string): string | null {
+  const maxP = Number.parseInt(maxPoints, 10);
+  return !Number.isNaN(maxP) && maxP > 0 ? `Maximum ${maxP} bonus points per transaction` : null;
+}
+
+function endDatePart(endDate: string): string | null {
+  if (!endDate) return null;
+  const endD = new Date(endDate);
+  if (Number.isNaN(endD.getTime())) return null;
+  return `Valid until ${endD.toLocaleDateString('en-SA', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+}
+
+function buildTermsParts(
+  multiplier: string,
+  minPurchase: string,
+  maxUses: string,
+  maxPoints: string,
+  endDate: string,
+): string[] {
+  return [
+    multiplierPart(multiplier),
+    minPurchasePart(minPurchase),
+    maxUsesPart(maxUses),
+    maxPointsPart(maxPoints),
+    endDatePart(endDate),
+  ].filter((p): p is string => p !== null);
+}
 import { Input, Textarea } from '@pointly/ui';
 import { Gift, Users } from 'lucide-react';
 import { useMemo } from 'react';
@@ -72,24 +117,7 @@ export function CampaignFormFields({
   const { t } = useTranslation();
 
   const termsPreview = useMemo(() => {
-    const parts: string[] = [];
-    const mult = Number.parseFloat(multiplier);
-    if (!Number.isNaN(mult) && mult > 0) parts.push(`Earn ${mult}x points on your purchases`);
-    const minP = Number.parseFloat(minPurchase);
-    if (!Number.isNaN(minP) && minP > 0) parts.push(`Minimum purchase: ${minP} SAR`);
-    const maxU = Number.parseInt(maxUses, 10);
-    if (!Number.isNaN(maxU) && maxU > 0)
-      parts.push(`Limited to ${maxU} ${maxU === 1 ? 'use' : 'uses'} per customer`);
-    const maxP = Number.parseInt(maxPoints, 10);
-    if (!Number.isNaN(maxP) && maxP > 0) parts.push(`Maximum ${maxP} bonus points per transaction`);
-    if (endDate) {
-      const endD = new Date(endDate);
-      if (!Number.isNaN(endD.getTime())) {
-        parts.push(
-          `Valid until ${endD.toLocaleDateString('en-SA', { year: 'numeric', month: 'long', day: 'numeric' })}`,
-        );
-      }
-    }
+    const parts = buildTermsParts(multiplier, minPurchase, maxUses, maxPoints, endDate);
     return parts.length > 0 ? `${parts.join('. ')}.` : '';
   }, [multiplier, minPurchase, maxUses, maxPoints, endDate]);
 

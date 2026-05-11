@@ -177,40 +177,27 @@ export class RecordPurchaseUseCase {
     // 5d. Check and claim any lifetime milestone rewards crossed by this purchase
     const claimedMilestones = customer.checkAndClaimMilestones(merchant.getMilestones());
 
-    // 6. Create merchant transaction record (include campaign metadata if active)
-    const baseMetadata: TransactionMetadata = request.metadata || {};
+    // 6. Build breakdown and transaction metadata
+    const breakdown = this.buildBreakdown({
+      request,
+      pointsCalculation,
+      customer,
+      merchant,
+      merchantPoints,
+      boostedGlobalPoints,
+      activeCampaignName,
+      activeCampaignMultiplier,
+      activeCampaignBonusCap,
+      activeCampaignBonusBeforeCap,
+    });
 
-    // Build points calculation breakdown
-    const loyaltyConfig = merchant.getLoyaltyConfig();
-    const breakdown = {
-      purchaseAmount: request.amountSAR,
-      pointsPerSAR: loyaltyConfig.pointsPerSAR,
-      basePoints: pointsCalculation.merchantPoints,
-      tierMultiplier: customer.getEarningMultiplier(),
-      tierName: customer.getCurrentTier().getDisplayName(),
-      ...(activeCampaignName !== undefined && { campaignName: activeCampaignName }),
-      ...(activeCampaignMultiplier !== undefined && {
-        campaignMultiplier: activeCampaignMultiplier,
-      }),
-      ...(activeCampaignBonusCap !== undefined && { bonusPointsCap: activeCampaignBonusCap }),
-      ...(activeCampaignBonusBeforeCap !== undefined && {
-        bonusPointsBeforeCap: activeCampaignBonusBeforeCap,
-      }),
-      finalMerchantPoints: merchantPoints.toNumber(),
-      finalGlobalPoints: boostedGlobalPoints.toNumber(),
-    };
-
-    const txMetadata: TransactionMetadata = {
-      ...baseMetadata,
-      breakdown: JSON.stringify(breakdown),
-      ...(activeCampaignName
-        ? {
-            campaignId: activeCampaignId ?? '',
-            campaignName: activeCampaignName,
-            campaignMultiplier: activeCampaignMultiplier ?? 1,
-          }
-        : {}),
-    };
+    const txMetadata = this.buildTxMetadata(
+      request.metadata,
+      breakdown,
+      activeCampaignName,
+      activeCampaignId,
+      activeCampaignMultiplier,
+    );
 
     const transaction = Transaction.createEarn(
       request.merchantId,
@@ -266,39 +253,19 @@ export class RecordPurchaseUseCase {
     }
 
     // 10. Store idempotency result
-    const response: RecordPurchaseResponse = {
-      transactionId: transaction.getTransactionId(),
-      merchantPoints: merchantPoints.toNumber(),
-      globalPoints: boostedGlobalPoints.toNumber(),
-      newMerchantBalance: customer.getMerchantPointsBalance(request.merchantId).toNumber(),
-      newGlobalBalance: customer.getGlobalPointsBalance().toNumber(),
-
-      // Tier info
-      currentTier: customer.getCurrentTier().getDisplayName(),
-      tierUpgrade: customer.getCurrentTier().isHigherThan(tierBefore),
-      earningMultiplier: customer.getEarningMultiplier(),
-      isDecayImmune: customer.isDecayImmune(),
-      pointsToNextTier: customer.getPointsToNextTier(),
-
-      ...(activeCampaignMultiplier !== undefined && {
-        campaignMultiplier: activeCampaignMultiplier,
-      }),
-      ...(activeCampaignName !== undefined && { campaignName: activeCampaignName }),
-
+    const response = this.buildResponse({
+      transaction,
+      customer,
+      merchant: request.merchantId,
+      merchantPoints,
+      boostedGlobalPoints,
+      tierBefore,
+      activeCampaignMultiplier,
+      activeCampaignName,
       breakdown,
-
-      ...(claimedMilestones.length > 0 && {
-        milestonesAwarded: claimedMilestones.map((m) => ({
-          id: m.id,
-          label: m.label,
-          bonusPoints: m.bonusPoints,
-        })),
-      }),
-
-      ...(referralBonusAwarded && { referralBonusAwarded: true }),
-
-      message: `Purchase recorded! Earned ${merchantPoints.toNumber()} merchant points and ${boostedGlobalPoints.toNumber()} Pointly Network points`,
-    };
+      claimedMilestones,
+      referralBonusAwarded,
+    });
 
     await this.idempotencyService.storeResult(
       request.idempotencyKey,
@@ -325,6 +292,123 @@ export class RecordPurchaseUseCase {
     }
 
     return response;
+  }
+
+  private buildBreakdown(args: {
+    request: RecordPurchaseRequest;
+    pointsCalculation: { merchantPoints: number; globalPoints: number };
+    customer: Customer;
+    merchant: Merchant;
+    merchantPoints: Points;
+    boostedGlobalPoints: Points;
+    activeCampaignName: string | undefined;
+    activeCampaignMultiplier: number | undefined;
+    activeCampaignBonusCap: number | undefined;
+    activeCampaignBonusBeforeCap: number | undefined;
+  }): PurchaseBreakdown {
+    const {
+      request,
+      pointsCalculation,
+      customer,
+      merchant,
+      merchantPoints,
+      boostedGlobalPoints,
+      activeCampaignName,
+      activeCampaignMultiplier,
+      activeCampaignBonusCap,
+      activeCampaignBonusBeforeCap,
+    } = args;
+    return {
+      purchaseAmount: request.amountSAR,
+      pointsPerSAR: merchant.getLoyaltyConfig().pointsPerSAR,
+      basePoints: pointsCalculation.merchantPoints,
+      tierMultiplier: customer.getEarningMultiplier(),
+      tierName: customer.getCurrentTier().getDisplayName(),
+      ...(activeCampaignName !== undefined && { campaignName: activeCampaignName }),
+      ...(activeCampaignMultiplier !== undefined && {
+        campaignMultiplier: activeCampaignMultiplier,
+      }),
+      ...(activeCampaignBonusCap !== undefined && { bonusPointsCap: activeCampaignBonusCap }),
+      ...(activeCampaignBonusBeforeCap !== undefined && {
+        bonusPointsBeforeCap: activeCampaignBonusBeforeCap,
+      }),
+      finalMerchantPoints: merchantPoints.toNumber(),
+      finalGlobalPoints: boostedGlobalPoints.toNumber(),
+    };
+  }
+
+  private buildTxMetadata(
+    base: TransactionMetadata | undefined,
+    breakdown: PurchaseBreakdown,
+    campaignName: string | undefined,
+    campaignId: string | undefined,
+    campaignMultiplier: number | undefined,
+  ): TransactionMetadata {
+    return {
+      ...(base ?? {}),
+      breakdown: JSON.stringify(breakdown),
+      ...(campaignName
+        ? {
+            campaignId: campaignId ?? '',
+            campaignName,
+            campaignMultiplier: campaignMultiplier ?? 1,
+          }
+        : {}),
+    };
+  }
+
+  private buildResponse(args: {
+    transaction: Transaction;
+    customer: Customer;
+    merchant: string;
+    merchantPoints: Points;
+    boostedGlobalPoints: Points;
+    tierBefore: ReturnType<Customer['getCurrentTier']>;
+    activeCampaignMultiplier: number | undefined;
+    activeCampaignName: string | undefined;
+    breakdown: PurchaseBreakdown;
+    claimedMilestones: Array<{ id: string; label: string; bonusPoints: number }>;
+    referralBonusAwarded: boolean;
+  }): RecordPurchaseResponse {
+    const {
+      transaction,
+      customer,
+      merchant,
+      merchantPoints,
+      boostedGlobalPoints,
+      tierBefore,
+      activeCampaignMultiplier,
+      activeCampaignName,
+      breakdown,
+      claimedMilestones,
+      referralBonusAwarded,
+    } = args;
+    return {
+      transactionId: transaction.getTransactionId(),
+      merchantPoints: merchantPoints.toNumber(),
+      globalPoints: boostedGlobalPoints.toNumber(),
+      newMerchantBalance: customer.getMerchantPointsBalance(merchant).toNumber(),
+      newGlobalBalance: customer.getGlobalPointsBalance().toNumber(),
+      currentTier: customer.getCurrentTier().getDisplayName(),
+      tierUpgrade: customer.getCurrentTier().isHigherThan(tierBefore),
+      earningMultiplier: customer.getEarningMultiplier(),
+      isDecayImmune: customer.isDecayImmune(),
+      pointsToNextTier: customer.getPointsToNextTier(),
+      ...(activeCampaignMultiplier !== undefined && {
+        campaignMultiplier: activeCampaignMultiplier,
+      }),
+      ...(activeCampaignName !== undefined && { campaignName: activeCampaignName }),
+      breakdown,
+      ...(claimedMilestones.length > 0 && {
+        milestonesAwarded: claimedMilestones.map((m) => ({
+          id: m.id,
+          label: m.label,
+          bonusPoints: m.bonusPoints,
+        })),
+      }),
+      ...(referralBonusAwarded && { referralBonusAwarded: true }),
+      message: `Purchase recorded! Earned ${merchantPoints.toNumber()} merchant points and ${boostedGlobalPoints.toNumber()} Pointly Network points`,
+    };
   }
 
   private async resolveBestCampaign(
