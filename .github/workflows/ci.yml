@@ -96,6 +96,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: MohammadYusif/pointly
+          files: ./apps/api/coverage/lcov.info
           fail_ci_if_error: true
 
   build:
