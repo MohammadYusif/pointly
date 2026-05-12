@@ -17,6 +17,7 @@ const ibmPlexArabic = IBM_Plex_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://pointly.sa'),
   title: 'Pointly — The Loyalty Network for Saudi SMBs',
   description:
     'One loyalty card. Every merchant. Pointly connects Saudi businesses into a unified rewards network — no hardware, no integration headaches.',
@@ -32,17 +33,20 @@ export const metadata: Metadata = {
   creator: 'Pointly',
   openGraph: {
     type: 'website',
+    url: 'https://pointly.sa',
     locale: 'ar_SA',
     alternateLocale: 'en_US',
     siteName: 'Pointly',
     title: 'Pointly — The Loyalty Network for Saudi SMBs',
     description:
       'One loyalty card. Every merchant. Join the Saudi loyalty network built for small businesses.',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Pointly' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Pointly — The Loyalty Network for Saudi SMBs',
     description: 'One loyalty card. Every merchant. Built for Saudi SMBs.',
+    images: ['/og-image.png'],
   },
 };
 
