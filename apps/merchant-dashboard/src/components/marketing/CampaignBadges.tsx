@@ -14,7 +14,7 @@ export function CampaignStatusBadge({
   const status = getCampaignStatus(campaign as Parameters<typeof getCampaignStatus>[0]);
 
   const styles: Record<string, string> = {
-    active: 'bg-primary/10 text-primary border border-primary/20',
+    active: 'bg-primary/10 text-primary-accessible border border-primary/20',
     scheduled: 'bg-secondary/10 text-secondary border border-secondary/20',
     expired: 'bg-muted text-muted-foreground border border-border',
     inactive: 'bg-muted text-muted-foreground border border-border',
@@ -86,7 +86,7 @@ export function MultiplierBadge({ multiplier }: { multiplier: number }) {
   return (
     <span
       className={`inline-flex items-center gap-0.5 text-sm font-bold px-2.5 py-0.5 rounded-full ${
-        isHigh ? 'bg-orange-100 text-orange-700' : 'bg-primary/10 text-primary'
+        isHigh ? 'bg-orange-100 text-orange-700' : 'bg-primary/10 text-primary-accessible'
       }`}
     >
       <Zap className="w-3.5 h-3.5" />

@@ -147,7 +147,7 @@ export function CampaignFormFields({
       )}
 
       {showTypeSpecificHint && (
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm text-primary">
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm text-primary-accessible">
           <Gift className="w-4 h-4 mt-0.5 shrink-0" />
           <p>{showTypeSpecificHint}</p>
         </div>
@@ -276,7 +276,7 @@ export function CampaignFormFields({
             }
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border rounded-lg transition-all ${
               selectedTiers.length === ALL_TIERS.length
-                ? 'border-primary bg-primary/10 text-primary font-medium shadow-sm'
+                ? 'border-primary bg-primary/10 text-primary-accessible font-medium shadow-sm'
                 : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
             }`}
           >

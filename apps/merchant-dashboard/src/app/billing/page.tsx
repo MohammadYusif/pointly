@@ -69,12 +69,12 @@ export default function BillingPage() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-3">
-            <span className="text-2xl font-bold text-primary">
+            <span className="text-2xl font-bold text-primary-accessible">
               {tiers.find((tier) => tier.key === currentTier)?.[
                 language === 'ar' ? 'nameAr' : 'nameEn'
               ] || currentTier}
             </span>
-            <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
+            <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary-accessible">
               {t('common.active')}
             </span>
           </div>
@@ -91,7 +91,7 @@ export default function BillingPage() {
                 <CardTitle className="flex items-center justify-between">
                   <span>{language === 'ar' ? tier.nameAr : tier.nameEn}</span>
                   {isCurrentTier && (
-                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
+                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary-accessible">
                       {t('billing.current')}
                     </span>
                   )}

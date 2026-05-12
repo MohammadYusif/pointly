@@ -115,7 +115,7 @@ export default function MarketingPage() {
                 <Zap className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-primary">{stats.active}</p>
+                <p className="text-2xl font-bold text-primary-accessible">{stats.active}</p>
                 <p className="text-xs text-muted-foreground">{t('campaigns.activeCampaigns')}</p>
               </div>
             </div>

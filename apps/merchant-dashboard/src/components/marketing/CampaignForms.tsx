@@ -281,7 +281,7 @@ export function CreateCampaignForm({ onClose }: { onClose: () => void }) {
                     onClick={() => setPlatformFilter(p)}
                     className={`px-3 py-1.5 text-sm border rounded-lg transition-all ${
                       platformFilter === p
-                        ? 'border-primary bg-primary/10 text-primary font-medium'
+                        ? 'border-primary bg-primary/10 text-primary-accessible font-medium'
                         : 'border-border text-muted-foreground hover:border-primary/40'
                     }`}
                   >
@@ -576,7 +576,7 @@ export function CampaignCard({
                 onClick={() => setShowEdit(!showEdit)}
                 className={`p-1.5 rounded-lg border transition-colors ${
                   showEdit
-                    ? 'bg-primary/10 border-primary/20 text-primary'
+                    ? 'bg-primary/10 border-primary/20 text-primary-accessible'
                     : 'border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
                 }`}
                 title={t('campaigns.edit')}
@@ -615,7 +615,7 @@ export function CampaignCard({
             </span>
           )}
           {campaign.maxPointsPerTransaction && campaign.maxPointsPerTransaction > 0 && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary-accessible border border-primary/20">
               ≤{campaign.maxPointsPerTransaction} pts
             </span>
           )}

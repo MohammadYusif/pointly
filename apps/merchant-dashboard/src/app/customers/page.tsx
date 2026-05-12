@@ -122,7 +122,9 @@ export default function CustomersPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <Card>
             <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-primary">{insights.birthdayReward.count}</p>
+              <p className="text-2xl font-bold text-primary-accessible">
+                {insights.birthdayReward.count}
+              </p>
               <p className="text-xs text-muted-foreground mt-1">
                 {t('perkInsights.birthdayThisMonth')}
               </p>
