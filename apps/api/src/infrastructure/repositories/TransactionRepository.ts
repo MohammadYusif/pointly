@@ -82,8 +82,10 @@ export class TransactionRepository
       {
         IndexName: 'CustomerTransactionsIndex',
         KeyConditionExpression: 'GSI1PK = :pk',
+        FilterExpression: 'merchantId <> :network',
         ExpressionAttributeValues: {
           ':pk': `CUSTOMER#${customerId}`,
+          ':network': 'POINTLY_NETWORK',
         },
       },
       options,

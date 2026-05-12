@@ -12,7 +12,6 @@ const transactionsQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(100).optional().default(20),
   nextToken: z.string().optional(),
   sortOrder: z.enum(['ASC', 'DESC']).optional().default('DESC'),
-  type: z.enum(['EARN', 'REDEEM', 'ADJUSTMENT', 'EXPIRATION', 'REVERSAL']).optional(),
 });
 
 const enrollSchema = z.object({
@@ -95,18 +94,11 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
         ...(query.nextToken && { nextToken: query.nextToken }),
       });
 
-      // Exclude POINTLY_NETWORK audit trail entries — customers see merchant transactions only
-      // (global points info is shown in the transaction breakdown)
-      const withoutNetwork = result.items.filter((t) => t.getMerchantId() !== 'POINTLY_NETWORK');
-      const filtered = query.type
-        ? withoutNetwork.filter((t) => t.getType() === query.type)
-        : withoutNetwork;
-
       return reply.send({
         success: true,
         data: {
-          transactions: filtered.map((t) => t.toJSON()),
-          count: filtered.length,
+          transactions: result.items.map((t) => t.toJSON()),
+          count: result.count,
           nextToken: result.nextToken,
         },
       });
