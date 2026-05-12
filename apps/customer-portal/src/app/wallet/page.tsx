@@ -3,7 +3,7 @@
 import { CustomerLayout } from '@/components/CustomerLayout';
 import { DecayWarning } from '@/components/DecayWarning';
 import { PointlyLogo } from '@/components/PointlyLogo';
-import { useCustomer, useGiftPoints, useMyMerchants, useNotificationPermission } from '@/hooks/api';
+import { useCustomer, useMyMerchants, useNotificationPermission } from '@/hooks/api';
 import { walletApi } from '@/lib/api';
 import { useTranslation } from '@pointly/i18n';
 import type { CustomerEnrollment, CustomerMerchantView } from '@pointly/shared';
@@ -13,13 +13,10 @@ import {
   TIER_ORDER,
   getTierBgColor,
   getTierTarget,
-  isValidSaudiPhone,
-  normalizePhone,
 } from '@pointly/shared';
 import type { CustomerTierLevel } from '@pointly/shared';
-import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
+import { Button, Card, CardContent, CardHeader, CardTitle, useRTL } from '@pointly/ui';
 import { useState } from 'react';
-import { toast } from 'sonner';
 
 type TFn = ReturnType<typeof useTranslation>['t'];
 
@@ -50,103 +47,6 @@ function WalletSkeleton() {
       <div className="h-32 skeleton rounded-xl" />
       <div className="h-24 skeleton rounded-xl" />
     </div>
-  );
-}
-
-interface GiftCardProps {
-  maxPoints: number;
-}
-
-function GiftCard({ maxPoints }: GiftCardProps) {
-  const { t } = useTranslation();
-  const giftMutation = useGiftPoints();
-  const [showGift, setShowGift] = useState(false);
-  const [giftPhone, setGiftPhone] = useState('');
-  const [giftPoints, setGiftPoints] = useState('');
-
-  const handleGiftPoints = async () => {
-    const points = Number.parseInt(giftPoints, 10);
-    if (!points || points < 1) {
-      toast.error(t('gift.minPoints'));
-      return;
-    }
-    if (points > maxPoints) {
-      toast.error(t('gift.insufficientPoints'));
-      return;
-    }
-    if (!isValidSaudiPhone(giftPhone)) {
-      toast.error(t('gift.invalidPhone'));
-      return;
-    }
-    const normalizedGiftPhone = normalizePhone(giftPhone);
-    if (!normalizedGiftPhone) {
-      toast.error(t('gift.invalidPhone'));
-      return;
-    }
-    try {
-      await giftMutation.mutateAsync({
-        recipientPhone: normalizedGiftPhone,
-        points,
-        idempotencyKey: crypto.randomUUID(),
-      });
-      toast.success(t('gift.success'));
-      setGiftPhone('');
-      setGiftPoints('');
-      setShowGift(false);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('common.error'));
-    }
-  };
-
-  return (
-    <Card className="stagger-item">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-base">{t('gift.title')}</CardTitle>
-        <Button variant="outline" size="sm" onClick={() => setShowGift(!showGift)}>
-          {t('gift.send')}
-        </Button>
-      </CardHeader>
-      {showGift && (
-        <CardContent className="space-y-3">
-          <div>
-            <label htmlFor="gift-phone" className="text-sm text-muted-foreground block mb-1">
-              {t('gift.recipientPhone')}
-            </label>
-            <Input
-              id="gift-phone"
-              placeholder={t('gift.recipientPhonePlaceholder')}
-              value={giftPhone}
-              onChange={(e) => setGiftPhone(e.target.value)}
-              dir="ltr"
-            />
-          </div>
-          <div>
-            <label htmlFor="gift-points" className="text-sm text-muted-foreground block mb-1">
-              {t('gift.pointsToGift')}
-            </label>
-            <Input
-              id="gift-points"
-              type="number"
-              min="1"
-              max={maxPoints}
-              value={giftPoints}
-              onChange={(e) => setGiftPoints(e.target.value)}
-            />
-          </div>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={() => setShowGift(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button
-              onClick={handleGiftPoints}
-              disabled={giftMutation.isPending || !giftPhone || !giftPoints}
-            >
-              {giftMutation.isPending ? t('common.loading') : t('gift.send')}
-            </Button>
-          </div>
-        </CardContent>
-      )}
-    </Card>
   );
 }
 
@@ -382,9 +282,7 @@ export default function WalletPage() {
             className={`text-sm font-medium text-muted-foreground flex items-center gap-1 w-full ${textStart}`}
             onClick={() => setShowDetails(!showDetails)}
           >
-            {showDetails
-              ? `${t('wallet.lessDetails')} \u25b4`
-              : `${t('wallet.moreDetails')} \u25be`}
+            {showDetails ? `${t('wallet.lessDetails')} ▴` : `${t('wallet.moreDetails')} ▾`}
           </button>
 
           {showDetails && (
@@ -420,8 +318,6 @@ export default function WalletPage() {
                   decayPhase={customer.globalPointsDecayPhase}
                 />
               )}
-
-              <GiftCard maxPoints={customer.globalPointsBalance} />
             </div>
           )}
         </div>

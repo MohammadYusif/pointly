@@ -5,7 +5,6 @@ import type {
   CustomerMerchantView,
   CustomerPerkView,
   CustomerResponse,
-  GiftPointsRequest,
   PublicMerchantDetail,
   PublicMerchantSummary,
   TierBenefitsResponse,
@@ -96,13 +95,6 @@ export function checkInChallenge() {
 
 export function getTierBenefits() {
   return fetchApi<TierBenefitsResponse>('/v1/me/tier-benefits');
-}
-
-export function giftPoints(data: GiftPointsRequest) {
-  return fetchApi<{ success: boolean }>('/v1/me/gift', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
 }
 
 export function deleteAccount(): Promise<void> {
