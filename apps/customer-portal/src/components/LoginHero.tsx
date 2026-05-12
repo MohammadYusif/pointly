@@ -35,11 +35,6 @@ export function LoginHero() {
         <PointlyLogo height={30} color="#ffffff" />
       </motion.div>
 
-      <motion.div className="login-badge" variants={itemVariants}>
-        <span className="login-badge-dot" />
-        {t('auth.platformBadge')}
-      </motion.div>
-
       <motion.h1 className="login-headline" variants={itemVariants}>
         {t('auth.heroLine1')}
         <br />
