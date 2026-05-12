@@ -2,7 +2,7 @@
 
 import { useTranslation } from '@pointly/i18n';
 
-export type DatePreset = '7d' | '30d' | '90d';
+export type DatePreset = '1d' | '7d' | '30d' | '90d';
 export type GroupBy = 'day' | 'week' | 'month';
 
 interface DateRangeSelectorProps {
@@ -13,6 +13,7 @@ interface DateRangeSelectorProps {
 }
 
 const PRESET_DAYS: Record<DatePreset, number> = {
+  '1d': 1,
   '7d': 7,
   '30d': 30,
   '90d': 90,
@@ -20,6 +21,7 @@ const PRESET_DAYS: Record<DatePreset, number> = {
 
 /** Valid groupBy options per preset */
 const VALID_GROUP_BY: Record<DatePreset, GroupBy[]> = {
+  '1d': ['day'],
   '7d': ['day'],
   '30d': ['day', 'week'],
   '90d': ['day', 'week', 'month'],
@@ -27,6 +29,7 @@ const VALID_GROUP_BY: Record<DatePreset, GroupBy[]> = {
 
 /** Default groupBy when switching presets */
 const DEFAULT_GROUP_BY: Record<DatePreset, GroupBy> = {
+  '1d': 'day',
   '7d': 'day',
   '30d': 'day',
   '90d': 'week',
@@ -58,6 +61,7 @@ export function DateRangeSelector({
   const { t } = useTranslation();
 
   const presetLabels: Record<DatePreset, string> = {
+    '1d': t('analytics.today'),
     '7d': t('analytics.days7'),
     '30d': t('analytics.days30'),
     '90d': t('analytics.months3'),
