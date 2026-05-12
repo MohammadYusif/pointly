@@ -49,7 +49,6 @@ export function LoginHero() {
       <motion.p className="login-hero-sub" variants={itemVariants}>
         {t('auth.heroSubtitle')}
       </motion.p>
-
     </motion.div>
   );
 }
