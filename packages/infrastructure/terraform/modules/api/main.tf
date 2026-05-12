@@ -109,6 +109,25 @@ resource "aws_iam_role_policy" "sqs_send" {
   })
 }
 
+# Grant API Lambda permission to create merchant Cognito users (AdminCreateUser)
+resource "aws_iam_role_policy" "cognito_merchant" {
+  count = var.merchant_user_pool_arn != "" ? 1 : 0
+
+  name = "pointly-cognito-merchant-${var.environment}"
+  role = aws_iam_role.lambda_exec.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["cognito-idp:AdminCreateUser", "cognito-idp:AdminUpdateUserAttributes"]
+        Resource = var.merchant_user_pool_arn
+      }
+    ]
+  })
+}
+
 # ===========================================
 # CloudWatch Log Groups
 # ===========================================
@@ -159,6 +178,8 @@ resource "aws_lambda_function" "api" {
       MERCHANT_USER_POOL_ID               = var.merchant_user_pool_id
       MERCHANT_USER_POOL_CLIENT_ID        = var.merchant_user_pool_client_id
       CUSTOMER_USER_POOL_ID               = var.customer_user_pool_id
+      MOYASAR_SECRET_KEY                  = var.moyasar_secret_key
+      MOYASAR_WEBHOOK_SECRET              = var.moyasar_webhook_secret
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
       LOG_LEVEL                           = local.is_prod ? "info" : "debug"
     }

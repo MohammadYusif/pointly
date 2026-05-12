@@ -59,6 +59,13 @@ module "api" {
   # SMS Provider (Taqnyat)
   sms_provider_api_key = var.sms_provider_api_key
   sms_sender_id        = var.sms_sender_id
+
+  # Moyasar (merchant signup payment)
+  moyasar_secret_key     = var.moyasar_secret_key
+  moyasar_webhook_secret = var.moyasar_webhook_secret
+
+  # Merchant Cognito pool ARN (for AdminCreateUser IAM policy)
+  merchant_user_pool_arn = module.auth.merchant_user_pool_arn
 }
 
 # ===========================================

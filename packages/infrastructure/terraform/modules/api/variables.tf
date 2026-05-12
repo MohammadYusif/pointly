@@ -106,3 +106,25 @@ variable "sms_sender_id" {
   type        = string
   default     = "POINTLY"
 }
+
+# Moyasar (payment gateway)
+variable "moyasar_secret_key" {
+  description = "Moyasar secret API key for invoice creation and status checks"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "moyasar_webhook_secret" {
+  description = "Moyasar webhook HMAC secret for signature verification"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+# Merchant Cognito User Pool ARN (for AdminCreateUser IAM policy)
+variable "merchant_user_pool_arn" {
+  description = "ARN of the merchant Cognito User Pool (used to grant AdminCreateUser access)"
+  type        = string
+  default     = ""
+}

@@ -73,3 +73,17 @@ variable "sms_sender_id" {
   default     = "POINTLY"
   description = "SMS sender ID — must be pre-approved by Taqnyat / Saudi telecom."
 }
+
+variable "moyasar_secret_key" {
+  type        = string
+  sensitive   = true
+  default     = ""
+  description = "Moyasar secret key for invoice creation. Set via TF_VAR_moyasar_secret_key in CI."
+}
+
+variable "moyasar_webhook_secret" {
+  type        = string
+  sensitive   = true
+  default     = ""
+  description = "Moyasar webhook HMAC secret. Set via TF_VAR_moyasar_webhook_secret in CI."
+}
