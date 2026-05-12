@@ -350,7 +350,7 @@ export class Merchant {
    * Check if merchant is verified and active
    */
   isVerified(): boolean {
-    return this.props.status === MerchantStatus.ACTIVE && this.props.verifiedAt !== undefined;
+    return this.props.status === MerchantStatus.ACTIVE;
   }
 
   // Location management methods
