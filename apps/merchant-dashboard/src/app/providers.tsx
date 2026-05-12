@@ -38,7 +38,7 @@ export function Providers({ children }: { children: ReactNode }) {
         <AuthProvider>{children}</AuthProvider>
       </DirectionProvider>
       <Toaster position="top-center" richColors closeButton toastOptions={{ duration: 3000 }} />
-      <ReactQueryDevtools initialIsOpen={false} />
+      {process.env.NODE_ENV !== 'production' && <ReactQueryDevtools initialIsOpen={false} />}
     </QueryClientProvider>
   );
 }

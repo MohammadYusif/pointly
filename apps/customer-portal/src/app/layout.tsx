@@ -5,8 +5,21 @@ import { SwRegistration } from '@/components/SwRegistration';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: 'Pointly - Customer Portal',
-  description: 'Manage your loyalty points',
+  title: 'Pointly - بوينتلي',
+  applicationName: 'Pointly',
+  description: 'Your loyalty points, everywhere. كسب نقاطك وأنت تتسوق في كل مكان.',
+  themeColor: '#0d9488',
+  openGraph: {
+    type: 'website',
+    siteName: 'Pointly',
+    title: 'Pointly — Loyalty Rewards',
+    description: 'View your points, tier, and redeem rewards at any Pointly merchant.',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Pointly — Loyalty Rewards',
+    description: 'View your points, tier, and redeem rewards at any Pointly merchant.',
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
