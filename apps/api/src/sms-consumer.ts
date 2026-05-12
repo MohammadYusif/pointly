@@ -1,10 +1,45 @@
-import type { SQSEvent } from 'aws-lambda';
+import type { SQSBatchResponse, SQSEvent } from 'aws-lambda';
 import type { SmsMessage } from './application/services/ISmsPublisherService';
 import { logger } from './lib/logger';
 
-export const handler = async (event: SQSEvent): Promise<void> => {
+const TAQNYAT_URL = 'https://api.taqnyat.sa/v1/messages';
+
+async function sendSms(message: SmsMessage, apiKey: string, senderId: string): Promise<void> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const res = await fetch(TAQNYAT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        recipients: [message.phone],
+        body: message.body,
+        sender: senderId,
+      }),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => 'unknown');
+      throw new Error(`Taqnyat HTTP ${res.status}: ${text}`);
+    }
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+export const handler = async (event: SQSEvent): Promise<SQSBatchResponse> => {
+  const apiKey = process.env['SMS_PROVIDER_API_KEY'] ?? '';
+  const senderId = process.env['SMS_SENDER_ID'] ?? 'POINTLY';
+  const failures: SQSBatchResponse['batchItemFailures'] = [];
+
   for (const record of event.Records) {
     let message: SmsMessage;
+
     try {
       message = JSON.parse(record.body) as SmsMessage;
     } catch {
@@ -12,17 +47,40 @@ export const handler = async (event: SQSEvent): Promise<void> => {
         body: record.body,
         messageId: record.messageId,
       });
-      // Re-throw so SQS retries and eventually dead-letters
-      throw new Error(`Invalid SQS message body: ${record.messageId}`);
+      // Unparseable messages are not retryable — skip so they eventually DLQ via maxReceiveCount
+      continue;
     }
 
-    // TODO: Integrate with KSA SMS provider (Unifonic / Taqnyat / Msegat)
-    // For now: emit structured log so messages are observable in CloudWatch
-    logger.info('sms_dispatch_pending', {
-      phone: message.phone,
-      type: message.type,
-      merchantId: message.merchantId,
-      messageId: record.messageId,
-    });
+    if (!apiKey) {
+      // No provider configured — log for observability (dev/staging without Taqnyat)
+      logger.info('sms_dispatch_skipped', {
+        phone: message.phone,
+        type: message.type,
+        merchantId: message.merchantId,
+        messageId: record.messageId,
+        reason: 'SMS_PROVIDER_API_KEY not set',
+      });
+      continue;
+    }
+
+    try {
+      await sendSms(message, apiKey, senderId);
+      logger.info('sms_dispatched', {
+        phone: message.phone,
+        type: message.type,
+        merchantId: message.merchantId,
+        messageId: record.messageId,
+      });
+    } catch (err) {
+      logger.error('sms_dispatch_failed', {
+        messageId: record.messageId,
+        phone: message.phone,
+        type: message.type,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      failures.push({ itemIdentifier: record.messageId });
+    }
   }
+
+  return { batchItemFailures: failures };
 };
