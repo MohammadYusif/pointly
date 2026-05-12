@@ -63,6 +63,7 @@ export default function HistoryPage() {
             <option value="EARN">{t('transaction.purchase')}</option>
             <option value="REDEEM">{t('transaction.redemption')}</option>
             <option value="EXPIRATION">{t('transaction.expiration')}</option>
+            <option value="ADJUSTMENT">{t('transaction.adjustment')}</option>
           </select>
           <Button
             variant="outline"
