@@ -1,224 +1,172 @@
 # Pointly
 
-A multi-tenant SaaS loyalty platform for the Saudi Arabian market. Pointly enables merchants to run loyalty programs while customers earn and redeem points across a unified network.
+A multi-tenant SaaS loyalty platform for the Saudi Arabian market. Merchants run loyalty programs; customers earn and redeem points across a unified network.
 
-## Architecture Overview
+## Architecture
 
-```mermaid
-graph TB
-    subgraph Clients
-        MP[Merchant Dashboard<br/>React + Vite]
-        CP[Customer Portal<br/>React + Vite]
-        POS[POS Integration<br/>REST API]
-    end
-
-    subgraph API Gateway
-        APIGW[AWS API Gateway<br/>REST + WebSocket]
-    end
-
-    subgraph Compute
-        Lambda[Lambda Functions<br/>Node.js 24.x]
-        API[Fastify API<br/>Local Dev]
-    end
-
-    subgraph Auth
-        CognitoM[Cognito<br/>Merchants]
-        CognitoC[Cognito<br/>Customers]
-    end
-
-    subgraph Data
-        DDB[(DynamoDB<br/>Single Table)]
-        SQS[SQS<br/>SMS Queue]
-    end
-
-    subgraph Monitoring
-        CW[CloudWatch<br/>Logs & Metrics]
-        SNS[SNS<br/>Alarms]
-    end
-
-    MP --> APIGW
-    CP --> APIGW
-    POS --> APIGW
-
-    APIGW --> CognitoM
-    APIGW --> CognitoC
-    APIGW --> Lambda
-
-    Lambda --> DDB
-    Lambda --> SQS
-
-    API --> DDB
-
-    Lambda --> CW
-    CW --> SNS
+```
+Browser / POS
+    │
+    ├── merchant.pointly.sa  (Next.js → S3 + CloudFront)
+    ├── customer.pointly.sa  (Next.js → S3 + CloudFront)
+    └── pointly.sa           (Next.js static → S3 + CloudFront)
+                                         │
+                               api.pointly.sa
+                          (CloudFront → API Gateway → Lambda)
+                                         │
+                          ┌──────────────┼──────────────┐
+                     DynamoDB          SQS           Cognito
+                  (single-table)    (SMS queue)   (2 user pools)
+                                         │
+                                   SMS Consumer Lambda
+                                         │
+                                      Taqnyat
+                                   (SMS delivery)
 ```
 
-## Domain Model
+### AWS Services
 
-```mermaid
-classDiagram
-    class Customer {
-        +customerId: string
-        +phone: PhoneNumber
-        +globalPointsBalance: Points
-        +currentTier: CustomerTier
-        +enrollments: MerchantEnrollment[]
-        +addPointsFromPurchase()
-        +redeemPoints()
-        +updateTierFromProgress()
-    }
+| Service | Purpose |
+|---------|---------|
+| Lambda (Node 22) | API handler, decay cron, tier-reset cron, SMS consumer |
+| API Gateway (REST) | HTTP proxy to API Lambda |
+| CloudFront | CDN for all 4 domains — one wildcard ACM cert covers everything |
+| DynamoDB | Single-table design — 7 tables |
+| Cognito | Merchant pool (email/password) + Customer pool (OTP/phone) |
+| SQS | Async SMS dispatch queue with DLQ |
+| EventBridge | Monthly decay + tier-reset cron triggers |
+| WAFv2 | Rate limiting + managed rule groups on API Gateway |
+| CloudWatch | Logs, metrics, alarms, dashboard |
 
-    class Merchant {
-        +merchantId: string
-        +businessName: string
-        +tier: MerchantTier
-        +status: MerchantStatus
-        +calculateGlobalPoints()
-        +calculateMerchantPoints()
-    }
+## Monorepo Structure
 
-    class Transaction {
-        +transactionId: string
-        +type: TransactionType
-        +globalPoints: Points
-        +merchantPoints: Points
-    }
-
-    class CustomerTier {
-        <<enumeration>>
-        BRONZE
-        GOLD
-        PLATINUM
-        DIAMOND
-    }
-
-    class MerchantTier {
-        <<enumeration>>
-        BASIC
-        PROFESSIONAL
-        ENTERPRISE
-    }
-
-    Customer "1" --> "*" Transaction : participates
-    Merchant "1" --> "*" Transaction : processes
-    Customer --> CustomerTier
-    Merchant --> MerchantTier
 ```
+apps/
+  api/                  # Fastify 5 API — DDD, Clean Architecture
+  merchant-dashboard/   # Next.js 15 — merchant admin panel
+  customer-portal/      # Next.js 15 — customer-facing app (OTP login)
+  landing/              # Next.js 15 static export — marketing site
+
+packages/
+  shared/               # TypeScript types + utilities (phone, formatting, tier config)
+  ui/                   # Shared React components (Button, Card, Sheet, LanguageToggle)
+  i18n/                 # RTL/LTR context + translation hooks
+  http-client/          # Thin fetch wrapper factory
+  infrastructure/       # Terraform IaC — 7 modules, eu-west-1
+  assets/               # Brand assets (logos, icons)
+```
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Language | TypeScript 5 |
+| API | Fastify 5 on AWS Lambda (Node.js 22) |
+| Frontend | Next.js 15, React 18/19 |
+| Database | DynamoDB (AWS SDK v3, single-table design) |
+| Auth | AWS Cognito — merchant pool (SRP) + customer pool (CUSTOM_AUTH OTP) |
+| Infrastructure | Terraform (not CDK) — `packages/infrastructure/terraform/` |
+| Monorepo | pnpm 10 + Turborepo |
+| Linter | Biome 1.9.4 — no ESLint, no Prettier |
+| Tests | Vitest (API only) |
+| SMS | Taqnyat REST API |
+| Payments | Moyasar (merchant signup gating) |
 
 ## Quick Start
 
 ### Prerequisites
 
-- Node.js 20+
-- pnpm 10+
-- Docker & Docker Compose
+- Node.js ≥ 22
+- pnpm ≥ 10 (`corepack enable`)
+- Docker (for local DynamoDB)
 
 ### Local Development
 
 ```bash
-# Clone the repository
-git clone https://github.com/MohammadYusif/pointly.git
-cd pointly
-
 # Install dependencies
 pnpm install
 
 # Start local DynamoDB
 pnpm docker:up
 
-# Run the API in development mode
-pnpm dev
+# Seed test data
+pnpm seed
 
-# Run tests
-pnpm test
+# Run all apps
+pnpm dev
+```
+
+Individual apps:
+
+```bash
+pnpm --filter @pointly/api dev           # API on :3000
+pnpm --filter @pointly/landing dev       # Landing on :3002
+pnpm --filter @pointly/merchant-dashboard dev   # Dashboard on :3000
+pnpm --filter @pointly/customer-portal dev      # Customer portal on :3001
 ```
 
 ### Environment Variables
 
-Create `.env` files in each app directory. See component READMEs for details.
+Each app has its own env vars. See the sub-`CLAUDE.md` files in each `apps/` directory for the full list. Quick reference:
 
-## Project Structure
+| App | Key vars |
+|-----|---------|
+| API | `USER_LEDGER_TABLE`, `MERCHANT_USER_POOL_ID`, `MOYASAR_SECRET_KEY`, `SMS_QUEUE_URL` |
+| Merchant Dashboard | `NEXT_PUBLIC_COGNITO_USER_POOL_ID`, `NEXT_PUBLIC_API_URL` |
+| Customer Portal | `NEXT_PUBLIC_CUSTOMER_USER_POOL_ID`, `NEXT_PUBLIC_API_URL` |
+| Landing | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_MERCHANT_URL` |
 
-```
-pointly/
-├── apps/
-│   ├── api/                    # Core API service (Fastify + DDD)
-│   ├── customer-portal/        # Customer-facing web app (React)
-│   └── merchant-dashboard/     # Merchant admin panel (React)
-├── packages/
-│   ├── infrastructure/         # AWS CDK stacks
-│   └── shared/                 # Shared types and utilities
-├── docker/                     # Docker Compose for local dev
-└── docs/                       # Additional documentation
-```
-
-| Directory | Description |
-|-----------|-------------|
-| `apps/api` | Core backend API with domain-driven design, handles all business logic |
-| `apps/customer-portal` | React SPA for customers to view points, tiers, and redeem rewards |
-| `apps/merchant-dashboard` | React SPA for merchants to manage loyalty programs and view analytics |
-| `packages/infrastructure` | AWS CDK stacks for DynamoDB, Cognito, API Gateway, Lambda |
-| `packages/shared` | Shared TypeScript types and utilities across packages |
-| `docker/` | Local development services (DynamoDB Local, Admin UI) |
-
-## Key Features
-
-### Points System
-- **Dual Currency**: Global points (network-wide) + Merchant points (store-specific)
-- **Simplified Earning**: 1 SAR = 1 point for all merchant tiers
-- **Decay System**: 12-month grace period (no decay), then Phase 1 (5%/month, months 12–17) and Phase 2 (15%/month, months 18+). Gold, Platinum, and Diamond customers are decay-immune.
+## Domain Model
 
 ### Customer Tiers
-| Tier     | Monthly Points   | Earning Multiplier | Decay Immune |
-|----------|------------------|--------------------|--------------|
-| Bronze   | 0 – 4,999        | 1.0x               | No           |
-| Gold     | 5,000 – 9,999    | 1.1x               | Yes          |
-| Platinum | 10,000 – 14,999  | 1.15x              | Yes          |
-| Diamond  | 15,000+          | 1.2x               | Yes          |
 
-Tiers are evaluated monthly based on points earned in the current calendar month. Progress resets lazily on the first transaction of the new month.
+| Tier | Monthly Points | Multiplier | Decay Immune |
+|------|---------------|-----------|--------------|
+| Bronze | 0 – 4,999 | 1.0× | No |
+| Gold | 5,000 – 9,999 | 1.1× | Yes |
+| Platinum | 10,000 – 14,999 | 1.15× | Yes |
+| Diamond | 15,000+ | 1.2× | Yes |
 
-### Merchant Tiers
-| Tier | Price | Points Rate | Min Purchase | Welcome Bonus | Locations | SMS/month | Min Redemption |
-|------|-------|-------------|--------------|---------------|-----------|-----------|----------------|
-| Basic | 75 SAR/mo | 1 pt/SAR | 10 SAR | 50 pts | 1 | 100 | 100 pts |
-| Professional | 105 SAR/mo | 1 pt/SAR | 5 SAR | 100 pts | 3 | 500 | 50 pts |
-| Enterprise | 175 SAR/mo | 1 pt/SAR | None | 200 pts | Unlimited | 2,000 | 25 pts |
+Redemption rate: **0.01 SAR per point** (all tiers).
 
-All tiers use a fixed redemption rate of 0.01 SAR per point.
+### Merchant Plans
 
-## Scripts
+| Plan | Price | Locations | SMS/month | Min Purchase |
+|------|-------|-----------|-----------|--------------|
+| Basic | 75 SAR/mo | 1 | 100 | 10 SAR |
+| Professional | 105 SAR/mo | 3 | 500 | 5 SAR |
+| Enterprise | 175 SAR/mo | Unlimited | 2,000 | None |
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start all services in development mode |
-| `pnpm build` | Build all packages |
-| `pnpm test` | Run all tests |
-| `pnpm lint` | Lint all packages with Biome |
-| `pnpm type-check` | TypeScript type checking |
-| `pnpm docker:up` | Start local DynamoDB |
-| `pnpm docker:down` | Stop local DynamoDB |
-| `pnpm infra:deploy` | Deploy AWS infrastructure |
+### Points System
 
-## Component Documentation
+- **Dual wallet**: global points (spendable at any merchant) + merchant points (store-specific)
+- **Earning**: 1 SAR spent = 1 point × tier multiplier
+- **Decay**: 12-month grace, then 5%/month (months 12–17), then 15%/month (month 18+). Gold+ tiers are decay-immune for global points.
+- **Tier progress**: resets monthly; evaluated lazily on first transaction of the new month if cron missed a run
 
-- [API Service](apps/api/README.md) - Core backend with domain-driven design
-- [Infrastructure](packages/infrastructure/README.md) - AWS CDK deployment
-- [Customer Portal](apps/customer-portal/README.md) - Customer web application
-- [Merchant Dashboard](apps/merchant-dashboard/README.md) - Merchant admin panel
+## Key Commands
 
-## Tech Stack
+```bash
+pnpm check                            # Biome lint + format (auto-fix)
+pnpm type-check                       # tsc --noEmit all packages
+pnpm --filter @pointly/api test       # Vitest
+pnpm build                            # Build all packages
+pnpm --filter @pointly/api build:lambda:all  # Build Lambda zips for deployment
+pnpm infra:deploy                     # terraform apply (dev workspace)
+```
 
-- **Runtime**: Node.js 24.x
-- **Language**: TypeScript 5.7
-- **API Framework**: Fastify 5
-- **Database**: DynamoDB (single-table design)
-- **Auth**: AWS Cognito
-- **Infrastructure**: AWS CDK
-- **Testing**: Vitest
-- **Linting**: Biome
-- **Monorepo**: Turborepo + pnpm
+## Infrastructure
+
+Terraform state is stored in S3 (`pointly-terraform-state-*`) with DynamoDB locking. Two environments via Terraform workspaces:
+
+```bash
+cd packages/infrastructure/terraform
+terraform workspace select prod
+terraform apply -var-file="environments/prod.tfvars"
+```
+
+See [`packages/infrastructure/CLAUDE.md`](packages/infrastructure/CLAUDE.md) for the full infra guide.
 
 ## License
 
-Proprietary - All rights reserved
+Proprietary — All rights reserved

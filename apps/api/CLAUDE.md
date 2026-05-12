@@ -57,6 +57,9 @@ All routes under `/v1`. Auth scopes are applied at the registration level, not p
 | POST | `/v1/customers` | `routes/customerPublic.ts` |
 | GET | `/v1/customers/phone/:phone` | `routes/customerPublic.ts` |
 | GET | `/v1/merchants/:id/public` | `routes/merchantPublic.ts` |
+| POST | `/v1/merchants/initiate-signup` | `routes/merchantPublic.ts` |
+| GET | `/v1/merchants/signup-status?paymentId=` | `routes/merchantPublic.ts` |
+| POST | `/v1/webhooks/moyasar` | `routes/moyasarWebhook.ts` |
 | GET | `/v1/push/vapid-key` | `routes/push.ts` |
 
 **Customer JWT routes (`/v1/me/...`):**
@@ -132,6 +135,9 @@ All live in `application/use-cases/`. Each has a single `execute()` method.
 | `CheckChallengeEligibilityUseCase` | GET `/v1/me/challenges` |
 | `ProcessPointsDecayUseCase` | `scheduled-decay.ts` (EventBridge monthly) |
 | `ProcessMonthlyTierResetUseCase` | `scheduled-tier-reset.ts` (EventBridge monthly) |
+| `InitiateMerchantSignupUseCase` | POST `/v1/merchants/initiate-signup` |
+| `CompleteMerchantSignupUseCase` | POST `/v1/webhooks/moyasar` (on `invoice.paid`) |
+| `GetSignupStatusUseCase` | GET `/v1/merchants/signup-status` |
 
 ## DI Container (`container.ts`)
 
@@ -151,6 +157,10 @@ PENDING_CONSENTS_TABLE  # defaults to 'pointly-pending-consents' if absent
 SMS_QUOTA_TABLE
 SMS_QUEUE_URL           # SQS queue for SMS dispatch
 WALLET_PASSES_TABLE     # DynamoDB: push subscriptions + wallet pass data (defaults to 'pointly-wallet-passes')
+
+# Moyasar (merchant signup payment gateway)
+MOYASAR_SECRET_KEY      # Basic-auth key for invoice creation + status checks
+MOYASAR_WEBHOOK_SECRET  # HMAC-SHA256 secret to verify X-Moyasar-Signature header
 
 # Optional (Cognito — required in production)
 MERCHANT_USER_POOL_ID
@@ -214,10 +224,11 @@ Key test files:
 
 ## Lambda Build
 
-Three separate esbuild bundles (no shared code at runtime):
+Four separate esbuild bundles (no shared code at runtime):
 - `dist/lambda/index.js` — API Gateway handler
 - `dist/lambda-decay/index.js` — Decay cron
 - `dist/lambda-tier-reset/index.js` — Tier reset cron
+- `dist/lambda-sms-consumer/index.js` — SQS → Taqnyat SMS consumer
 
 **Always rebuild before `terraform apply`** when API code changes.
 
@@ -230,6 +241,9 @@ Three separate esbuild bundles (no shared code at runtime):
 - Merchant gift use cases must only award `merchantPointsBalance` — never `globalPointsBalance` (prevents global currency inflation)
 - Optional fields in use-case request interfaces need `?: T | undefined` (not just `?: T`) — `exactOptionalPropertyTypes` is enabled
 - DynamoDB `USER_LEDGER_TABLE` holds both Customers and Merchants — PK prefix differentiates (`CUSTOMER#` vs `MERCHANT#`)
+- **Moyasar webhook** (`/v1/webhooks/moyasar`) uses `addContentTypeParser` to capture raw body as a string for HMAC-SHA256 verification before parsing JSON — if you add middleware that consumes the body stream before this runs, signature verification will break
+- **`PendingMerchantSignup`** is stored in `USER_LEDGER_TABLE` (not a separate table). PK = `PENDING_SIGNUP#<signupId>`. Payment reverse-lookup stored as a separate item: `PK = PAYMENT_INDEX#<paymentId>`. Both have a 24h TTL.
+- **`IIdempotencyService`** methods: `getResult<T>(key)`, `storeResult<T>(key, value, ttlSeconds)`, `delete(key)` — NOT `check` / `record`
 - `@pointly/api` does NOT depend on `@pointly/shared` — domain types (`PerkType`, `WalletConfig`, `CampaignType`, etc.) are intentionally local to keep the Lambda bundle self-contained
 - `WALLET_PASSES_TABLE` stores both push subscription records (`PK: CUSTOMER#<id> SK: PUSH#<hash>`) and merchant-keyed push index records (`PK: MERCHANT_PUSH#<merchantId> SK: CUSTOMER#<id>#PUSH#<hash>`) — do not use `ScanCommand` for per-merchant queries; use `QueryCommand` on the merchant-keyed PK
 - Apple/Google Wallet generation returns a 501 gracefully if the relevant env vars are absent — no crash

@@ -140,6 +140,28 @@ pnpm infra:deploy                  # Terraform deploy (infra package)
 
 > API and Merchant Dashboard both default to port 3000 — run them separately or change one.
 
+## External Services
+
+| Service | Purpose | Auth | Used in |
+|---------|---------|------|---------|
+| **Taqnyat** (`api.taqnyat.sa`) | OTP SMS + loyalty SMS | `Bearer <sms_provider_api_key>` | Cognito trigger (OTP) + SQS consumer (notifications) |
+| **Moyasar** (`api.moyasar.com`) | Merchant signup payment | `Basic <moyasar_secret_key>:` | API `/v1/merchants/initiate-signup` + webhook |
+
+Both keys are injected as Lambda env vars via Terraform. Set via `TF_VAR_*` in CI — never hardcoded.
+
+## Custom Domain Architecture (when pointly.sa is live)
+
+One ACM cert (`*.pointly.sa` + `pointly.sa`) in **us-east-1** covers all four CloudFront distributions:
+
+| Subdomain | CloudFront → |
+|-----------|-------------|
+| `pointly.sa` | S3 (landing) |
+| `merchant.pointly.sa` | S3 (merchant dashboard) |
+| `customer.pointly.sa` | S3 (customer portal) |
+| `api.pointly.sa` | API Gateway (no custom domain on APIGW — CF proxies to the default invoke URL) |
+
+Set `domain_name = "pointly.sa"` and `certificate_arn = "<us-east-1 cert ARN>"` in `environments/prod.tfvars` to activate.
+
 ## Tier Config (Single Source of Truth)
 
 - **API**: `apps/api/src/domain/config/TierConfig.ts`

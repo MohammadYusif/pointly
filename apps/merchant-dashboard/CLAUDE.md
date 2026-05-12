@@ -28,6 +28,7 @@ src/
     settings/page.tsx       # Merchant profile, locations, perks, wallet card branding, push stats
     marketing/page.tsx      # Campaign management + push notification targeting
     billing/page.tsx        # Billing info (static placeholder)
+    signup-complete/page.tsx # Public page — polls signup status after Moyasar payment redirect
   components/
     DashboardLayout.tsx     # Sidebar nav + header shell
     AppSkeleton.tsx         # Full-page loading skeleton (no bg class — shows body bg)
@@ -41,6 +42,7 @@ src/
     use-customers.ts
     use-merchant.ts
     use-purchases.ts
+    use-signup-status.ts    # useSignupStatus(paymentId) — polls /v1/merchants/signup-status, 2s refetch while pending
     use-wallet.ts
     use-webhooks.ts
   lib/
@@ -59,16 +61,25 @@ Uses `amazon-cognito-identity-js` with **email/password** (SRP auth).
 
 ```
 lib/auth.ts
-  signIn(email, password)     → CognitoUserSession + MerchantInfo
-  signOut()                   → clears Cognito + cookie
-  getCurrentSession()         → returns session or null
-  getAccessToken()            → returns ID token JWT (NOT access token)
-  setAuthCookie()             → sets pointly-auth cookie (30-day, SameSite=Lax)
+  signIn(email, password)             → SignInResult (see below)
+  completeNewPassword(user, newPwd)   → void — handles NEW_PASSWORD_REQUIRED after AdminCreateUser
+  signOut()                           → clears Cognito + cookie
+  getCurrentSession()                 → returns session or null
+  getAccessToken()                    → returns ID token JWT (NOT access token)
+  setAuthCookie()                     → sets pointly-auth cookie (30-day, SameSite=Lax)
+
+// SignInResult discriminated union:
+type SignInResult =
+  | { session: CognitoUserSession; merchant: MerchantInfo }         // normal login
+  | { requiresNewPassword: true; cognitoUser: CognitoUser }         // first login after AdminCreateUser
 
 lib/auth-context.tsx
   AuthProvider               → wraps app, calls getCurrentSession on mount
   useAuth()                  → { merchant, isLoading, signIn, signOut }
+  // /signup-complete is whitelisted as a public path — no auth redirect
 ```
+
+**NEW_PASSWORD_REQUIRED flow**: Merchants created via `AdminCreateUser` (Moyasar signup) must set a new password on first login. `login/page.tsx` has a 3-step flow: credentials → new password form → redirect to dashboard. Catch error code `NEW_PASSWORD_REQUIRED` from `signIn()` and call `completeNewPassword()` with the `cognitoUser` returned.
 
 **Critical**: The API expects the **ID token** (not the access token). The ID token contains `custom:merchantId` in its payload. `getAccessToken()` returns `session.getIdToken().getJwtToken()`.
 
@@ -87,6 +98,7 @@ All API calls go through `fetchApi()`, which:
 3. Auto-calls `signOut()` on 401
 
 Exported namespaces:
+- `signupApi` — `getStatus(paymentId)` — public, no auth header, used by `/signup-complete` page
 - `merchantApi` — `getById`, `getCustomers`, `getTransactions`, `getStats`, `getAnalytics`, `getLocationAnalytics`, `registerCustomer`, `getPendingConsents`, `getCustomerInsights`, `getPerkInsights`, `getTierBreakdown`, `getCustomerConsent`, `update`, `addLocation`, `uploadLogo`
 - `customerApi` — `getById`, `getByPhone`, `create`, `getTransactions`, `getStats`
 - `purchaseApi` — `record`, `getById`, `redeem`
@@ -146,6 +158,7 @@ Renders a styled receipt. `receipt-pdf.ts` converts the DOM to PDF using jsPDF. 
 | `/redeem` | Point redemption flow | `useRedeemPoints` |
 | `/settings` | Profile, locations, perks, wallet branding, push stats | `useMerchant`, `usePerks`, `usePushStats` |
 | `/marketing` | Campaign management + push targeting | `useCampaigns` |
+| `/signup-complete` | Post-payment status polling (public, no auth guard) | `useSignupStatus` |
 
 ## Gotchas
 

@@ -57,9 +57,13 @@ Workspaces determine resource naming (e.g. `pointly-dev-api` vs `pointly-prod-ap
 | `lambda_zip_path` | Yes | Path to pre-built main API Lambda zip |
 | `lambda_decay_zip_path` | No | Decay cron Lambda zip (empty = skip) |
 | `lambda_tier_reset_zip_path` | No | Tier reset cron Lambda zip (empty = skip) |
-| `domain_name` | No | e.g. `pointly.sa` — merchant gets `merchant.pointly.sa` |
-| `certificate_arn` | No | ACM cert ARN for CloudFront (must be in `us-east-1`) |
+| `domain_name` | No | e.g. `pointly.sa` — merchant gets `merchant.pointly.sa`, API gets `api.pointly.sa` |
+| `certificate_arn` | No | ACM cert ARN for CloudFront (must be in `us-east-1`) — one wildcard cert covers all subdomains |
 | `alarm_email` | No | CloudWatch alarm notification recipient |
+| `sms_provider_api_key` | No | Taqnyat API key — set via `TF_VAR_sms_provider_api_key` in CI |
+| `sms_sender_id` | No | SMS sender ID (default `POINTLY`) — must be pre-approved by Taqnyat |
+| `moyasar_secret_key` | No | Moyasar secret key — set via `TF_VAR_moyasar_secret_key` in CI |
+| `moyasar_webhook_secret` | No | Moyasar HMAC webhook secret — set via `TF_VAR_moyasar_webhook_secret` in CI |
 
 ## Modules
 
@@ -163,5 +167,7 @@ CI handles this automatically on deploy pipelines.
 - **ACM cert must be in `us-east-1`** — CloudFront requires this even though all other resources are in `eu-west-1`
 - **Workspace ≠ environment prefix** — the `environment` variable controls resource naming, not just the workspace. Both must match
 - **Single-table design** — `user_ledger` holds both Customers (`CUSTOMER#<id>`) and Merchants (`MERCHANT#<id>`). Do not create separate tables for them
-- **SQS → SMS**: the `sms_queue` is for async SMS delivery. The API publishes to SQS; a separate processor (Lambda or SNS) handles actual SMS sending — not directly from the API Lambda
+- **SQS → SMS**: the `sms_queue` is for async SMS delivery. The API Lambda publishes to SQS; `pointly-sms-consumer-<env>` Lambda polls and calls Taqnyat REST API
+- **Single cert, four subdomains**: one wildcard ACM cert in `us-east-1` covers `pointly.sa`, `merchant.*`, `customer.*`, and `api.*`. The `api` subdomain is served via a CloudFront distribution in `modules/api` that proxies to API Gateway — no custom domain is set on API Gateway itself
+- **Sensitive vars via CI**: `sms_provider_api_key`, `moyasar_secret_key`, `moyasar_webhook_secret` must be passed as `TF_VAR_*` environment variables in CI — never committed to tfvars files
 - **State lock**: if `terraform apply` is interrupted, the DynamoDB lock may not release. Run `terraform force-unlock <lock-id>` to clear it

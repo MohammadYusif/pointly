@@ -35,7 +35,8 @@ src/
     Features.tsx        # Feature grid
     NetworkSection.tsx  # Merchant network explainer
     TiersSection.tsx    # Bronze/Gold/Platinum/Diamond table
-    PricingSection.tsx  # Pricing plans
+    PricingSection.tsx  # Pricing plans + signup modal trigger (non-Enterprise plans open SignupModal)
+    SignupModal.tsx     # 2-step signup form (business info → contact info) → Moyasar payment redirect
     AboutSection.tsx    # Company/mission blurb
     CTASection.tsx      # Final call-to-action
     Footer.tsx          # Links, legal, social
@@ -53,6 +54,7 @@ src/
     stats.css, features.css, network.css, tiers.css,
     pricing.css, about.css, cta.css, footer.css,
     inner.css           # Per-section style modules
+    signup-modal.css    # .modal-overlay, .modal-card, .modal-step-dots, .modal-input, .modal-btn-primary
 ```
 
 ## CSS Architecture
@@ -106,7 +108,10 @@ Wraps sections in an `IntersectionObserver`. Children gain a CSS class when they
 Shows the Bronze/Gold/Platinum/Diamond table. Tier data is hardcoded here (mirrors `@pointly/shared` — keep in sync if thresholds change).
 
 ### `PricingSection.tsx`
-Static pricing cards. No live data.
+Pricing cards. Non-Enterprise plans open `SignupModal` on click (state: `modalOpen`, `selectedPlan`). Enterprise plan links to contact. Reads `NEXT_PUBLIC_API_URL` from env for the modal's API calls.
+
+### `SignupModal.tsx`
+2-step signup form. Step 1: `businessName` + `contactName`. Step 2: `email` + `phone`. On submit: `POST ${apiUrl}/v1/merchants/initiate-signup` → `window.location.href = data.paymentUrl` (Moyasar hosted page). `callbackUrl` is set to `${dashboardUrl}/signup-complete`. No password field — server generates a temp password; merchant sets their real password on first login via `NEW_PASSWORD_REQUIRED` flow.
 
 ### `PageShell.tsx`
 Used by inner pages (blog, careers, contact, help). Renders Navbar + Footer + content slot + RTL-aware padding.
@@ -118,6 +123,13 @@ Loaded via Google Fonts in `layout.tsx`:
 - **IBM Plex Sans Arabic** — used for Arabic text
 
 Both loaded with `display=swap`. Font family applied via CSS variables in `tokens.css`.
+
+## Env Vars
+
+```
+NEXT_PUBLIC_API_URL        # e.g. https://api.pointly.sa — used by SignupModal for POST /v1/merchants/initiate-signup
+NEXT_PUBLIC_MERCHANT_URL   # e.g. https://merchant.pointly.sa — used as callbackUrl base for Moyasar
+```
 
 ## Gotchas
 

@@ -87,6 +87,9 @@ Key interfaces used by both frontends:
 | `PlatformCounts` | `{ ios: number; android: number; web: number }` — push subscription breakdown per merchant |
 | `GiftPointsRequest` | `{ merchantId, points, idempotencyKey }` — `idempotencyKey` is required |
 | `ChallengeProgressResponse` | `{ weeklyVisitCount, weeklyVisitDates, lastStreakResetAt }` — note: no `streakCount` field |
+| `MerchantSignupRequest` | `{ businessName, contactName, email, phone, plan, callbackUrl }` — body for `POST /v1/merchants/initiate-signup` |
+| `MerchantSignupResponse` | `{ paymentUrl, signupId }` — redirect to `paymentUrl` for Moyasar hosted payment |
+| `MerchantSignupStatus` | `{ status: 'pending' \| 'active' \| 'failed' }` — polled by `/signup-complete` page |
 
 ### Badges (`badges.ts`)
 
