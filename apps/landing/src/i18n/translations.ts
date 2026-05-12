@@ -105,6 +105,7 @@ export const translations = {
       plans: [
         {
           name: 'Basic',
+          planKey: 'BASIC',
           price: '75',
           desc: 'For single-location businesses starting their loyalty program.',
           features: [
@@ -115,11 +116,12 @@ export const translations = {
             '100 SMS / month',
             'Pointly network access',
           ],
-          cta: 'Start free trial',
+          cta: 'Get started',
           popular: false,
         },
         {
           name: 'Professional',
+          planKey: 'PROFESSIONAL',
           price: '105',
           desc: 'For growing businesses managing multiple locations.',
           features: [
@@ -130,11 +132,12 @@ export const translations = {
             '500 SMS / month',
             'Pointly network access',
           ],
-          cta: 'Start free trial',
+          cta: 'Get started',
           popular: true,
         },
         {
           name: 'Enterprise',
+          planKey: 'ENTERPRISE',
           price: '175',
           desc: 'For high-volume merchants with an unlimited store network.',
           features: [
@@ -151,6 +154,28 @@ export const translations = {
       ],
       perMonth: 'SAR / month',
       mostPopular: 'MOST POPULAR',
+    },
+    signup: {
+      title: 'Create your account',
+      subtitle: 'Fill in your details and proceed to payment.',
+      close: 'Close',
+      businessName: 'Business name',
+      businessNamePlaceholder: 'e.g. Al-Noor Coffee',
+      contactName: 'Your name',
+      contactNamePlaceholder: 'e.g. Mohammed Al-Zahrani',
+      email: 'Email address',
+      emailPlaceholder: 'you@business.com',
+      phone: 'Phone number',
+      next: 'Continue',
+      back: 'Back',
+      submit: 'Proceed to payment',
+      loading: 'Redirecting…',
+      note: 'You will be redirected to our secure payment page.',
+      errorBusinessName: 'Business name must be at least 2 characters.',
+      errorContactName: 'Please enter your name.',
+      errorEmail: 'Please enter a valid email address.',
+      errorPhone: 'Please enter your phone number.',
+      errorGeneric: 'Something went wrong. Please try again.',
     },
     about: {
       label: 'About Pointly',
@@ -350,6 +375,7 @@ export const translations = {
       plans: [
         {
           name: 'الأساسي',
+          planKey: 'BASIC',
           price: '75',
           desc: 'للمتاجر ذات الفرع الواحد التي تبدأ برنامج الولاء.',
           features: [
@@ -360,11 +386,12 @@ export const translations = {
             '100 رسالة SMS / شهرياً',
             'الوصول إلى شبكة بوينتلي',
           ],
-          cta: 'ابدأ تجربتك المجانية',
+          cta: 'ابدأ الآن',
           popular: false,
         },
         {
           name: 'الاحترافي',
+          planKey: 'PROFESSIONAL',
           price: '105',
           desc: 'للشركات المتنامية التي تدير فروعاً متعددة.',
           features: [
@@ -375,11 +402,12 @@ export const translations = {
             '500 رسالة SMS / شهرياً',
             'الوصول إلى شبكة بوينتلي',
           ],
-          cta: 'ابدأ تجربتك المجانية',
+          cta: 'ابدأ الآن',
           popular: true,
         },
         {
           name: 'المؤسسات',
+          planKey: 'ENTERPRISE',
           price: '175',
           desc: 'للتجار ذوي الحجم الكبير وشبكة الفروع غير المحدودة.',
           features: [
@@ -396,6 +424,28 @@ export const translations = {
       ],
       perMonth: 'ريال / شهر',
       mostPopular: 'الأكثر شعبية',
+    },
+    signup: {
+      title: 'أنشئ حسابك',
+      subtitle: 'أدخل بياناتك وانتقل إلى الدفع.',
+      close: 'إغلاق',
+      businessName: 'اسم المتجر',
+      businessNamePlaceholder: 'مثال: قهوة النور',
+      contactName: 'اسمك',
+      contactNamePlaceholder: 'مثال: محمد الزهراني',
+      email: 'البريد الإلكتروني',
+      emailPlaceholder: 'you@business.com',
+      phone: 'رقم الجوال',
+      next: 'متابعة',
+      back: 'رجوع',
+      submit: 'الانتقال إلى الدفع',
+      loading: 'جارٍ التوجيه…',
+      note: 'ستنتقل إلى صفحة الدفع الآمنة.',
+      errorBusinessName: 'يجب أن يكون اسم المتجر حرفين على الأقل.',
+      errorContactName: 'يرجى إدخال اسمك.',
+      errorEmail: 'يرجى إدخال بريد إلكتروني صحيح.',
+      errorPhone: 'يرجى إدخال رقم جوالك.',
+      errorGeneric: 'حدث خطأ ما. يرجى المحاولة مرة أخرى.',
     },
     about: {
       label: 'عن بوينتلي',
