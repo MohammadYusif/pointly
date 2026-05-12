@@ -6,7 +6,7 @@
 
 ## Tech Stack
 
-- **API**: Fastify 5 on AWS Lambda (Node 20), DynamoDB, Clean/DDD architecture
+- **API**: Fastify 5 on AWS Lambda (Node 22), DynamoDB, Clean/DDD architecture
 - **Dashboards**: Next.js 15 (merchant + customer portal + landing), React 18/19
 - **Infrastructure**: Terraform — 7 modules, AWS `me-south-1` (Bahrain)
 - **Monorepo**: pnpm 10+ / Turbo
@@ -15,7 +15,7 @@
 
 ## Prerequisites
 
-- **Node.js** ≥ 20 (`engines` enforced in `package.json`)
+- **Node.js** ≥ 22 (`engines` enforced in `package.json`)
 - **pnpm** ≥ 10 (`packageManager: pnpm@10.28.2`)
 - **Docker** — required for local DynamoDB (`pnpm docker:up`)
 - **Terraform** — only for infra changes (`packages/infrastructure`)
@@ -30,7 +30,9 @@ apps/landing/              → apps/landing/CLAUDE.md
 packages/shared/           → packages/shared/CLAUDE.md
 packages/ui/               → packages/ui/CLAUDE.md
 packages/infrastructure/   → packages/infrastructure/CLAUDE.md
-packages/http-client/      → no sub-CLAUDE.md (see packages/shared/CLAUDE.md for usage)
+packages/http-client/      → no sub-CLAUDE.md — see packages/shared/CLAUDE.md for usage
+packages/i18n/             → no sub-CLAUDE.md — DirectionProvider, useDirection, useTranslation (used by @pointly/ui and portals)
+packages/assets/           → no sub-CLAUDE.md — static brand assets (logos, icons)
 ```
 
 ## RPI Workflow (MANDATORY for non-trivial tasks)

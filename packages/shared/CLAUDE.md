@@ -102,3 +102,24 @@ getStatusBadge(status) // 'ACTIVE' | 'INACTIVE' | ... → { label, variant, clas
 3. **No side effects** — all functions are pure; no state, no network calls, no DOM access
 4. **Build** — `packages/shared` must be built before apps that depend on it (`turbo run build` handles dependency ordering)
 5. **Import from index** — always `import { ... } from '@pointly/shared'`, never from deep paths like `@pointly/shared/src/phone`
+
+## HTTP Client (`@pointly/http-client`)
+
+Thin fetch wrapper factory used by both dashboards. Not part of `@pointly/shared` itself,
+but documented here as the root CLAUDE.md points here for usage.
+
+```ts
+import { createFetchApi } from '@pointly/http-client';
+
+const fetchApi = createFetchApi({
+  baseUrl: process.env.NEXT_PUBLIC_API_URL,
+  getToken: () => getAccessToken(),   // returns ID token JWT or null
+  onUnauthorized: () => signOut(),    // called on 401
+});
+
+// Then call like:
+const data = await fetchApi<CustomerResponse>('/v1/me');
+```
+
+`createFetchApi` injects `Authorization: Bearer <token>` automatically, sets
+`Content-Type: application/json` when a body is present, and throws on non-OK responses.
