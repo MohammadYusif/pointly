@@ -50,7 +50,7 @@ export function ProgressRing({
         height={size}
         viewBox={`0 0 ${size} ${size}`}
         role="img"
-        aria-label="Tier progress"
+        aria-label={`Tier progress: ${Math.round(clampedProgress)}%`}
       >
         <circle
           cx={size / 2}
