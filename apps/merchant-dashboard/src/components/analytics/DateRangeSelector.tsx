@@ -77,38 +77,42 @@ export function DateRangeSelector({
 
   return (
     <div className="flex flex-wrap gap-2">
-      <div className="flex rounded-md border border-input overflow-hidden">
+      <fieldset className="flex rounded-md border border-input m-0 p-0">
+        <legend className="sr-only">{t('analytics.dateRange')}</legend>
         {(Object.keys(presetLabels) as DatePreset[]).map((p) => (
           <button
             key={p}
             type="button"
             onClick={() => onPresetChange(p)}
-            className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+            aria-pressed={preset === p}
+            className={`relative px-3 min-h-[44px] text-xs font-medium transition-colors focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 ${
               preset === p
-                ? 'bg-primary text-primary-foreground'
+                ? 'bg-primary-accessible text-primary-foreground'
                 : 'bg-background text-muted-foreground hover:bg-muted'
             }`}
           >
             {presetLabels[p]}
           </button>
         ))}
-      </div>
-      <div className="flex rounded-md border border-input overflow-hidden">
+      </fieldset>
+      <fieldset className="flex rounded-md border border-input m-0 p-0">
+        <legend className="sr-only">{t('analytics.groupBy')}</legend>
         {validGroupBys.map((g) => (
           <button
             key={g}
             type="button"
             onClick={() => onGroupByChange(g)}
-            className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+            aria-pressed={groupBy === g}
+            className={`relative px-3 min-h-[44px] text-xs font-medium transition-colors focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 ${
               groupBy === g
-                ? 'bg-primary text-primary-foreground'
+                ? 'bg-primary-accessible text-primary-foreground'
                 : 'bg-background text-muted-foreground hover:bg-muted'
             }`}
           >
             {groupByLabels[g]}
           </button>
         ))}
-      </div>
+      </fieldset>
     </div>
   );
 }
