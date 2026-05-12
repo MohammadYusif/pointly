@@ -274,7 +274,6 @@ export interface PublicMerchantPerk {
 export interface PublicMerchantSummary {
   merchantId: string;
   businessName: string;
-  tier: string;
   loyaltyConfig: {
     pointsPerSAR: number;
     welcomeBonus: number;
@@ -288,7 +287,6 @@ export interface PublicMerchantSummary {
 export interface PublicMerchantDetail {
   merchantId: string;
   businessName: string;
-  tier: string;
   loyaltyConfig: {
     pointsPerSAR: number;
     welcomeBonus: number;

@@ -3,7 +3,6 @@
 import { CustomerLayout } from '@/components/CustomerLayout';
 import { useEnrollMerchant, useMerchantDetail, useMyMerchants } from '@/hooks/api';
 import { useTranslation } from '@pointly/i18n';
-import { getTierColor } from '@pointly/shared';
 import { Button, Card, CardContent, useRTL } from '@pointly/ui';
 import { ArrowLeft, Gift, MapPin, Star, Users } from 'lucide-react';
 import Link from 'next/link';
@@ -65,8 +64,6 @@ export function MerchantDetailClient() {
     );
   }
 
-  const tierColor = getTierColor(merchant.tier);
-
   return (
     <CustomerLayout>
       <div className="space-y-4">
@@ -83,12 +80,6 @@ export function MerchantDetailClient() {
         <div className={textStart}>
           <h1 className="text-2xl font-bold">{merchant.businessName}</h1>
           <div className="flex items-center gap-2 mt-1">
-            <span
-              className="text-xs font-semibold px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: `${tierColor}20`, color: tierColor }}
-            >
-              {merchant.tier}
-            </span>
             <span className="text-sm text-muted-foreground flex items-center gap-1">
               <Users className="h-3.5 w-3.5" />
               {formatNumber(merchant.totalCustomers)} {t('merchants.customers')}

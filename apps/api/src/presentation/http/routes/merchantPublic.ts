@@ -30,7 +30,6 @@ export async function merchantPublicRoutes(server: FastifyInstance): Promise<voi
       return {
         merchantId: json.merchantId,
         businessName: json.businessName,
-        tier: json.tier,
         loyaltyConfig: {
           pointsPerSAR: json.loyaltyConfig.pointsPerSAR,
           welcomeBonus: json.loyaltyConfig.welcomeBonus,
@@ -67,7 +66,6 @@ export async function merchantPublicRoutes(server: FastifyInstance): Promise<voi
         data: {
           merchantId: json.merchantId,
           businessName: json.businessName,
-          tier: json.tier,
           loyaltyConfig: {
             pointsPerSAR: json.loyaltyConfig.pointsPerSAR,
             welcomeBonus: json.loyaltyConfig.welcomeBonus,

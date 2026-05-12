@@ -2,8 +2,7 @@
 
 import { useTranslation } from '@pointly/i18n';
 import type { PublicMerchantSummary } from '@pointly/shared';
-import { CUSTOMER_TIERS, getTierColor } from '@pointly/shared';
-import { Button, Card, CardContent, cn } from '@pointly/ui';
+import { Button, Card, CardContent } from '@pointly/ui';
 import { type BezierDefinition, motion, useReducedMotion } from 'framer-motion';
 import { MapPin, Users } from 'lucide-react';
 import Link from 'next/link';
@@ -17,20 +16,9 @@ interface MerchantCardProps {
   isEnrolling: boolean;
 }
 
-function getTierBgColor(tier: string): string {
-  const upper = tier.toUpperCase();
-  const found = CUSTOMER_TIERS[upper as keyof typeof CUSTOMER_TIERS];
-  if (found) return found.color;
-  return CUSTOMER_TIERS.BRONZE.color;
-}
-
 export function MerchantCard({ merchant, isEnrolled, onEnroll, isEnrolling }: MerchantCardProps) {
   const { t } = useTranslation();
   const prefersReducedMotion = useReducedMotion();
-
-  const tierColor = getTierColor(merchant.tier);
-  const tierBg = getTierBgColor(merchant.tier);
-  const tierLabel = merchant.tier.charAt(0).toUpperCase() + merchant.tier.slice(1).toLowerCase();
 
   return (
     <motion.div
@@ -40,7 +28,7 @@ export function MerchantCard({ merchant, isEnrolled, onEnroll, isEnrolling }: Me
     >
       <Card className="merchant-card">
         <CardContent className="p-4 space-y-3">
-          {/* Header: Name + Tier Badge */}
+          {/* Header: Name */}
           <div className="flex items-start justify-between gap-2">
             <Link
               href={`/merchants/${merchant.merchantId}`}
@@ -48,12 +36,6 @@ export function MerchantCard({ merchant, isEnrolled, onEnroll, isEnrolling }: Me
             >
               {merchant.businessName}
             </Link>
-            <span
-              className={cn('text-xs font-semibold px-2 py-0.5 rounded-full shrink-0', tierColor)}
-              style={{ backgroundColor: `${tierBg}20` }}
-            >
-              {tierLabel}
-            </span>
           </div>
 
           {/* Loyalty Config Preview */}
