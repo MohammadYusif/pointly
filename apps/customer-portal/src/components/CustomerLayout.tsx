@@ -89,7 +89,7 @@ export function CustomerLayout({ children }: { children: React.ReactNode }) {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: EASE }}
       >
-        <div className="max-w-lg mx-auto px-4 h-12 flex items-center justify-between">
+        <div className="max-w-lg md:max-w-3xl mx-auto px-4 h-12 flex items-center justify-between">
           <PointlyLogo height={22} />
           <div className="flex items-center gap-1">
             <LanguageToggle showLabel={false} />
@@ -104,7 +104,7 @@ export function CustomerLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </motion.header>
-      <main className="max-w-lg mx-auto px-4 py-4">
+      <main className="max-w-lg md:max-w-3xl mx-auto px-4 py-4">
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}
@@ -123,7 +123,7 @@ export function CustomerLayout({ children }: { children: React.ReactNode }) {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.15, ease: EASE }}
       >
-        <div className="max-w-lg mx-auto flex justify-around py-2">
+        <div className="max-w-lg md:max-w-3xl mx-auto flex justify-around py-2">
           {navItems.map((item) => {
             const isActive =
               pathname === item.href ||
@@ -135,7 +135,7 @@ export function CustomerLayout({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 className={`flex flex-col items-center gap-0.5 px-1 py-1 text-[11px] leading-tight transition-colors ${
                   isActive
-                    ? 'text-primary font-medium'
+                    ? 'text-[var(--color-primary-accessible)] font-medium'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >

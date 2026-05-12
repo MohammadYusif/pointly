@@ -27,6 +27,7 @@ html.notready #app-content {
 @theme {
   /* Brand Colors */
   --color-primary: #08b0a2;
+  --color-primary-accessible: #067a72;
   --color-primary-foreground: #ffffff;
   --color-secondary: #263452;
   --color-secondary-foreground: #ffffff;
@@ -51,8 +52,8 @@ html.notready #app-content {
   --color-destructive-foreground: #ffffff;
 
   /* Typography */
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-arabic: "IBM Plex Sans Arabic", "Tajawal", ui-sans-serif, system-ui, sans-serif;
 
   /* Border Radius */
@@ -403,23 +404,101 @@ html.notready #app-content {
   min-height: 100vh;
 }
 
-/* Login wrapper — adds a centered teal glow on top of the body dot grid */
+/* Login wrapper - floating orbs on top of the body dot grid */
 .login-wrapper {
   position: relative;
+  overflow: hidden;
 }
 
-.login-wrapper::before {
-  content: "";
+/* Floating orbs - merchant login background */
+.login-orb {
   position: fixed;
-  top: -5%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 700px;
-  height: 500px;
-  background: radial-gradient(ellipse, rgba(8, 176, 162, 0.07), transparent 70%);
+  border-radius: 50%;
   pointer-events: none;
+  will-change: transform;
+  filter: blur(80px);
   z-index: 0;
-  filter: blur(20px);
+}
+
+@keyframes floatOrb1 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(28px, -48px) scale(1.08);
+  }
+  66% {
+    transform: translate(-18px, 28px) scale(0.93);
+  }
+}
+
+@keyframes floatOrb2 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  40% {
+    transform: translate(-38px, 52px) scale(1.12);
+  }
+  80% {
+    transform: translate(22px, -22px) scale(0.9);
+  }
+}
+
+@keyframes floatOrb3 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  30% {
+    transform: translate(42px, 18px) scale(0.88);
+  }
+  70% {
+    transform: translate(-28px, -38px) scale(1.1);
+  }
+}
+
+.login-orb-1 {
+  width: 560px;
+  height: 560px;
+  background: rgba(8, 176, 162, 0.1);
+  top: -12%;
+  inset-inline-start: -8%;
+  animation: floatOrb1 14s ease-in-out infinite;
+}
+
+.login-orb-2 {
+  width: 480px;
+  height: 480px;
+  background: rgba(38, 52, 82, 0.08);
+  bottom: -8%;
+  inset-inline-end: -6%;
+  animation: floatOrb2 19s ease-in-out infinite;
+}
+
+.login-orb-3 {
+  width: 320px;
+  height: 320px;
+  background: rgba(8, 176, 162, 0.07);
+  top: 38%;
+  inset-inline-start: 42%;
+  animation: floatOrb3 11s ease-in-out infinite;
+}
+
+.login-orb-4 {
+  width: 260px;
+  height: 260px;
+  background: rgba(5, 161, 165, 0.08);
+  top: 15%;
+  inset-inline-end: 8%;
+  animation: floatOrb1 17s ease-in-out infinite reverse;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-orb {
+    animation: none;
+  }
 }
 
 /* Card glassmorphism — globally applied so cards float above the dot grid */

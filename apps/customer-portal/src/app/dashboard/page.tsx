@@ -174,132 +174,141 @@ export default function CustomerDashboard() {
           <TierBadge tier={customer.currentTier} label={customer.tierDisplayName} size="sm" />
         </div>
 
-        {/* Point Balance + Merchants Enrolled */}
-        <div className="grid grid-cols-2 gap-3">
-          <PointsCard
-            value={customer.globalPointsBalance}
-            label={t('dashboard.pointlyPoints')}
-            variant="primary"
-            icon={<Gem className="h-5 w-5" />}
-          />
-          <PointsCard
-            value={enrolledCount}
-            label={t('dashboard.merchantsEnrolled')}
-            icon={<ShoppingBag className="h-5 w-5" />}
-          />
-        </div>
-
-        {/* Tier Progress Ring */}
-        {tierTarget > 0 && (
-          <Card className="stagger-item">
-            <CardContent className="p-4 flex flex-col items-center gap-3">
-              <ProgressRing progress={progressPercent} tier={customer.currentTier}>
-                <div className="text-center">
-                  <p className={`text-sm font-bold ${getTierColor(customer.currentTier)}`}>
-                    {customer.tierDisplayName}
-                  </p>
-                </div>
-              </ProgressRing>
-              <p className="text-sm text-muted-foreground">
-                {formatNumber(progress)} / {formatNumber(tierTarget)}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {formatNumber(customer.pointsToNextTier || 0)} {t('dashboard.pointsToNextTier')}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Decay Warning */}
-        {customer.nextDecayDate && (
-          <DecayWarning
-            nextDecayDate={customer.nextDecayDate}
-            globalPointsBalance={customer.globalPointsBalance}
-            isDecayImmune={customer.isDecayImmune}
-            decayPhase={customer.globalPointsDecayPhase}
-          />
-        )}
-
-        {/* Active Challenges */}
-        {challengeData && (
-          <Card className="stagger-item">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">{t('challenges.activeChallenges')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChallengeCard
-                title={t('challenges.weeklyStreak')}
-                description={t('challenges.weeklyStreakDesc', { count: 3 })}
-                current={challengeData.weeklyVisitCount}
-                target={3}
-                bonusPoints={tierBenefits ? getStreakBonusForTier(tierBenefits.tier) : 500}
-                daysRemaining={getDaysRemainingInWeek()}
+        {/* Two-column layout at md: — left: status, right: activity */}
+        <div className="md:grid md:grid-cols-2 md:gap-6 space-y-4 md:space-y-0">
+          {/* Left column: points + tier progress + decay */}
+          <div className="space-y-4">
+            {/* Point Balance + Merchants Enrolled */}
+            <div className="grid grid-cols-2 gap-3">
+              <PointsCard
+                value={customer.globalPointsBalance}
+                label={t('dashboard.pointlyPoints')}
+                variant="primary"
+                icon={<Gem className="h-5 w-5" />}
               />
-            </CardContent>
-          </Card>
-        )}
+              <PointsCard
+                value={enrolledCount}
+                label={t('dashboard.merchantsEnrolled')}
+                icon={<ShoppingBag className="h-5 w-5" />}
+              />
+            </div>
 
-        {/* Tier Benefits */}
-        {tierBenefits && (
-          <Card className="stagger-item">
-            <CardHeader>
-              <CardTitle className="text-base">{t('tier.benefits')}</CardTitle>
-              <p className="text-xs text-muted-foreground">
-                {t('tier.benefitsSubtitle', { tier: tierBenefits.displayName })}
-              </p>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {tierBenefits.benefits.map((b) => (
-                  <li key={b.key} className="flex items-center gap-2 text-sm">
-                    <span>{b.icon}</span>
-                    <span>{t(`tier.${b.key}`)}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        )}
+            {/* Tier Progress Ring */}
+            {tierTarget > 0 && (
+              <Card className="stagger-item">
+                <CardContent className="p-4 flex flex-col items-center gap-3">
+                  <ProgressRing progress={progressPercent} tier={customer.currentTier}>
+                    <div className="text-center">
+                      <p className={`text-sm font-bold ${getTierColor(customer.currentTier)}`}>
+                        {customer.tierDisplayName}
+                      </p>
+                    </div>
+                  </ProgressRing>
+                  <p className="text-sm text-muted-foreground">
+                    {formatNumber(progress)} / {formatNumber(tierTarget)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatNumber(customer.pointsToNextTier || 0)} {t('dashboard.pointsToNextTier')}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
-        {/* Badges Summary */}
-        {earnedBadges.length > 0 && (
-          <Card className="stagger-item">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">{t('badges.title')}</CardTitle>
-              <Link href="/badges" className="text-xs text-primary hover:underline">
-                {t('common.viewAll')}
-              </Link>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-2">
-                {earnedBadges.map((badge) => (
-                  <MilestoneBadge key={badge.id} badge={badge} />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+            {/* Decay Warning */}
+            {customer.nextDecayDate && (
+              <DecayWarning
+                nextDecayDate={customer.nextDecayDate}
+                globalPointsBalance={customer.globalPointsBalance}
+                isDecayImmune={customer.isDecayImmune}
+                decayPhase={customer.globalPointsDecayPhase}
+              />
+            )}
+          </div>
 
-        {/* Recent Transactions */}
-        <Card className="stagger-item">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">{t('dashboard.recentTransactions')}</CardTitle>
-            <Link href="/history" className="text-xs text-primary hover:underline">
-              {t('common.viewAll')}
-            </Link>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <TransactionListContent
-              isLoading={txLoading}
-              transactions={transactions}
-              merchantNameMap={merchantNameMap}
-              noDataLabel={t('common.noData')}
-            />
-          </CardContent>
-        </Card>
+          {/* Right column: activity + perks */}
+          <div className="space-y-4">
+            {/* Active Challenges */}
+            {challengeData && (
+              <Card className="stagger-item">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="text-base">{t('challenges.activeChallenges')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChallengeCard
+                    title={t('challenges.weeklyStreak')}
+                    description={t('challenges.weeklyStreakDesc', { count: 3 })}
+                    current={challengeData.weeklyVisitCount}
+                    target={3}
+                    bonusPoints={tierBenefits ? getStreakBonusForTier(tierBenefits.tier) : 500}
+                    daysRemaining={getDaysRemainingInWeek()}
+                  />
+                </CardContent>
+              </Card>
+            )}
 
-        {/* VIP Perks */}
-        <PerksSection />
+            {/* Tier Benefits */}
+            {tierBenefits && (
+              <Card className="stagger-item">
+                <CardHeader>
+                  <CardTitle className="text-base">{t('tier.benefits')}</CardTitle>
+                  <p className="text-xs text-muted-foreground">
+                    {t('tier.benefitsSubtitle', { tier: tierBenefits.displayName })}
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {tierBenefits.benefits.map((b) => (
+                      <li key={b.key} className="flex items-center gap-2 text-sm">
+                        <span>{b.icon}</span>
+                        <span>{t(`tier.${b.key}`)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Badges Summary */}
+            {earnedBadges.length > 0 && (
+              <Card className="stagger-item">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="text-base">{t('badges.title')}</CardTitle>
+                  <Link href="/badges" className="text-xs text-primary hover:underline">
+                    {t('common.viewAll')}
+                  </Link>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-2">
+                    {earnedBadges.map((badge) => (
+                      <MilestoneBadge key={badge.id} badge={badge} />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Recent Transactions */}
+            <Card className="stagger-item">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-base">{t('dashboard.recentTransactions')}</CardTitle>
+                <Link href="/history" className="text-xs text-primary hover:underline">
+                  {t('common.viewAll')}
+                </Link>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <TransactionListContent
+                  isLoading={txLoading}
+                  transactions={transactions}
+                  merchantNameMap={merchantNameMap}
+                  noDataLabel={t('common.noData')}
+                />
+              </CardContent>
+            </Card>
+
+            {/* VIP Perks */}
+            <PerksSection />
+          </div>
+        </div>
       </div>
     </CustomerLayout>
   );

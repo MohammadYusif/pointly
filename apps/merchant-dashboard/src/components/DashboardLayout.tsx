@@ -41,6 +41,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       label: t('navigation.loyalty'),
       href: '/manual-entry',
       active: isActive('/manual-entry'),
+      separator: true,
     },
     {
       key: 'redeem',
