@@ -1,6 +1,7 @@
 import type { ICampaignRepository } from '../../application/repositories/ICampaignRepository';
 import type { ICustomerRepository } from '../../application/repositories/ICustomerRepository';
 import type { IMerchantRepository } from '../../application/repositories/IMerchantRepository';
+import type { IPendingSignupRepository } from '../../application/repositories/IPendingSignupRepository';
 import type { IPushSubscriptionRepository } from '../../application/repositories/IPushSubscriptionRepository';
 import type { IQRNonceRepository } from '../../application/repositories/IQRNonceRepository';
 import type { ITransactionRepository } from '../../application/repositories/ITransactionRepository';
@@ -8,10 +9,12 @@ import type { IWebhookConfigRepository } from '../../application/repositories/IW
 import type { IDecayCalculatorService } from '../../application/services/IDecayCalculatorService';
 import type { IIdempotencyService } from '../../application/services/IIdempotencyService';
 import type { IOutgoingWebhookService } from '../../application/services/IOutgoingWebhookService';
+import type { IPaymentService } from '../../application/services/IPaymentService';
 import type { IPushNotificationService } from '../../application/services/IPushNotificationService';
 import type { ISmsPublisherService } from '../../application/services/ISmsPublisherService';
 import { AddMerchantLocationUseCase } from '../../application/use-cases/AddMerchantLocationUseCase';
 import { CheckChallengeEligibilityUseCase } from '../../application/use-cases/CheckChallengeEligibilityUseCase';
+import { CompleteMerchantSignupUseCase } from '../../application/use-cases/CompleteMerchantSignupUseCase';
 import { CreateCampaignUseCase } from '../../application/use-cases/CreateCampaignUseCase';
 import { CreateCustomerUseCase } from '../../application/use-cases/CreateCustomerUseCase';
 import { DeactivateCampaignUseCase } from '../../application/use-cases/DeactivateCampaignUseCase';
@@ -21,7 +24,9 @@ import { GenerateQRCodeUseCase } from '../../application/use-cases/GenerateQRCod
 import { GetAnalyticsUseCase } from '../../application/use-cases/GetAnalyticsUseCase';
 import { GetCustomerInsightsUseCase } from '../../application/use-cases/GetCustomerInsightsUseCase';
 import { GetCustomerPerksUseCase } from '../../application/use-cases/GetCustomerPerksUseCase';
+import { GetSignupStatusUseCase } from '../../application/use-cases/GetSignupStatusUseCase';
 import { GiftPointsUseCase } from '../../application/use-cases/GiftPointsUseCase';
+import { InitiateMerchantSignupUseCase } from '../../application/use-cases/InitiateMerchantSignupUseCase';
 import { ListCampaignsUseCase } from '../../application/use-cases/ListCampaignsUseCase';
 import { ManagePerkUseCase } from '../../application/use-cases/ManagePerkUseCase';
 import { ManagePushSubscriptionUseCase } from '../../application/use-cases/ManagePushSubscriptionUseCase';
@@ -52,10 +57,13 @@ import {
   TransactionalWriter,
   WebhookConfigRepository,
 } from '../../infrastructure/repositories';
+import { PendingSignupRepository } from '../../infrastructure/repositories/PendingSignupRepository';
 import { PushSubscriptionRepository } from '../../infrastructure/repositories/PushSubscriptionRepository';
 import { QRNonceRepository } from '../../infrastructure/repositories/QRNonceRepository';
 import { CampaignNotificationService } from '../../infrastructure/services/CampaignNotificationService';
+import { CognitoMerchantService } from '../../infrastructure/services/CognitoMerchantService';
 import { CognitoUserService } from '../../infrastructure/services/CognitoUserService';
+import { MoyasarPaymentService } from '../../infrastructure/services/MoyasarPaymentService';
 import { WebPushService } from '../../infrastructure/services/WebPushService';
 
 export interface Container {
@@ -67,6 +75,7 @@ export interface Container {
   campaignRepository: ICampaignRepository;
   webhookConfigRepository: IWebhookConfigRepository;
   pushSubscriptionRepository: IPushSubscriptionRepository;
+  pendingSignupRepository: IPendingSignupRepository;
 
   // Services
   idempotencyService: IIdempotencyService;
@@ -74,6 +83,7 @@ export interface Container {
   smsPublisherService: ISmsPublisherService;
   outgoingWebhookService: IOutgoingWebhookService;
   webPushService: IPushNotificationService;
+  paymentService: IPaymentService | null;
 
   // Use Cases
   createCustomerUseCase: CreateCustomerUseCase;
@@ -104,6 +114,9 @@ export interface Container {
   merchantGiftPointsUseCase: MerchantGiftPointsUseCase;
   processReferralBonusUseCase: ProcessReferralBonusUseCase;
   processMerchantPointsExpiryUseCase: ProcessMerchantPointsExpiryUseCase;
+  initiateMerchantSignupUseCase: InitiateMerchantSignupUseCase | null;
+  completeMerchantSignupUseCase: CompleteMerchantSignupUseCase | null;
+  getSignupStatusUseCase: GetSignupStatusUseCase | null;
 }
 
 let container: Container | null = null;
@@ -123,9 +136,16 @@ export function createContainer(): Container {
     dbClient,
     env.WALLET_PASSES_TABLE ?? 'pointly-wallet-passes',
   );
+  const pendingSignupRepository = new PendingSignupRepository(dbClient, env.USER_LEDGER_TABLE);
 
   // Create services
   const idempotencyService = new IdempotencyService(dbClient, env.IDEMPOTENCY_TABLE);
+  const paymentService: IPaymentService | null = env.MOYASAR_SECRET_KEY
+    ? new MoyasarPaymentService(env.MOYASAR_SECRET_KEY, env.MOYASAR_WEBHOOK_SECRET ?? '')
+    : null;
+  const cognitoMerchantService = env.MERCHANT_USER_POOL_ID
+    ? new CognitoMerchantService(env.MERCHANT_USER_POOL_ID, env.AWS_REGION)
+    : null;
   const decayCalculatorService = new DecayCalculatorService();
   const smsPublisherService = new SmsPublisherService(env.SMS_QUEUE_URL, env.AWS_REGION);
   const outgoingWebhookService = new OutgoingWebhookService();
@@ -276,6 +296,24 @@ export function createContainer(): Container {
     (items) => transactionalWriter.writeAll(items),
   );
 
+  // Merchant signup use cases (null when Moyasar not configured)
+  const initiateMerchantSignupUseCase = paymentService
+    ? new InitiateMerchantSignupUseCase(merchantRepository, pendingSignupRepository, paymentService)
+    : null;
+  const completeMerchantSignupUseCase = paymentService
+    ? new CompleteMerchantSignupUseCase(
+        pendingSignupRepository,
+        merchantRepository,
+        paymentService,
+        cognitoMerchantService,
+        idempotencyService,
+      )
+    : null;
+  const getSignupStatusUseCase = new GetSignupStatusUseCase(
+    pendingSignupRepository,
+    merchantRepository,
+  );
+
   return {
     customerRepository,
     merchantRepository,
@@ -320,6 +358,11 @@ export function createContainer(): Container {
       customerRepository,
       merchantRepository,
     ),
+    pendingSignupRepository,
+    paymentService,
+    initiateMerchantSignupUseCase,
+    completeMerchantSignupUseCase,
+    getSignupStatusUseCase,
   };
 }
 

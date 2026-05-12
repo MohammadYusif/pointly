@@ -8,6 +8,7 @@ import { customerRoutes } from './customers';
 import { healthRoutes } from './health';
 import { merchantPublicRoutes } from './merchantPublic';
 import { merchantRoutes } from './merchants';
+import { moyasarWebhookRoutes } from './moyasarWebhook';
 import { purchaseRoutes } from './purchases';
 import { pushCustomerRoutes, pushMerchantRoutes, pushPublicRoutes } from './push';
 import { walletPassRoutes } from './wallet-pass';
@@ -24,6 +25,7 @@ export async function registerRoutes(server: FastifyInstance): Promise<void> {
       await app.register(customerPublicRoutes, { prefix: '/customers' });
       await app.register(merchantPublicRoutes, { prefix: '/merchants' });
       await app.register(pushPublicRoutes, { prefix: '/push' });
+      await app.register(moyasarWebhookRoutes, { prefix: '/webhooks/moyasar' });
 
       // Customer-authenticated routes
       await app.register(async (customerApp) => {

@@ -61,6 +61,10 @@ const envSchema = z.object({
   GOOGLE_WALLET_ISSUER_ID: z.string().optional(),
   GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL: z.string().optional(),
   GOOGLE_WALLET_PRIVATE_KEY: z.string().optional(),
+
+  // Moyasar (payment gateway for merchant signup)
+  MOYASAR_SECRET_KEY: z.string().optional(),
+  MOYASAR_WEBHOOK_SECRET: z.string().optional(),
 });
 
 export type Environment = z.infer<typeof envSchema>;

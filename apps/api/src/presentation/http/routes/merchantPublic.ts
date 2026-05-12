@@ -8,6 +8,7 @@ import {
   PhoneNumber,
   ValidationError,
 } from '../../../domain';
+import type { PlanType } from '../../../domain/config/PlanPrices';
 import { getContainer } from '../container';
 
 const createMerchantSchema = z.object({
@@ -19,6 +20,17 @@ const createMerchantSchema = z.object({
 });
 
 type CreateMerchantBody = z.infer<typeof createMerchantSchema>;
+
+const initiateSignupSchema = z.object({
+  businessName: z.string().min(2).max(100),
+  contactName: z.string().min(1).max(100),
+  email: z.string().email(),
+  phone: z.string().min(1),
+  plan: z.enum(['BASIC', 'PROFESSIONAL', 'ENTERPRISE']),
+  callbackUrl: z.string().url(),
+});
+
+type InitiateSignupBody = z.infer<typeof initiateSignupSchema>;
 
 export async function merchantPublicRoutes(server: FastifyInstance): Promise<void> {
   // GET /v1/merchants — List all verified merchants (PUBLIC, for customer discovery)
@@ -145,6 +157,54 @@ export async function merchantPublicRoutes(server: FastifyInstance): Promise<voi
         success: true,
         data: merchant.toJSON(),
       });
+    },
+  );
+
+  // POST /v1/merchants/initiate-signup — Start Moyasar-gated merchant signup (PUBLIC)
+  server.post(
+    '/initiate-signup',
+    async (request: FastifyRequest<{ Body: InitiateSignupBody }>, reply: FastifyReply) => {
+      const body = initiateSignupSchema.parse(request.body);
+      const container = getContainer();
+
+      if (!container.initiateMerchantSignupUseCase) {
+        return reply.status(503).send({ success: false, error: 'Payment service not configured' });
+      }
+
+      const result = await container.initiateMerchantSignupUseCase.execute({
+        businessName: body.businessName,
+        contactName: body.contactName,
+        email: body.email,
+        phone: body.phone,
+        plan: body.plan as PlanType,
+        callbackUrl: body.callbackUrl,
+      });
+
+      return reply.status(201).send({ success: true, data: result });
+    },
+  );
+
+  // GET /v1/merchants/signup-status?paymentId=xxx — Poll signup status (PUBLIC)
+  server.get(
+    '/signup-status',
+    async (
+      request: FastifyRequest<{ Querystring: { paymentId?: string } }>,
+      reply: FastifyReply,
+    ) => {
+      const { paymentId } = request.query;
+
+      if (!paymentId) {
+        return reply.status(400).send({ success: false, error: 'paymentId is required' });
+      }
+
+      const container = getContainer();
+
+      if (!container.getSignupStatusUseCase) {
+        return reply.status(503).send({ success: false, error: 'Payment service not configured' });
+      }
+
+      const result = await container.getSignupStatusUseCase.execute(paymentId);
+      return reply.send({ success: true, data: result });
     },
   );
 }
