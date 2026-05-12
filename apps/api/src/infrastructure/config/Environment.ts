@@ -6,7 +6,7 @@ const envSchema = z.object({
   ENVIRONMENT: z.string().default('dev'),
 
   // AWS Region
-  AWS_REGION: z.string().default('me-south-1'),
+  AWS_REGION: z.string().default('eu-west-1'),
 
   // DynamoDB Tables
   USER_LEDGER_TABLE: z.string(),

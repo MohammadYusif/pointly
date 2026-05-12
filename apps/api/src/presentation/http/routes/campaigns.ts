@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import { ForbiddenError } from '../../../domain/errors/DomainError';
+import { ForbiddenError, ValidationError } from '../../../domain/errors/DomainError';
 import { getContainer } from '../container';
 
 function enforceMerchantAccess(request: FastifyRequest<{ Params: { id: string } }>): void {
@@ -64,6 +64,7 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
     ) => {
       enforceMerchantAccess(request);
       const { id: merchantId } = request.params;
+      if (!merchantId) throw new ValidationError('merchantId is required');
       const body = createCampaignSchema.parse(request.body);
 
       const { createCampaignUseCase } = getContainer();
@@ -77,6 +78,7 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
     async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
       enforceMerchantAccess(request);
       const { id: merchantId } = request.params;
+      if (!merchantId) throw new ValidationError('merchantId is required');
 
       const { listCampaignsUseCase } = getContainer();
       const result = await listCampaignsUseCase.execute(merchantId);
@@ -92,6 +94,7 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
     ) => {
       enforceMerchantAccess(request);
       const { id: merchantId, campaignId } = request.params;
+      if (!merchantId) throw new ValidationError('merchantId is required');
 
       const { deactivateCampaignUseCase } = getContainer();
       await deactivateCampaignUseCase.execute({ merchantId, campaignId });
@@ -110,6 +113,7 @@ export async function campaignRoutes(server: FastifyInstance): Promise<void> {
     ) => {
       enforceMerchantAccess(request);
       const { id: merchantId, campaignId } = request.params;
+      if (!merchantId) throw new ValidationError('merchantId is required');
       const body = updateCampaignSchema.parse(request.body);
 
       const { updateCampaignUseCase } = getContainer();
