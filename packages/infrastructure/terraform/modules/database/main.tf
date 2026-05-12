@@ -191,6 +191,11 @@ resource "aws_dynamodb_table" "transaction_audit" {
   }
 
   attribute {
+    name = "GSI4SK"
+    type = "S"
+  }
+
+  attribute {
     name = "GSI5PK"
     type = "S"
   }
@@ -231,6 +236,7 @@ resource "aws_dynamodb_table" "transaction_audit" {
   global_secondary_index {
     name            = "CustomerMerchantIndex"
     hash_key        = "GSI4PK"
+    range_key       = "GSI4SK"
     projection_type = "ALL"
   }
 
