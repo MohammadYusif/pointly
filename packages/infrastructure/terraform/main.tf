@@ -8,6 +8,10 @@ locals {
 module "auth" {
   source      = "./modules/auth"
   environment = var.environment
+
+  # SMS Provider (Taqnyat) — for OTP delivery in CreateAuthChallenge trigger
+  sms_provider_api_key = var.sms_provider_api_key
+  sms_sender_id        = var.sms_sender_id
 }
 
 # ===========================================

@@ -334,10 +334,30 @@ data "archive_file" "create_auth_challenge" {
         } else {
           otp = String(Math.floor(100000 + Math.random() * 900000));
         }
-        console.log('[DEV] OTP for', event.request.userAttributes.phone_number, ':', otp);
-        event.response.publicChallengeParameters = {
-          phone: event.request.userAttributes.phone_number,
-        };
+
+        // Send OTP via Taqnyat (3s timeout — Cognito hard limit is 5s)
+        const phone = event.request.userAttributes.phone_number;
+        const apiKey = process.env.SMS_PROVIDER_API_KEY;
+        const senderId = process.env.SMS_SENDER_ID || 'POINTLY';
+        if (apiKey) {
+          try {
+            const ctrl = new AbortController();
+            const t = setTimeout(function() { ctrl.abort(); }, 3000);
+            await fetch('https://api.taqnyat.sa/v1/messages', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+              body: JSON.stringify({ recipients: [phone], body: 'Your Pointly code is: ' + otp, sender: senderId }),
+              signal: ctrl.signal,
+            });
+            clearTimeout(t);
+          } catch (e) {
+            console.error('[OTP] Taqnyat call failed:', e.message);
+          }
+        } else {
+          console.log('[DEV] OTP for', phone, ':', otp);
+        }
+
+        event.response.publicChallengeParameters = { phone: phone };
         event.response.privateChallengeParameters = { answer: otp };
         event.response.challengeMetadata = 'OTP_' + otp;
         return event;
@@ -359,6 +379,13 @@ resource "aws_lambda_function" "create_auth_challenge" {
   runtime          = "nodejs22.x"
   filename         = data.archive_file.create_auth_challenge.output_path
   source_code_hash = data.archive_file.create_auth_challenge.output_base64sha256
+
+  environment {
+    variables = {
+      SMS_PROVIDER_API_KEY = var.sms_provider_api_key
+      SMS_SENDER_ID        = var.sms_sender_id
+    }
+  }
 
   depends_on = [aws_cloudwatch_log_group.create_auth_challenge]
 }
