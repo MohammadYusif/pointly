@@ -8,21 +8,19 @@ export function useRecentTransactions(limit = 5) {
   });
 }
 
-export function useInfiniteTransactions(
-  limit = 20,
-  sortOrder: 'ASC' | 'DESC' = 'DESC',
-  type?: string,
-) {
+export function useInfiniteTransactions(limit = 20, sortOrder: 'ASC' | 'DESC' = 'DESC') {
   return useInfiniteQuery({
-    queryKey: ['transactions', 'infinite', limit, sortOrder, type],
+    queryKey: ['transactions', 'infinite', limit, sortOrder],
     queryFn: ({ pageParam }) =>
       getCustomerTransactions({
         limit,
         sortOrder,
-        ...(type ? { type } : {}),
         ...(pageParam ? { nextToken: pageParam } : {}),
       }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextToken,
+    staleTime: 0,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
 }

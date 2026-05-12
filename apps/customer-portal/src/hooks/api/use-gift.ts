@@ -7,6 +7,7 @@ export function useGiftPoints() {
     mutationFn: giftPoints,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
   });
 }

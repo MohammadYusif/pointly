@@ -25,7 +25,7 @@ export default function HistoryPage() {
   const [typeFilter, setTypeFilter] = useState<string | undefined>(undefined);
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteTransactions(20, sortOrder, typeFilter);
+    useInfiniteTransactions(20, sortOrder);
 
   const { data: merchants } = useMyMerchants();
 
@@ -39,9 +39,14 @@ export default function HistoryPage() {
     return names;
   }, [merchants]);
 
-  const transactions = useMemo(
+  const allTransactions = useMemo(
     () => data?.pages.flatMap((page) => page.transactions ?? []) ?? [],
     [data],
+  );
+
+  const transactions = useMemo(
+    () => (typeFilter ? allTransactions.filter((tx) => tx.type === typeFilter) : allTransactions),
+    [allTransactions, typeFilter],
   );
 
   return (
