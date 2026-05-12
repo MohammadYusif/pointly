@@ -50,20 +50,6 @@ export function LoginHero() {
         {t('auth.heroSubtitle')}
       </motion.p>
 
-      <motion.div className="login-stats" variants={itemVariants}>
-        <div>
-          <span className="login-stat-value">50+</span>
-          <span className="login-stat-label">{t('auth.stats.merchantsLabel')}</span>
-        </div>
-        <div>
-          <span className="login-stat-value">4</span>
-          <span className="login-stat-label">{t('auth.stats.tiersLabel')}</span>
-        </div>
-        <div>
-          <span className="login-stat-value">12K+</span>
-          <span className="login-stat-label">{t('auth.stats.customersLabel')}</span>
-        </div>
-      </motion.div>
     </motion.div>
   );
 }
