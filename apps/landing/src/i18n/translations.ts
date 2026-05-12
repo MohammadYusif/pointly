@@ -93,7 +93,7 @@ export const translations = {
       multiplier1_1x: '1.1× earning multiplier',
       multiplier1_15x: '1.15× earning multiplier',
       multiplier1_2x: '1.2× earning multiplier',
-      decayImmunity: 'Points never expire',
+      decayImmunity: 'Tier never drops',
       priorityBadge: 'Priority customer badge',
       exclusivePerks: 'Exclusive Platinum+ perks',
       diamondStatus: 'Diamond elite status',
@@ -149,7 +149,7 @@ export const translations = {
           popular: false,
         },
       ],
-      perMonth: '/ month SAR',
+      perMonth: 'SAR / month',
       mostPopular: 'MOST POPULAR',
     },
     about: {
@@ -205,7 +205,13 @@ export const translations = {
         },
         {
           title: 'Company',
-          links: [{ label: 'About', href: '/#about' }],
+          links: [
+            { label: 'About', href: '/#about' },
+            { label: 'Blog', href: '/blog' },
+            { label: 'Careers', href: '/careers' },
+            { label: 'Contact', href: '/contact' },
+            { label: 'Help', href: '/help' },
+          ],
         },
       ],
     },
@@ -224,7 +230,7 @@ export const translations = {
       contact: {
         title: 'Contact Us',
         subtitle: 'Have a question or want to learn more about Pointly?',
-        body: "We're setting up our contact channels. Check back soon.",
+        body: 'Get in touch with us at support@pointly.sa — we typically respond within one business day.',
       },
       help: {
         title: 'Help Center',
@@ -332,7 +338,7 @@ export const translations = {
       multiplier1_1x: 'مضاعف كسب 1.1×',
       multiplier1_15x: 'مضاعف كسب 1.15×',
       multiplier1_2x: 'مضاعف كسب 1.2×',
-      decayImmunity: 'النقاط لا تنتهي أبداً',
+      decayImmunity: 'المستوى لا ينخفض أبداً',
       priorityBadge: 'شارة عميل مميز',
       exclusivePerks: 'مزايا حصرية للبلاتيني فأعلى',
       diamondStatus: 'مكانة ألماس النخبة',
@@ -388,7 +394,7 @@ export const translations = {
           popular: false,
         },
       ],
-      perMonth: '/ شهر ريال',
+      perMonth: 'ريال / شهر',
       mostPopular: 'الأكثر شعبية',
     },
     about: {
@@ -412,7 +418,7 @@ export const translations = {
       ],
       stats: [
         { label: 'تأسست', value: '2026' },
-        { label: 'المنطقة', value: 'KSA' },
+        { label: 'المنطقة', value: 'المملكة' },
         { label: 'خطط التجار', value: '3' },
         { label: 'مستويات الولاء', value: '4' },
       ],
@@ -443,7 +449,13 @@ export const translations = {
         },
         {
           title: 'الشركة',
-          links: [{ label: 'عن بوينتلي', href: '/#about' }],
+          links: [
+            { label: 'عن بوينتلي', href: '/#about' },
+            { label: 'المدونة', href: '/blog' },
+            { label: 'الوظائف', href: '/careers' },
+            { label: 'تواصل معنا', href: '/contact' },
+            { label: 'المساعدة', href: '/help' },
+          ],
         },
       ],
     },
@@ -461,7 +473,7 @@ export const translations = {
       contact: {
         title: 'تواصل معنا',
         subtitle: 'هل لديك سؤال أو تريد معرفة المزيد عن بوينتلي؟',
-        body: 'نحن نُجهّز قنوات التواصل. تابعنا قريباً.',
+        body: 'تواصل معنا على support@pointly.sa — نرد عادةً خلال يوم عمل واحد.',
       },
       help: {
         title: 'مركز المساعدة',

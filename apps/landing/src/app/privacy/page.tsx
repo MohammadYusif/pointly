@@ -21,7 +21,7 @@ const EN_CONTENT = [
   },
   {
     heading: '5. Security',
-    body: 'We use industry-standard encryption (TLS in transit, AES-256 at rest) and restrict access to your data to authorised personnel only. Our infrastructure is hosted in the AWS Middle East (Bahrain) region.',
+    body: 'We use industry-standard encryption (TLS in transit, AES-256 at rest) and restrict access to your data to authorised personnel only. Our infrastructure is hosted in the AWS EU West (Ireland) region.',
   },
   {
     heading: '6. Your Rights',
@@ -52,7 +52,7 @@ const AR_CONTENT = [
   },
   {
     heading: '5. الأمن',
-    body: 'نستخدم تشفيراً بمعايير الصناعة (TLS أثناء النقل وAES-256 في حالة الراحة) ونقصر الوصول إلى بياناتك على الموظفين المخوّلين فقط. بنيتنا التحتية مستضافة في منطقة AWS الشرق الأوسط (البحرين).',
+    body: 'نستخدم تشفيراً بمعايير الصناعة (TLS أثناء النقل وAES-256 في حالة الراحة) ونقصر الوصول إلى بياناتك على الموظفين المخوّلين فقط. بنيتنا التحتية مستضافة في منطقة AWS أوروبا الغربية (أيرلندا).',
   },
   {
     heading: '6. حقوقك',

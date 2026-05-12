@@ -1,15 +1,26 @@
 'use client';
 
 import { PageShell } from '@/components/PageShell';
+import type { ReactNode } from 'react';
 
-const EN_CONTENT = [
+type Section = { heading: string; body: ReactNode };
+
+const EN_CONTENT: Section[] = [
   {
     heading: '1. Service Description',
     body: 'Pointly is a SaaS loyalty platform that enables Saudi merchants to run a unified loyalty program. Merchants access the platform via a web dashboard to record transactions, award points to customers, and manage redemptions. Customers participate through a shared loyalty network across all enrolled merchants.',
   },
   {
     heading: '2. Merchant Account',
-    body: 'To use Pointly you must register a merchant account and provide accurate business information. You are responsible for maintaining the confidentiality of your login credentials and for all activity that occurs under your account. You must notify us immediately at support@pointly.sa if you suspect unauthorised access.',
+    body: (
+      <>
+        To use Pointly you must register a merchant account and provide accurate business
+        information. You are responsible for maintaining the confidentiality of your login
+        credentials and for all activity that occurs under your account. You must notify us
+        immediately at <a href="mailto:support@pointly.sa">support@pointly.sa</a> if you suspect
+        unauthorised access.
+      </>
+    ),
   },
   {
     heading: '3. Subscription and Billing',
@@ -37,18 +48,29 @@ const EN_CONTENT = [
   },
   {
     heading: '9. Contact',
-    body: 'For questions about these terms, email legal@pointly.sa.',
+    body: (
+      <>
+        For questions about these terms, email{' '}
+        <a href="mailto:legal@pointly.sa">legal@pointly.sa</a>.
+      </>
+    ),
   },
 ];
 
-const AR_CONTENT = [
+const AR_CONTENT: Section[] = [
   {
     heading: '1. وصف الخدمة',
     body: 'بوينتلي هي منصة ولاء SaaS تُمكّن التجار السعوديين من إدارة برنامج ولاء موحّد. يصل التجار إلى المنصة عبر لوحة تحكم ويب لتسجيل المعاملات ومنح النقاط للعملاء وإدارة عمليات الاسترداد. يشارك العملاء من خلال شبكة ولاء مشتركة عبر جميع التجار المسجلين.',
   },
   {
     heading: '2. حساب التاجر',
-    body: 'لاستخدام بوينتلي، يجب عليك تسجيل حساب تاجر وتقديم معلومات تجارية دقيقة. أنت مسؤول عن الحفاظ على سرية بيانات تسجيل الدخول وعن جميع الأنشطة التي تجري تحت حسابك. يجب إخطارنا فوراً على support@pointly.sa في حال اشتبهت بوصول غير مصرح به.',
+    body: (
+      <>
+        لاستخدام بوينتلي، يجب عليك تسجيل حساب تاجر وتقديم معلومات تجارية دقيقة. أنت مسؤول عن الحفاظ
+        على سرية بيانات تسجيل الدخول وعن جميع الأنشطة التي تجري تحت حسابك. يجب إخطارنا فوراً على{' '}
+        <a href="mailto:support@pointly.sa">support@pointly.sa</a> في حال اشتبهت بوصول غير مصرح به.
+      </>
+    ),
   },
   {
     heading: '3. الاشتراك والفواتير',
@@ -76,7 +98,12 @@ const AR_CONTENT = [
   },
   {
     heading: '9. التواصل',
-    body: 'للاستفسارات حول هذه الشروط، راسلنا على legal@pointly.sa.',
+    body: (
+      <>
+        للاستفسارات حول هذه الشروط، راسلنا على{' '}
+        <a href="mailto:legal@pointly.sa">legal@pointly.sa</a>.
+      </>
+    ),
   },
 ];
 
