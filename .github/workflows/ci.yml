@@ -89,6 +89,15 @@ jobs:
 
       - name: Run tests
         run: pnpm run test
+        env:
+          # Turbo's test pipeline depends on build for each package.
+          # Customer-portal and merchant-dashboard validate env vars at build time.
+          NEXT_PUBLIC_API_URL: https://placeholder.example.com
+          NEXT_PUBLIC_COGNITO_USER_POOL_ID: eu-west-1_placeholder
+          NEXT_PUBLIC_COGNITO_CLIENT_ID: placeholder-client-id
+          NEXT_PUBLIC_CUSTOMER_USER_POOL_ID: eu-west-1_placeholder
+          NEXT_PUBLIC_CUSTOMER_CLIENT_ID: placeholder-client-id
+          NEXT_PUBLIC_MERCHANT_URL: https://merchant.placeholder.com
 
       - name: Upload coverage
         uses: codecov/codecov-action@v5
