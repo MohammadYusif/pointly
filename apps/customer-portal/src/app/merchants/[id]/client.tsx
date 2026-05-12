@@ -57,7 +57,7 @@ export function MerchantDetailClient() {
       <CustomerLayout>
         <div className="text-center py-12 space-y-4">
           <p className="text-muted-foreground">{t('errors.notFound')}</p>
-          <Link href="/merchants" className="text-primary hover:underline text-sm">
+          <Link href="/merchants" className="text-primary-accessible hover:underline text-sm">
             {t('merchants.backToList')}
           </Link>
         </div>
@@ -105,19 +105,19 @@ export function MerchantDetailClient() {
             </h2>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div>
-                <p className="text-lg font-bold text-primary">
+                <p className="text-lg font-bold text-primary-accessible">
                   {merchant.loyaltyConfig.pointsPerSAR}
                 </p>
                 <p className="text-xs text-muted-foreground">{t('merchants.pointsPerSAR')}</p>
               </div>
               <div>
-                <p className="text-lg font-bold text-primary">
+                <p className="text-lg font-bold text-primary-accessible">
                   {merchant.loyaltyConfig.welcomeBonus}
                 </p>
                 <p className="text-xs text-muted-foreground">{t('merchants.welcomeBonus')}</p>
               </div>
               <div>
-                <p className="text-lg font-bold text-primary">
+                <p className="text-lg font-bold text-primary-accessible">
                   {merchant.loyaltyConfig.redemptionRate}
                 </p>
                 <p className="text-xs text-muted-foreground">{t('merchants.redemptionRate')}</p>
@@ -187,7 +187,9 @@ export function MerchantDetailClient() {
 
         {isEnrolled && (
           <div className="text-center py-2">
-            <span className="text-sm text-primary font-medium">{t('merchants.enrolled')}</span>
+            <span className="text-sm text-primary-accessible font-medium">
+              {t('merchants.enrolled')}
+            </span>
           </div>
         )}
       </div>

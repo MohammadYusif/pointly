@@ -41,7 +41,9 @@ export function MilestoneBadge({ badge }: MilestoneBadgeProps) {
       <div
         className={cn(
           'w-12 h-12 rounded-full flex items-center justify-center',
-          badge.isEarned ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground',
+          badge.isEarned
+            ? 'bg-primary/10 text-primary-accessible'
+            : 'bg-muted text-muted-foreground',
         )}
       >
         <Icon className="h-6 w-6" />

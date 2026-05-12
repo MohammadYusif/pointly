@@ -84,7 +84,7 @@ export function MerchantCard({ merchant, isEnrolled, onEnroll, isEnrolling }: Me
           <div className="flex items-center justify-between pt-1">
             <Link
               href={`/merchants/${merchant.merchantId}`}
-              className="text-xs text-primary hover:underline"
+              className="text-xs text-primary-accessible hover:underline"
             >
               {t('merchants.viewDetails')}
             </Link>

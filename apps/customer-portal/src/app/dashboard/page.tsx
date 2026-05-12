@@ -273,7 +273,7 @@ export default function CustomerDashboard() {
               <Card className="stagger-item">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="text-base">{t('badges.title')}</CardTitle>
-                  <Link href="/badges" className="text-xs text-primary hover:underline">
+                  <Link href="/badges" className="text-xs text-primary-accessible hover:underline">
                     {t('common.viewAll')}
                   </Link>
                 </CardHeader>
@@ -291,7 +291,7 @@ export default function CustomerDashboard() {
             <Card className="stagger-item">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-base">{t('dashboard.recentTransactions')}</CardTitle>
-                <Link href="/history" className="text-xs text-primary hover:underline">
+                <Link href="/history" className="text-xs text-primary-accessible hover:underline">
                   {t('common.viewAll')}
                 </Link>
               </CardHeader>

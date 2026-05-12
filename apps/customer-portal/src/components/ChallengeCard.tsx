@@ -31,7 +31,7 @@ export function ChallengeCard({
             <p className="font-medium text-sm">{title}</p>
             <p className="text-xs text-muted-foreground">{description}</p>
           </div>
-          <span className="text-xs font-medium text-primary whitespace-nowrap">
+          <span className="text-xs font-medium text-primary-accessible whitespace-nowrap">
             +{bonusPoints} {t('common.points')}
           </span>
         </div>

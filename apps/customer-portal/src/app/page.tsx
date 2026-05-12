@@ -173,7 +173,7 @@ export default function LoginPage() {
                     </Button>
                     <p className="text-center text-sm text-muted-foreground">
                       {t('auth.noAccount')}{' '}
-                      <Link href="/register" className="font-medium text-primary">
+                      <Link href="/register" className="font-medium text-primary-accessible">
                         {t('auth.signUp')}
                       </Link>
                     </p>

@@ -196,7 +196,7 @@ export default function RegisterPage() {
                       <Link
                         href="/terms"
                         target="_blank"
-                        className="font-medium underline text-primary"
+                        className="font-medium underline text-primary-accessible"
                       >
                         {t('register.termsLink')}
                       </Link>{' '}
@@ -204,7 +204,7 @@ export default function RegisterPage() {
                       <Link
                         href="/privacy"
                         target="_blank"
-                        className="font-medium underline text-primary"
+                        className="font-medium underline text-primary-accessible"
                       >
                         {t('register.privacyLink')}
                       </Link>
@@ -223,7 +223,7 @@ export default function RegisterPage() {
 
                   <p className="text-center text-sm text-muted-foreground">
                     {t('register.haveAccount')}{' '}
-                    <Link href="/" className="font-medium text-primary">
+                    <Link href="/" className="font-medium text-primary-accessible">
                       {t('register.loginLink')}
                     </Link>
                   </p>

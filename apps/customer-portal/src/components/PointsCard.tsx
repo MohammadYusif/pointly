@@ -27,7 +27,9 @@ export function PointsCard({ value, label, sublabel, variant = 'default', icon }
       <Card className="points-card">
         <CardContent className="p-4 text-center space-y-1">
           {icon && <div className="flex justify-center text-muted-foreground mb-1">{icon}</div>}
-          <p className={`text-2xl font-bold ${variant === 'primary' ? 'text-primary' : ''}`}>
+          <p
+            className={`text-2xl font-bold ${variant === 'primary' ? 'text-primary-accessible' : ''}`}
+          >
             {formatNumber(value)}
           </p>
           <p className="text-xs text-muted-foreground">{label}</p>
