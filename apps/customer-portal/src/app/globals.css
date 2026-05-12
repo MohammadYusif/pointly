@@ -12,6 +12,7 @@
 @theme {
   /* Brand Colors — aligned with landing page */
   --color-primary: #08b0a2;
+  --color-primary-accessible: #067a72;
   --color-primary-foreground: #ffffff;
   --color-secondary: #1e2d4a;
   --color-secondary-foreground: #ffffff;

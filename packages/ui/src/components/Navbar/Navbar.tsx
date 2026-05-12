@@ -19,6 +19,8 @@ export interface NavItem {
   onClick?: () => void;
   /** Whether this item is currently active */
   active?: boolean;
+  /** If true, renders a thin vertical divider before this item in the desktop nav */
+  separator?: boolean;
 }
 
 export interface NavbarProps {
@@ -72,15 +74,19 @@ export function Navbar({
   const renderDesktopNav = () => (
     <nav className="hidden md:flex md:items-center md:gap-1">
       {items.map((item) => (
-        <Button
-          key={item.key}
-          variant="ghost"
-          size="sm"
-          onClick={() => handleNavItemClick(item)}
-          className={cn(item.active && 'bg-muted')}
-        >
-          {item.label}
-        </Button>
+        <React.Fragment key={item.key}>
+          {item.separator && (
+            <div className="w-px h-5 bg-border mx-1 shrink-0" aria-hidden="true" />
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleNavItemClick(item)}
+            className={cn(item.active && 'bg-muted')}
+          >
+            {item.label}
+          </Button>
+        </React.Fragment>
       ))}
     </nav>
   );

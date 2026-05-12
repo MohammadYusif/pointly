@@ -1,14 +1,15 @@
 import { AppSkeleton } from '@/components/AppSkeleton';
 import type { Metadata } from 'next';
-import { IBM_Plex_Sans_Arabic, Inter } from 'next/font/google';
+import { IBM_Plex_Sans_Arabic, Plus_Jakarta_Sans } from 'next/font/google';
 import '../components/receipt/receipt-print.css';
 import './globals.css';
 import { Providers } from './providers';
 
-const inter = Inter({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-sans',
   display: 'swap',
+  weight: ['400', '500', '600', '700', '800'],
 });
 
 const ibmPlexArabic = IBM_Plex_Sans_Arabic({
@@ -53,7 +54,7 @@ export default function RootLayout({
       lang="ar"
       dir="rtl"
       suppressHydrationWarning
-      className={`${inter.variable} ${ibmPlexArabic.variable}`}
+      className={`${plusJakartaSans.variable} ${ibmPlexArabic.variable}`}
     >
       <head>
         <script

@@ -38,8 +38,12 @@ export default function LoginPage() {
 
   return (
     <div className="login-wrapper min-h-screen flex items-center justify-center px-4">
+      <div className="login-orb login-orb-1" aria-hidden="true" />
+      <div className="login-orb login-orb-2" aria-hidden="true" />
+      <div className="login-orb login-orb-3" aria-hidden="true" />
+      <div className="login-orb login-orb-4" aria-hidden="true" />
       <motion.div
-        className="w-full max-w-md"
+        className="w-full max-w-md relative z-10"
         initial={prefersReducedMotion ? false : { opacity: 0, y: 24, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.7, delay: 0.1, ease: EASE }}
