@@ -8,7 +8,6 @@ export default function BlogPage() {
       {(t) => (
         <div className="container">
           <div className="inner-hero">
-            <div className="inner-hero-label">{t.pages.blog.title}</div>
             <h1>{t.pages.blog.title}</h1>
             <p>{t.pages.blog.subtitle}</p>
           </div>

@@ -122,6 +122,11 @@
     margin-bottom: 6px;
   }
 
+  .btn-primary--sm {
+    font-size: 0.85rem;
+    padding: 8px 18px;
+  }
+
   [dir="rtl"] .inner-hero p {
     max-width: 100%;
   }

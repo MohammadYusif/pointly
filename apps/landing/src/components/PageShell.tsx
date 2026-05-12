@@ -54,11 +54,7 @@ function PageShellNav({ t, locale, onLocaleChange }: PageShellNavProps) {
             >
               {locale === 'en' ? 'العربية' : 'English'}
             </button>
-            <Link
-              href="/#pricing"
-              className="btn-primary"
-              style={{ fontSize: '0.85rem', padding: '8px 18px' }}
-            >
+            <Link href="/#pricing" className="btn-primary btn-primary--sm">
               {t.nav.getStarted}
             </Link>
           </div>
@@ -73,12 +69,17 @@ interface PageShellProps {
 }
 
 export function PageShell({ children }: PageShellProps) {
-  const [locale, setLocale] = useState<Locale>('en');
+  const [locale, setLocale] = useState<Locale>(() => {
+    if (typeof window === 'undefined') return 'ar';
+    const stored = localStorage.getItem('pointly-language');
+    return stored === 'en' || stored === 'ar' ? stored : 'ar';
+  });
   const t = translations[locale];
   const isRtl = locale === 'ar';
 
   const handleLocaleChange = (newLocale: Locale) => {
     setLocale(newLocale);
+    localStorage.setItem('pointly-language', newLocale);
     document.documentElement.lang = newLocale;
     document.documentElement.dir = newLocale === 'ar' ? 'rtl' : 'ltr';
   };

@@ -8,7 +8,6 @@ export default function CareersPage() {
       {(t) => (
         <div className="container">
           <div className="inner-hero">
-            <div className="inner-hero-label">{t.pages.careers.title}</div>
             <h1>{t.pages.careers.title}</h1>
             <p>{t.pages.careers.subtitle}</p>
           </div>

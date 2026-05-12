@@ -112,13 +112,13 @@ export function Hero({ t, isRtl }: HeroProps) {
                 <div className="hero-card-pts-label">{t.hero.globalPoints}</div>
                 <div className="hero-card-meta">
                   <span>2,600 {t.hero.cardToTier}</span>
-                  <span>62%</span>
+                  <span>48%</span>
                 </div>
                 <div className="hero-card-progress-bar">
                   <motion.div
                     className="hero-card-progress-fill"
                     initial={{ width: 0 }}
-                    animate={{ width: '62%' }}
+                    animate={{ width: '48%' }}
                     transition={{ duration: 1.2, ease: EASE, delay: 0.8 }}
                   />
                 </div>

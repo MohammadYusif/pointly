@@ -1,7 +1,10 @@
 'use client';
 
 import type { TranslationKeys } from '@/i18n/translations';
+import Link from 'next/link';
 import { ScrollReveal } from './ScrollReveal';
+
+const MERCHANT_URL = process.env.NEXT_PUBLIC_MERCHANT_URL ?? 'https://d62obmvn36z3a.cloudfront.net';
 
 interface PricingSectionProps {
   t: TranslationKeys;
@@ -50,9 +53,19 @@ export function PricingSection({ t }: PricingSectionProps) {
                     </li>
                   ))}
                 </ul>
-                <button type="button" className="pricing-cta">
-                  {plan.cta}
-                </button>
+                {i === t.pricing.plans.length - 1 ? (
+                  <Link href="/contact" className="pricing-cta">
+                    {plan.cta}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    className="pricing-cta"
+                    onClick={() => window.open(MERCHANT_URL, '_blank')}
+                  >
+                    {plan.cta}
+                  </button>
+                )}
               </div>
             </ScrollReveal>
           ))}

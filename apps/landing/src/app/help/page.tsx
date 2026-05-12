@@ -8,7 +8,6 @@ export default function HelpPage() {
       {(t) => (
         <div className="container">
           <div className="inner-hero">
-            <div className="inner-hero-label">{t.pages.help.title}</div>
             <h1>{t.pages.help.title}</h1>
             <p>{t.pages.help.subtitle}</p>
           </div>
