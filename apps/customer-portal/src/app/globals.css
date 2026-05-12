@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "tailwindcss-animate";
 
 /* Scan workspace packages for Tailwind utility classes */
 @source "../../node_modules/@pointly/ui/src/**/*.{ts,tsx}";
