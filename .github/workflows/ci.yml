@@ -92,7 +92,7 @@ jobs:
 
       - name: Upload coverage
         uses: codecov/codecov-action@v5
-        if: always() && secrets.CODECOV_TOKEN != ''
+        if: always()
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: MohammadYusif/pointly
@@ -123,6 +123,15 @@ jobs:
 
       - name: Build all packages
         run: pnpm run build
+        env:
+          # Placeholder values so Next.js env validation passes at build time.
+          # Real values are injected by deploy-staging / deploy-production pipelines.
+          NEXT_PUBLIC_API_URL: https://placeholder.example.com
+          NEXT_PUBLIC_COGNITO_USER_POOL_ID: eu-west-1_placeholder
+          NEXT_PUBLIC_COGNITO_CLIENT_ID: placeholder-client-id
+          NEXT_PUBLIC_CUSTOMER_USER_POOL_ID: eu-west-1_placeholder
+          NEXT_PUBLIC_CUSTOMER_CLIENT_ID: placeholder-client-id
+          NEXT_PUBLIC_MERCHANT_URL: https://merchant.placeholder.com
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
