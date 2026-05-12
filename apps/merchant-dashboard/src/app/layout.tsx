@@ -1,3 +1,4 @@
+import '@/lib/env';
 import { AppSkeleton } from '@/components/AppSkeleton';
 import type { Metadata } from 'next';
 import { IBM_Plex_Sans_Arabic, Plus_Jakarta_Sans } from 'next/font/google';
