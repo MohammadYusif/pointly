@@ -5,6 +5,8 @@ import {
   type CognitoUserSession,
 } from 'amazon-cognito-identity-js';
 
+export type { CognitoUser };
+
 const userPoolId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID || '';
 const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID || '';
 
@@ -36,10 +38,11 @@ function parseIdToken(session: CognitoUserSession): MerchantInfo {
   };
 }
 
-export function signIn(
-  email: string,
-  password: string,
-): Promise<{ session: CognitoUserSession; merchant: MerchantInfo }> {
+export type SignInResult =
+  | { session: CognitoUserSession; merchant: MerchantInfo; requiresNewPassword?: false }
+  | { requiresNewPassword: true; cognitoUser: CognitoUser };
+
+export function signIn(email: string, password: string): Promise<SignInResult> {
   return new Promise((resolve, reject) => {
     const cognitoUser = new CognitoUser({
       Username: email,
@@ -58,7 +61,31 @@ export function signIn(
       onFailure: (err) => {
         reject(err);
       },
+      newPasswordRequired: (_userAttributes, _requiredAttributes) => {
+        // AdminCreateUser sets users in FORCE_CHANGE_PASSWORD state
+        resolve({ requiresNewPassword: true, cognitoUser });
+      },
     });
+  });
+}
+
+export function completeNewPassword(
+  cognitoUser: CognitoUser,
+  newPassword: string,
+): Promise<{ session: CognitoUserSession; merchant: MerchantInfo }> {
+  return new Promise((resolve, reject) => {
+    cognitoUser.completeNewPasswordChallenge(
+      newPassword,
+      {},
+      {
+        onSuccess: (session) => {
+          resolve({ session, merchant: parseIdToken(session) });
+        },
+        onFailure: (err) => {
+          reject(err);
+        },
+      },
+    );
   });
 }
 

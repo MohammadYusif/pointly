@@ -49,7 +49,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isLoading) return;
     const isLoginPage = pathname === '/login' || pathname === '/login/';
-    if (!merchant && !isLoginPage) {
+    const isPublicPage = isLoginPage || pathname.startsWith('/signup-complete');
+    if (!merchant && !isPublicPage) {
       router.replace('/login/');
     } else if (merchant && isLoginPage) {
       router.replace('/');
@@ -58,6 +59,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     const result = await cognitoSignIn(email, password);
+    if (result.requiresNewPassword) {
+      // Surface as a typed error so the login page can handle the password-change flow
+      const err = new Error('NEW_PASSWORD_REQUIRED') as Error & {
+        cognitoUser: typeof result.cognitoUser;
+      };
+      err.cognitoUser = result.cognitoUser;
+      throw err;
+    }
     setMerchant(result.merchant);
     setAuthCookie();
   }, []);

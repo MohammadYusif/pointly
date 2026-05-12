@@ -3,6 +3,11 @@
  */
 import type { CustomerTierLevel } from './tier-config';
 
+/** Merchant signup status after Moyasar payment. */
+export interface MerchantSignupStatus {
+  status: 'pending' | 'active' | 'failed';
+}
+
 /** A single purchase line item used for category-targeted campaign matching. */
 export interface LineItem {
   category: string;

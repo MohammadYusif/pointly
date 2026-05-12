@@ -297,3 +297,20 @@ export const pushApi = {
       body: JSON.stringify({ filename, contentType }),
     }),
 };
+
+// Public API — no auth header required
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+
+export const signupApi = {
+  getStatus: async (paymentId: string): Promise<{ status: 'pending' | 'active' | 'failed' }> => {
+    const res = await fetch(
+      `${API_BASE}/v1/merchants/signup-status?paymentId=${encodeURIComponent(paymentId)}`,
+    );
+    if (!res.ok) throw new Error('Failed to fetch signup status');
+    const json = (await res.json()) as {
+      success: boolean;
+      data: { status: 'pending' | 'active' | 'failed' };
+    };
+    return json.data;
+  },
+};
