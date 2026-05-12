@@ -88,6 +88,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             size="icon"
             onClick={signOut}
             title={t('auth.logout')}
+            aria-label={t('auth.logout')}
             className="icon-hover-rotate"
           >
             <LogOut className="h-4 w-4" />

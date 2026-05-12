@@ -68,6 +68,8 @@ export function CustomerLayout({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <motion.div
+          role="status"
+          aria-label={t('common.loading')}
           className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full"
           animate={{ rotate: 360 }}
           transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY, ease: 'linear' }}
@@ -97,7 +99,7 @@ export function CustomerLayout({ children }: { children: React.ReactNode }) {
               type="button"
               onClick={handleLogout}
               aria-label={t('auth.logout')}
-              className="flex items-center justify-center w-8 h-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-black/5 transition-colors"
+              className="flex items-center justify-center w-11 h-11 rounded-full text-muted-foreground hover:text-foreground hover:bg-black/5 transition-colors"
             >
               <LogOut className="h-4 w-4" />
             </button>
@@ -133,7 +135,8 @@ export function CustomerLayout({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.key}
                 href={item.href}
-                className={`flex flex-col items-center gap-0.5 px-1 py-1 text-[11px] leading-tight transition-colors ${
+                aria-current={isActive ? 'page' : undefined}
+                className={`flex flex-col items-center gap-0.5 px-1 py-2 text-[11px] leading-tight transition-colors ${
                   isActive
                     ? 'text-[var(--color-primary-accessible)] font-medium'
                     : 'text-muted-foreground hover:text-foreground'
