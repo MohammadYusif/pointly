@@ -92,3 +92,17 @@ variable "sms_quota_table_arn" {
 variable "wallet_passes_table_arn" {
   type = string
 }
+
+# SMS Provider (Taqnyat)
+variable "sms_provider_api_key" {
+  description = "Taqnyat API key for SMS delivery"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "sms_sender_id" {
+  description = "SMS sender ID (must be pre-approved by Taqnyat)"
+  type        = string
+  default     = "POINTLY"
+}

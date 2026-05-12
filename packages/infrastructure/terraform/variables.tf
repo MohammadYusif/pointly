@@ -59,3 +59,17 @@ variable "tier_reset_lambda_function_name" {
   default     = ""
   description = "Override name of tier-reset Lambda for monitoring alarms. Auto-detected if empty."
 }
+
+# SMS Provider (Taqnyat)
+variable "sms_provider_api_key" {
+  type        = string
+  sensitive   = true
+  default     = ""
+  description = "Taqnyat API key for SMS delivery. Set via TF_VAR_sms_provider_api_key in CI."
+}
+
+variable "sms_sender_id" {
+  type        = string
+  default     = "POINTLY"
+  description = "SMS sender ID — must be pre-approved by Taqnyat / Saudi telecom."
+}

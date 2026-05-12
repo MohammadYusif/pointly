@@ -51,6 +51,10 @@ module "api" {
   pending_consents_table_arn  = module.database.pending_consents_table_arn
   sms_quota_table_arn         = module.database.sms_quota_table_arn
   wallet_passes_table_arn     = module.database.wallet_passes_table_arn
+
+  # SMS Provider (Taqnyat)
+  sms_provider_api_key = var.sms_provider_api_key
+  sms_sender_id        = var.sms_sender_id
 }
 
 # ===========================================

@@ -33,7 +33,9 @@ async function sendSms(message: SmsMessage, apiKey: string, senderId: string): P
 }
 
 export const handler = async (event: SQSEvent): Promise<SQSBatchResponse> => {
+  // biome-ignore lint/complexity/useLiteralKeys: TS noPropertyAccessFromIndexSignature requires bracket notation for process.env
   const apiKey = process.env['SMS_PROVIDER_API_KEY'] ?? '';
+  // biome-ignore lint/complexity/useLiteralKeys: TS noPropertyAccessFromIndexSignature requires bracket notation for process.env
   const senderId = process.env['SMS_SENDER_ID'] ?? 'POINTLY';
   const failures: SQSBatchResponse['batchItemFailures'] = [];
 

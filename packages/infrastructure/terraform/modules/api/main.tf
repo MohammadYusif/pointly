@@ -654,8 +654,10 @@ resource "aws_lambda_function" "sms_consumer" {
 
   environment {
     variables = {
-      NODE_ENV  = var.environment
-      LOG_LEVEL = var.environment == "prod" ? "info" : "debug"
+      NODE_ENV             = var.environment
+      LOG_LEVEL            = var.environment == "prod" ? "info" : "debug"
+      SMS_PROVIDER_API_KEY = var.sms_provider_api_key
+      SMS_SENDER_ID        = var.sms_sender_id
     }
   }
 
