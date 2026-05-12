@@ -1,7 +1,9 @@
 name: Deploy to Staging
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -17,14 +19,27 @@ env:
   TF_VERSION: '1.14.0'
 
 jobs:
+  guard:
+    name: Guard — CI must pass
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: CI passed
+        run: echo "CI workflow passed — proceeding with staging deploy"
+
   deploy-infrastructure:
     name: Deploy Infrastructure (Staging)
     runs-on: ubuntu-latest
+    needs: [guard]
     permissions:
       contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v5
@@ -95,6 +110,8 @@ jobs:
           echo "landing_distribution_id=$(terraform output -raw landing_distribution_id)" >> $GITHUB_OUTPUT
           echo "customer_portal_bucket_name=$(terraform output -raw customer_portal_bucket_name)" >> $GITHUB_OUTPUT
           echo "customer_portal_distribution_id=$(terraform output -raw customer_portal_distribution_id)" >> $GITHUB_OUTPUT
+          echo "merchant_user_pool_id=$(terraform output -raw merchant_user_pool_id)" >> $GITHUB_OUTPUT
+          echo "merchant_user_pool_client_id=$(terraform output -raw merchant_user_pool_client_id)" >> $GITHUB_OUTPUT
           echo "customer_user_pool_id=$(terraform output -raw customer_user_pool_id)" >> $GITHUB_OUTPUT
           echo "customer_user_pool_client_id=$(terraform output -raw customer_user_pool_client_id)" >> $GITHUB_OUTPUT
 
@@ -107,6 +124,8 @@ jobs:
       landing_distribution_id: ${{ steps.tf-outputs.outputs.landing_distribution_id }}
       customer_portal_bucket_name: ${{ steps.tf-outputs.outputs.customer_portal_bucket_name }}
       customer_portal_distribution_id: ${{ steps.tf-outputs.outputs.customer_portal_distribution_id }}
+      merchant_user_pool_id: ${{ steps.tf-outputs.outputs.merchant_user_pool_id }}
+      merchant_user_pool_client_id: ${{ steps.tf-outputs.outputs.merchant_user_pool_client_id }}
       customer_user_pool_id: ${{ steps.tf-outputs.outputs.customer_user_pool_id }}
       customer_user_pool_client_id: ${{ steps.tf-outputs.outputs.customer_user_pool_client_id }}
 
@@ -119,6 +138,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v5
@@ -138,6 +159,8 @@ jobs:
         run: pnpm --filter @pointly/merchant-dashboard build
         env:
           NEXT_PUBLIC_API_URL: ${{ needs.deploy-infrastructure.outputs.api_url }}
+          NEXT_PUBLIC_COGNITO_USER_POOL_ID: ${{ needs.deploy-infrastructure.outputs.merchant_user_pool_id }}
+          NEXT_PUBLIC_COGNITO_CLIENT_ID: ${{ needs.deploy-infrastructure.outputs.merchant_user_pool_client_id }}
           NEXT_PUBLIC_ENVIRONMENT: staging
 
       - name: Configure AWS credentials
@@ -166,6 +189,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v5
@@ -187,7 +212,6 @@ jobs:
           NEXT_PUBLIC_API_URL: ${{ needs.deploy-infrastructure.outputs.api_url }}
           NEXT_PUBLIC_CUSTOMER_USER_POOL_ID: ${{ needs.deploy-infrastructure.outputs.customer_user_pool_id }}
           NEXT_PUBLIC_CUSTOMER_CLIENT_ID: ${{ needs.deploy-infrastructure.outputs.customer_user_pool_client_id }}
-          NEXT_PUBLIC_REGION: ${{ env.AWS_REGION }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
@@ -215,6 +239,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v5
