@@ -66,6 +66,10 @@ module "api" {
 
   # Merchant Cognito pool ARN (for AdminCreateUser IAM policy)
   merchant_user_pool_arn = module.auth.merchant_user_pool_arn
+
+  # Custom domain — CloudFront distribution for api.<domain>
+  domain_name     = var.domain_name
+  certificate_arn = var.certificate_arn
 }
 
 # ===========================================

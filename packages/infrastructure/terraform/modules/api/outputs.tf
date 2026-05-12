@@ -1,5 +1,11 @@
 output "api_url" {
-  value = "${aws_api_gateway_stage.main.invoke_url}/"
+  description = "Public API base URL — CloudFront when domain_name is set, raw API Gateway otherwise"
+  value       = local.has_api_domain ? "https://api.${var.domain_name}/" : "${aws_api_gateway_stage.main.invoke_url}/"
+}
+
+output "api_cdn_distribution_id" {
+  description = "CloudFront distribution ID for the API (empty string if no custom domain configured)"
+  value       = try(aws_cloudfront_distribution.api[0].id, "")
 }
 
 output "api_gateway_name" {

@@ -128,3 +128,16 @@ variable "merchant_user_pool_arn" {
   type        = string
   default     = ""
 }
+
+# Custom domain / CloudFront
+variable "domain_name" {
+  description = "Root domain (e.g. pointly.sa). API is served at api.<domain>. Empty = no CloudFront distribution."
+  type        = string
+  default     = ""
+}
+
+variable "certificate_arn" {
+  description = "ACM certificate ARN (must be in us-east-1 for CloudFront). Empty = no CloudFront distribution."
+  type        = string
+  default     = ""
+}

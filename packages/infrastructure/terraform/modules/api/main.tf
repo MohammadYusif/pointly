@@ -1,5 +1,7 @@
 locals {
-  is_prod = var.environment == "prod"
+  is_prod        = var.environment == "prod"
+  has_api_domain = var.domain_name != "" && var.certificate_arn != ""
+  api_gw_origin  = "${aws_api_gateway_rest_api.main.id}.execute-api.${data.aws_region.current.id}.amazonaws.com"
   table_arns = [
     var.user_ledger_table_arn,
     var.transaction_audit_table_arn,
@@ -722,4 +724,66 @@ resource "aws_iam_role_policy" "sms_consumer_sqs" {
       }
     ]
   })
+}
+
+# ===========================================
+# CloudFront Distribution for API
+# Only created when domain_name + certificate_arn are both set.
+# Serves api.<domain> → API Gateway stage (no custom domain on APIGW needed).
+# Uses the same us-east-1 ACM cert as all other CloudFront distributions,
+# eliminating the need for a separate eu-west-1 cert.
+# ===========================================
+resource "aws_cloudfront_distribution" "api" {
+  count = local.has_api_domain ? 1 : 0
+
+  comment         = "Pointly API CDN - ${var.environment}"
+  enabled         = true
+  is_ipv6_enabled = true
+  price_class     = "PriceClass_100"
+  http_version    = "http2and3"
+
+  aliases = ["api.${var.domain_name}"]
+
+  origin {
+    domain_name = local.api_gw_origin
+    origin_id   = "APIGateway"
+
+    # Strip stage name: CloudFront receives /v1/... → APIGW receives /<stage>/v1/...
+    origin_path = "/${var.environment}"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "APIGateway"
+    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods         = ["GET", "HEAD"]
+    compress               = true
+
+    # CachingDisabled (AWS managed) — zero TTL, pure pass-through
+    cache_policy_id = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+
+    # AllViewerExceptHostHeader (AWS managed) — forwards Authorization,
+    # Content-Type, X-Moyasar-Signature, all query strings, etc.
+    # Host header is excluded so API Gateway accepts the request.
+    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac"
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    acm_certificate_arn      = var.certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
+  }
 }

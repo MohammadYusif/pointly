@@ -20,6 +20,11 @@ output "api_url" {
   value = module.api.api_url
 }
 
+output "api_cdn_distribution_id" {
+  description = "CloudFront distribution ID for api.<domain> (empty if no custom domain)"
+  value       = module.api.api_cdn_distribution_id
+}
+
 output "lambda_function_name" {
   value = module.api.lambda_function_name
 }
