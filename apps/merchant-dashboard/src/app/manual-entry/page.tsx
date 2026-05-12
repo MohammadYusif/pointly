@@ -12,7 +12,7 @@ import { getTierColor, normalizePhone } from '@pointly/shared';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, useRTL } from '@pointly/ui';
 import { CheckCircle, Download, Printer, RotateCcw } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type Step = 'input' | 'confirming' | 'submitting' | 'receipt';
 
@@ -30,6 +30,26 @@ export default function ManualEntryPage() {
   const [cashierName, setCashierName] = useState('');
   const [selectedLocationId, setSelectedLocationId] = useState('');
   const [error, setError] = useState('');
+  const [amountError, setAmountError] = useState('');
+
+  const minimumPurchase = merchantData?.loyaltyConfig?.minimumPurchase ?? 0;
+
+  useEffect(() => {
+    if (!amount) {
+      setAmountError('');
+      return;
+    }
+    const parsed = Number(amount);
+    if (parsed <= 0) {
+      setAmountError(t('errors.invalidAmount'));
+      return;
+    }
+    if (minimumPurchase > 0 && parsed < minimumPurchase) {
+      setAmountError(t('transaction.minimumPurchase', { min: String(minimumPurchase) }));
+      return;
+    }
+    setAmountError('');
+  }, [amount, minimumPurchase, t]);
 
   const locations = merchantData?.locations?.filter((l) => l.isActive) || [];
   const isMultiLocation = locations.length > 1;
@@ -62,6 +82,7 @@ export default function ManualEntryPage() {
 
   const handleConfirm = async () => {
     if (!merchant || !customer) return;
+    if (amountError) return;
     setStep('submitting');
     setError('');
 
@@ -158,6 +179,7 @@ export default function ManualEntryPage() {
                     step="0.01"
                     dir="ltr"
                   />
+                  {amountError && <p className="text-sm text-destructive mt-1">{amountError}</p>}
                 </div>
                 {isMultiLocation && (
                   <div>
