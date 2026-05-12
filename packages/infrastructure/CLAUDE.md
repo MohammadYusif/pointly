@@ -1,6 +1,6 @@
 # Infrastructure – `packages/infrastructure`
 
-Terraform IaC for all Pointly AWS resources. Region: `me-south-1` (Bahrain). Two environments via Terraform workspaces: `dev` and `prod`.
+Terraform IaC for all Pointly AWS resources. Region: `eu-west-1` (Ireland). Two environments via Terraform workspaces: `dev` and `prod`.
 
 ## Directory Structure
 
@@ -29,7 +29,7 @@ terraform/
 
 ## State Backend
 
-- **S3 bucket**: `pointly-terraform-state-759316130972` (region: `me-south-1`)
+- **S3 bucket**: `pointly-terraform-state-759316130972` (region: `eu-west-1`)
 - **Lock table**: `pointly-terraform-locks` (DynamoDB)
 - **Key**: `infrastructure/terraform.tfstate`
 - State is encrypted at rest. Workspaces create separate state files per environment.
@@ -53,7 +53,7 @@ Workspaces determine resource naming (e.g. `pointly-dev-api` vs `pointly-prod-ap
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `environment` | Yes | `dev` or `prod` |
-| `aws_region` | No | Default: `me-south-1` |
+| `aws_region` | No | Default: `eu-west-1` |
 | `lambda_zip_path` | Yes | Path to pre-built main API Lambda zip |
 | `lambda_decay_zip_path` | No | Decay cron Lambda zip (empty = skip) |
 | `lambda_tier_reset_zip_path` | No | Tier reset cron Lambda zip (empty = skip) |
@@ -160,7 +160,7 @@ CI handles this automatically on deploy pipelines.
 ## Gotchas
 
 - **Lambda zips must be pre-built** — Terraform does not run `npm build`. Always run `pnpm --filter @pointly/api build:lambda:all` before `terraform apply` when API code changed
-- **ACM cert must be in `us-east-1`** — CloudFront requires this even though all other resources are in `me-south-1`
+- **ACM cert must be in `us-east-1`** — CloudFront requires this even though all other resources are in `eu-west-1`
 - **Workspace ≠ environment prefix** — the `environment` variable controls resource naming, not just the workspace. Both must match
 - **Single-table design** — `user_ledger` holds both Customers (`CUSTOMER#<id>`) and Merchants (`MERCHANT#<id>`). Do not create separate tables for them
 - **SQS → SMS**: the `sms_queue` is for async SMS delivery. The API publishes to SQS; a separate processor (Lambda or SNS) handles actual SMS sending — not directly from the API Lambda

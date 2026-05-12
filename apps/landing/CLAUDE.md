@@ -121,6 +121,7 @@ Both loaded with `display=swap`. Font family applied via CSS variables in `token
 
 ## Gotchas
 
+- Feature icons in `Features.tsx` use **emoji** (not SVG) — Biome enforces `noSvgWithoutTitle` as an error; inline SVGs without a `<title>` will fail `pnpm check`
 - `output: 'export'` means **no dynamic routes with `generateStaticParams`** unless all params are known at build time
 - `ScrollReveal` uses `useEffect` + `IntersectionObserver` — it's a Client Component. Keep it as a thin wrapper; don't put server data fetching inside it
 - All href links to the merchant dashboard or customer portal use full absolute URLs (env var or hardcoded) — not relative paths

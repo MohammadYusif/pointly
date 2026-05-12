@@ -103,6 +103,20 @@ getStatusBadge(status) // 'ACTIVE' | 'INACTIVE' | ... → { label, variant, clas
 4. **Build** — `packages/shared` must be built before apps that depend on it (`turbo run build` handles dependency ordering)
 5. **Import from index** — always `import { ... } from '@pointly/shared'`, never from deep paths like `@pointly/shared/src/phone`
 
+## i18n Package (`@pointly/i18n`)
+
+Direction and translation context for all frontends. No sub-CLAUDE.md — documented here as the root delegates to this file.
+
+```ts
+import { DirectionProvider, useDirection, useTranslation } from '@pointly/i18n';
+```
+
+- **`<DirectionProvider defaultLanguage="ar">`** — must wrap any app that uses `useRTL()` from `@pointly/ui`. Reads `localStorage['pointly-language']` on mount and syncs `document.documentElement.dir/lang`. Default language is `'ar'`.
+- **`useDirection()`** — returns `{ direction, language, setLanguage, toggleDirection, isRTL }`. Throws if called outside `DirectionProvider`. Consumed internally by `@pointly/ui`'s `useRTL()`.
+- **`useTranslation()`** — returns `{ t, language, locale, formatNumber, formatCurrency, formatDate, formatRelativeTime }`. `t(key, params?)` accepts dot-notation paths (e.g. `'common.save'`) and `{{param}}` interpolation. Translation JSON files live in `packages/i18n/src/locales/en.json` and `ar.json`.
+
+**Note**: The landing page (`apps/landing`) uses its own `src/i18n/translations.ts` instead of `@pointly/i18n` — it is a static export with no React context.
+
 ## HTTP Client (`@pointly/http-client`)
 
 Thin fetch wrapper factory used by both dashboards. Not part of `@pointly/shared` itself,

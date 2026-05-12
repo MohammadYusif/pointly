@@ -1,6 +1,6 @@
 # API – `apps/api`
 
-Fastify 5 REST API running on AWS Lambda (Node 20). Clean/DDD architecture. Talks to DynamoDB only.
+Fastify 5 REST API running on AWS Lambda (Node 22). Clean/DDD architecture. Talks to DynamoDB only.
 
 ## Commands
 

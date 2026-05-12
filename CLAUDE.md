@@ -8,7 +8,7 @@
 
 - **API**: Fastify 5 on AWS Lambda (Node 22), DynamoDB, Clean/DDD architecture
 - **Dashboards**: Next.js 15 (merchant + customer portal + landing), React 18/19
-- **Infrastructure**: Terraform — 7 modules, AWS `me-south-1` (Bahrain)
+- **Infrastructure**: Terraform — 7 modules, AWS `eu-west-1` (Ireland)
 - **Monorepo**: pnpm 10+ / Turbo
 - **Linter**: Biome 1.9.4 — no ESLint, no Prettier
 - **Tests**: Vitest (API only)
@@ -31,7 +31,7 @@ packages/shared/           → packages/shared/CLAUDE.md
 packages/ui/               → packages/ui/CLAUDE.md
 packages/infrastructure/   → packages/infrastructure/CLAUDE.md
 packages/http-client/      → no sub-CLAUDE.md — see packages/shared/CLAUDE.md for usage
-packages/i18n/             → no sub-CLAUDE.md — DirectionProvider, useDirection, useTranslation (used by @pointly/ui and portals)
+packages/i18n/             → no sub-CLAUDE.md — see packages/shared/CLAUDE.md for API; exports DirectionProvider, useDirection, useTranslation (used by @pointly/ui and portals)
 packages/assets/           → no sub-CLAUDE.md — static brand assets (logos, icons)
 ```
 
