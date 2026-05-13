@@ -24,19 +24,33 @@ export function ScrollReveal({
     el.classList.add('sr-hidden', `sr-${direction}`);
     if (delay > 0) el.style.transitionDelay = `${delay * 0.1}s`;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          el.classList.remove('sr-hidden');
-          el.style.transitionDelay = '';
-          observer.unobserve(el);
-        }
-      },
-      { rootMargin: '0px 0px -60px 0px', threshold: 0.05 },
-    );
+    let observer: IntersectionObserver | null = null;
+    let raf1 = 0;
+    let raf2 = 0;
 
-    observer.observe(el);
-    return () => observer.disconnect();
+    // Double rAF ensures the browser has painted the hidden state before we
+    // observe — otherwise add+remove in the same frame skips the transition.
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        observer = new IntersectionObserver(
+          ([entry]) => {
+            if (entry.isIntersecting) {
+              el.classList.remove('sr-hidden');
+              el.style.transitionDelay = '';
+              observer?.unobserve(el);
+            }
+          },
+          { rootMargin: '0px 0px -60px 0px', threshold: 0.05 },
+        );
+        observer.observe(el);
+      });
+    });
+
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+      observer?.disconnect();
+    };
   }, [delay, direction]);
 
   return (
