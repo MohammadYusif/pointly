@@ -1,6 +1,15 @@
+import * as Sentry from '@sentry/aws-serverless';
 import type { SQSBatchResponse, SQSEvent } from 'aws-lambda';
 import type { SmsMessage } from './application/services/ISmsPublisherService';
 import { logger } from './lib/logger';
+
+Sentry.init({
+  // biome-ignore lint/complexity/useLiteralKeys: TS noPropertyAccessFromIndexSignature
+  dsn: process.env['SENTRY_DSN'],
+  // biome-ignore lint/complexity/useLiteralKeys: TS noPropertyAccessFromIndexSignature
+  environment: process.env['ENVIRONMENT'] ?? 'dev',
+  tracesSampleRate: 0,
+});
 
 const TAQNYAT_URL = 'https://api.taqnyat.sa/v1/messages';
 
@@ -32,7 +41,7 @@ async function sendSms(message: SmsMessage, apiKey: string, senderId: string): P
   }
 }
 
-export const handler = async (event: SQSEvent): Promise<SQSBatchResponse> => {
+export const handler = Sentry.wrapHandler(async (event: SQSEvent): Promise<SQSBatchResponse> => {
   // biome-ignore lint/complexity/useLiteralKeys: TS noPropertyAccessFromIndexSignature requires bracket notation for process.env
   const apiKey = process.env['SMS_PROVIDER_API_KEY'] ?? '';
   // biome-ignore lint/complexity/useLiteralKeys: TS noPropertyAccessFromIndexSignature requires bracket notation for process.env
@@ -85,4 +94,4 @@ export const handler = async (event: SQSEvent): Promise<SQSBatchResponse> => {
   }
 
   return { batchItemFailures: failures };
-};
+});

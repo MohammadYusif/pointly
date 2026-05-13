@@ -65,6 +65,9 @@ const envSchema = z.object({
   // Moyasar (payment gateway for merchant signup)
   MOYASAR_SECRET_KEY: z.string().optional(),
   MOYASAR_WEBHOOK_SECRET: z.string().optional(),
+
+  // Observability
+  SENTRY_DSN: z.string().optional(),
 });
 
 export type Environment = z.infer<typeof envSchema>;

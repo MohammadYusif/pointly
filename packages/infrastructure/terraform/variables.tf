@@ -87,3 +87,9 @@ variable "moyasar_webhook_secret" {
   default     = ""
   description = "Moyasar webhook HMAC secret. Set via TF_VAR_moyasar_webhook_secret in CI."
 }
+
+variable "sentry_dsn" {
+  type        = string
+  default     = ""
+  description = "Sentry DSN for API Lambda error tracking. Not a secret — safe to commit."
+}

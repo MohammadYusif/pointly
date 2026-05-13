@@ -184,6 +184,7 @@ resource "aws_lambda_function" "api" {
       MOYASAR_WEBHOOK_SECRET              = var.moyasar_webhook_secret
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
       LOG_LEVEL                           = local.is_prod ? "info" : "debug"
+      SENTRY_DSN                          = var.sentry_dsn
     }
   }
 
@@ -460,6 +461,7 @@ resource "aws_lambda_function" "decay" {
       WALLET_PASSES_TABLE                 = var.wallet_passes_table_name
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
       LOG_LEVEL                           = local.is_prod ? "info" : "debug"
+      SENTRY_DSN                          = var.sentry_dsn
     }
   }
 
@@ -501,6 +503,7 @@ resource "aws_lambda_function" "tier_reset" {
       WALLET_PASSES_TABLE                 = var.wallet_passes_table_name
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
       LOG_LEVEL                           = local.is_prod ? "info" : "debug"
+      SENTRY_DSN                          = var.sentry_dsn
     }
   }
 
@@ -681,6 +684,7 @@ resource "aws_lambda_function" "sms_consumer" {
       LOG_LEVEL            = var.environment == "prod" ? "info" : "debug"
       SMS_PROVIDER_API_KEY = var.sms_provider_api_key
       SMS_SENDER_ID        = var.sms_sender_id
+      SENTRY_DSN           = var.sentry_dsn
     }
   }
 

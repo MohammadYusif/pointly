@@ -70,6 +70,9 @@ module "api" {
   # Custom domain — CloudFront distribution for api.<domain>
   domain_name     = var.domain_name
   certificate_arn = var.certificate_arn
+
+  # Observability
+  sentry_dsn = var.sentry_dsn
 }
 
 # ===========================================

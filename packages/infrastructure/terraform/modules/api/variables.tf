@@ -141,3 +141,10 @@ variable "certificate_arn" {
   type        = string
   default     = ""
 }
+
+
+variable "sentry_dsn" {
+  description = "Sentry DSN for the API Lambda functions. Safe to commit — DSN is not a secret."
+  type        = string
+  default     = ""
+}
