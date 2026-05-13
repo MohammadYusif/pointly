@@ -13,65 +13,60 @@ export function Hero({ t, isRtl }: HeroProps) {
   };
 
   const ctaArrow = isRtl ? 'M13 8H3M7 4l-4 4 4 4' : 'M3 8h10M9 4l4 4-4 4';
-  const redeemArrow = isRtl ? 'M12 7H2M6 3l-4 4 4 4' : 'M2 7h10M8 3l4 4-4 4';
 
   return (
     <section className="hero">
       <div className="container">
-        <div className="hero-grid">
-          {/* Left: text — animated via CSS hero-item-in keyframes */}
-          <div className="hero-text">
-            <h1 className="hero-title">
-              {t.hero.title} <span className="highlight">{t.hero.titleHighlight}</span>
-            </h1>
+        <div className="hero-content">
+          <div className="hero-eyebrow">{t.features.label}</div>
 
-            <p className="hero-sub">{t.hero.subtitle}</p>
+          <h1 className="hero-title">
+            {t.hero.title} <span className="hero-highlight">{t.hero.titleHighlight}</span>
+          </h1>
 
-            <div className="hero-actions">
-              <button type="button" className="btn-primary" onClick={() => scrollTo('pricing')}>
-                {t.hero.cta}
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path
-                    d={ctaArrow}
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-              <button type="button" className="btn-secondary" onClick={() => scrollTo('features')}>
-                {t.hero.secondary}
-              </button>
-            </div>
+          <p className="hero-sub">{t.hero.subtitle}</p>
+
+          <div className="hero-actions">
+            <button
+              type="button"
+              className="btn-primary hero-cta"
+              onClick={() => scrollTo('pricing')}
+            >
+              {t.hero.cta}
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path
+                  d={ctaArrow}
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <button type="button" className="btn-secondary" onClick={() => scrollTo('features')}>
+              {t.hero.secondary}
+            </button>
           </div>
+        </div>
 
-          {/* Right: card mockup — animated via CSS hero-card-in keyframe */}
-          <div className="hero-visual">
-            <div className="hero-card-wrap">
-              <div className="hero-card">
-                <div className="hero-card-header">
-                  <span className="hero-card-merchant">{t.hero.cardMerchant}</span>
-                  <div className="hero-card-tier">★ {t.tiers.items[2].name}</div>
-                </div>
+        {/* Dark product mockup below CTAs */}
+        <div className="hero-mockup">
+          <div className="hero-card">
+            <div className="hero-card-top">
+              <div className="hero-card-merchant">{t.hero.cardMerchant}</div>
+              <div className="hero-card-tier">★ {t.tiers.items[2].name}</div>
+            </div>
+
+            <div className="hero-card-pts-row">
+              <div>
                 <div className="hero-card-pts">12,400</div>
                 <div className="hero-card-pts-label">{t.hero.globalPoints}</div>
-                <div className="hero-card-meta">
-                  <span>2,600 {t.hero.cardToTier}</span>
-                  <span>48%</span>
-                </div>
-                <div className="hero-card-progress-bar">
-                  {/* Animated via CSS progress-grow keyframe */}
-                  <div className="hero-card-progress-fill" />
-                </div>
               </div>
-
-              {/* Floating mini-cards — animated via CSS float-fade-in + float-up keyframes */}
-              <div className="hero-float-row">
-                <div className="hero-float-card hero-float-earn">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <div className="hero-card-badges">
+                <div className="hero-badge hero-badge-earn">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                     <path
-                      d="M7 1v12M1 7h12"
+                      d="M6 1v10M1 6h10"
                       stroke="currentColor"
                       strokeWidth="1.5"
                       strokeLinecap="round"
@@ -79,10 +74,10 @@ export function Hero({ t, isRtl }: HeroProps) {
                   </svg>
                   {t.hero.floatEarned}
                 </div>
-                <div className="hero-float-card hero-float-redeem">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <div className="hero-badge hero-badge-redeem">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                     <path
-                      d={redeemArrow}
+                      d="M10 6H2M6 2l-4 4 4 4"
                       stroke="currentColor"
                       strokeWidth="1.5"
                       strokeLinecap="round"
@@ -91,6 +86,16 @@ export function Hero({ t, isRtl }: HeroProps) {
                   </svg>
                   {t.hero.floatRedeemed}
                 </div>
+              </div>
+            </div>
+
+            <div className="hero-card-progress">
+              <div className="hero-card-progress-meta">
+                <span>{t.hero.cardToTier}</span>
+                <span>48%</span>
+              </div>
+              <div className="hero-card-bar">
+                <div className="hero-card-fill" />
               </div>
             </div>
           </div>
