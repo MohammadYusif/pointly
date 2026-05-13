@@ -29,9 +29,8 @@ export class MerchantGiftPointsUseCase {
 
   async execute(request: MerchantGiftPointsRequest): Promise<MerchantGiftPointsResponse> {
     // Idempotency check
-    const cached = await this.idempotencyService.getResult<MerchantGiftPointsResponse>(
-      request.idempotencyKey,
-    );
+    const scopedKey = `${request.merchantId}:${request.idempotencyKey}`;
+    const cached = await this.idempotencyService.getResult<MerchantGiftPointsResponse>(scopedKey);
     if (cached) return cached;
 
     if (request.points <= 0) {
@@ -80,7 +79,7 @@ export class MerchantGiftPointsUseCase {
       pointsGifted: request.points,
     };
 
-    await this.idempotencyService.storeResult(request.idempotencyKey, result, 86400);
+    await this.idempotencyService.storeResult(scopedKey, result, 86400);
 
     return result;
   }

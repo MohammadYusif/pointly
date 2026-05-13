@@ -73,9 +73,8 @@ export class RedeemPointsUseCase {
 
   async execute(request: RedeemPointsRequest): Promise<RedeemPointsResponse> {
     // 1. Check idempotency
-    const existingResult = await this.idempotencyService.getResult<RedeemPointsResponse>(
-      request.idempotencyKey,
-    );
+    const scopedKey = `${request.merchantId}:${request.idempotencyKey}`;
+    const existingResult = await this.idempotencyService.getResult<RedeemPointsResponse>(scopedKey);
     if (existingResult) {
       return existingResult;
     }
@@ -150,11 +149,7 @@ export class RedeemPointsUseCase {
       message: `Redeemed ${request.pointsToRedeem} points for ${sarValue.toFixed(2)} SAR`,
     };
 
-    await this.idempotencyService.storeResult(
-      request.idempotencyKey,
-      response,
-      IDEMPOTENCY_TTL_SECONDS,
-    );
+    await this.idempotencyService.storeResult(scopedKey, response, IDEMPOTENCY_TTL_SECONDS);
 
     if (this.webhookConfigRepository && this.outgoingWebhookService) {
       const webhookConfigRepo = this.webhookConfigRepository;

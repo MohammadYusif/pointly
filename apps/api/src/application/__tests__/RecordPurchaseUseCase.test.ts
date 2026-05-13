@@ -138,7 +138,7 @@ describe('RecordPurchaseUseCase', () => {
       // Verify atomic write was called once for all items
       expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
       expect(mockIdempotencyService.storeResult).toHaveBeenCalledWith(
-        request.idempotencyKey,
+        `${request.merchantId}:${request.idempotencyKey}`,
         result,
         3600,
       );

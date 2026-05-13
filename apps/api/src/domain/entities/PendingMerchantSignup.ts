@@ -9,7 +9,7 @@ export interface PendingMerchantSignupProps {
   email: string;
   phone: string; // E.164
   contactName: string;
-  hashedPassword: string;
+  tempPassword: string;
   plan: PlanType;
   paymentId?: string | undefined;
   status: PendingSignupStatus;
@@ -25,7 +25,7 @@ export class PendingMerchantSignup {
     email: string;
     phone: string;
     contactName: string;
-    hashedPassword: string;
+    tempPassword: string;
     plan: PlanType;
   }): PendingMerchantSignup {
     const now = new Date();
@@ -35,7 +35,7 @@ export class PendingMerchantSignup {
       email: params.email,
       phone: params.phone,
       contactName: params.contactName,
-      hashedPassword: params.hashedPassword,
+      tempPassword: params.tempPassword,
       plan: params.plan,
       status: 'PENDING_PAYMENT',
       ttl: Math.floor(now.getTime() / 1000) + 86400, // 24 hours
@@ -67,8 +67,8 @@ export class PendingMerchantSignup {
     return this.props.contactName;
   }
 
-  getHashedPassword(): string {
-    return this.props.hashedPassword;
+  getTempPassword(): string {
+    return this.props.tempPassword;
   }
 
   getPlan(): PlanType {

@@ -54,7 +54,7 @@ export class InitiateMerchantSignupUseCase {
       email: request.email,
       phone: request.phone,
       contactName: request.contactName,
-      hashedPassword: tempPassword, // Stored temporarily; used as Cognito temp password
+      tempPassword,
       plan: request.plan,
     });
 

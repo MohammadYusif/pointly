@@ -128,13 +128,13 @@ resource "aws_cloudwatch_metric_alarm" "lambda_throttles" {
 
 resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
   alarm_name          = "Pointly-Lambda-${var.lambda_function_name}-Duration"
-  alarm_description   = "Lambda function ${var.lambda_function_name} duration is high"
+  alarm_description   = "Lambda function ${var.lambda_function_name} p99 duration is high"
   namespace           = "AWS/Lambda"
   metric_name         = "Duration"
-  statistic           = "Average"
+  extended_statistic  = "p99"
   period              = 300
   evaluation_periods  = 2
-  threshold           = 10000 # 10 seconds
+  threshold           = local.is_prod ? 3000 : 5000
   comparison_operator = "GreaterThanThreshold"
   treat_missing_data  = "notBreaching"
 

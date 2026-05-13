@@ -77,7 +77,7 @@ export class CompleteMerchantSignupUseCase {
     if (this.cognitoMerchantService) {
       await this.cognitoMerchantService.createUser({
         email: signup.getEmail(),
-        temporaryPassword: signup.getHashedPassword(), // This is the temp password
+        temporaryPassword: signup.getTempPassword(),
         merchantId: merchant.getMerchantId(),
         businessName: signup.getBusinessName(),
         tier: signup.getPlan(),

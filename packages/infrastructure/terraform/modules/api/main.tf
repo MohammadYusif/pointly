@@ -180,6 +180,7 @@ resource "aws_lambda_function" "api" {
       MERCHANT_USER_POOL_ID               = var.merchant_user_pool_id
       MERCHANT_USER_POOL_CLIENT_ID        = var.merchant_user_pool_client_id
       CUSTOMER_USER_POOL_ID               = var.customer_user_pool_id
+      CUSTOMER_USER_POOL_CLIENT_ID        = var.customer_user_pool_client_id
       MOYASAR_SECRET_KEY                  = var.moyasar_secret_key
       MOYASAR_WEBHOOK_SECRET              = var.moyasar_webhook_secret
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"

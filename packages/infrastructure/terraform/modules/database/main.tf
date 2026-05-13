@@ -94,12 +94,6 @@ resource "aws_dynamodb_table" "user_ledger" {
   }
 
   global_secondary_index {
-    name            = "PendingConsentsIndex"
-    hash_key        = "GSI3PK"
-    projection_type = "ALL"
-  }
-
-  global_secondary_index {
     name            = "StatusIndex"
     hash_key        = "GSI3PK"
     range_key       = "GSI3SK"
@@ -142,16 +136,6 @@ resource "aws_dynamodb_table" "transaction_audit" {
 
   attribute {
     name = "SK"
-    type = "S"
-  }
-
-  attribute {
-    name = "merchantId"
-    type = "S"
-  }
-
-  attribute {
-    name = "createdAt"
     type = "S"
   }
 
@@ -203,13 +187,6 @@ resource "aws_dynamodb_table" "transaction_audit" {
   attribute {
     name = "GSI5SK"
     type = "S"
-  }
-
-  global_secondary_index {
-    name            = "DateIndex"
-    hash_key        = "merchantId"
-    range_key       = "createdAt"
-    projection_type = "ALL"
   }
 
   global_secondary_index {
@@ -371,6 +348,11 @@ resource "aws_dynamodb_table" "sms_quota" {
     type = "S"
   }
 
+  ttl {
+    attribute_name = "ttl"
+    enabled        = true
+  }
+
   server_side_encryption {
     enabled = true
   }
@@ -399,28 +381,6 @@ resource "aws_dynamodb_table" "wallet_passes" {
   attribute {
     name = "SK"
     type = "S"
-  }
-
-  attribute {
-    name = "passSerial"
-    type = "S"
-  }
-
-  attribute {
-    name = "customerId"
-    type = "S"
-  }
-
-  global_secondary_index {
-    name            = "SerialIndex"
-    hash_key        = "passSerial"
-    projection_type = "ALL"
-  }
-
-  global_secondary_index {
-    name            = "CustomerIndex"
-    hash_key        = "customerId"
-    projection_type = "ALL"
   }
 
   server_side_encryption {

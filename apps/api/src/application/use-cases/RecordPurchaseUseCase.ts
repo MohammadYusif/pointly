@@ -107,9 +107,9 @@ export class RecordPurchaseUseCase {
 
   async execute(request: RecordPurchaseRequest): Promise<RecordPurchaseResponse> {
     // 1. Check idempotency - prevent duplicate transactions
-    const existingResult = await this.idempotencyService.getResult<RecordPurchaseResponse>(
-      request.idempotencyKey,
-    );
+    const scopedKey = `${request.merchantId}:${request.idempotencyKey}`;
+    const existingResult =
+      await this.idempotencyService.getResult<RecordPurchaseResponse>(scopedKey);
     if (existingResult) {
       return existingResult;
     }
@@ -267,11 +267,7 @@ export class RecordPurchaseUseCase {
       referralBonusAwarded,
     });
 
-    await this.idempotencyService.storeResult(
-      request.idempotencyKey,
-      response,
-      IDEMPOTENCY_TTL_SECONDS,
-    );
+    await this.idempotencyService.storeResult(scopedKey, response, IDEMPOTENCY_TTL_SECONDS);
 
     // 11. Fire-and-forget SMS notification
     if (this.smsPublisher) {

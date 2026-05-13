@@ -47,40 +47,39 @@ export class ProcessMonthlyTierResetUseCase {
       // Get all customers (in production, this would be paginated)
       const customers = await this.getAllCustomers();
 
-      for (const customer of customers) {
-        try {
-          result.totalCustomersProcessed++;
+      const BATCH_SIZE = 25;
+      for (let i = 0; i < customers.length; i += BATCH_SIZE) {
+        const batch = customers.slice(i, i + BATCH_SIZE);
+        await Promise.allSettled(
+          batch.map(async (customer) => {
+            try {
+              result.totalCustomersProcessed++;
 
-          const oldTier = customer.getCurrentTier();
+              const oldTier = customer.getCurrentTier();
+              const newTier = customer.updateTierFromProgress();
 
-          // Update tier based on last month's progress
-          const newTier = customer.updateTierFromProgress();
+              if (newTier.isHigherThan(oldTier)) {
+                result.tierChanges.upgrades++;
+              } else if (newTier.isLowerThan(oldTier)) {
+                result.tierChanges.downgrades++;
+              } else {
+                result.tierChanges.maintained++;
+              }
 
-          // Track changes
-          if (newTier.isHigherThan(oldTier)) {
-            result.tierChanges.upgrades++;
-          } else if (newTier.isLowerThan(oldTier)) {
-            result.tierChanges.downgrades++;
-          } else {
-            result.tierChanges.maintained++;
-          }
+              customer.resetMonthlyProgress();
+              await this.customerRepository.save(customer);
 
-          // Reset monthly progress for new month
-          customer.resetMonthlyProgress();
-
-          // Single-entity write: no transaction semantics needed here.
-          await this.customerRepository.save(customer);
-
-          // Count tier distribution
-          const tierKey = newTier.getLevel().toLowerCase();
-          result.tierDistribution[tierKey] = (result.tierDistribution[tierKey] || 0) + 1;
-        } catch (error) {
-          result.errors.push(
-            `Error processing customer ${customer.getCustomerId()}: ${
-              error instanceof Error ? error.message : String(error)
-            }`,
-          );
-        }
+              const tierKey = newTier.getLevel().toLowerCase();
+              result.tierDistribution[tierKey] = (result.tierDistribution[tierKey] || 0) + 1;
+            } catch (error) {
+              result.errors.push(
+                `Error processing customer ${customer.getCustomerId()}: ${
+                  error instanceof Error ? error.message : String(error)
+                }`,
+              );
+            }
+          }),
+        );
       }
     } catch (error) {
       result.errors.push(

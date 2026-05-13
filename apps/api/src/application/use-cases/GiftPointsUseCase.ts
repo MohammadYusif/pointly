@@ -29,9 +29,8 @@ export class GiftPointsUseCase {
 
   async execute(request: GiftPointsRequest): Promise<GiftPointsResponse> {
     // Idempotency check
-    const cached = await this.idempotencyService.getResult<GiftPointsResponse>(
-      request.idempotencyKey,
-    );
+    const scopedKey = `${request.senderId}:${request.idempotencyKey}`;
+    const cached = await this.idempotencyService.getResult<GiftPointsResponse>(scopedKey);
     if (cached) return cached;
 
     if (request.points <= 0) {
@@ -110,7 +109,7 @@ export class GiftPointsUseCase {
       pointsGifted: request.points,
     };
 
-    await this.idempotencyService.storeResult(request.idempotencyKey, result, 86400);
+    await this.idempotencyService.storeResult(scopedKey, result, 86400);
 
     return result;
   }

@@ -50,15 +50,21 @@ export class ProcessPointsDecayUseCase {
     try {
       const customers = await this.getAllCustomers();
 
-      for (const customer of customers) {
-        try {
-          result.totalCustomersProcessed++;
-          await this.processOneCustomer(customer, ksaHoursOk, result);
-        } catch (error) {
-          result.errors.push(
-            `Error processing customer ${customer.getCustomerId()}: ${error instanceof Error ? error.message : String(error)}`,
-          );
-        }
+      const BATCH_SIZE = 25;
+      for (let i = 0; i < customers.length; i += BATCH_SIZE) {
+        const batch = customers.slice(i, i + BATCH_SIZE);
+        await Promise.allSettled(
+          batch.map(async (customer) => {
+            try {
+              result.totalCustomersProcessed++;
+              await this.processOneCustomer(customer, ksaHoursOk, result);
+            } catch (error) {
+              result.errors.push(
+                `Error processing customer ${customer.getCustomerId()}: ${error instanceof Error ? error.message : String(error)}`,
+              );
+            }
+          }),
+        );
       }
     } catch (error) {
       result.errors.push(

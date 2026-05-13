@@ -45,7 +45,7 @@ export async function createServer(): Promise<FastifyInstance> {
 
   // Register security plugins
   await server.register(helmet, {
-    contentSecurityPolicy: env.NODE_ENV === 'production',
+    contentSecurityPolicy: true,
   });
 
   await server.register(cors, {
@@ -57,6 +57,7 @@ export async function createServer(): Promise<FastifyInstance> {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   });
 
+  // Per-Lambda-instance limit (in-memory store). WAF enforces the global limit (2K req/5min per IP).
   await server.register(rateLimit, {
     max: 100,
     timeWindow: '1 minute',
