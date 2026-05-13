@@ -65,6 +65,7 @@ export interface CustomerJSON {
   claimedMilestones: string[];
   referralCode: string;
   referredBy?: string;
+  smsMarketingOptIn: boolean;
   enrollments: EnrollmentJSON[];
   createdAt: string;
   updatedAt: string;
@@ -105,6 +106,9 @@ export interface CustomerProps {
   referralCode: string; // Unique code this customer can share (e.g. "A1B2C3D4")
   referredBy?: string; // Referral code used when this customer registered (referrer's code)
 
+  // CITC / PDPL compliance — explicit opt-in required for marketing SMS
+  smsMarketingOptIn: boolean;
+
   enrollments: Map<string, CustomerEnrollment>;
   createdAt: Date;
   updatedAt: Date;
@@ -143,6 +147,8 @@ export class Customer {
       // Referral program
       referralCode: ulid().slice(-8).toUpperCase(),
 
+      smsMarketingOptIn: false,
+
       enrollments: new Map(),
       createdAt: now,
       updatedAt: now,
@@ -163,6 +169,7 @@ export class Customer {
     phone: PhoneNumber,
     name?: string,
     dateOfBirth?: string,
+    smsMarketingOptIn = false,
   ): Customer {
     const now = new Date();
     const props: CustomerProps = {
@@ -181,6 +188,7 @@ export class Customer {
       lastStreakResetAt: now,
       claimedMilestones: [],
       referralCode: ulid().slice(-8).toUpperCase(),
+      smsMarketingOptIn,
       enrollments: new Map(),
       createdAt: now,
       updatedAt: now,
@@ -860,6 +868,15 @@ export class Customer {
     this.props.updatedAt = new Date();
   }
 
+  getSmsMarketingOptIn(): boolean {
+    return this.props.smsMarketingOptIn;
+  }
+
+  setSmsMarketingOptIn(value: boolean): void {
+    this.props.smsMarketingOptIn = value;
+    this.props.updatedAt = new Date();
+  }
+
   /**
    * Check all provided milestone configs against globalLifetimePoints and claim any
    * that have been crossed but not yet claimed. Returns the list of newly claimed milestones.
@@ -1037,6 +1054,8 @@ export class Customer {
       // Referral program
       referralCode: this.props.referralCode,
       ...(this.props.referredBy && { referredBy: this.props.referredBy }),
+
+      smsMarketingOptIn: this.props.smsMarketingOptIn,
 
       enrollments,
       createdAt: this.props.createdAt.toISOString(),

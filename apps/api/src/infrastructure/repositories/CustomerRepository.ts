@@ -42,6 +42,7 @@ interface CustomerItem {
   claimedMilestones?: string[];
   referralCode?: string;
   referredBy?: string;
+  smsMarketingOptIn?: boolean;
   enrollments: EnrollmentItem[];
   createdAt: string;
   updatedAt: string;
@@ -336,6 +337,8 @@ export class CustomerRepository
       claimedMilestones: customerItem.claimedMilestones || [],
       // Migration-safe: generate a referral code for pre-existing records that lack one
       referralCode: customerItem.referralCode || ulid().slice(-8).toUpperCase(),
+      // Default false for existing records created before this field was added
+      smsMarketingOptIn: customerItem.smsMarketingOptIn ?? false,
       enrollments,
       createdAt,
       updatedAt: new Date(customerItem.updatedAt),
@@ -417,6 +420,7 @@ export class CustomerRepository
       claimedMilestones: json.claimedMilestones,
       referralCode: json.referralCode,
       ...(json.referredBy && { referredBy: json.referredBy }),
+      smsMarketingOptIn: json.smsMarketingOptIn,
       enrollments,
       createdAt: json.createdAt,
       updatedAt: json.updatedAt,

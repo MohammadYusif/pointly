@@ -24,6 +24,7 @@ const setupSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
     .optional(),
+  smsMarketingOptIn: z.boolean().optional(),
 });
 
 export async function customerSelfRoutes(server: FastifyInstance): Promise<void> {
@@ -200,6 +201,7 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
         cognitoPhone,
         name: body.name,
         dateOfBirth: body.dateOfBirth,
+        smsMarketingOptIn: body.smsMarketingOptIn,
       });
 
       return reply

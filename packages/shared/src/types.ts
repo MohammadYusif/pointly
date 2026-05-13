@@ -148,6 +148,7 @@ export interface CustomerResponse {
   monthsOfInactivity: number;
 
   referralCode?: string;
+  smsMarketingOptIn?: boolean;
 
   enrollments: CustomerEnrollment[];
   createdAt: string;

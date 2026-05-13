@@ -6,6 +6,7 @@ export interface SetupCustomerAccountRequest {
   cognitoPhone: string;
   name?: string | undefined;
   dateOfBirth?: string | undefined;
+  smsMarketingOptIn?: boolean | undefined;
 }
 
 export interface SetupCustomerAccountResponse {
@@ -36,6 +37,7 @@ export class SetupCustomerAccountUseCase {
       phone,
       request.name,
       request.dateOfBirth,
+      request.smsMarketingOptIn ?? false,
     );
     await this.customerRepository.save(customer);
 
