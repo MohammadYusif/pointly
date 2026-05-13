@@ -6,7 +6,7 @@
   }
 
   .cta-box {
-    background: var(--navy);
+    background: linear-gradient(135deg, #1e2d4a 0%, #0f172a 100%);
     border-radius: 28px;
     padding: 72px 48px;
     text-align: center;

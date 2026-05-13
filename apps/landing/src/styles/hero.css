@@ -95,10 +95,12 @@
   .hero-card {
     width: 100%;
     max-width: 480px;
-    background: var(--navy);
+    background: linear-gradient(145deg, #0a3040 0%, #0c2236 55%, #0f172a 100%);
     border-radius: var(--radius-2xl);
+    border: 1px solid rgba(8, 176, 162, 0.22);
     padding: 28px;
-    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25), 0 4px 16px rgba(15, 23, 42, 0.15);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04) inset, 0 32px 80px rgba(8, 176, 162, 0.18), 0
+      8px 24px rgba(0, 0, 0, 0.3);
     position: relative;
     overflow: hidden;
     text-align: start;
@@ -108,16 +110,28 @@
     text-align: start;
   }
 
+  /* Teal glow orb in top-right */
   .hero-card::before {
     content: "";
     position: absolute;
-    top: 0;
+    top: -48px;
+    right: -48px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(8, 176, 162, 0.22) 0%, transparent 65%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* Shimmer accent line at bottom */
+  .hero-card::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
     left: 0;
     right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--teal), #0891b2, var(--teal));
-    background-size: 200% 100%;
-    animation: shimmer 3s linear infinite;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(8, 176, 162, 0.5), transparent);
   }
 
   .hero-card-top {
@@ -130,18 +144,18 @@
   .hero-card-merchant {
     font-size: 0.75rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.5);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
   }
 
   .hero-card-tier {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: rgba(99, 102, 241, 0.2);
-    border: 1px solid rgba(99, 102, 241, 0.35);
-    color: #a5b4fc;
+    background: linear-gradient(135deg, rgba(8, 176, 162, 0.25), rgba(8, 145, 178, 0.25));
+    border: 1px solid rgba(8, 176, 162, 0.4);
+    color: #5eead4;
     font-size: 0.72rem;
     font-weight: 700;
     padding: 4px 12px;
@@ -159,7 +173,10 @@
   .hero-card-pts {
     font-size: 3rem;
     font-weight: 800;
-    color: #fff;
+    background: linear-gradient(135deg, #5eead4 0%, #fff 60%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     letter-spacing: -0.04em;
     line-height: 1;
     margin-bottom: 4px;

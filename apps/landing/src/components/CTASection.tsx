@@ -1,7 +1,7 @@
 'use client';
 
 import type { TranslationKeys } from '@/i18n/translations';
-import { scaleIn, viewportOnce } from '@/lib/motion';
+import { fadeUp, viewportOnce } from '@/lib/motion';
 import { motion } from 'framer-motion';
 
 interface CTASectionProps {
@@ -17,7 +17,7 @@ export function CTASection({ t, isRtl }: CTASectionProps) {
       <div className="container">
         <motion.div
           className="cta-box"
-          variants={scaleIn}
+          variants={fadeUp}
           initial="hidden"
           whileInView="visible"
           viewport={viewportOnce}

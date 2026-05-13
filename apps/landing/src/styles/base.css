@@ -29,7 +29,6 @@
     background-size: 28px 28px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden;
   }
 
   @media (max-width: 640px) {
