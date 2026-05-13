@@ -329,15 +329,9 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
       return reply.status(400).send({ success: false, error: 'Customer ID not found in token' });
     }
 
-    try {
-      const { deleteCustomerAccountUseCase } = getContainer();
-      await deleteCustomerAccountUseCase.execute({ customerId, cognitoPhone });
-      request.log.info({ customerId }, 'Account permanently deleted');
-      return reply.send({ success: true });
-    } catch (err) {
-      request.log.error({ err, customerId }, 'DELETE /v1/me failed');
-      const message = err instanceof Error ? err.message : 'Failed to delete account';
-      return reply.status(500).send({ success: false, error: message });
-    }
+    const { deleteCustomerAccountUseCase } = getContainer();
+    await deleteCustomerAccountUseCase.execute({ customerId, cognitoPhone });
+    request.log.info({ customerId }, 'Account permanently deleted');
+    return reply.send({ success: true });
   });
 }

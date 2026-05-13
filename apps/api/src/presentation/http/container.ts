@@ -240,7 +240,7 @@ export function createContainer(): Container {
   const setupCustomerAccountUseCase = new SetupCustomerAccountUseCase(customerRepository);
 
   const cognitoUserService = env.CUSTOMER_USER_POOL_ID
-    ? new CognitoUserService(env.CUSTOMER_USER_POOL_ID, env.AWS_REGION ?? 'me-south-1')
+    ? new CognitoUserService(env.CUSTOMER_USER_POOL_ID, env.AWS_REGION)
     : null;
   const deleteCustomerAccountUseCase = new DeleteCustomerAccountUseCase(
     customerRepository,

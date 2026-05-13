@@ -29,10 +29,18 @@ export async function createServer(): Promise<FastifyInstance> {
         level: env.NODE_ENV === 'production' ? 'info' : ('debug' as const),
       };
 
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
   const server = Fastify({
     logger: loggerOptions,
-    requestIdHeader: 'x-request-id',
     requestIdLogLabel: 'requestId',
+    genReqId: (req) => {
+      const incoming = req.headers['x-request-id'];
+      if (typeof incoming === 'string' && UUID_RE.test(incoming)) {
+        return incoming;
+      }
+      return crypto.randomUUID();
+    },
   });
 
   // Register security plugins

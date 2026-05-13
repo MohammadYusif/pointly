@@ -10,8 +10,33 @@ function enforceMerchantAccess(request: FastifyRequest<{ Params: { id: string } 
   }
 }
 
+const BLOCKED_HOSTNAME_PATTERNS = [
+  /^localhost$/i,
+  /^127\./,
+  /^10\./,
+  /^172\.(1[6-9]|2\d|3[01])\./,
+  /^192\.168\./,
+  /^169\.254\./,
+  /^0\./,
+  /^\[::1\]$/,
+];
+
 const registerWebhookSchema = z.object({
-  url: z.string().url(),
+  url: z
+    .string()
+    .url()
+    .refine(
+      (url) => {
+        try {
+          const parsed = new URL(url);
+          if (parsed.protocol !== 'https:') return false;
+          return !BLOCKED_HOSTNAME_PATTERNS.some((p) => p.test(parsed.hostname));
+        } catch {
+          return false;
+        }
+      },
+      { message: 'Webhook URL must use HTTPS and point to a public address' },
+    ),
   secretKey: z.string().min(16),
   events: z.array(z.enum(['REDEMPTION'])).min(1),
 });

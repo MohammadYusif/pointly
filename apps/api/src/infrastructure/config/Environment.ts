@@ -29,10 +29,6 @@ const envSchema = z.object({
   API_PORT: z.string().default('3000').transform(Number),
   API_HOST: z.string().default('0.0.0.0'),
 
-  // JWT Configuration
-  JWT_SECRET: z.string().optional(),
-  JWT_EXPIRES_IN: z.string().default('24h'),
-
   // Cognito
   MERCHANT_USER_POOL_ID: z.string().optional(),
   MERCHANT_USER_POOL_CLIENT_ID: z.string().optional(),

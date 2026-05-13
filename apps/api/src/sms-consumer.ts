@@ -48,7 +48,7 @@ export const handler = Sentry.wrapHandler(async (event: SQSEvent): Promise<SQSBa
   const senderId = process.env['SMS_SENDER_ID'] ?? 'POINTLY';
   const failures: SQSBatchResponse['batchItemFailures'] = [];
 
-  for (const record of event.Records) {
+  const tasks = event.Records.map(async (record) => {
     let message: SmsMessage;
 
     try {
@@ -58,12 +58,10 @@ export const handler = Sentry.wrapHandler(async (event: SQSEvent): Promise<SQSBa
         body: record.body,
         messageId: record.messageId,
       });
-      // Unparseable messages are not retryable — skip so they eventually DLQ via maxReceiveCount
-      continue;
+      return;
     }
 
     if (!apiKey) {
-      // No provider configured — log for observability (dev/staging without Taqnyat)
       logger.info('sms_dispatch_skipped', {
         phone: message.phone,
         type: message.type,
@@ -71,7 +69,7 @@ export const handler = Sentry.wrapHandler(async (event: SQSEvent): Promise<SQSBa
         messageId: record.messageId,
         reason: 'SMS_PROVIDER_API_KEY not set',
       });
-      continue;
+      return;
     }
 
     try {
@@ -91,7 +89,9 @@ export const handler = Sentry.wrapHandler(async (event: SQSEvent): Promise<SQSBa
       });
       failures.push({ itemIdentifier: record.messageId });
     }
-  }
+  });
+
+  await Promise.allSettled(tasks);
 
   return { batchItemFailures: failures };
 });

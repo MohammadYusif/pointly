@@ -39,7 +39,7 @@ type RedeemPointsBody = z.infer<typeof redeemPointsSchema>;
 const recordPurchaseSchema = z.object({
   merchantId: z.string().min(1),
   customerId: z.string().min(1),
-  amount: z.number().positive(),
+  amount: z.number().positive().max(100_000),
   idempotencyKey: z.string().min(1),
   locationId: z.string().optional(),
   metadata: transactionMetadataSchema,

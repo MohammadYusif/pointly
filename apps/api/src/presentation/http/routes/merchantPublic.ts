@@ -21,13 +21,32 @@ const createMerchantSchema = z.object({
 
 type CreateMerchantBody = z.infer<typeof createMerchantSchema>;
 
+const ALLOWED_CALLBACK_ORIGINS = [
+  'https://pointly.sa',
+  'https://merchant.pointly.sa',
+  'https://app.pointly.sa',
+];
+
 const initiateSignupSchema = z.object({
   businessName: z.string().min(2).max(100),
   contactName: z.string().min(1).max(100),
   email: z.string().email(),
   phone: z.string().min(1),
   plan: z.enum(['BASIC', 'PROFESSIONAL', 'ENTERPRISE']),
-  callbackUrl: z.string().url(),
+  callbackUrl: z
+    .string()
+    .url()
+    .refine(
+      (url) => {
+        try {
+          const parsed = new URL(url);
+          return ALLOWED_CALLBACK_ORIGINS.some((origin) => parsed.origin === origin);
+        } catch {
+          return false;
+        }
+      },
+      { message: 'callbackUrl must be a valid Pointly domain' },
+    ),
 });
 
 type InitiateSignupBody = z.infer<typeof initiateSignupSchema>;

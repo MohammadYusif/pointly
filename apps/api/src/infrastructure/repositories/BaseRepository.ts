@@ -57,9 +57,23 @@ export abstract class BaseDynamoDBRepository<T> {
     };
 
     if (options?.nextToken) {
-      queryInput.ExclusiveStartKey = JSON.parse(
-        Buffer.from(options.nextToken, 'base64').toString(),
-      );
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(Buffer.from(options.nextToken, 'base64').toString());
+      } catch {
+        throw new Error('Invalid pagination token');
+      }
+      if (
+        typeof parsed !== 'object' ||
+        parsed === null ||
+        Array.isArray(parsed) ||
+        !Object.keys(parsed as Record<string, unknown>).every(
+          (k) => typeof (parsed as Record<string, unknown>)[k] === 'string',
+        )
+      ) {
+        throw new Error('Invalid pagination token');
+      }
+      queryInput.ExclusiveStartKey = parsed as Record<string, string>;
     }
 
     const result = await this.client.send(new QueryCommand(queryInput));

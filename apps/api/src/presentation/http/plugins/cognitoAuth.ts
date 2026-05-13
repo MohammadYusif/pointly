@@ -51,12 +51,17 @@ export const cognitoAuthPlugin = fp(async function cognitoAuthPlugin(
     return key.getPublicKey();
   }) as Secret;
 
+  const verifyOptions: { allowedIss: string; allowedAud?: string } = {
+    allowedIss: issuer,
+  };
+  if (env.MERCHANT_USER_POOL_CLIENT_ID) {
+    verifyOptions.allowedAud = env.MERCHANT_USER_POOL_CLIENT_ID;
+  }
+
   await server.register(fastifyJwt, {
     secret,
     decode: { complete: true },
-    verify: {
-      allowedIss: issuer,
-    },
+    verify: verifyOptions,
   });
 
   server.decorateRequest('merchantId', '');

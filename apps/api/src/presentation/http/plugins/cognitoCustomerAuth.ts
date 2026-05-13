@@ -56,12 +56,17 @@ export const cognitoCustomerAuthPlugin = fp(async function cognitoCustomerAuthPl
     return key.getPublicKey();
   }) as Secret;
 
+  const verifyOptions: { allowedIss: string; allowedAud?: string } = {
+    allowedIss: issuer,
+  };
+  if (env.CUSTOMER_USER_POOL_CLIENT_ID) {
+    verifyOptions.allowedAud = env.CUSTOMER_USER_POOL_CLIENT_ID;
+  }
+
   await server.register(fastifyJwt, {
     secret,
     decode: { complete: true },
-    verify: {
-      allowedIss: issuer,
-    },
+    verify: verifyOptions,
     namespace: 'customer',
     // Explicitly name the request decorator so the decoded token lands on
     // request.customerUser (not the default request.user which the merchant
