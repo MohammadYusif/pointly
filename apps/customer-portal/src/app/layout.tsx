@@ -9,7 +9,10 @@ export const metadata: Metadata = {
   title: 'Pointly - بوينتلي',
   applicationName: 'Pointly',
   description: 'Your loyalty points, everywhere. كسب نقاطك وأنت تتسوق في كل مكان.',
-  themeColor: '#0d9488',
+  themeColor: '#08B0A2',
+  icons: {
+    apple: '/apple-touch-icon.png',
+  },
   openGraph: {
     type: 'website',
     siteName: 'Pointly',

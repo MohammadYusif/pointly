@@ -37,6 +37,9 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Pointly' }],
   creator: 'Pointly',
+  icons: {
+    apple: '/apple-touch-icon.png',
+  },
   openGraph: {
     type: 'website',
     locale: 'ar_SA',
