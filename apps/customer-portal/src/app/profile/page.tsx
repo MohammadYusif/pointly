@@ -145,6 +145,54 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
+        {/* Notifications */}
+        <Card className="stagger-item">
+          <CardHeader>
+            <CardTitle className="text-base">{t('profile.notificationsTitle')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <label className="flex items-start justify-between gap-4 cursor-pointer">
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  {t('profile.smsNotificationsLabel')}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {t('profile.smsNotificationsDesc')}
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                role="switch"
+                aria-checked={customer?.smsMarketingOptIn ?? false}
+                className="sr-only"
+                checked={customer?.smsMarketingOptIn ?? false}
+                disabled={updateCustomer.isPending}
+                onChange={(e) => {
+                  updateCustomer.mutate(
+                    { smsMarketingOptIn: e.target.checked },
+                    {
+                      onSuccess: () => toast.success(t('profile.smsNotificationsUpdated')),
+                      onError: () => toast.error(t('errors.serverError')),
+                    },
+                  );
+                }}
+              />
+              <span
+                aria-hidden="true"
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  customer?.smsMarketingOptIn ? 'bg-teal-500' : 'bg-gray-200'
+                } ${updateCustomer.isPending ? 'opacity-50' : ''}`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition duration-200 ease-in-out ${
+                    customer?.smsMarketingOptIn ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </span>
+            </label>
+          </CardContent>
+        </Card>
+
         <Button variant="destructive" className="w-full stagger-item" onClick={handleSignOut}>
           <LogOut className={`h-4 w-4 me-2 ${flipIcon}`} />
           {t('auth.logout')}

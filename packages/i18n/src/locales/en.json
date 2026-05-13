@@ -116,7 +116,11 @@
     "deleteConfirmTitle": "Delete your account?",
     "deleteConfirmDescription": "This will permanently delete your account, points, and all associated data. This action cannot be undone.",
     "deleteConfirmLabel": "Type DELETE to confirm",
-    "deleteConfirmButton": "Permanently Delete Account"
+    "deleteConfirmButton": "Permanently Delete Account",
+    "notificationsTitle": "Notifications",
+    "smsNotificationsLabel": "SMS Loyalty Notifications",
+    "smsNotificationsDesc": "Receive SMS updates for points earned, offers, and tier changes. You can opt out at any time.",
+    "smsNotificationsUpdated": "Notification preferences updated."
   },
   "customer": {
     "title": "Customers",
@@ -490,18 +494,18 @@
   },
   "terms": {
     "title": "Terms of Use",
-    "lastUpdated": "Last updated: March 2026",
-    "intro": "By using Pointly, you agree to the following terms.",
+    "lastUpdated": "Last updated: May 2026",
+    "intro": "By registering for or using the Pointly loyalty platform, you agree to the following terms. Please read them carefully.",
     "section1Title": "1. Loyalty Program",
-    "section1Body": "Pointly operates a loyalty rewards platform. Points are earned through purchases at participating merchants and may be redeemed according to the rules set by each merchant. Points have no cash value outside the platform.",
+    "section1Body": "Pointly operates a loyalty rewards platform. Points are earned through purchases at participating merchants and may be redeemed according to each merchant's rules. Points have no cash value and cannot be transferred, sold, or exchanged outside the platform.",
     "section2Title": "2. Account",
-    "section2Body": "You are responsible for maintaining the security of your account. Your phone number is your unique identifier. You must be 13 years or older to register.",
-    "section3Title": "3. Points & Rewards",
-    "section3Body": "Points are credited at the discretion of merchants. Pointly reserves the right to correct point balances in case of errors. Unused points may expire per the merchant's policy.",
-    "section4Title": "4. Changes",
-    "section4Body": "We may update these terms at any time. Continued use of the platform constitutes acceptance of the revised terms.",
+    "section2Body": "You are responsible for keeping your account secure. Your mobile number is your unique identifier. You must be 13 years or older to register. You may only hold one account per mobile number.",
+    "section3Title": "3. Points, Rewards & Billing",
+    "section3Body": "Points are credited at the discretion of participating merchants. Pointly reserves the right to correct balances in the event of errors. Unused points may expire per merchant or platform policy. If your business subscribes to a Pointly merchant plan, subscription fees are charged monthly. ⚠ Subscriptions auto-renew each month until cancelled. All merchant subscription prices are exclusive of 15% Value Added Tax (VAT / ضريبة القيمة المضافة) as required by ZATCA. Merchants who cancel within 3 business days of first subscribing may request a review at support@pointly.sa.",
+    "section4Title": "4. Changes to Terms",
+    "section4Body": "We may update these terms at any time. For material changes, we will provide at least 30 days' notice by email or in-app notification. Continued use of the platform after the effective date constitutes acceptance of the revised terms.",
     "section5Title": "5. Contact",
-    "section5Body": "For questions, contact support@pointly.sa."
+    "section5Body": "For questions about these terms, contact support@pointly.sa."
   },
   "campaigns": {
     "title": "Campaigns",
@@ -634,19 +638,19 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated: March 2026",
-    "intro": "Pointly is committed to protecting your personal information.",
+    "lastUpdated": "Last updated: May 2026",
+    "intro": "Pointly (operated by Pointly Technology Co.) is committed to protecting your personal data in accordance with the Saudi Personal Data Protection Law (PDPL) and its implementing regulations.",
     "section1Title": "1. Information We Collect",
-    "section1Body": "We collect your phone number, name, and date of birth at registration. We also collect transaction data such as purchases and point redemptions.",
+    "section1Body": "We collect your mobile number, name, and date of birth at registration. We also collect transaction data (purchases, point credits, and redemptions), loyalty tier history, device identifiers for push notifications, and — if you consent — SMS marketing preferences.",
     "section2Title": "2. How We Use Your Data",
-    "section2Body": "Your data is used to operate the loyalty program, credit and redeem points, and provide merchants with aggregated analytics. We do not sell your personal data.",
-    "section3Title": "3. Data Sharing",
-    "section3Body": "Your transaction history is shared with merchants you transact with. Your phone number is not disclosed to merchants beyond what is necessary for verification.",
-    "section4Title": "4. Security",
-    "section4Body": "We use industry-standard security measures including encryption and secure authentication (OTP) to protect your account.",
-    "section5Title": "5. Your Rights",
-    "section5Body": "You may request deletion of your account and personal data by contacting support@pointly.sa.",
+    "section2Body": "Your data is used to: operate the loyalty rewards program; credit, redeem, and display your points balance; send transactional SMS (e.g. points received, tier changes); send marketing SMS only if you have explicitly opted in; provide merchants with aggregated, non-identifiable analytics; and comply with legal obligations. We do not sell your personal data.",
+    "section3Title": "3. Data Sharing and Transfers",
+    "section3Body": "Your transaction history is shared only with merchants you are enrolled with. Your phone number is not disclosed to third parties beyond what is strictly necessary. Your data is processed on AWS infrastructure located in Ireland (eu-west-1). We take appropriate contractual safeguards to protect cross-border transfers as required by PDPL Article 29. No data is transferred to countries without adequate protection without your explicit consent.",
+    "section4Title": "4. Security and Breach Notification",
+    "section4Body": "We apply industry-standard security measures including TLS encryption, OTP-based authentication, and access controls. In the event of a personal data breach that poses a risk to your rights, we will notify the Saudi Data & AI Authority (SDAIA) within 72 hours of becoming aware, and will inform affected individuals without undue delay.",
+    "section5Title": "5. Your PDPL Rights",
+    "section5Body": "Under the Saudi PDPL you have the right to: access your personal data; correct inaccurate data; request deletion of your data; receive a portable copy of your data; object to processing for direct marketing at any time; and request restriction of processing while a dispute is resolved. To exercise any of these rights, contact privacy@pointly.sa. We will respond within 30 days.",
     "section6Title": "6. Contact",
-    "section6Body": "For privacy inquiries, email privacy@pointly.sa."
+    "section6Body": "For privacy inquiries or to exercise your data rights, email privacy@pointly.sa. You may also file a complaint with the Saudi Data & AI Authority (SDAIA) at sdaia.gov.sa."
   }
 }

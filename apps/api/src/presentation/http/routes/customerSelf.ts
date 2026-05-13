@@ -6,6 +6,7 @@ import { getContainer } from '../container';
 
 const updateProfileSchema = z.object({
   name: z.string().min(1).max(100).optional(),
+  smsMarketingOptIn: z.boolean().optional(),
 });
 
 const transactionsQuerySchema = z.object({
@@ -48,7 +49,10 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
   // PATCH /v1/me — Update own profile (name)
   server.patch(
     '/',
-    async (request: FastifyRequest<{ Body: { name?: string } }>, reply: FastifyReply) => {
+    async (
+      request: FastifyRequest<{ Body: { name?: string; smsMarketingOptIn?: boolean } }>,
+      reply: FastifyReply,
+    ) => {
       const { customerId } = request;
       if (!customerId) {
         throw new ValidationError('Customer ID not found in token');
@@ -59,6 +63,7 @@ export async function customerSelfRoutes(server: FastifyInstance): Promise<void>
       const customer = await updateCustomerProfileUseCase.execute({
         customerId,
         name: body.name,
+        smsMarketingOptIn: body.smsMarketingOptIn,
       });
 
       return reply.send({ success: true, data: customer });

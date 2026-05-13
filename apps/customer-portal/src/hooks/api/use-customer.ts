@@ -12,7 +12,7 @@ export function useUpdateCustomer() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { name?: string }) => updateCustomer(data),
+    mutationFn: (data: { name?: string; smsMarketingOptIn?: boolean }) => updateCustomer(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer', 'me'] });
     },

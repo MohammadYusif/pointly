@@ -4,6 +4,7 @@ import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 export interface UpdateCustomerProfileRequest {
   customerId: string;
   name?: string | undefined;
+  smsMarketingOptIn?: boolean | undefined;
 }
 
 export class UpdateCustomerProfileUseCase {
@@ -17,6 +18,10 @@ export class UpdateCustomerProfileUseCase {
 
     if (request.name) {
       customer.updateName(request.name);
+    }
+
+    if (request.smsMarketingOptIn !== undefined) {
+      customer.setSmsMarketingOptIn(request.smsMarketingOptIn);
     }
 
     await this.customerRepository.save(customer);

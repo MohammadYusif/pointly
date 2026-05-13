@@ -41,7 +41,7 @@ export function getCustomerTransactions(params?: {
   );
 }
 
-export function updateCustomer(data: { name?: string }) {
+export function updateCustomer(data: { name?: string; smsMarketingOptIn?: boolean }) {
   return fetchApi<CustomerResponse>('/v1/me', {
     method: 'PATCH',
     body: JSON.stringify(data),
