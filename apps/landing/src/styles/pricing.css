@@ -77,6 +77,13 @@
     margin-bottom: 2px;
     line-height: 1;
   }
+  .pricing-vat-note {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    margin-bottom: 12px;
+  }
+
   .pricing-price span {
     font-size: 0.88rem;
     font-weight: 500;

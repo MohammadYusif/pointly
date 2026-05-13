@@ -154,6 +154,7 @@ export const translations = {
       ],
       perMonth: 'SAR / month',
       mostPopular: 'MOST POPULAR',
+      vatNote: 'Excl. 15% VAT',
     },
     signup: {
       title: 'Create your account',
@@ -171,6 +172,10 @@ export const translations = {
       submit: 'Proceed to payment',
       loading: 'Redirecting…',
       note: 'You will be redirected to our secure payment page.',
+      autoRenewNote:
+        'This is a monthly auto-renewing subscription. You will be charged each month until you cancel.',
+      privacyNote: 'By proceeding you agree to our',
+      privacyLinkText: 'Privacy Policy',
       errorBusinessName: 'Business name must be at least 2 characters.',
       errorContactName: 'Please enter your name.',
       errorEmail: 'Please enter a valid email address.',
@@ -423,6 +428,7 @@ export const translations = {
       ],
       perMonth: 'ريال / شهر',
       mostPopular: 'الأكثر شعبية',
+      vatNote: 'لا تشمل ضريبة القيمة المضافة 15%',
     },
     signup: {
       title: 'أنشئ حسابك',
@@ -440,6 +446,9 @@ export const translations = {
       submit: 'الانتقال إلى الدفع',
       loading: 'جارٍ التوجيه…',
       note: 'ستنتقل إلى صفحة الدفع الآمنة.',
+      autoRenewNote: 'هذا اشتراك شهري يتجدد تلقائياً. سيتم الخصم من طريقة الدفع شهرياً حتى الإلغاء.',
+      privacyNote: 'بالمتابعة توافق على',
+      privacyLinkText: 'سياسة الخصوصية',
       errorBusinessName: 'يجب أن يكون اسم المتجر حرفين على الأقل.',
       errorContactName: 'يرجى إدخال اسمك.',
       errorEmail: 'يرجى إدخال بريد إلكتروني صحيح.',

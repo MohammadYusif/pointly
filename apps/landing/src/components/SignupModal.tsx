@@ -226,6 +226,19 @@ export function SignupModal({
                 placeholder="+966 5X XXX XXXX"
               />
             </div>
+            <div className="modal-renew-notice">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <title>Notice</title>
+                <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+                <path
+                  d="M8 5v3.5M8 11v.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+              {s.autoRenewNote}
+            </div>
             <div className="modal-actions">
               <button
                 type="button"
@@ -241,7 +254,19 @@ export function SignupModal({
                 {isLoading ? s.loading : s.submit}
               </button>
             </div>
-            <p className="modal-note">{s.note}</p>
+            <p className="modal-note">
+              {s.privacyNote}{' '}
+              <a
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="modal-privacy-link"
+              >
+                {s.privacyLinkText}
+              </a>
+              {'. '}
+              {s.note}
+            </p>
           </form>
         )}
       </div>

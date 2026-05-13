@@ -41,6 +41,7 @@ export function PricingSection({ t }: PricingSectionProps) {
                   <div className="pricing-price">
                     {plan.price} <span>{t.pricing.perMonth}</span>
                   </div>
+                  <p className="pricing-vat-note">{t.pricing.vatNote}</p>
                   <p className="pricing-desc">{plan.desc}</p>
                   <ul className="pricing-features">
                     {plan.features.map((feature) => (

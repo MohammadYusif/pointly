@@ -213,4 +213,33 @@
     text-align: center;
     margin-top: 12px;
   }
+
+  .modal-renew-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    background: rgba(8, 176, 162, 0.06);
+    border: 1px solid rgba(8, 176, 162, 0.18);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    line-height: 1.45;
+  }
+
+  .modal-renew-notice svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--teal);
+  }
+
+  .modal-privacy-link {
+    color: var(--teal);
+    text-decoration: underline;
+    font-weight: 500;
+  }
+
+  .modal-privacy-link:hover {
+    color: var(--teal-dark);
+  }
 }
