@@ -24,7 +24,29 @@ const EN_CONTENT: Section[] = [
   },
   {
     heading: '3. Subscription and Billing',
-    body: 'Pointly is offered on a monthly subscription basis. Fees are as published on our pricing page and are billed in Saudi Riyals (SAR). Subscriptions automatically renew unless cancelled before the renewal date. No refunds are issued for partial periods. We reserve the right to update pricing with 30 days notice.',
+    body: (
+      <>
+        <strong>
+          ⚠ Auto-renewal notice: Pointly subscriptions automatically renew every month. Your payment
+          method will be charged on the same date each month unless you cancel before the renewal
+          date.
+        </strong>
+        <br />
+        <br />
+        Fees are as published on our pricing page and are billed in Saudi Riyals (SAR).{' '}
+        <strong>
+          All prices are exclusive of 15% Value Added Tax (VAT / ضريبة القيمة المضافة) as required
+          by ZATCA.
+        </strong>{' '}
+        VAT will be added at checkout. We reserve the right to update pricing with 30 days written
+        notice sent to your registered email address.
+        <br />
+        <br />
+        Merchants who cancel within 3 business days of their first subscription payment may submit a
+        refund request to <a href="mailto:support@pointly.sa">support@pointly.sa</a> for review. No
+        refunds are issued for partial periods after the cooling-off window.
+      </>
+    ),
   },
   {
     heading: '4. Acceptable Use',
@@ -74,7 +96,28 @@ const AR_CONTENT: Section[] = [
   },
   {
     heading: '3. الاشتراك والفواتير',
-    body: 'يُقدَّم بوينتلي على أساس اشتراك شهري. الرسوم كما هو منشور في صفحة الأسعار وتُفوتر بالريال السعودي (SAR). تتجدد الاشتراكات تلقائياً ما لم يتم إلغاؤها قبل تاريخ التجديد. لا يتم استرداد أموال للفترات الجزئية. نحتفظ بالحق في تحديث الأسعار بإشعار مدته 30 يوماً.',
+    body: (
+      <>
+        <strong>
+          ⚠ تنبيه التجديد التلقائي: تتجدد اشتراكات بوينتلي تلقائياً كل شهر. سيتم خصم المبلغ من طريقة
+          الدفع الخاصة بك في نفس التاريخ كل شهر ما لم تقم بالإلغاء قبل تاريخ التجديد.
+        </strong>
+        <br />
+        <br />
+        الرسوم كما هو منشور في صفحة الأسعار وتُفوتر بالريال السعودي.{' '}
+        <strong>
+          جميع الأسعار لا تشمل ضريبة القيمة المضافة بنسبة 15% (VAT) وفقاً لمتطلبات هيئة الزكاة
+          والضريبة والجمارك (زاتكا).
+        </strong>{' '}
+        ستُضاف ضريبة القيمة المضافة عند الدفع. نحتفظ بالحق في تحديث الأسعار مع إشعار كتابي مدته 30
+        يوماً يُرسل إلى بريدك الإلكتروني المسجل.
+        <br />
+        <br />
+        يجوز للتجار الذين يلغون خلال 3 أيام عمل من دفعة الاشتراك الأولى تقديم طلب استرداد إلى{' '}
+        <a href="mailto:support@pointly.sa">support@pointly.sa</a> للمراجعة. لا يتم استرداد أموال
+        للفترات الجزئية بعد نافذة التراجع.
+      </>
+    ),
   },
   {
     heading: '4. الاستخدام المقبول',
