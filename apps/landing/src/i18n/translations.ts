@@ -22,7 +22,7 @@ export const translations = {
       floatEarned: '+240 pts earned',
       floatRedeemed: '−500 pts redeemed',
       cardMerchant: 'Al-Noor Coffee',
-      globalPoints: 'global points',
+      globalPoints: 'loyalty points',
       cardToTier: 'to Diamond',
     },
     stats: {
@@ -42,16 +42,16 @@ export const translations = {
           desc: 'Sign up and start rewarding customers in minutes. No POS integration required.',
         },
         {
-          title: 'Dual Points System',
-          desc: 'Customers earn global Pointly points and your store-specific points simultaneously.',
+          title: 'Loyalty Points System',
+          desc: 'Customers earn merchant-specific loyalty points on every purchase, with tier multipliers that increase earnings as they level up.',
         },
         {
           title: 'Smart Tiers',
           desc: 'Bronze to Diamond — each tier unlocks a higher earning multiplier, weekly streak bonuses (up to 750 pts), and decay immunity from Gold onwards.',
         },
         {
-          title: 'Point Gifting',
-          desc: 'Merchants gift points directly to customers. Customers gift global points to each other — driving engagement across the whole network.',
+          title: 'Targeted Campaigns',
+          desc: 'Send SMS campaigns to specific customer segments — win back lapsed customers, reward top spenders, or announce new promotions.',
         },
         {
           title: 'Real-time Dashboard',
@@ -67,10 +67,10 @@ export const translations = {
       label: 'The Pointly Network',
       title: 'One card, every store',
       subtitle:
-        'When you join Pointly, your customers can earn and spend their global points at any merchant in the network — giving them more reasons to come back to you.',
-      pointOne: 'Earn global points at any Pointly merchant',
+        'When you join Pointly, your customers earn loyalty points at any merchant in the network — giving them more reasons to come back to you.',
+      pointOne: 'Earn loyalty points at every Pointly merchant you visit',
       pointTwo: 'Plus earn bonus points specific to each store',
-      pointThree: 'Redeem anywhere in the network',
+      pointThree: 'Redeem your points on your next visit',
       merchants: ['Café', 'Restaurant', 'Salon', 'Grocery', 'Gym', 'Bookstore'],
     },
     tiers: {
@@ -297,7 +297,7 @@ export const translations = {
       floatEarned: '+240 نقطة مكتسبة',
       floatRedeemed: '−500 نقطة مستردة',
       cardMerchant: 'قهوة النور',
-      globalPoints: 'نقطة عالمية',
+      globalPoints: 'نقطة ولاء',
       cardToTier: 'إلى ألماس',
     },
     stats: {
@@ -316,16 +316,16 @@ export const translations = {
           desc: 'سجّل وابدأ بمكافأة العملاء في دقائق. لا حاجة لدمج نظام نقاط البيع.',
         },
         {
-          title: 'نظام نقاط مزدوج',
-          desc: 'يكسب العملاء نقاط بوينتلي العالمية ونقاط متجرك في آنٍ واحد.',
+          title: 'نظام نقاط الولاء',
+          desc: 'يكسب العملاء نقاط ولاء خاصة بكل متجر على كل عملية شراء، مع مضاعفات المستوى التي ترفع الكسب مع الترقي.',
         },
         {
           title: 'مستويات ذكية',
           desc: 'من برونز إلى ألماس — كل مستوى يفتح مضاعف كسب أعلى، ومكافآت سلسلة أسبوعية (حتى 750 نقطة)، وحصانة من التراجع ابتداءً من الذهبي.',
         },
         {
-          title: 'إهداء النقاط',
-          desc: 'يُهدي التجار النقاط مباشرةً للعملاء. ويتبادل العملاء النقاط العالمية فيما بينهم — مما يعزز التفاعل عبر الشبكة بأكملها.',
+          title: 'حملات موجّهة',
+          desc: 'أرسل حملات SMS لشرائح محددة من العملاء — استعد العملاء الغائبين، كافئ أكثرهم إنفاقاً، أو أعلن عن عروض جديدة.',
         },
         {
           title: 'لوحة تحكم حية',
@@ -341,10 +341,10 @@ export const translations = {
       label: 'شبكة بوينتلي',
       title: 'بطاقة واحدة، كل المتاجر',
       subtitle:
-        'عندما تنضم إلى بوينتلي، يمكن لعملائك كسب نقاطهم العالمية وإنفاقها في أي متجر في الشبكة — مما يمنحهم أسباباً أكثر للعودة إليك.',
-      pointOne: 'اكسب نقاطاً عالمية في أي متجر بوينتلي',
+        'عندما تنضم إلى بوينتلي، يكسب عملاؤك نقاط ولاء في أي متجر في الشبكة — مما يمنحهم أسباباً أكثر للعودة إليك.',
+      pointOne: 'اكسب نقاط ولاء في كل متجر بوينتلي تزوره',
       pointTwo: 'بالإضافة إلى نقاط إضافية خاصة بكل متجر',
-      pointThree: 'استرد في أي مكان في الشبكة',
+      pointThree: 'استرد نقاطك في زيارتك القادمة',
       merchants: ['مقهى', 'مطعم', 'صالون', 'بقالة', 'نادي رياضي', 'مكتبة'],
     },
     tiers: {
