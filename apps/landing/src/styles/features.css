@@ -18,7 +18,13 @@
     }
   }
 
+  .features-grid > * {
+    display: flex;
+    flex-direction: column;
+  }
+
   .feature-card {
+    flex: 1;
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: var(--radius-xl);
