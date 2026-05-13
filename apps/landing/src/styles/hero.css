@@ -38,6 +38,7 @@
     margin-bottom: 20px;
     line-height: 1.08;
     letter-spacing: -0.03em;
+    animation: hero-item-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
   }
 
   .hero-title .highlight {
@@ -53,6 +54,7 @@
     max-width: 480px;
     margin-bottom: 40px;
     line-height: 1.7;
+    animation: hero-item-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both;
   }
 
   @media (max-width: 900px) {
@@ -68,6 +70,7 @@
     align-items: center;
     gap: 14px;
     flex-wrap: wrap;
+    animation: hero-item-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.34s both;
   }
 
   @media (max-width: 900px) {
@@ -105,6 +108,7 @@
     padding: 28px;
     box-shadow: 0 16px 60px rgba(0, 0, 0, 0.1), 0 4px 16px rgba(0, 0, 0, 0.04);
     overflow: hidden;
+    animation: hero-card-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
   }
 
   .hero-card::before {
@@ -184,10 +188,11 @@
   }
 
   .hero-card-progress-fill {
-    width: 62%;
+    width: 48%;
     height: 100%;
     background: linear-gradient(90deg, var(--teal), #0891b2);
     border-radius: 100px;
+    animation: progress-grow 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both;
   }
 
   .hero-float-card {
@@ -221,11 +226,29 @@
 
   .hero-float-earn {
     color: var(--teal);
-    animation: float-up 4s ease-in-out infinite;
+    animation: float-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both, float-up 4s ease-in-out
+      1.1s infinite;
   }
   .hero-float-redeem {
     color: #ef4444;
-    animation: float-up 4s ease-in-out infinite 2s;
+    animation: float-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.75s both, float-up 4s ease-in-out
+      1.25s infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-title,
+    .hero-sub,
+    .hero-actions,
+    .hero-card,
+    .hero-float-earn,
+    .hero-float-redeem {
+      animation: none;
+    }
+
+    .hero-card-progress-fill {
+      animation: none;
+      width: 48%;
+    }
   }
 
   [dir="rtl"] .hero-sub {

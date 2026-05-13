@@ -1,9 +1,6 @@
 'use client';
 
-import { type BezierDefinition, motion, useInView, useReducedMotion } from 'framer-motion';
-import { useRef } from 'react';
-
-const EASE_OUT_EXPO: BezierDefinition = [0.16, 1, 0.3, 1];
+import { useEffect, useRef } from 'react';
 
 interface ScrollRevealProps {
   children: React.ReactNode;
@@ -19,35 +16,32 @@ export function ScrollReveal({
   direction = 'up',
 }: ScrollRevealProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '0px 0px -60px 0px' });
-  const prefersReducedMotion = useReducedMotion();
 
-  const directionOffset = {
-    up: { x: 0, y: 24 },
-    down: { x: 0, y: -24 },
-    left: { x: 24, y: 0 },
-    right: { x: -24, y: 0 },
-  };
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  const offset = directionOffset[direction];
+    el.classList.add('sr-hidden', `sr-${direction}`);
+    if (delay > 0) el.style.transitionDelay = `${delay * 0.1}s`;
 
-  if (prefersReducedMotion) {
-    return <div className={className}>{children}</div>;
-  }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.remove('sr-hidden');
+          el.style.transitionDelay = '';
+          observer.unobserve(el);
+        }
+      },
+      { rootMargin: '0px 0px -60px 0px', threshold: 0.05 },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [delay, direction]);
 
   return (
-    <motion.div
-      ref={ref}
-      className={className}
-      initial={{ opacity: 0, x: offset.x, y: offset.y }}
-      animate={isInView ? { opacity: 1, x: 0, y: 0 } : { opacity: 0, x: offset.x, y: offset.y }}
-      transition={{
-        duration: 0.6,
-        delay: delay * 0.1,
-        ease: EASE_OUT_EXPO,
-      }}
-    >
+    <div ref={ref} className={`scroll-reveal${className ? ` ${className}` : ''}`}>
       {children}
-    </motion.div>
+    </div>
   );
 }

@@ -6,6 +6,7 @@
     right: 0;
     z-index: 100;
     transition: background 0.35s ease, backdrop-filter 0.35s ease, box-shadow 0.35s ease;
+    animation: nav-enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   .nav.scrolled {
@@ -142,20 +143,22 @@
     }
   }
 
-  /* Mobile slide-down menu */
+  /* Mobile slide-down menu — conditionally rendered by JSX, always flex when present */
   .mobile-menu {
-    display: none;
+    display: flex;
     flex-direction: column;
     padding: 16px 24px 24px;
     background: rgba(249, 250, 251, 0.96);
     backdrop-filter: blur(20px) saturate(1.5);
     -webkit-backdrop-filter: blur(20px) saturate(1.5);
     border-top: 1px solid var(--border);
+    animation: mobile-menu-enter 0.2s ease both;
   }
 
-  @media (max-width: 768px) {
+  @media (prefers-reduced-motion: reduce) {
+    .nav,
     .mobile-menu {
-      display: flex;
+      animation: none;
     }
   }
 
