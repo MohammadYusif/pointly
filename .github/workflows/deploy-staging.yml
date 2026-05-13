@@ -114,6 +114,7 @@ jobs:
           echo "merchant_user_pool_client_id=$(terraform output -raw merchant_user_pool_client_id)" >> $GITHUB_OUTPUT
           echo "customer_user_pool_id=$(terraform output -raw customer_user_pool_id)" >> $GITHUB_OUTPUT
           echo "customer_user_pool_client_id=$(terraform output -raw customer_user_pool_client_id)" >> $GITHUB_OUTPUT
+          echo "dashboard_url=$(terraform output -raw dashboard_url)" >> $GITHUB_OUTPUT
 
     outputs:
       api_url: ${{ steps.tf-outputs.outputs.api_url }}
@@ -128,6 +129,7 @@ jobs:
       merchant_user_pool_client_id: ${{ steps.tf-outputs.outputs.merchant_user_pool_client_id }}
       customer_user_pool_id: ${{ steps.tf-outputs.outputs.customer_user_pool_id }}
       customer_user_pool_client_id: ${{ steps.tf-outputs.outputs.customer_user_pool_client_id }}
+      dashboard_url: ${{ steps.tf-outputs.outputs.dashboard_url }}
 
   deploy-merchant-dashboard:
     name: Deploy Merchant Dashboard
@@ -258,6 +260,9 @@ jobs:
 
       - name: Build Landing Page
         run: pnpm --filter @pointly/landing build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ needs.deploy-infrastructure.outputs.api_url }}
+          NEXT_PUBLIC_MERCHANT_URL: ${{ needs.deploy-infrastructure.outputs.dashboard_url }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
