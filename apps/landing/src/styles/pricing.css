@@ -18,30 +18,30 @@
 
   .pricing-card {
     background: var(--card-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1.5px solid var(--card-border);
+    border: 1px solid var(--border);
     border-radius: var(--radius-2xl);
     padding: 32px;
     position: relative;
-    transition: transform 0.25s var(--ease-out-expo), box-shadow 0.25s var(--ease-out-expo),
-      border-color 0.25s var(--ease-out-expo);
+    box-shadow: var(--shadow-card);
+    transition: transform 0.22s var(--ease-out-expo), box-shadow 0.22s var(--ease-out-expo),
+      border-color 0.22s;
   }
 
   .pricing-card:hover {
     transform: translateY(-4px);
-    box-shadow: var(--shadow-xl);
+    box-shadow: var(--shadow-card-hover);
     border-color: rgba(8, 176, 162, 0.2);
   }
 
   .pricing-card.popular {
+    background: var(--teal);
     border-color: var(--teal);
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: var(--shadow-teal-sm);
+    box-shadow: var(--shadow-teal);
   }
 
   .pricing-card.popular:hover {
-    box-shadow: var(--shadow-teal-lg);
+    box-shadow: var(--shadow-teal-hover);
+    transform: translateY(-4px);
   }
 
   .popular-badge {
@@ -49,7 +49,7 @@
     top: -13px;
     left: 50%;
     transform: translateX(-50%);
-    background: linear-gradient(135deg, var(--teal), #0891b2);
+    background: #0d1117;
     color: #fff;
     font-size: 0.69rem;
     font-weight: 700;
@@ -57,45 +57,81 @@
     border-radius: 100px;
     letter-spacing: 0.1em;
     white-space: nowrap;
-    box-shadow: var(--shadow-teal-sm);
   }
 
   .pricing-plan {
     font-size: 0.78rem;
     font-weight: 700;
-    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: 10px;
   }
 
+  .pricing-card:not(.popular) .pricing-plan {
+    color: var(--text-muted);
+  }
+
+  .pricing-card.popular .pricing-plan {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
   .pricing-price {
     font-size: 2.5rem;
     font-weight: 800;
-    color: var(--text-primary);
     letter-spacing: -0.04em;
     margin-bottom: 2px;
     line-height: 1;
   }
+
+  .pricing-card:not(.popular) .pricing-price {
+    color: var(--text-primary);
+  }
+
+  .pricing-card.popular .pricing-price {
+    color: #fff;
+  }
+
   .pricing-vat-note {
     font-size: 0.72rem;
-    color: var(--text-muted);
     margin-top: 4px;
     margin-bottom: 12px;
+  }
+
+  .pricing-card:not(.popular) .pricing-vat-note {
+    color: var(--text-muted);
+  }
+
+  .pricing-card.popular .pricing-vat-note {
+    color: rgba(255, 255, 255, 0.6);
   }
 
   .pricing-price span {
     font-size: 0.88rem;
     font-weight: 500;
-    color: var(--text-muted);
     letter-spacing: 0;
   }
+
+  .pricing-card:not(.popular) .pricing-price span {
+    color: var(--text-muted);
+  }
+
+  .pricing-card.popular .pricing-price span {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
   .pricing-desc {
     font-size: 0.875rem;
-    color: var(--text-secondary);
     margin-bottom: 24px;
     margin-top: 8px;
     line-height: 1.55;
+  }
+
+  .pricing-card:not(.popular) .pricing-desc {
+    color: var(--text-secondary);
+  }
+
+  .pricing-card.popular .pricing-desc {
+    color: rgba(255, 255, 255, 0.8);
   }
 
   .pricing-features {
@@ -105,17 +141,33 @@
     flex-direction: column;
     gap: 10px;
   }
+
   .pricing-feature {
     font-size: 0.875rem;
-    color: var(--text-secondary);
     display: flex;
     align-items: flex-start;
     gap: 10px;
   }
+
+  .pricing-card:not(.popular) .pricing-feature {
+    color: var(--text-secondary);
+  }
+
+  .pricing-card.popular .pricing-feature {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
   .pricing-feature-check {
-    color: var(--teal);
     flex-shrink: 0;
     margin-top: 1px;
+  }
+
+  .pricing-card:not(.popular) .pricing-feature-check {
+    color: var(--teal);
+  }
+
+  .pricing-card.popular .pricing-feature-check {
+    color: rgba(255, 255, 255, 0.9);
   }
 
   .pricing-cta {
@@ -128,12 +180,7 @@
     font-weight: 600;
     cursor: pointer;
     border: 1.5px solid;
-    transition:
-      background 0.2s var(--ease-out-quart),
-      color 0.2s var(--ease-out-quart),
-      border-color 0.2s var(--ease-out-quart),
-      box-shadow 0.25s var(--ease-out-quart),
-      transform 0.15s var(--ease-out-quart);
+    transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
   }
 
   .pricing-cta:active {
@@ -145,18 +192,22 @@
     color: var(--text-primary);
     background: transparent;
   }
+
   .pricing-card:not(.popular) .pricing-cta:hover {
     border-color: var(--teal);
     color: var(--teal);
     background: rgba(8, 176, 162, 0.04);
   }
+
   .pricing-card.popular .pricing-cta {
-    background: var(--teal);
-    color: #fff;
-    border-color: var(--teal);
+    background: #fff;
+    color: var(--teal);
+    border-color: transparent;
+    font-weight: 700;
   }
+
   .pricing-card.popular .pricing-cta:hover {
-    background: var(--teal-dark);
-    box-shadow: var(--shadow-teal-md);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 }
