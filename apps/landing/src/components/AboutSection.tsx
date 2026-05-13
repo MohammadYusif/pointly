@@ -1,8 +1,9 @@
 'use client';
 
 import type { TranslationKeys } from '@/i18n/translations';
+import { fadeUp, scaleIn, smooth, staggerContainer, viewportOnce } from '@/lib/motion';
+import { motion } from 'framer-motion';
 import { Globe, Landmark, Smartphone } from 'lucide-react';
-import { ScrollReveal } from './ScrollReveal';
 
 interface AboutSectionProps {
   t: TranslationKeys;
@@ -16,7 +17,13 @@ export function AboutSection({ t }: AboutSectionProps) {
       <div className="container">
         <div className="about-layout">
           {/* Text */}
-          <ScrollReveal>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewportOnce}
+            variants={fadeUp}
+            transition={smooth}
+          >
             <div className="section-label">{t.about.label}</div>
             <h2 className="section-title">{t.about.title}</h2>
             <p className="section-sub">{t.about.subtitle}</p>
@@ -37,19 +44,29 @@ export function AboutSection({ t }: AboutSectionProps) {
                 );
               })}
             </div>
-          </ScrollReveal>
+          </motion.div>
 
           {/* 2x2 stat cards */}
-          <ScrollReveal delay={2}>
-            <div className="about-stats">
-              {t.about.stats.map((stat) => (
-                <div key={stat.label} className="about-stat-card">
-                  <div className="about-stat-value">{stat.value}</div>
-                  <div className="about-stat-label">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </ScrollReveal>
+          <motion.div
+            className="about-stats"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewportOnce}
+          >
+            {t.about.stats.map((stat) => (
+              <motion.div
+                key={stat.label}
+                className="about-stat-card"
+                variants={scaleIn}
+                transition={smooth}
+                whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
+              >
+                <div className="about-stat-value">{stat.value}</div>
+                <div className="about-stat-label">{stat.label}</div>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </div>
     </section>

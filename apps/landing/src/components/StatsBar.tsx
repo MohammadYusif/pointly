@@ -1,7 +1,8 @@
 'use client';
 
 import type { TranslationKeys } from '@/i18n/translations';
-import { ScrollReveal } from './ScrollReveal';
+import { fadeUp, smooth, staggerContainer, viewportOnce } from '@/lib/motion';
+import { motion } from 'framer-motion';
 
 interface StatsBarProps {
   t: TranslationKeys;
@@ -18,16 +19,20 @@ export function StatsBar({ t }: StatsBarProps) {
   return (
     <section className="stats-bar">
       <div className="container">
-        <div className="stats-grid">
-          {STATS.map((stat, i) => (
-            <ScrollReveal key={stat.key} delay={i + 1}>
-              <div className="stat-item">
-                <div className="stat-value">{stat.value}</div>
-                <div className="stat-label">{t.stats[stat.key]}</div>
-              </div>
-            </ScrollReveal>
+        <motion.div
+          className="stats-grid"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewportOnce}
+        >
+          {STATS.map((stat) => (
+            <motion.div key={stat.key} className="stat-item" variants={fadeUp} transition={smooth}>
+              <div className="stat-value">{stat.value}</div>
+              <div className="stat-label">{t.stats[stat.key]}</div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

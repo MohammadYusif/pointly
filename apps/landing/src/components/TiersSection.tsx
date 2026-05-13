@@ -1,15 +1,15 @@
 'use client';
 
 import type { TranslationKeys } from '@/i18n/translations';
+import { fadeUp, smooth, staggerContainerSlow, viewportOnce } from '@/lib/motion';
 import { CUSTOMER_TIERS, TIER_ORDER } from '@pointly/shared';
 import type { CustomerTierLevel } from '@pointly/shared';
-import { ScrollReveal } from './ScrollReveal';
+import { motion } from 'framer-motion';
 
 interface TiersSectionProps {
   t: TranslationKeys;
 }
 
-/** Presentation-only mapping from domain tier level to CSS class name. */
 const TIER_CSS_COLOR: Record<CustomerTierLevel, string> = {
   BRONZE: 'bronze',
   GOLD: 'gold',
@@ -77,13 +77,25 @@ export function TiersSection({ t }: TiersSectionProps) {
   return (
     <section className="section" id="tiers">
       <div className="container">
-        <ScrollReveal>
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewportOnce}
+          variants={fadeUp}
+          transition={smooth}
+        >
           <div className="section-label">{t.tiers.label}</div>
           <h2 className="section-title">{t.tiers.title}</h2>
           <p className="section-sub">{t.tiers.subtitle}</p>
-        </ScrollReveal>
+        </motion.div>
 
-        <div className="tiers-grid">
+        <motion.div
+          className="tiers-grid"
+          variants={staggerContainerSlow}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewportOnce}
+        >
           {TIER_ORDER.map((level, i) => {
             const tier = CUSTOMER_TIERS[level];
             const cssColor = TIER_CSS_COLOR[level];
@@ -92,7 +104,12 @@ export function TiersSection({ t }: TiersSectionProps) {
             const multiplier = `${tier.earningMultiplier}×`;
 
             return (
-              <ScrollReveal key={level} delay={i + 1}>
+              <motion.div
+                key={level}
+                variants={fadeUp}
+                transition={smooth}
+                whileHover={{ y: -6, transition: { duration: 0.2 } }}
+              >
                 <div className={`tier-card ${cssColor}`}>
                   <div className="tier-icon">
                     <TierIcon color={cssColor} />
@@ -112,10 +129,10 @@ export function TiersSection({ t }: TiersSectionProps) {
                     ))}
                   </ul>
                 </div>
-              </ScrollReveal>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

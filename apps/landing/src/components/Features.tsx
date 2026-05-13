@@ -1,8 +1,9 @@
 'use client';
 
 import type { TranslationKeys } from '@/i18n/translations';
+import { fadeUp, smooth, staggerContainerSlow, viewportOnce } from '@/lib/motion';
+import { motion } from 'framer-motion';
 import { ArrowLeftRight, BarChart3, Flame, Layers, Send, Zap } from 'lucide-react';
-import { ScrollReveal } from './ScrollReveal';
 
 interface FeaturesProps {
   t: TranslationKeys;
@@ -14,17 +15,34 @@ export function Features({ t }: FeaturesProps) {
   return (
     <section className="section" id="features">
       <div className="container">
-        <ScrollReveal>
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewportOnce}
+          variants={fadeUp}
+          transition={smooth}
+        >
           <div className="section-label">{t.features.label}</div>
           <h2 className="section-title">{t.features.title}</h2>
           <p className="section-sub">{t.features.subtitle}</p>
-        </ScrollReveal>
+        </motion.div>
 
-        <div className="features-grid">
+        <motion.div
+          className="features-grid"
+          variants={staggerContainerSlow}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewportOnce}
+        >
           {t.features.items.map((item, i) => {
             const Icon = ICONS[i];
             return (
-              <ScrollReveal key={item.title} delay={i + 1}>
+              <motion.div
+                key={item.title}
+                variants={fadeUp}
+                transition={smooth}
+                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              >
                 <div className="feature-card">
                   <div className="feature-icon">
                     <Icon className="h-6 w-6" aria-hidden="true" />
@@ -32,10 +50,10 @@ export function Features({ t }: FeaturesProps) {
                   <div className="feature-title">{item.title}</div>
                   <div className="feature-desc">{item.desc}</div>
                 </div>
-              </ScrollReveal>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

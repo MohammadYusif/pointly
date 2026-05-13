@@ -1,9 +1,10 @@
 'use client';
 
 import type { TranslationKeys } from '@/i18n/translations';
+import { fadeUp, smooth, staggerContainerSlow, viewportOnce } from '@/lib/motion';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useState } from 'react';
-import { ScrollReveal } from './ScrollReveal';
 import { SignupModal } from './SignupModal';
 
 const MERCHANT_URL = process.env.NEXT_PUBLIC_MERCHANT_URL ?? 'https://d62obmvn36z3a.cloudfront.net';
@@ -26,15 +27,32 @@ export function PricingSection({ t }: PricingSectionProps) {
     <>
       <section className="section" id="pricing">
         <div className="container">
-          <ScrollReveal>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewportOnce}
+            variants={fadeUp}
+            transition={smooth}
+          >
             <div className="section-label">{t.pricing.label}</div>
             <h2 className="section-title">{t.pricing.title}</h2>
             <p className="section-sub">{t.pricing.subtitle}</p>
-          </ScrollReveal>
+          </motion.div>
 
-          <div className="pricing-grid">
-            {t.pricing.plans.map((plan, i) => (
-              <ScrollReveal key={plan.name} delay={i + 1}>
+          <motion.div
+            className="pricing-grid"
+            variants={staggerContainerSlow}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewportOnce}
+          >
+            {t.pricing.plans.map((plan) => (
+              <motion.div
+                key={plan.name}
+                variants={fadeUp}
+                transition={smooth}
+                whileHover={{ y: -6, transition: { duration: 0.2 } }}
+              >
                 <div className={`pricing-card${plan.popular ? ' popular' : ''}`}>
                   {plan.popular && <div className="popular-badge">{t.pricing.mostPopular}</div>}
                   <div className="pricing-plan">{plan.name}</div>
@@ -80,9 +98,9 @@ export function PricingSection({ t }: PricingSectionProps) {
                     </button>
                   )}
                 </div>
-              </ScrollReveal>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 

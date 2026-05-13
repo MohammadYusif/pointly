@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { fadeLeft, fadeRight, fadeUp, smooth, viewportOnce } from '@/lib/motion';
+import { type Variants, motion } from 'framer-motion';
 
 interface ScrollRevealProps {
   children: React.ReactNode;
@@ -9,53 +10,32 @@ interface ScrollRevealProps {
   direction?: 'up' | 'down' | 'left' | 'right';
 }
 
+const directionVariants: Record<string, Variants> = {
+  up: fadeUp,
+  down: {
+    hidden: { opacity: 0, y: -24 },
+    visible: { opacity: 1, y: 0 },
+  },
+  left: fadeLeft,
+  right: fadeRight,
+};
+
 export function ScrollReveal({
   children,
   className = '',
   delay = 0,
   direction = 'up',
 }: ScrollRevealProps) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    el.classList.add('sr-hidden', `sr-${direction}`);
-    if (delay > 0) el.style.transitionDelay = `${delay * 0.1}s`;
-
-    let observer: IntersectionObserver | null = null;
-    let raf1 = 0;
-    let raf2 = 0;
-
-    // Double rAF ensures the browser has painted the hidden state before we
-    // observe — otherwise add+remove in the same frame skips the transition.
-    raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => {
-        observer = new IntersectionObserver(
-          ([entry]) => {
-            if (entry.isIntersecting) {
-              el.classList.remove('sr-hidden');
-              el.style.transitionDelay = '';
-              observer?.unobserve(el);
-            }
-          },
-          { rootMargin: '0px 0px -60px 0px', threshold: 0.05 },
-        );
-        observer.observe(el);
-      });
-    });
-
-    return () => {
-      cancelAnimationFrame(raf1);
-      cancelAnimationFrame(raf2);
-      observer?.disconnect();
-    };
-  }, [delay, direction]);
-
   return (
-    <div ref={ref} className={`scroll-reveal${className ? ` ${className}` : ''}`}>
+    <motion.div
+      className={className || undefined}
+      variants={directionVariants[direction]}
+      initial="hidden"
+      whileInView="visible"
+      viewport={viewportOnce}
+      transition={{ ...smooth, delay: delay * 0.1 }}
+    >
       {children}
-    </div>
+    </motion.div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import type { Locale, TranslationKeys } from '@/i18n/translations';
+import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
 interface NavbarProps {
@@ -32,7 +33,12 @@ export function Navbar({ t, locale, onLocaleChange }: NavbarProps) {
   };
 
   return (
-    <nav className={`nav${scrolled || mobileOpen ? ' scrolled' : ''}`}>
+    <motion.nav
+      className={`nav${scrolled || mobileOpen ? ' scrolled' : ''}`}
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+    >
       <div className="container">
         <div className="nav-inner">
           {/* Logo */}
@@ -107,7 +113,12 @@ export function Navbar({ t, locale, onLocaleChange }: NavbarProps) {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="mobile-menu">
+        <motion.div
+          className="mobile-menu"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        >
           <div className="mobile-menu-links">
             {[
               { label: t.nav.features, id: 'features' },
@@ -162,8 +173,8 @@ export function Navbar({ t, locale, onLocaleChange }: NavbarProps) {
               {t.nav.getStarted}
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
-    </nav>
+    </motion.nav>
   );
 }

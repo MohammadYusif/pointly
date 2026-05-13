@@ -1,7 +1,8 @@
 'use client';
 
 import type { TranslationKeys } from '@/i18n/translations';
-import { ScrollReveal } from './ScrollReveal';
+import { scaleIn, viewportOnce } from '@/lib/motion';
+import { motion } from 'framer-motion';
 
 interface CTASectionProps {
   t: TranslationKeys;
@@ -14,37 +15,42 @@ export function CTASection({ t, isRtl }: CTASectionProps) {
   return (
     <section className="cta-section">
       <div className="container">
-        <div className="cta-box">
+        <motion.div
+          className="cta-box"
+          variants={scaleIn}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewportOnce}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        >
           <div className="cta-inner">
-            <ScrollReveal>
-              <div className="section-label">{t.cta.label}</div>
-              <h2 className="section-title">{t.cta.title}</h2>
-              <p className="section-sub">{t.cta.subtitle}</p>
+            <div className="section-label">{t.cta.label}</div>
+            <h2 className="section-title">{t.cta.title}</h2>
+            <p className="section-sub">{t.cta.subtitle}</p>
 
-              <div className="cta-actions">
-                <button
-                  type="button"
-                  className="btn-primary"
-                  onClick={() =>
-                    document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })
-                  }
-                >
-                  {t.cta.primary}
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <path
-                      d={arrowPath}
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <p className="cta-note">{t.cta.note}</p>
-            </ScrollReveal>
+            <div className="cta-actions">
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() =>
+                  document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })
+                }
+              >
+                {t.cta.primary}
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path
+                    d={arrowPath}
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+            <p className="cta-note">{t.cta.note}</p>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

@@ -1,7 +1,8 @@
 'use client';
 
 import type { TranslationKeys } from '@/i18n/translations';
-import { ScrollReveal } from './ScrollReveal';
+import { fadeLeft, fadeRight, smooth, viewportOnce } from '@/lib/motion';
+import { motion } from 'framer-motion';
 
 interface NetworkSectionProps {
   t: TranslationKeys;
@@ -90,7 +91,13 @@ export function NetworkSection({ t }: NetworkSectionProps) {
       <div className="container">
         <div className="network-layout">
           {/* Graphic */}
-          <ScrollReveal direction="left">
+          <motion.div
+            variants={fadeRight}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewportOnce}
+            transition={smooth}
+          >
             <div className="network-graphic">
               {/* Connecting lines */}
               <svg className="network-lines" viewBox="0 0 420 420" fill="none" aria-hidden="true">
@@ -160,10 +167,16 @@ export function NetworkSection({ t }: NetworkSectionProps) {
                 </div>
               ))}
             </div>
-          </ScrollReveal>
+          </motion.div>
 
           {/* Text */}
-          <ScrollReveal delay={2} direction="right">
+          <motion.div
+            variants={fadeLeft}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewportOnce}
+            transition={{ ...smooth, delay: 0.2 }}
+          >
             <div className="section-label">{t.network.label}</div>
             <h2 className="section-title">{t.network.title}</h2>
             <p className="section-sub mb-8">{t.network.subtitle}</p>
@@ -186,7 +199,7 @@ export function NetworkSection({ t }: NetworkSectionProps) {
                 </div>
               ))}
             </div>
-          </ScrollReveal>
+          </motion.div>
         </div>
       </div>
     </section>
