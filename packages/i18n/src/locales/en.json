@@ -406,7 +406,10 @@
     "termsLink": "Terms of Use",
     "termsAnd": "and",
     "privacyLink": "Privacy Policy",
-    "termsRequired": "You must accept the terms to continue"
+    "termsRequired": "You must accept the terms to continue",
+    "smsOptInLabel": "I agree to receive loyalty SMS notifications (points, offers, tier changes)",
+    "smsOptInNote": "You can opt out at any time from your profile settings.",
+    "dataShareNote": "Your loyalty activity may be visible to other merchants in the Pointly network."
   },
   "enroll": {
     "title": "Join a Merchant",

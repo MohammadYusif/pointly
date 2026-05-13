@@ -50,6 +50,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [cognitoUser, setCognitoUser] = useState<CognitoUser | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [smsOptIn, setSmsOptIn] = useState(false);
 
   const handleInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +83,7 @@ export default function RegisterPage() {
       await completeProfile({
         name: name || undefined,
         dateOfBirth: dateOfBirth || undefined,
+        smsMarketingOptIn: smsOptIn,
       });
       // Hard navigation ensures dashboard loads with fresh auth state
       window.location.href = '/dashboard';
@@ -210,6 +212,31 @@ export default function RegisterPage() {
                       </Link>
                     </label>
                   </div>
+
+                  <div className="flex items-start gap-2">
+                    <input
+                      id="sms-optin-checkbox"
+                      type="checkbox"
+                      checked={smsOptIn}
+                      onChange={(e) => setSmsOptIn(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+                    />
+                    <div>
+                      <label
+                        htmlFor="sms-optin-checkbox"
+                        className="text-xs leading-snug text-muted-foreground"
+                      >
+                        {t('register.smsOptInLabel')}
+                      </label>
+                      <p className="text-xs text-muted-foreground/70 mt-0.5">
+                        {t('register.smsOptInNote')}
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground/70 px-0.5">
+                    {t('register.dataShareNote')}
+                  </p>
 
                   {error && <p className="text-sm text-red-600">{error}</p>}
 

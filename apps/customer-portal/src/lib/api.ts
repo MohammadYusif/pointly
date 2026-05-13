@@ -59,7 +59,11 @@ export function getMyPerks() {
   return fetchApi<CustomerPerkView[]>('/v1/me/perks');
 }
 
-export function completeProfile(data: { name?: string; dateOfBirth?: string }) {
+export function completeProfile(data: {
+  name?: string;
+  dateOfBirth?: string;
+  smsMarketingOptIn?: boolean;
+}) {
   return fetchApi<CustomerResponse>('/v1/me/setup', {
     method: 'POST',
     body: JSON.stringify(data),
