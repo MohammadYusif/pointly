@@ -199,7 +199,7 @@
 
   .modal-btn-primary:hover:not(:disabled) {
     background: var(--teal-dark);
-    box-shadow: var(--shadow-teal-md);
+    box-shadow: var(--shadow-teal);
   }
 
   .modal-btn-primary:disabled {
