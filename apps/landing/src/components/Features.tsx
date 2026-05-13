@@ -38,7 +38,8 @@ export function Features({ t }: FeaturesProps) {
             const Icon = ICONS[i];
             return (
               <motion.div
-                key={item.title}
+                // biome-ignore lint/suspicious/noArrayIndexKey: static array, index key prevents FM remount on locale switch
+                key={i}
                 variants={fadeUp}
                 transition={smooth}
                 whileHover={{ y: -4, transition: { duration: 0.2 } }}

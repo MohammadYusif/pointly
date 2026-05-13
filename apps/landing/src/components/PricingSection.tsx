@@ -46,9 +46,10 @@ export function PricingSection({ t }: PricingSectionProps) {
             whileInView="visible"
             viewport={viewportOnce}
           >
-            {t.pricing.plans.map((plan) => (
+            {t.pricing.plans.map((plan, i) => (
               <motion.div
-                key={plan.name}
+                // biome-ignore lint/suspicious/noArrayIndexKey: static array, index key prevents FM remount on locale switch
+                key={i}
                 variants={fadeUp}
                 transition={smooth}
                 whileHover={{ y: -6, transition: { duration: 0.2 } }}
