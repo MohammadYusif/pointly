@@ -30,7 +30,7 @@ function WalletCardPreview({
   const { t } = useTranslation();
   return (
     <div
-      className="rounded-2xl p-5 w-72 shadow-lg border"
+      className="rounded-2xl p-5 w-full max-w-[18rem] shadow-lg border"
       style={{ backgroundColor, borderColor: primaryColor }}
     >
       <div className="flex items-center justify-between mb-4">
@@ -295,12 +295,14 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className={`text-2xl md:text-3xl font-bold text-foreground ${textStart}`}>
-          {t('settings.title')}
-        </h1>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className={`text-2xl md:text-3xl font-bold text-foreground truncate ${textStart}`}>
+            {t('settings.title')}
+          </h1>
+        </div>
         {!isEditing && (
-          <Button variant="outline" onClick={startEditing}>
+          <Button variant="outline" className="shrink-0" onClick={startEditing}>
             {t('common.edit')}
           </Button>
         )}
