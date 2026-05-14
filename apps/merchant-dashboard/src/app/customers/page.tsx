@@ -187,6 +187,7 @@ export default function CustomersPage() {
           {activeCampaignSegment !== null && (
             <div className="mb-6">
               <CreateCampaignForm
+                key={activeCampaignSegment.type ?? 'all'}
                 onClose={() => setActiveCampaignSegment(null)}
                 initialType={activeCampaignSegment.type ?? undefined}
                 initialWinBackDays={activeCampaignSegment.winBackDays}
