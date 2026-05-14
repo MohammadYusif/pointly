@@ -294,6 +294,7 @@ export function createContainer(): Container {
     transactionRepository,
     idempotencyService,
     (items) => transactionalWriter.writeAll(items),
+    smsPublisherService,
   );
 
   // Merchant signup use cases (null when Moyasar not configured)

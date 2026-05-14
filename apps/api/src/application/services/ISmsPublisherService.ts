@@ -5,6 +5,7 @@ export interface SmsMessage {
   type:
     | 'POINTS_EARNED'
     | 'POINTS_REDEEMED'
+    | 'POINTS_GIFTED'
     | 'DECAY_WARNING'
     | 'TIER_CHANGE'
     | 'WELCOME'

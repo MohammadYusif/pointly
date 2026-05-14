@@ -64,6 +64,7 @@ export function CustomerTransactionTable({
               <option value="all">{t('transaction.allTypes')}</option>
               <option value="EARN">{t('transaction.purchase')}</option>
               <option value="REDEEM">{t('transaction.redemption')}</option>
+              <option value="ADJUSTMENT">{t('transaction.adjustment')}</option>
             </select>
             <CustomerTransactionExport
               allTransactions={allTransactions}
@@ -110,9 +111,9 @@ export function CustomerTransactionTable({
                 <div className={textEnd}>
                   <p className="font-medium">{formatCurrency(getAmount(tx.amount))}</p>
                   <p
-                    className={`text-sm ${tx.type === 'EARN' ? 'text-green-600' : 'text-orange-600'}`}
+                    className={`text-sm ${tx.balanceAfter >= tx.balanceBefore ? 'text-green-600' : 'text-orange-600'}`}
                   >
-                    {tx.type === 'EARN' ? '+' : '-'}
+                    {tx.balanceAfter >= tx.balanceBefore ? '+' : '-'}
                     {formatNumber(tx.points)} {t('common.points')}
                   </p>
                 </div>

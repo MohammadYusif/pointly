@@ -201,9 +201,9 @@ export default function TransactionsPage() {
                     <div className={`${textEnd} flex flex-col items-end gap-1`}>
                       <p className="font-medium">{formatCurrency(getAmount(tx.amount))}</p>
                       <p
-                        className={`text-sm ${tx.type === 'EARN' ? 'text-green-600' : 'text-orange-600'}`}
+                        className={`text-sm ${tx.balanceAfter >= tx.balanceBefore ? 'text-green-600' : 'text-orange-600'}`}
                       >
-                        {tx.type === 'EARN' ? '+' : '-'}
+                        {tx.balanceAfter >= tx.balanceBefore ? '+' : '-'}
                         {formatNumber(tx.points)} {t('common.points')}
                       </p>
                       {breakdown && tx.type === 'EARN' && (

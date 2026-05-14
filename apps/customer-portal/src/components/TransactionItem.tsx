@@ -14,6 +14,7 @@ export function TransactionItem({ transaction, merchantName }: TransactionItemPr
   const { formatNumber, formatDate, t } = useTranslation();
   const badge = getTypeBadge(transaction.type);
   const isEarn = transaction.type === 'EARN';
+  const isCredit = transaction.balanceAfter >= transaction.balanceBefore;
   const [expanded, setExpanded] = useState(false);
   const breakdown = transaction.breakdown;
 
@@ -32,8 +33,8 @@ export function TransactionItem({ transaction, merchantName }: TransactionItemPr
           </p>
         </div>
         <div className="text-end">
-          <span className={`font-medium ${isEarn ? 'text-green-600' : 'text-amber-600'}`}>
-            {isEarn ? '+' : '-'}
+          <span className={`font-medium ${isCredit ? 'text-green-600' : 'text-amber-600'}`}>
+            {isCredit ? '+' : '-'}
             {formatNumber(transaction.points)}
           </span>
           {transaction.amount > 0 && (

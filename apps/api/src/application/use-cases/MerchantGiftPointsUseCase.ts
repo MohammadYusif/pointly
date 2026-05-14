@@ -3,6 +3,7 @@ import { ValidationError } from '../../domain/errors/DomainError';
 import type { ICustomerRepository } from '../repositories/ICustomerRepository';
 import type { ITransactionRepository } from '../repositories/ITransactionRepository';
 import type { IIdempotencyService } from '../services/IIdempotencyService';
+import type { ISmsPublisherService } from '../services/ISmsPublisherService';
 import type { PersistenceItem } from '../shared/interfaces/BaseRepository';
 
 export interface MerchantGiftPointsRequest {
@@ -25,6 +26,7 @@ export class MerchantGiftPointsUseCase {
     private transactionRepository: ITransactionRepository,
     private idempotencyService: IIdempotencyService,
     private atomicWrite: (items: PersistenceItem[]) => Promise<void>,
+    private smsPublisher?: ISmsPublisherService | undefined,
   ) {}
 
   async execute(request: MerchantGiftPointsRequest): Promise<MerchantGiftPointsResponse> {
@@ -80,6 +82,17 @@ export class MerchantGiftPointsUseCase {
     };
 
     await this.idempotencyService.storeResult(scopedKey, result, 86400);
+
+    // Fire-and-forget SMS notification (transactional — no opt-in check required)
+    if (this.smsPublisher) {
+      const customerPhone = customer.getPhone().toE164();
+      this.smsPublisher.publish({
+        phone: customerPhone,
+        body: `You received ${request.points} points as a gift! Your balance is now ${result.merchantPointsBalanceAfter} points.`,
+        merchantId: request.merchantId,
+        type: 'POINTS_GIFTED',
+      });
+    }
 
     return result;
   }
