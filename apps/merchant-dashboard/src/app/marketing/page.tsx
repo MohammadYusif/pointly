@@ -91,7 +91,7 @@ export default function MarketingPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-6 flex items-start justify-between gap-4">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className={`text-2xl md:text-3xl font-bold text-foreground ${textStart}`}>
             {t('marketing.title')}
@@ -107,7 +107,7 @@ export default function MarketingPage() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -183,13 +183,13 @@ export default function MarketingPage() {
         </CardHeader>
         <CardContent>
           {/* Filter Tabs */}
-          <div className="flex gap-1 mb-4 p-1 bg-muted/50 rounded-lg">
+          <div className="flex gap-1 mb-4 p-1 bg-muted/50 rounded-lg overflow-x-auto">
             {FILTER_TABS.map((tab) => (
               <button
                 key={tab.key}
                 type="button"
                 onClick={() => setFilter(tab.key)}
-                className={`flex-1 px-3 py-1.5 text-sm rounded-md transition-colors ${
+                className={`shrink-0 whitespace-nowrap px-3 py-1.5 text-sm rounded-md transition-colors ${
                   filter === tab.key
                     ? 'bg-background text-foreground shadow-sm font-medium'
                     : 'text-muted-foreground hover:text-foreground'

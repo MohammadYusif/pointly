@@ -91,7 +91,7 @@ export default function TransactionsPage() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <h1 className={`text-2xl md:text-3xl font-bold text-foreground ${textStart}`}>
           {t('transaction.title')}
         </h1>
