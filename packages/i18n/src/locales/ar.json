@@ -383,7 +383,8 @@
     "birthdayThisMonth": "أعياد ميلاد هذا الشهر",
     "inactiveCustomers": "غير نشطين 60+ يوم",
     "newCustomers": "جدد هذا الشهر",
-    "totalCustomers": "إجمالي العملاء"
+    "totalCustomers": "إجمالي العملاء",
+    "createCampaign": "إنشاء حملة"
   },
   "expiry": {
     "pointsExpireIn": "تنتهي نقاطك خلال",

@@ -383,7 +383,8 @@
     "birthdayThisMonth": "birthdays this month",
     "inactiveCustomers": "inactive 60+ days",
     "newCustomers": "new this month",
-    "totalCustomers": "total customers"
+    "totalCustomers": "total customers",
+    "createCampaign": "Create campaign"
   },
   "expiry": {
     "pointsExpireIn": "Your points expire in",
