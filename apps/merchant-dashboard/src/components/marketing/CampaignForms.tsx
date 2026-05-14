@@ -134,11 +134,21 @@ function buildCreatePayload(args: {
 /*  Create Campaign Form                                               */
 /* ------------------------------------------------------------------ */
 
-export function CreateCampaignForm({ onClose }: { onClose: () => void }) {
+export function CreateCampaignForm({
+  onClose,
+  initialType,
+  initialWinBackDays,
+  initialWelcomeDays,
+}: {
+  onClose: () => void;
+  initialType?: CampaignType;
+  initialWinBackDays?: string;
+  initialWelcomeDays?: string;
+}) {
   const { t } = useTranslation();
   const createCampaign = useCreateCampaign();
 
-  const [selectedType, setSelectedType] = useState<CampaignType | null>(null);
+  const [selectedType, setSelectedType] = useState<CampaignType | null>(initialType ?? null);
   const [message, setMessage] = useState('');
   const [customName, setCustomName] = useState('');
   const [customDesc, setCustomDesc] = useState('');
@@ -149,8 +159,8 @@ export function CreateCampaignForm({ onClose }: { onClose: () => void }) {
   const [maxUses, setMaxUses] = useState('');
   const [minPurchase, setMinPurchase] = useState('');
   const [maxPoints, setMaxPoints] = useState('');
-  const [winBackDays, setWinBackDays] = useState('60');
-  const [welcomeDays, setWelcomeDays] = useState('30');
+  const [winBackDays, setWinBackDays] = useState(initialWinBackDays ?? '60');
+  const [welcomeDays, setWelcomeDays] = useState(initialWelcomeDays ?? '30');
   const [lastVisitDays, setLastVisitDays] = useState('');
   const [enablePush, setEnablePush] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
