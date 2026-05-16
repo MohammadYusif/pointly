@@ -1,96 +1,34 @@
 # Pointly Customer Portal
 
-Customer-facing web application for viewing points, tier status, and redeeming rewards.
+Next.js 15 app for end customers. Phone OTP login (Cognito CUSTOM_AUTH), Arabic-first with bilingual support, forced light mode.
 
-## Features (Planned)
+See [CLAUDE.md](CLAUDE.md) for the full engineering guide (auth flow, i18n, styling, gotchas).
 
-```mermaid
-graph LR
-    subgraph Customer Portal
-        HOME[Dashboard]
-        POINTS[Points Balance]
-        TIER[Tier Status]
-        HISTORY[Transaction History]
-        REDEEM[Redemption]
-        PROFILE[Profile]
-    end
-
-    HOME --> POINTS
-    HOME --> TIER
-    HOME --> HISTORY
-    HOME --> REDEEM
-    HOME --> PROFILE
-```
-
-### Dashboard
-- Global points balance
-- Current tier with progress bar
-- Recent transactions
-- Available rewards
-
-### Points & Tiers
-- View global and per-merchant balances
-- Tier progress visualization
-- Monthly earning summary
-- Decay warnings for inactive accounts
-
-### Redemption
-- Browse available rewards
-- Tier-based redemption multipliers
-- QR code for in-store redemption
-- Redemption history
-
-### Profile
-- Phone number (primary identifier)
-- Notification preferences
-- Enrolled merchants
-- Consent management
-
-## Tech Stack (Planned)
-
-- **Framework**: React 18 + Vite
-- **Styling**: Tailwind CSS
-- **State**: TanStack Query
-- **Auth**: AWS Amplify + Cognito
-- **i18n**: Arabic (RTL) + English
-
-## Getting Started
+## Quick Start
 
 ```bash
-# Install dependencies
-pnpm install
-
-# Start development server
-pnpm dev
-
-# Build for production
-pnpm build
+pnpm dev        # next dev on :3001
+pnpm build      # next build
+pnpm type-check # tsc --noEmit
 ```
 
-## Environment Variables
+Env vars needed: `NEXT_PUBLIC_CUSTOMER_USER_POOL_ID`, `NEXT_PUBLIC_CUSTOMER_CLIENT_ID`, `NEXT_PUBLIC_API_URL`
 
-```env
-VITE_API_URL=http://localhost:3000
-VITE_COGNITO_USER_POOL_ID=
-VITE_COGNITO_CLIENT_ID=
-VITE_REGION=me-south-1
-```
+## Features
 
-## Directory Structure
+- **Login** — phone number + OTP two-step (no password)
+- **Dashboard** — global points balance, tier badge + progress, quick actions
+- **QR code** — full-screen animated QR for in-store scanning (auto-refreshes before expiry)
+- **Transaction history** — infinite-scroll paginated list
+- **Merchant enrollment** — browse and enroll with merchants
+- **Profile** — edit name, SMS marketing opt-in toggle
+- **Wallet** — download Apple/Google Wallet pass
+- **Challenges** — weekly visit streak tracking
 
-```
-src/
-├── components/        # Reusable UI components
-├── pages/            # Route pages
-├── hooks/            # Custom React hooks
-├── services/         # API client
-├── stores/           # State management
-└── utils/            # Utilities
-```
+## Key Patterns
 
-## Design Considerations
-
-- Mobile-first responsive design
-- RTL support for Arabic
-- Offline-capable PWA
-- Accessibility (WCAG 2.1 AA)
+- Default language: Arabic (`dir="rtl"`) — inline script in `layout.tsx` prevents direction flash
+- All data fetching via TanStack Query hooks in `hooks/api/`
+- `CustomerLayout` handles the auth guard — don't duplicate in individual pages
+- Phone inputs always `dir="ltr"` regardless of page direction
+- `completeProfile({})` called on every login (idempotent) to ensure DynamoDB record exists

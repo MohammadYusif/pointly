@@ -1,249 +1,104 @@
 # API – `apps/api`
 
-Fastify 5 REST API running on AWS Lambda (Node 22). Clean/DDD architecture. Talks to DynamoDB only.
+Fastify 5 REST API on AWS Lambda (Node 22). Clean/DDD architecture. DynamoDB only.
 
 ## Commands
 
 ```bash
-pnpm dev                          # tsx watch (hot-reload local server on port 3000)
-pnpm test                         # vitest run --coverage
-pnpm test:watch                   # vitest interactive
-pnpm build                        # tsc + tsc-alias
-pnpm build:lambda:all             # esbuild → 3 Lambda zips (main, decay, tier-reset)
-pnpm type-check                   # tsc --noEmit
-
-# From monorepo root
-pnpm docker:up                    # Start local DynamoDB (docker compose)
-pnpm seed                         # Seed test data
-pnpm seed:clean                   # Wipe + reseed
+pnpm dev                    # tsx watch, port 3000
+pnpm test                   # vitest --coverage
+pnpm build:lambda:all       # esbuild → 4 Lambda zips
+pnpm type-check             # tsc --noEmit
+pnpm docker:up && pnpm seed # local DynamoDB + seed data
 ```
 
 ## Architecture
 
 ```
 src/
-  domain/           # Pure business logic — no I/O, no framework
-    config/         # TierConfig.ts — SINGLE SOURCE OF TRUTH for tiers
-    entities/       # Customer, Merchant, Transaction (rich domain objects)
+  domain/           # Pure business logic — no I/O
+    config/         # TierConfig.ts — tier thresholds (source of truth)
+    entities/       # Customer, Merchant, Transaction
     value-objects/  # Points, Money, Email, PhoneNumber, CustomerTier
     errors/         # DomainError, ValidationError, NotFoundError
   application/
-    use-cases/      # One class per operation (RecordPurchaseUseCase, etc.)
-    repositories/   # Interfaces (ICustomerRepository, etc.)
+    use-cases/      # One class per operation, single execute() method
+    repositories/   # Interfaces
     services/       # Interfaces (IDecayCalculatorService, ISmsPublisherService)
   infrastructure/
     config/         # Environment.ts — Zod-validated env vars
-    database/       # DynamoDBClient factory
     repositories/   # DynamoDB implementations
     services/       # DecayCalculatorService, SmsPublisherService, TransactionalWriter
-  presentation/
-    http/
-      container.ts  # DI container — wires repos → services → use-cases
-      routes/       # Route handlers (thin — delegate to use-cases)
-      plugins/      # cognitoAuth, cognitoCustomerAuth, errorHandler
-  lambda.ts           # Main Lambda entrypoint (API Gateway proxy)
-  scheduled-decay.ts  # EventBridge cron — monthly point decay
-  scheduled-tier-reset.ts  # EventBridge cron — monthly tier reset
+  presentation/http/
+    container.ts    # DI singleton — wires repos → services → use-cases
+    routes/         # Thin handlers, delegate to use-cases
+    plugins/        # cognitoAuth, cognitoCustomerAuth, errorHandler
+  lambda.ts                  # API Gateway entrypoint
+  scheduled-decay.ts         # EventBridge monthly decay cron
+  scheduled-tier-reset.ts    # EventBridge monthly tier-reset cron
 ```
 
-## Route Map
+## Routes
 
-All routes under `/v1`. Auth scopes are applied at the registration level, not per-route.
+All under `/v1`. See `src/presentation/http/routes/` for full handlers.
 
-**Public routes:**
-| Method | Path | Handler file |
-|--------|------|--------------|
-| GET | `/health` | `routes/health.ts` |
-| POST | `/v1/customers` | `routes/customerPublic.ts` |
-| GET | `/v1/customers/phone/:phone` | `routes/customerPublic.ts` |
-| GET | `/v1/merchants/:id/public` | `routes/merchantPublic.ts` |
-| POST | `/v1/merchants/initiate-signup` | `routes/merchantPublic.ts` |
-| GET | `/v1/merchants/signup-status?paymentId=` | `routes/merchantPublic.ts` |
-| POST | `/v1/webhooks/moyasar` | `routes/moyasarWebhook.ts` |
-| GET | `/v1/push/vapid-key` | `routes/push.ts` |
+**Public**: `GET /health`, `POST /v1/customers`, `GET /v1/customers/phone/:phone`, `GET /v1/merchants/:id/public`, `POST /v1/merchants/initiate-signup`, `GET /v1/merchants/signup-status`, `POST /v1/webhooks/moyasar`, `GET /v1/push/vapid-key`
 
-**Customer JWT routes (`/v1/me/...`):**
-| Method | Path | Handler file |
-|--------|------|--------------|
-| GET | `/v1/me` | `routes/customerSelf.ts` |
-| PATCH | `/v1/me` | `routes/customerSelf.ts` |
-| DELETE | `/v1/me` | `routes/customerSelf.ts` |
-| POST | `/v1/me/setup` | `routes/customerSelf.ts` |
-| POST | `/v1/me/qr-code` | `routes/customerSelf.ts` |
-| GET | `/v1/me/transactions` | `routes/customerSelf.ts` |
-| GET | `/v1/me/perks` | `routes/customerSelf.ts` |
-| GET | `/v1/me/merchants` | `routes/customerSelf.ts` |
-| POST | `/v1/me/enroll` | `routes/customerSelf.ts` |
-| GET | `/v1/me/challenges` | `routes/customerSelf.ts` |
-| POST | `/v1/me/gift` | `routes/customerSelf.ts` |
-| POST | `/v1/me/consent/:merchantId` | `routes/customerSelf.ts` |
-| POST | `/v1/me/push-subscriptions` | `routes/push.ts` |
-| DELETE | `/v1/me/push-subscriptions` | `routes/push.ts` |
-| GET | `/v1/me/wallet/apple-pass` | `routes/wallet-pass.ts` |
-| GET | `/v1/me/wallet/google-link` | `routes/wallet-pass.ts` |
+**Customer JWT (`/v1/me/...`)**: self CRUD, QR code, transactions, perks, merchants, enroll, gift, consent, push subscriptions, wallet pass
 
-**Merchant JWT routes:**
-| Method | Path | Handler file |
-|--------|------|--------------|
-| GET | `/v1/merchants/:id` | `routes/merchants.ts` |
-| PATCH | `/v1/merchants/:id` | `routes/merchants.ts` |
-| POST | `/v1/merchants/:id/logo-upload` | `routes/merchants.ts` |
-| POST | `/v1/merchants/:id/locations` | `routes/merchants.ts` |
-| GET | `/v1/merchants/:id/customers` | `routes/customers.ts` |
-| GET | `/v1/merchants/:id/transactions` | `routes/merchants.ts` |
-| GET | `/v1/merchants/:id/stats` | `routes/merchants.ts` |
-| GET | `/v1/merchants/:id/analytics` | `routes/merchants.ts` |
-| GET | `/v1/merchants/:id/analytics/locations/:locationId` | `routes/merchants.ts` |
-| GET | `/v1/merchants/:id/customer-insights` | `routes/merchants.ts` |
-| GET | `/v1/merchants/:id/perk-insights` | `routes/merchants.ts` |
-| GET | `/v1/merchants/:id/customers/tier-breakdown` | `routes/merchants.ts` |
-| POST | `/v1/merchants/:id/register-customer` | `routes/merchants.ts` |
-| POST | `/v1/merchants/:id/enroll-customer` | `routes/merchants.ts` |
-| GET | `/v1/merchants/:id/verify-qr` | `routes/merchants.ts` |
-| GET | `/v1/merchants/:id/push-stats` | `routes/push.ts` |
-| POST/PATCH/DELETE | `/v1/merchants/:id/perks` | `routes/merchants.ts` |
-| POST | `/v1/merchants/:id/campaigns` | `routes/campaigns.ts` |
-| GET/PATCH/DELETE | `/v1/merchants/:id/campaigns/:campaignId` | `routes/campaigns.ts` |
-| POST | `/v1/merchants/:id/webhooks` | `routes/webhooks.ts` |
-| GET | `/v1/merchants/:id/webhooks` | `routes/webhooks.ts` |
-| DELETE | `/v1/merchants/:id/webhooks/:webhookId` | `routes/webhooks.ts` |
-| POST | `/v1/purchases` | `routes/purchases.ts` |
-| POST | `/v1/purchases/redeem` | `routes/purchases.ts` |
-| GET | `/v1/purchases/:id` | `routes/purchases.ts` |
-| GET | `/v1/customers/:id` | `routes/customers.ts` |
-| GET | `/v1/customers/:id/transactions` | `routes/customers.ts` |
-| GET | `/v1/customers/:id/stats` | `routes/customers.ts` |
+**Merchant JWT**: merchant CRUD + logo, locations, customers, transactions, stats, analytics, insights, tier breakdown, perks, campaigns, webhooks, purchases, redeem
 
-## Use Cases
+## Use Cases (`application/use-cases/`)
 
-All live in `application/use-cases/`. Each has a single `execute()` method.
+Key ones: `RecordPurchaseUseCase`, `RedeemPointsUseCase`, `EnrollCustomerUseCase`, `ManagePerkUseCase`, `ManageCampaignUseCase`, `GetAnalyticsUseCase`, `ProcessPointsDecayUseCase`, `ProcessMonthlyTierResetUseCase`, `InitiateMerchantSignupUseCase`, `CompleteMerchantSignupUseCase`.
 
-| Use Case | Triggered by |
-|----------|-------------|
-| `EnrollCustomerUseCase` | POST `/v1/merchants/:id/register-customer` |
-| `ApproveConsentUseCase` | POST `/v1/me/consent/:merchantId` |
-| `RecordPurchaseUseCase` | POST `/v1/purchases` |
-| `RedeemPointsUseCase` | POST `/v1/purchases/redeem` |
-| `GenerateQRCodeUseCase` | POST `/v1/me/qr-code` |
-| `ManagePerkUseCase` | POST/PATCH/DELETE `/v1/merchants/:id/perks` |
-| `ManageCampaignUseCase` | POST/PATCH/DELETE `/v1/merchants/:id/campaigns` |
-| `GetAnalyticsUseCase` | GET `/v1/merchants/:id/analytics` |
-| `GetCustomerPerksUseCase` | GET `/v1/me/perks` |
-| `GetCustomerInsightsUseCase` | GET `/v1/merchants/:id/customer-insights` |
-| `ManagePushSubscriptionUseCase` | POST/DELETE `/v1/me/push-subscriptions`, GET `/v1/push/vapid-key`, GET `/v1/merchants/:id/push-stats` |
-| `ManageWalletPassUseCase` | GET `/v1/me/wallet/apple-pass`, GET `/v1/me/wallet/google-link` |
-| `CheckChallengeEligibilityUseCase` | GET `/v1/me/challenges` |
-| `ProcessPointsDecayUseCase` | `scheduled-decay.ts` (EventBridge monthly) |
-| `ProcessMonthlyTierResetUseCase` | `scheduled-tier-reset.ts` (EventBridge monthly) |
-| `InitiateMerchantSignupUseCase` | POST `/v1/merchants/initiate-signup` |
-| `CompleteMerchantSignupUseCase` | POST `/v1/webhooks/moyasar` (on `invoice.paid`) |
-| `GetSignupStatusUseCase` | GET `/v1/merchants/signup-status` |
+## DI Container
 
-## DI Container (`container.ts`)
-
-`getContainer()` returns a singleton. `resetContainer()` clears it (used in tests).
-All repos and use-cases are instantiated here — never `new` them in route handlers.
+`getContainer()` — singleton per Lambda warm instance. `resetContainer()` in tests to prevent state leakage. Never `new` repos or use-cases in route handlers.
 
 ## Environment Variables
 
-Validated at startup by Zod (`infrastructure/config/Environment.ts`). Required:
-
+Required at startup (Zod-validated in `Environment.ts`):
 ```
-USER_LEDGER_TABLE       # DynamoDB: customers + merchants (same table, PK differentiates)
-TRANSACTION_TABLE
-IDEMPOTENCY_TABLE
-QR_NONCE_TABLE
-PENDING_CONSENTS_TABLE  # defaults to 'pointly-pending-consents' if absent
-SMS_QUOTA_TABLE
-SMS_QUEUE_URL           # SQS queue for SMS dispatch
-WALLET_PASSES_TABLE     # DynamoDB: push subscriptions + wallet pass data (defaults to 'pointly-wallet-passes')
-
-# Moyasar (merchant signup payment gateway)
-MOYASAR_SECRET_KEY      # Basic-auth key for invoice creation + status checks
-MOYASAR_WEBHOOK_SECRET  # HMAC-SHA256 secret to verify X-Moyasar-Signature header
-
-# Optional (Cognito — required in production)
-MERCHANT_USER_POOL_ID
-MERCHANT_USER_POOL_CLIENT_ID
-CUSTOMER_USER_POOL_ID
-CUSTOMER_USER_POOL_CLIENT_ID
-
-# Optional — Web Push (VAPID)
-VAPID_PUBLIC_KEY
-VAPID_PRIVATE_KEY
-VAPID_SUBJECT           # e.g. mailto:admin@pointly.sa
-
-# Optional — Apple Wallet (all required together if Apple pass enabled)
-APPLE_PASS_CERT_PEM
-APPLE_PASS_KEY_PEM
-APPLE_PASS_KEY_PASSPHRASE
-APPLE_TEAM_ID
-APPLE_PASS_TYPE_ID
-APPLE_WWDR_PEM
-
-# Optional — Google Wallet
-GOOGLE_WALLET_ISSUER_ID
-GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL
-GOOGLE_WALLET_PRIVATE_KEY
-
-# Optional — S3 merchant logo assets
-MERCHANT_ASSETS_BUCKET
-MERCHANT_ASSETS_URL     # CloudFront URL prefix for serving logo assets
-
-# Local dev
-DYNAMODB_ENDPOINT       # e.g. http://localhost:8000 (set by docker-compose)
+USER_LEDGER_TABLE, TRANSACTION_TABLE, IDEMPOTENCY_TABLE, QR_NONCE_TABLE,
+PENDING_CONSENTS_TABLE, SMS_QUOTA_TABLE, SMS_QUEUE_URL, WALLET_PASSES_TABLE,
+MOYASAR_SECRET_KEY, MOYASAR_WEBHOOK_SECRET
 ```
+Optional: Cognito pool IDs, VAPID keys, Apple/Google Wallet certs, S3 assets bucket, `DYNAMODB_ENDPOINT` (local dev).
 
 ## Auth
 
-Two separate Cognito pools. Two plugins, two `preHandler` hooks.
+Two Cognito pools, two plugins:
+- **Merchant**: `plugins/cognitoAuth.ts` → injects `request.merchant`
+- **Customer**: `plugins/cognitoCustomerAuth.ts` → injects `request.customer`
+- Uses **ID token** (not access token) — `custom:merchantId` is in the ID token payload.
 
-- **Merchant**: `plugins/cognitoAuth.ts` → `verifyMerchantToken` — validates JWT, injects `request.merchant`
-- **Customer**: `plugins/cognitoCustomerAuth.ts` → `verifyCustomerToken` — validates JWT, injects `request.customer`
-- API uses **ID token** (not access token) — custom attributes like `custom:merchantId` are in the ID token payload.
-
-## Customer Domain (key rules)
+## Customer Domain Rules
 
 - **Dual wallet**: `globalPointsBalance` (spendable anywhere) + per-merchant `merchantPointsBalance`
-- **Tier upgrades**: happen immediately when `monthlyProgress` crosses a threshold during `addPointsFromPurchase`
-- **Tier decay**: happens once per month via scheduled job — drops ONE level if threshold not maintained
-- **Smart redemption** (`redeemSmart`): prioritises merchant points first, then global points
-- **Point decay**: 12-month grace → Phase 1: 5%/month (months 12-17) → Phase 2: 15%/month + wipe merchant points (month 18+)
-- **Decay immunity**: Gold/Platinum/Diamond tiers are decay-immune for global points; Phase 2 wipes merchant balances for all tiers
-- **Lazy monthly reset**: `addPointsFromPurchase` checks `isNewMonth()` and resets `monthlyProgress` if cron missed a run
-
-## Testing
-
-Tests live in `src/**/__tests__/`. Run `pnpm test`. Coverage via `@vitest/coverage-v8`.
-
-Key test files:
-- `application/__tests__/RecordPurchaseUseCase.test.ts`
-- `application/__tests__/RedeemPointsUseCase.test.ts`
-- `domain/__tests__/tier.test.ts`
-- `domain/__tests__/point-system.test.ts`
+- **Tier upgrades**: immediate when `monthlyProgress` crosses threshold in `addPointsFromPurchase`
+- **Smart redemption**: prioritises merchant points first, then global
+- **Point decay**: 12-month grace → 5%/month (months 12–17) → 15%/month + wipe merchant points (18+)
+- **Decay immunity**: Gold/Platinum/Diamond immune for global points; Phase 2 wipes merchant balances for all tiers
+- **Lazy monthly reset**: `addPointsFromPurchase` resets `monthlyProgress` via `isNewMonth()` if cron missed
 
 ## Lambda Build
 
-Four separate esbuild bundles (no shared code at runtime):
-- `dist/lambda/index.js` — API Gateway handler
-- `dist/lambda-decay/index.js` — Decay cron
-- `dist/lambda-tier-reset/index.js` — Tier reset cron
-- `dist/lambda-sms-consumer/index.js` — SQS → Taqnyat SMS consumer
+Four esbuild bundles (no shared code at runtime): `lambda/` (API GW), `lambda-decay/`, `lambda-tier-reset/`, `lambda-sms-consumer/` (SQS → Taqnyat).
 
 **Always rebuild before `terraform apply`** when API code changes.
 
 ## Gotchas
 
-- `TransactionalWriter.writeAll()` is used for ALL multi-entity writes — never write repos individually in a use-case if multiple entities change
-- Idempotency check happens inside `RecordPurchaseUseCase` and `RedeemPointsUseCase` — always pass a client-generated `idempotencyKey`
-- `getContainer()` is a singleton per Lambda warm instance — `resetContainer()` in tests to avoid state leakage
-- Phone numbers stored in E.164 format (`+966XXXXXXXXX`) — within the API use `new PhoneNumber(raw).toE164()`, NOT `normalizePhone()` (which is frontend-only from `@pointly/shared`)
-- Merchant gift use cases must only award `merchantPointsBalance` — never `globalPointsBalance` (prevents global currency inflation)
-- Optional fields in use-case request interfaces need `?: T | undefined` (not just `?: T`) — `exactOptionalPropertyTypes` is enabled
-- DynamoDB `USER_LEDGER_TABLE` holds both Customers and Merchants — PK prefix differentiates (`CUSTOMER#` vs `MERCHANT#`)
-- **Moyasar webhook** (`/v1/webhooks/moyasar`) uses `addContentTypeParser` to capture raw body as a string for HMAC-SHA256 verification before parsing JSON — if you add middleware that consumes the body stream before this runs, signature verification will break
-- **`PendingMerchantSignup`** is stored in `USER_LEDGER_TABLE` (not a separate table). PK = `PENDING_SIGNUP#<signupId>`. Payment reverse-lookup stored as a separate item: `PK = PAYMENT_INDEX#<paymentId>`. Both have a 24h TTL.
-- **`IIdempotencyService`** methods: `getResult<T>(key)`, `storeResult<T>(key, value, ttlSeconds)`, `delete(key)` — NOT `check` / `record`
-- `@pointly/api` does NOT depend on `@pointly/shared` — domain types (`PerkType`, `WalletConfig`, `CampaignType`, etc.) are intentionally local to keep the Lambda bundle self-contained
-- `WALLET_PASSES_TABLE` stores both push subscription records (`PK: CUSTOMER#<id> SK: PUSH#<hash>`) and merchant-keyed push index records (`PK: MERCHANT_PUSH#<merchantId> SK: CUSTOMER#<id>#PUSH#<hash>`) — do not use `ScanCommand` for per-merchant queries; use `QueryCommand` on the merchant-keyed PK
-- Apple/Google Wallet generation returns a 501 gracefully if the relevant env vars are absent — no crash
+- `TransactionalWriter.writeAll()` for ALL multi-entity writes — never write repos individually in a use-case
+- Idempotency is inside `RecordPurchaseUseCase` / `RedeemPointsUseCase` — always pass `idempotencyKey`
+- Phone: use `new PhoneNumber(raw).toE164()` in API, NOT `normalizePhone()` (that's frontend-only)
+- Merchant gift must only award `merchantPointsBalance` — never `globalPointsBalance`
+- Optional fields require `?: T | undefined` — `exactOptionalPropertyTypes` is enabled
+- `USER_LEDGER_TABLE` holds Customers (`CUSTOMER#`) and Merchants (`MERCHANT#`) in the same table
+- `PendingMerchantSignup` is also in `USER_LEDGER_TABLE`: `PK=PENDING_SIGNUP#<id>`, payment reverse-lookup `PK=PAYMENT_INDEX#<paymentId>` — both 24h TTL
+- `IIdempotencyService`: `getResult<T>`, `storeResult<T>`, `delete` — NOT `check`/`record`
+- `@pointly/api` does NOT depend on `@pointly/shared` — domain types are local to keep Lambda bundle lean
+- Moyasar webhook captures raw body via `addContentTypeParser` for HMAC — any middleware consuming the body stream before this breaks signature verification
+- `WALLET_PASSES_TABLE`: use `QueryCommand` on `MERCHANT_PUSH#<merchantId>` PK for per-merchant queries — not `ScanCommand`
+- Apple/Google Wallet returns 501 gracefully when env vars absent
