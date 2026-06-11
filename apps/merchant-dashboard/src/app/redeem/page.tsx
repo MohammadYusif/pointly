@@ -33,7 +33,7 @@ export default function RedeemPage() {
   const lookupMutation = useCustomerByPhoneLookup();
   const loyaltyConfig = merchantData?.loyaltyConfig;
   const minimumRedemption = loyaltyConfig?.minimumRedemption ?? 100;
-  const redemptionRate = loyaltyConfig?.redemptionRate ?? 0.01;
+  const redemptionRate = loyaltyConfig?.redemptionRate ?? 0.1;
   const allowPartial = loyaltyConfig?.allowPartialRedemption ?? true;
 
   const getCustomerMerchantBalance = (): number => {

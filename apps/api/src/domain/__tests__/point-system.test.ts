@@ -787,19 +787,19 @@ describe('Point System - Real World Scenarios', () => {
         }).toThrow(/exceeds maximum allowed 0.5 SAR\/point/);
       });
 
-      it('should allow redemption at 0.01 SAR per point (normal rate)', () => {
-        // Normal: 100 points for 1 SAR (0.01 SAR per point)
+      it('should allow redemption at 0.1 SAR per point (normal rate)', () => {
+        // Normal: 100 points for 10 SAR (0.1 SAR per point)
         const transaction = Transaction.createRedeem(
           'merchant_123',
           'customer_123',
           Points.from(100),
-          Money.fromSAR(1),
+          Money.fromSAR(10),
           Points.from(1000),
           'idempotency_key',
         );
 
         expect(transaction.getPoints().toNumber()).toBe(100);
-        expect(transaction.getAmount()?.toSAR()).toBe(1);
+        expect(transaction.getAmount()?.toSAR()).toBe(10);
       });
 
       it('should allow redemption at exactly 0.50 SAR per point (edge case)', () => {
@@ -831,29 +831,29 @@ describe('Point System - Real World Scenarios', () => {
       });
 
       it('should validate expected rate when provided', () => {
-        // Merchant expects 0.01 SAR/point but transaction has 0.02
+        // Merchant expects 0.1 SAR/point but transaction has 0.2
         expect(() => {
           Transaction.createRedeem(
             'merchant_123',
             'customer_123',
             Points.from(100),
-            Money.fromSAR(2), // 0.02 SAR/point
+            Money.fromSAR(20), // 0.2 SAR/point
             Points.from(1000),
             'idempotency_key',
             {},
-            0.01, // Expected rate
+            0.1, // Expected rate
           );
         }).toThrow(/Redemption rate mismatch/);
       });
     });
 
     describe('Redemption Edge Cases', () => {
-      it('should allow redeeming 1 point for 0.01 SAR (normal rate)', () => {
+      it('should allow redeeming 1 point for 0.1 SAR (normal rate)', () => {
         const transaction = Transaction.createRedeem(
           'merchant_123',
           'customer_123',
           Points.from(1),
-          Money.fromSAR(0.01),
+          Money.fromSAR(0.1),
           Points.from(100),
           'idempotency_key',
         );

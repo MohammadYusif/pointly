@@ -138,7 +138,7 @@ describe('RedeemPointsUseCase', () => {
       expect(result.merchantPointsRedeemed).toBe(100);
       expect(result.globalPointsRedeemed).toBe(0);
       expect(result.transactionIds).toHaveLength(1);
-      expect(result.sarValue).toBe(1); // 100 * 0.01
+      expect(result.sarValue).toBe(10); // 100 * 0.1
       expect(mockAtomicWrite).toHaveBeenCalledTimes(1);
     });
 
@@ -185,8 +185,8 @@ describe('RedeemPointsUseCase', () => {
         idempotencyKey: 'redeem_3',
       });
 
-      // PROFESSIONAL tier: redemptionRate = 0.01
-      expect(result.sarValue).toBe(2); // 200 * 0.01
+      // PROFESSIONAL tier: redemptionRate = 0.1
+      expect(result.sarValue).toBe(20); // 200 * 0.1
     });
   });
 

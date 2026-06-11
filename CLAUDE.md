@@ -137,6 +137,6 @@ Set `domain_name` + `certificate_arn` in `environments/prod.tfvars` to activate.
 | Platinum | 10,000 | 1.15× | Yes |
 | Diamond | 15,000 | 1.2× | Yes |
 
-Redemption rate: **0.01 SAR/point**. Update both:
+Redemption rate: **0.1 SAR/point**. Update both:
 - API: `apps/api/src/domain/config/TierConfig.ts`
 - Frontend: `packages/shared/src/tier-config.ts`

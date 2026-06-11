@@ -14,7 +14,7 @@ Turbo handles build ordering — consuming apps depend on `@pointly/shared` bein
 ## Key Exports
 
 ### Constants (`constants.ts`)
-`CURRENCY_CODE = 'SAR'`, `LOCALE_AR = 'ar-SA'`, `LOCALE_EN = 'en-SA'`, `DEFAULT_REDEMPTION_RATE = 0.01`
+`CURRENCY_CODE = 'SAR'`, `LOCALE_AR = 'ar-SA'`, `LOCALE_EN = 'en-SA'`, `DEFAULT_REDEMPTION_RATE = 0.1`
 
 ### Tier Config (`tier-config.ts`)
 Frontend mirror of `apps/api/src/domain/config/TierConfig.ts` — **manually kept in sync**.

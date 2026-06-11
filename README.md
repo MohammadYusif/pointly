@@ -1,6 +1,6 @@
 # Pointly
 
-Multi-tenant SaaS loyalty platform for the Saudi market. Merchants run loyalty programs; customers earn and redeem points across a unified network.
+Multi-tenant SaaS loyalty platform for the Saudi market. Merchants run loyalty programs; customers earn points and redeem them at the merchant where they were earned.
 
 ## Architecture
 
@@ -87,14 +87,14 @@ pnpm --filter @pointly/landing dev              # :3002
 | Platinum | 10,000 - 14,999 | 1.15x | Yes |
 | Diamond | 15,000+ | 1.2x | Yes |
 
-Redemption rate: **0.01 SAR per point** (all tiers).
+Redemption rate: **0.1 SAR per point** (all tiers).
 
 ### Points System
 
-- **Dual wallet**: global points (spendable anywhere) + merchant points (store-specific)
-- **Earning**: 1 SAR = 1 point x tier multiplier
-- **Decay**: 12-month grace, then 5%/month (months 12-17), then 15%/month + wipe merchant points (18+). Gold+ immune for global points.
-- **Tier progress**: resets monthly; evaluated lazily on first transaction if cron missed
+- **Dual wallet**: global points (tier tracking only, not redeemable) + merchant points (store-specific, redeemable at issuing merchant)
+- **Earning**: Each SAR spent earns global points (× tier multiplier) and merchant points (× campaign multiplier if active). Tier multiplier applies to global points only; campaigns boost merchant points only. Rates are configured per merchant (`globalPointsPerSAR` and `pointsPerSAR`)
+- **Decay**: 12-month grace, then 5%/month (months 12–17), then 15%/month + wipe merchant points (18+). Gold/Platinum/Diamond immune for global point decay; Phase 2 wipes merchant balances for all tiers.
+- **Tier progress**: monthly progress resets on 1st of month; tier decays at most one level (Diamond→Platinum, not back to Bronze) if threshold not maintained; evaluated lazily on first transaction if cron missed
 
 ## Key Commands
 
