@@ -1,5 +1,6 @@
 'use client';
 
+import { AppSkeleton } from '@/components/AppSkeleton';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   type ReactNode,
@@ -88,7 +89,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [merchant, isLoading, signIn, signOut],
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  // While the session is resolving (or an unauthenticated visitor is about
+  // to be redirected), show the skeleton instead of the dashboard chrome.
+  const isPublicPage =
+    pathname === '/login' || pathname === '/login/' || pathname.startsWith('/signup-complete');
+  const showSkeleton = !isPublicPage && (isLoading || !merchant);
+
+  return (
+    <AuthContext.Provider value={value}>
+      {showSkeleton ? <AppSkeleton /> : children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth(): AuthContextValue {

@@ -8,14 +8,16 @@ import { useTranslation } from '@pointly/i18n';
 import { Card, CardContent, CardHeader, CardTitle, useRTL } from '@pointly/ui';
 import { Check } from 'lucide-react';
 
+// Keep in sync with the landing page pricing plans
+// (apps/landing/src/i18n/translations.ts → pricing.plans)
 const tiers = [
   {
     key: 'BASIC',
     nameAr: 'أساسي',
     nameEn: 'Basic',
     features: {
-      ar: ['فرع واحد', 'برنامج ولاء قياسي', 'دعم عبر البريد الإلكتروني'],
-      en: ['1 location', 'Standard loyalty program', 'Email support'],
+      ar: ['فرع واحد', '100 رسالة SMS / شهرياً', 'الوصول إلى شبكة بوينتلي'],
+      en: ['1 store location', '100 SMS / month', 'Pointly network access'],
     },
   },
   {
@@ -23,8 +25,8 @@ const tiers = [
     nameAr: 'احترافي',
     nameEn: 'Professional',
     features: {
-      ar: ['حتى 3 فروع', 'علامة تجارية مخصصة', 'تحليلات متقدمة', 'دعم ذو أولوية'],
-      en: ['Up to 3 locations', 'Custom branding', 'Advanced analytics', 'Priority support'],
+      ar: ['حتى 3 فروع', '500 رسالة SMS / شهرياً', 'الوصول إلى شبكة بوينتلي'],
+      en: ['Up to 3 locations', '500 SMS / month', 'Pointly network access'],
     },
   },
   {
@@ -32,8 +34,8 @@ const tiers = [
     nameAr: 'مؤسسي',
     nameEn: 'Enterprise',
     features: {
-      ar: ['فروع غير محدودة', 'وصول API كامل', 'علامة بيضاء', 'مدير حساب مخصص'],
-      en: ['Unlimited locations', 'Full API access', 'White-label', 'Dedicated account manager'],
+      ar: ['فروع غير محدودة', '2,000 رسالة SMS / شهرياً', 'الوصول إلى شبكة بوينتلي'],
+      en: ['Unlimited locations', '2,000 SMS / month', 'Pointly network access'],
     },
   },
 ];

@@ -409,25 +409,31 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <p className="text-sm text-muted-foreground">{t('merchant.pointsRate')}</p>
+              <p className="text-sm text-muted-foreground">{t('settings.merchantPointsRate')}</p>
               <p className="font-medium">
-                {merchant?.loyaltyConfig?.pointsPerSAR ?? '-'} {t('common.points')} / SAR
+                {t('settings.pointsPerSarValue', {
+                  rate: merchant?.loyaltyConfig?.pointsPerSAR ?? '-',
+                })}
               </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">{t('dashboard.pointsRate')}</p>
+              <p className="text-sm text-muted-foreground">{t('settings.globalPointsRate')}</p>
               <p className="font-medium">
-                {merchant?.loyaltyConfig?.globalPointsPerSAR ?? '-'} {t('common.points')} / SAR
+                {t('settings.pointsPerSarValue', {
+                  rate: merchant?.loyaltyConfig?.globalPointsPerSAR ?? '-',
+                })}
               </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">{t('transaction.minAmount')}</p>
+              <p className="text-sm text-muted-foreground">{t('settings.minimumPurchase')}</p>
               <p className="font-medium">{merchant?.loyaltyConfig?.minimumPurchase ?? '-'} SAR</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">{t('settings.redemptionRate')}</p>
               <p className="font-medium">
-                {merchant?.loyaltyConfig?.redemptionRate ?? '-'} SAR / {t('common.points')}
+                {t('settings.redemptionRateValue', {
+                  rate: merchant?.loyaltyConfig?.redemptionRate ?? '-',
+                })}
               </p>
             </div>
           </CardContent>

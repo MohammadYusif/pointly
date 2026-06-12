@@ -29,6 +29,7 @@ export default function ManualEntryPage() {
   const [amount, setAmount] = useState('');
   const [cashierName, setCashierName] = useState('');
   const [selectedLocationId, setSelectedLocationId] = useState('');
+  const [locationTouched, setLocationTouched] = useState(false);
   const [error, setError] = useState('');
   const [amountError, setAmountError] = useState('');
 
@@ -137,7 +138,7 @@ export default function ManualEntryPage() {
     <DashboardLayout>
       <div className="mb-6">
         <h1 className={`text-2xl md:text-3xl font-bold text-foreground ${textStart}`}>
-          {t('navigation.loyalty')}
+          {t('navigation.recordPurchase')}
         </h1>
       </div>
 
@@ -190,6 +191,7 @@ export default function ManualEntryPage() {
                       id="location-input"
                       value={selectedLocationId}
                       onChange={(e) => setSelectedLocationId(e.target.value)}
+                      onBlur={() => setLocationTouched(true)}
                       required
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                     >
@@ -200,7 +202,7 @@ export default function ManualEntryPage() {
                         </option>
                       ))}
                     </select>
-                    {isMultiLocation && !selectedLocationId && (
+                    {isMultiLocation && locationTouched && !selectedLocationId && (
                       <p className="text-xs text-destructive mt-1">
                         {t('errors.locationRequired')}
                       </p>
