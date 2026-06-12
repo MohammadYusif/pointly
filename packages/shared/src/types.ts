@@ -313,6 +313,8 @@ export interface CustomerMerchantView {
   businessName: string;
   merchantPointsBalance: number;
   merchantLifetimePoints: number;
+  /** SAR value of one merchant point at this merchant */
+  redemptionRate: number;
   enrolledAt: string;
   transactionCount: number;
   lastTransactionAt?: string;
@@ -392,10 +394,14 @@ export interface TierBreakdownResponse {
 
 export type ChallengeType = 'WEEKLY_VISIT_STREAK';
 
+/** Mirrors GET /v1/me/challenges (apps/api customerSelf.ts) */
 export interface ChallengeProgressResponse {
-  weeklyVisitCount: number;
-  weeklyVisitDates: string[];
-  lastStreakResetAt: string | null;
+  weeklyStreakChallenge: {
+    target: number;
+    current: number;
+    lastResetAt: string | null;
+    visitDates: string[];
+  };
 }
 
 export interface ChallengeCheckInResponse {

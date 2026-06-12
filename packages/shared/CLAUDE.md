@@ -40,7 +40,7 @@ formatPhone(phone)   // → '+966 50 111 1111' display format
 ### API Response Types (`types.ts`)
 Key types: `MerchantResponse`, `CustomerResponse`, `MerchantScopedCustomerResponse`, `CustomerEnrollment`, `TransactionResponse`, `RecordPurchaseResponse`, `PaginatedResponse<T>`, `ApiResponse<T>`, `AnalyticsData`, `MerchantPerk`, `CustomerPerkView`, `GiftPointsRequest`, `ChallengeProgressResponse`, `MerchantSignupRequest/Response/Status`, `PlatformCounts`.
 
-Note: `ChallengeProgressResponse` has no `streakCount` field — only `weeklyVisitCount`, `weeklyVisitDates`, `lastStreakResetAt`.
+Note: `ChallengeProgressResponse` mirrors the API: `{ weeklyStreakChallenge: { target, current, lastResetAt, visitDates } }` — there is no top-level `streakCount` or `weeklyVisitCount`.
 
 ### Badges (`badges.ts`)
 `getTypeBadge(type)`, `getStatusBadge(status)` → `{ label, variant, className }`

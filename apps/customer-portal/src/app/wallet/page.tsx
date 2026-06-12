@@ -57,7 +57,10 @@ interface MerchantCardProps {
 
 function MerchantCard({ enrollment, merchant }: MerchantCardProps) {
   const { t, formatNumber, formatCurrency } = useTranslation();
-  const sarValue = enrollment.merchantPointsBalance * DEFAULT_REDEMPTION_RATE;
+  // Each merchant configures its own point value — fall back to the
+  // platform default only when the merchant record is unavailable.
+  const sarValue =
+    enrollment.merchantPointsBalance * (merchant?.redemptionRate ?? DEFAULT_REDEMPTION_RATE);
   const businessName = merchant?.businessName ?? enrollment.merchantId;
 
   const handleGoogleWallet = async () => {
@@ -150,7 +153,7 @@ function PushNotificationsCard() {
 }
 
 export default function WalletPage() {
-  const { t, formatNumber, formatCurrency, formatDate } = useTranslation();
+  const { t, formatNumber, formatDate } = useTranslation();
   const { textStart } = useRTL();
   const [showDetails, setShowDetails] = useState(false);
 
@@ -178,7 +181,6 @@ export default function WalletPage() {
     );
   }
 
-  const sarValue = customer.globalPointsBalance * DEFAULT_REDEMPTION_RATE;
   const tierTarget = getTierTarget(customer.currentTier);
   const progress = customer.monthlyProgress || 0;
   const progressPercent = tierTarget > 0 ? Math.min(100, (progress / tierTarget) * 100) : 100;
@@ -221,9 +223,7 @@ export default function WalletPage() {
             <p className="text-3xl font-bold leading-none">
               {formatNumber(customer.globalPointsBalance)}
             </p>
-            <p className="text-sm text-white/70 mt-1">
-              ≈ {formatCurrency(sarValue)} {t('wallet.sarValue')}
-            </p>
+            <p className="text-sm text-white/70 mt-1">{t('wallet.globalPoints')}</p>
           </div>
 
           <div className="flex items-center gap-2 mb-3">

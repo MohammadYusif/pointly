@@ -237,8 +237,8 @@ export default function CustomerDashboard() {
                   <ChallengeCard
                     title={t('challenges.weeklyStreak')}
                     description={t('challenges.weeklyStreakDesc', { count: 3 })}
-                    current={challengeData.weeklyVisitCount}
-                    target={3}
+                    current={challengeData.weeklyStreakChallenge.current}
+                    target={challengeData.weeklyStreakChallenge.target}
                     bonusPoints={tierBenefits ? getStreakBonusForTier(tierBenefits.tier) : 500}
                     daysRemaining={getDaysRemainingInWeek()}
                   />
