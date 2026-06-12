@@ -14,11 +14,10 @@ import { type Locale, translations } from '@/i18n/translations';
 import { useEffect, useState } from 'react';
 
 export default function LandingPage() {
-  const [locale, setLocale] = useState<Locale>(() => {
-    if (typeof window === 'undefined') return 'ar';
-    const stored = localStorage.getItem('pointly-language');
-    return stored === 'en' || stored === 'ar' ? stored : 'ar';
-  });
+  // Always start from the SSG default ('ar') so the first client render
+  // matches the exported HTML — reading localStorage in the initializer
+  // causes a hydration text mismatch (React #418).
+  const [locale, setLocale] = useState<Locale>('ar');
   const t = translations[locale];
   const isRtl = locale === 'ar';
 
@@ -28,6 +27,14 @@ export default function LandingPage() {
     document.documentElement.lang = newLocale;
     document.documentElement.dir = newLocale === 'ar' ? 'rtl' : 'ltr';
   };
+
+  // Sync stored language preference after hydration
+  useEffect(() => {
+    const stored = localStorage.getItem('pointly-language');
+    if (stored === 'en' || stored === 'ar') {
+      setLocale(stored);
+    }
+  }, []);
 
   // Set initial HTML attributes
   useEffect(() => {

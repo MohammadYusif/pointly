@@ -17,7 +17,7 @@ export const translations = {
       titleHighlight: 'Every merchant.',
       subtitle:
         'Pointly connects Saudi businesses into a unified rewards network. Customers earn points everywhere — merchants grow together.',
-      cta: 'Start free trial',
+      cta: 'Get started',
       secondary: 'See how it works',
       floatEarned: '+240 pts earned',
       floatRedeemed: '−500 pts redeemed',
@@ -192,8 +192,8 @@ export const translations = {
       title: 'Ready to grow with loyalty?',
       subtitle:
         'Be among the first Saudi merchants to launch a loyalty program that keeps customers coming back.',
-      primary: 'Start your free trial',
-      note: 'No credit card required. 14-day free trial.',
+      primary: 'Get started today',
+      note: 'Monthly subscription — cancel anytime.',
     },
     footer: {
       tagline: 'The unified loyalty network for Saudi merchants.',
@@ -271,10 +271,10 @@ export const translations = {
       titleHighlight: 'كل التجار.',
       subtitle:
         'بوينتلي يربط الشركات السعودية في شبكة مكافآت موحدة. يكسب العملاء النقاط في كل مكان — ويكبر التجار معاً.',
-      cta: 'ابدأ تجربتك المجانية',
+      cta: 'ابدأ الآن',
       secondary: 'شاهد كيف يعمل',
-      floatEarned: '+240 نقطة مكتسبة',
-      floatRedeemed: '−500 نقطة مستردة',
+      floatEarned: '+240 نقطة مكتسبة',
+      floatRedeemed: '−500 نقطة مستردة',
       cardMerchant: 'قهوة النور',
       globalPoints: 'نقطة ولاء',
       cardToTier: 'إلى ألماس',
@@ -443,8 +443,8 @@ export const translations = {
       label: 'ابدأ الآن',
       title: 'هل أنت مستعد للنمو مع برنامج الولاء؟',
       subtitle: 'كن من أوائل التجار السعوديين الذين يطلقون برنامج ولاء يجعل العملاء يعودون دائماً.',
-      primary: 'ابدأ تجربتك المجانية',
-      note: 'لا حاجة لبطاقة ائتمان. تجربة مجانية لمدة 14 يومًا.',
+      primary: 'ابدأ اليوم',
+      note: 'اشتراك شهري — يمكنك الإلغاء في أي وقت.',
     },
     footer: {
       tagline: 'شبكة الولاء الموحدة للتجار السعوديين.',

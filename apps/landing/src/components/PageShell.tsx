@@ -69,11 +69,9 @@ interface PageShellProps {
 }
 
 export function PageShell({ children }: PageShellProps) {
-  const [locale, setLocale] = useState<Locale>(() => {
-    if (typeof window === 'undefined') return 'ar';
-    const stored = localStorage.getItem('pointly-language');
-    return stored === 'en' || stored === 'ar' ? stored : 'ar';
-  });
+  // Start from the SSG default ('ar') so the first client render matches
+  // the exported HTML — localStorage is synced after hydration.
+  const [locale, setLocale] = useState<Locale>('ar');
   const t = translations[locale];
   const isRtl = locale === 'ar';
 
@@ -83,6 +81,13 @@ export function PageShell({ children }: PageShellProps) {
     document.documentElement.lang = newLocale;
     document.documentElement.dir = newLocale === 'ar' ? 'rtl' : 'ltr';
   };
+
+  useEffect(() => {
+    const stored = localStorage.getItem('pointly-language');
+    if (stored === 'en' || stored === 'ar') {
+      setLocale(stored);
+    }
+  }, []);
 
   useEffect(() => {
     document.documentElement.lang = locale;
