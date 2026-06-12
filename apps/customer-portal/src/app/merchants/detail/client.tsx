@@ -6,7 +6,7 @@ import { useTranslation } from '@pointly/i18n';
 import { Button, Card, CardContent, useRTL } from '@pointly/ui';
 import { ArrowLeft, Gift, MapPin, Star, Users } from 'lucide-react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
 
@@ -25,8 +25,8 @@ function DetailSkeleton() {
 export function MerchantDetailClient() {
   const { t, formatNumber } = useTranslation();
   const { textStart } = useRTL();
-  const params = useParams<{ id: string }>();
-  const merchantId = params.id;
+  const searchParams = useSearchParams();
+  const merchantId = searchParams.get('id') ?? '';
 
   const { data: merchant, isLoading, error } = useMerchantDetail(merchantId);
   const { data: myMerchants } = useMyMerchants();
@@ -43,7 +43,7 @@ export function MerchantDetailClient() {
     });
   };
 
-  if (isLoading) {
+  if (merchantId && isLoading) {
     return (
       <CustomerLayout>
         <DetailSkeleton />
@@ -51,7 +51,7 @@ export function MerchantDetailClient() {
     );
   }
 
-  if (error || !merchant) {
+  if (!merchantId || error || !merchant) {
     return (
       <CustomerLayout>
         <div className="text-center py-12 space-y-4">

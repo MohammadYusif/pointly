@@ -31,7 +31,7 @@ export function MerchantCard({ merchant, isEnrolled, onEnroll, isEnrolling }: Me
           {/* Header: Name */}
           <div className="flex items-start justify-between gap-2">
             <Link
-              href={`/merchants/${merchant.merchantId}`}
+              href={`/merchants/detail/?id=${merchant.merchantId}`}
               className="text-base font-bold text-foreground hover:text-primary transition-colors"
             >
               {merchant.businessName}
@@ -65,7 +65,7 @@ export function MerchantCard({ merchant, isEnrolled, onEnroll, isEnrolling }: Me
           {/* Enroll / Enrolled */}
           <div className="flex items-center justify-between pt-1">
             <Link
-              href={`/merchants/${merchant.merchantId}`}
+              href={`/merchants/detail/?id=${merchant.merchantId}`}
               className="text-xs text-primary-accessible hover:underline"
             >
               {t('merchants.viewDetails')}
