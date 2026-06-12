@@ -44,6 +44,18 @@ A browser audit of staging (2026-06-12) found:
 - Staging re-seeded via `node scripts/seed-data.mjs --env dev --clean`
   (deterministic `*_seed` items only).
 
+## Follow-up: landing hydration error root cause
+
+The residual React #418 on landing loads was NOT the locale pattern (that
+was a separate, already-fixed mismatch) — it was **four lucide-react
+versions installed across the monorepo** (0.468 / 0.469 ×2 / 0.577). The
+landing's server render resolved an old hoisted copy while the client ran
+0.577, and lucide redesigned several icons (Flame, Landmark) between those
+versions, so the SVG path data never matched. Fixed by pinning
+`lucide-react: ^0.577.0` in customer-portal, merchant-dashboard, and
+packages/ui (landing already had it). Keep lucide versions aligned across
+the workspace.
+
 ## Constraints
 
 - All three frontends are static exports — no middleware, no server routing.
