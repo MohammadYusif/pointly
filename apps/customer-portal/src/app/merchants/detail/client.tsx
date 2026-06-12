@@ -94,19 +94,25 @@ export function MerchantDetailClient() {
               <Star className="h-4 w-4 text-primary" />
               {t('merchants.loyaltyProgram')}
             </h2>
-            <div className="grid grid-cols-3 gap-3 text-center">
+            <div
+              className={`grid gap-3 text-center ${
+                merchant.loyaltyConfig.welcomeBonus > 0 ? 'grid-cols-3' : 'grid-cols-2'
+              }`}
+            >
               <div>
                 <p className="text-lg font-bold text-primary-accessible">
                   {merchant.loyaltyConfig.pointsPerSAR}
                 </p>
                 <p className="text-xs text-muted-foreground">{t('merchants.pointsPerSAR')}</p>
               </div>
-              <div>
-                <p className="text-lg font-bold text-primary-accessible">
-                  {merchant.loyaltyConfig.welcomeBonus}
-                </p>
-                <p className="text-xs text-muted-foreground">{t('merchants.welcomeBonus')}</p>
-              </div>
+              {merchant.loyaltyConfig.welcomeBonus > 0 && (
+                <div>
+                  <p className="text-lg font-bold text-primary-accessible">
+                    {merchant.loyaltyConfig.welcomeBonus}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{t('merchants.welcomeBonus')}</p>
+                </div>
+              )}
               <div>
                 <p className="text-lg font-bold text-primary-accessible">
                   {merchant.loyaltyConfig.redemptionRate}
