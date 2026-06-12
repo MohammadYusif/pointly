@@ -103,6 +103,37 @@ resource "aws_cloudfront_response_headers_policy" "landing_security" {
 }
 
 # ===========================================
+# CloudFront Function for URL Rewriting
+# ===========================================
+# The landing app exports extensionless pages as flat HTML files
+# (e.g. /privacy → privacy.html), so both "/privacy" and "/privacy/"
+# must be rewritten to "/privacy.html" for S3 to resolve them.
+resource "aws_cloudfront_function" "url_rewrite" {
+  name    = "Pointly-Landing-UrlRewrite-${var.environment}-eu"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+
+  code = <<-EOF
+    function handler(event) {
+      var request = event.request;
+      var uri = request.uri;
+      if (uri === '/') {
+        return request;
+      }
+      if (uri.endsWith('/')) {
+        uri = uri.slice(0, -1);
+      }
+      var lastSegment = uri.split('/').pop();
+      if (!lastSegment.includes('.')) {
+        uri += '.html';
+      }
+      request.uri = uri;
+      return request;
+    }
+  EOF
+}
+
+# ===========================================
 # CloudFront Cache Policy — Static Assets
 # ===========================================
 resource "aws_cloudfront_cache_policy" "landing_static" {
@@ -154,6 +185,11 @@ resource "aws_cloudfront_distribution" "landing" {
     compress                   = true
     cache_policy_id            = "658327ea-f89d-4fab-a63d-7e88639e58f6" # CachingOptimized
     response_headers_policy_id = aws_cloudfront_response_headers_policy.landing_security.id
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.url_rewrite.arn
+    }
   }
 
   # Next.js static assets — immutable, max cache
